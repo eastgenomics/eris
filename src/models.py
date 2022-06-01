@@ -17,13 +17,13 @@ class ClinicalIndication(models.Model):
 
     id = models.AutoField(primary_key = True)
 
-    code =  models.CharField(verbose_name='CI code', max_length = 10)
+    code =  models.CharField(verbose_name = 'CI code', max_length = 10)
 
-    name = models.TextField(verbose_name='CI name')
+    name = models.TextField(verbose_name = 'CI name')
 
-    gemini_name = models.TextField(verbose_name='Gemini name')
+    gemini_name = models.TextField(verbose_name = 'Gemini name')
 
-    source = models.TextField(verbose_name='CI source')
+    source = models.TextField(verbose_name = 'CI source')
 
     def __str__(self):
         return self.id
@@ -39,9 +39,9 @@ class ClinicalIndicationSource(models.Model):
         verbose_name='Clinical indication',
         on_delete=models.CASCADE)
 
-    source = models.TextField(verbose_name='Source name')
+    source = models.TextField(verbose_name = 'Source name')
 
-    date = models.CharField(verbose_name='Date', max_length = 10)
+    date = models.CharField(verbose_name = 'Date', max_length = 10)
 
     def __str__(self):
         return self.id
@@ -53,7 +53,7 @@ class ReferenceGenome(models.Model):
     id = models.AutoField(primary_key = True)
 
     reference_build = models.CharField(
-        verbose_name='Genome build',
+        verbose_name = 'Genome build',
         max_length = 10)
 
     def __str__(self):
@@ -73,8 +73,8 @@ class Panel(models.Model):
 
     reference_genome_id = models.ForeignKey(
         ReferenceGenome,
-        verbose_name='Reference genome ID',
-        on_delete=models.CASCADE)
+        verbose_name = 'Reference genome ID',
+        on_delete = models.CASCADE)
 
     def __str__(self):
         return self.id
@@ -87,15 +87,15 @@ class ClinicalIndicationPanel(models.Model):
 
     clinical_indication_id = models.ForeignKey(
         ClinicalIndication,
-        verbose_name='Clinical indication',
-        on_delete=models.CASCADE)
+        verbose_name = 'Clinical indication',
+        on_delete = models.CASCADE)
 
     panel_id = models.ForeignKey(
         Panel,
-        verbose_name='Panel',
-        on_delete=models.CASCADE)
+        verbose_name = 'Panel',
+        on_delete = models.CASCADE)
 
-    current = models.BooleanField(verbose_name='Currently in use')
+    current = models.BooleanField(verbose_name = 'Currently in use')
 
     def __str__(self):
         return self.id
@@ -112,9 +112,9 @@ class ClinicalIndicationPanelUsage(models.Model):
         verbose_name='Clinical indication',
         on_delete=models.CASCADE)
 
-    start_date = models.CharField(verbose_name='Start date', max_length = 10)
+    start_date = models.CharField(verbose_name = 'Start date', max_length = 10)
 
-    end_date = models.BooleanField(verbose_name='Currently in use')
+    end_date = models.BooleanField(verbose_name = 'Currently in use')
 
     def __str__(self):
         return self.id
@@ -137,7 +137,7 @@ class Gene(models.Model):
     hgnc_id = models.ForeignKey(
         Hgnc,
         verbose_name='HGNC ID',
-        on_delete=models.CASCADE)
+        on_delete = models.CASCADE)
 
     def __str__(self):
         return self.id
@@ -200,33 +200,33 @@ class PanelGene(models.Model):
 
     panel_id = models.ForeignKey(
         Panel,
-        verbose_name='Panel ID',
-        on_delete=models.CASCADE)
+        verbose_name = 'Panel ID',
+        on_delete = models.CASCADE)
 
     gene_id = models.ForeignKey(
         Gene,
-        verbose_name='Gene ID',
-        on_delete=models.CASCADE)
+        verbose_name = 'Gene ID',
+        on_delete = models.CASCADE)
 
     confidence_id = models.ForeignKey(
         Confidence,
-        verbose_name='Confidence ID',
-        on_delete=models.CASCADE)
+        verbose_name = 'Confidence ID',
+        on_delete = models.CASCADE)
 
     moi_id = models.ForeignKey(
         ModeOfInheritance,
-        verbose_name='Mode of inheritance ID',
-        on_delete=models.CASCADE)
+        verbose_name = 'Mode of inheritance ID',
+        on_delete = models.CASCADE)
 
     mop_id = models.ForeignKey(
         ModeOfPathogenicity,
-        verbose_name='Mode of pathogenicity ID',
-        on_delete=models.CASCADE)
+        verbose_name = 'Mode of pathogenicity ID',
+        on_delete = models.CASCADE)
 
     penetrance_id = models.ForeignKey(
         Penetrance,
-        verbose_name='Penetrance ID',
-        on_delete=models.CASCADE)
+        verbose_name = 'Penetrance ID',
+        on_delete = models.CASCADE)
 
     justification = models.TextField(verbose_name = 'Justification')
 
@@ -253,13 +253,13 @@ class PanelGeneTranscript(models.Model):
 
     panel_gene_id = models.ForeignKey(
         PanelGene,
-        verbose_name='Panel/gene link ID',
-        on_delete=models.CASCADE)
+        verbose_name = 'Panel/gene link ID',
+        on_delete = models.CASCADE)
 
     transcript_id = models.ForeignKey(
         Transcript,
-        verbose_name='Transcript ID',
-        on_delete=models.CASCADE)
+        verbose_name = 'Transcript ID',
+        on_delete = models.CASCADE)
 
     justification = models.TextField(verbose_name = 'justification')
 
@@ -342,53 +342,53 @@ class PanelRegion(models.Model):
 
     panel_id = models.ForeignKey(
         Panel,
-        verbose_name='Panel ID',
-        on_delete=models.CASCADE)
+        verbose_name = 'Panel ID',
+        on_delete = models.CASCADE)
 
     confidence_id = models.ForeignKey(
         Confidence,
-        verbose_name='Confidence level ID',
-        on_delete=models.CASCADE)
+        verbose_name = 'Confidence level ID',
+        on_delete = models.CASCADE)
 
     moi_id = models.ForeignKey(
         ModeOfInheritance,
-        verbose_name='Mode of inheritance ID',
-        on_delete=models.CASCADE)
+        verbose_name = 'Mode of inheritance ID',
+        on_delete = models.CASCADE)
 
     mop_id = models.ForeignKey(
         ModeOfPathogenicity,
-        verbose_name='Mode of pathogenicity ID',
-        on_delete=models.CASCADE)
+        verbose_name = 'Mode of pathogenicity ID',
+        on_delete = models.CASCADE)
 
     penetrance_id = models.ForeignKey(
         Penetrance,
-        verbose_name='Penetrance ID',
-        on_delete=models.CASCADE)
+        verbose_name = 'Penetrance ID',
+        on_delete = models.CASCADE)
 
     region_id = models.ForeignKey(
         Region,
-        verbose_name='Region ID',
-        on_delete=models.CASCADE)
+        verbose_name = 'Region ID',
+        on_delete = models.CASCADE)
 
     haplo_id = models.ForeignKey(
         Haploinsufficiency,
-        verbose_name='Haploinsufficiency ID',
-        on_delete=models.CASCADE)
+        verbose_name = 'Haploinsufficiency ID',
+        on_delete = models.CASCADE)
 
     triplo_id = models.ForeignKey(
         Triplosensitivity,
-        verbose_name='Triplosensitivity ID',
-        on_delete=models.CASCADE)
+        verbose_name = 'Triplosensitivity ID',
+        on_delete = models.CASCADE)
 
     overlap_id = models.ForeignKey(
         RequiredOverlap,
-        verbose_name='Required overlap ID',
-        on_delete=models.CASCADE)
+        verbose_name = 'Required overlap ID',
+        on_delete = models.CASCADE)
 
     vartype_id = models.ForeignKey(
         VariantType,
-        verbose_name='Variant type ID',
-        on_delete=models.CASCADE)
+        verbose_name = 'Variant type ID',
+        on_delete = models.CASCADE)
 
     justification = models.TextField(verbose_name = 'Justification')
 
@@ -403,8 +403,8 @@ class RegionAnnotation(models.Model):
 
     region_id = models.ForeignKey(
         Region,
-        verbose_name='Region ID',
-        on_delete=models.CASCADE)
+        verbose_name = 'Region ID',
+        on_delete = models.CASCADE)
 
     attribute = models.TextField(verbose_name = 'Attribute')
 
