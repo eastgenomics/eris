@@ -1,0 +1,1626 @@
+Number of genes, regions and STRs in each PA panel
+
+Panel 399: Additional findings health related
+number_of_genes: 14
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 933: Additional findings health related - adults
+number_of_genes: 13
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 929: Additional findings health related - adult specific
+number_of_genes: 6
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 930: Additional findings health related - children
+number_of_genes: 7
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 934: Additional findings health related - CNV analysis adults
+number_of_genes: 10
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 931: Additional findings health related - CNV analysis adult specific
+number_of_genes: 6
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 932: Additional findings health related - CNV analysis children
+number_of_genes: 4
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 774: Additional findings reproductive carrier status
+number_of_genes: 1
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 540: Adult onset movement disorder
+number_of_genes: 206
+number_of_strs: 11
+number_of_regions: 1
+
+Panel 245: Adult solid tumours cancer susceptibility
+number_of_genes: 105
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 391: Adult solid tumours for rare disease
+number_of_genes: 58
+number_of_strs: 0
+number_of_regions: 1
+
+Panel 511: Albinism or congenital nystagmus
+number_of_genes: 45
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 269: Amelogenesis imperfecta
+number_of_genes: 40
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 502: Amyloidosis
+number_of_genes: 11
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 263: Amyotrophic lateral sclerosis/motor neuron disease
+number_of_genes: 36
+number_of_strs: 4
+number_of_regions: 0
+
+Panel 510: Aniridia
+number_of_genes: 6
+number_of_strs: 0
+number_of_regions: 1
+
+Panel 34: Anophthalmia or microphthalmia
+number_of_genes: 63
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 134: Arrhythmogenic cardiomyopathy
+number_of_genes: 20
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 258: Arthrogryposis
+number_of_genes: 289
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 477: Ataxia and cerebellar anomalies - narrow panel
+number_of_genes: 270
+number_of_strs: 14
+number_of_regions: 3
+
+Panel 139: Atypical haemolytic uraemic syndrome
+number_of_genes: 15
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 260: Auditory Neuropathy Spectrum Disorde
+number_of_genes: 5
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 657: Autism
+number_of_genes: 735
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 282: Autosomal recessive congenital ichthyosis
+number_of_genes: 15
+number_of_strs: 0
+number_of_regions: 1
+
+Panel 557: Autosomal recessive primary hypertrophic osteoarthropathy
+number_of_genes: 3
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 543: Bardet Biedl syndrome
+number_of_genes: 24
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 38: Beckwith-Wiedemann syndrome (BWS) and other congenital overgrowth disorders
+number_of_genes: 29
+number_of_strs: 0
+number_of_regions: 1
+
+Panel 208: Bladder cancer pertinent cancer susceptibility
+number_of_genes: 4
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 545: Bleeding and platelet disorders
+number_of_genes: 114
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 166: Brain cancer pertinent cancer susceptibility
+number_of_genes: 7
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 90: Brain channelopathy
+number_of_genes: 26
+number_of_strs: 5
+number_of_regions: 1
+
+Panel 55: Breast cancer pertinent cancer susceptibility
+number_of_genes: 5
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 13: Brugada syndrome
+number_of_genes: 23
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 234: CAKUT
+number_of_genes: 100
+number_of_strs: 0
+number_of_regions: 1
+
+Panel 842: Cardiac arrhythmias
+number_of_genes: 99
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 843: Cardiac arrhythmias - additional genes
+number_of_genes: 3
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 749: Cardiomyopathies - including childhood onset
+number_of_genes: 214
+number_of_strs: 0
+number_of_regions: 1
+
+Panel 230: Cataracts
+number_of_genes: 199
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 214: Catecholaminergic polymorphic VT
+number_of_genes: 10
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 286: Cerebellar hypoplasia
+number_of_genes: 75
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 109: Cerebral folate deficiency
+number_of_genes: 4
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 491: Cerebral malformations
+number_of_genes: 153
+number_of_strs: 0
+number_of_regions: 1
+
+Panel 147: Cerebral vascular malformations
+number_of_genes: 104
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 745: CHARGE syndrome
+number_of_genes: 1
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 847: Childhood onset dystonia or chorea or related movement disorder
+number_of_genes: 969
+number_of_strs: 5
+number_of_regions: 0
+
+Panel 259: Childhood solid tumours cancer susceptibility
+number_of_genes: 85
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 221: Choanal atresia
+number_of_genes: 14
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 544: Cholestasis
+number_of_genes: 78
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 30: Chondrodysplasia punctata
+number_of_genes: 6
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 197: Classical tuberous sclerosis
+number_of_genes: 2
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 81: Clefting
+number_of_genes: 266
+number_of_strs: 0
+number_of_regions: 5
+
+Panel 210: ClinGen_Familial thoracic aortic aneurysm and aortic dissection
+number_of_genes: 53
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 64: ClinGen Gene Validity Curations
+number_of_genes: 47
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 244: Colorectal cancer pertinent cancer susceptibility
+number_of_genes: 13
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 517: Combined factor V and VIII deficiency
+number_of_genes: 2
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 507: Common craniosynostosis syndromes
+number_of_genes: 7
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 508: Confirmed Fanconi anaemia or Bloom syndrome
+number_of_genes: 23
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 145: Congenital adrenal hypoplasia
+number_of_genes: 21
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 25: Congenital disorders of glycosylation
+number_of_genes: 114
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 512: Congenital fibrosis of the extraocular muscles
+number_of_genes: 7
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 308: Congenital hyperinsulinism
+number_of_genes: 21
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 31: Congenital hypothyroidism
+number_of_genes: 35
+number_of_strs: 0
+number_of_regions: 2
+
+Panel 207: Congenital muscular dystrophy
+number_of_genes: 58
+number_of_strs: 1
+number_of_regions: 0
+
+Panel 232: Congenital myaesthenic syndrome
+number_of_genes: 35
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 225: Congenital myopathy
+number_of_genes: 116
+number_of_strs: 2
+number_of_regions: 3
+
+Panel 250: Corneal abnormalities
+number_of_genes: 42
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 658: Corneal dystrophies
+number_of_genes: 23
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 111: COVID-19 research
+number_of_genes: 695
+number_of_strs: 0
+number_of_regions: 2
+
+Panel 168: Craniosynostosis
+number_of_genes: 129
+number_of_strs: 0
+number_of_regions: 2
+
+Panel 5: Currarino triad
+number_of_genes: 11
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 560: Cutaneous photosensitivity with a likely genetic cause
+number_of_genes: 12
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 283: Cystic kidney disease
+number_of_genes: 69
+number_of_strs: 0
+number_of_regions: 2
+
+Panel 487: Cystic renal disease
+number_of_genes: 170
+number_of_strs: 0
+number_of_regions: 4
+
+Panel 519: Cytopenia - NOT Fanconi anaemia
+number_of_genes: 127
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 159: Cytopenias and congenital anaemias
+number_of_genes: 221
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 484: DDG2P
+number_of_genes: 1921
+number_of_strs: 1
+number_of_regions: 0
+
+Panel 251: Deafness and congenital structural abnormalities
+number_of_genes: 54
+number_of_strs: 0
+number_of_regions: 3
+
+Panel 293: Diabetes - neonatal onset
+number_of_genes: 35
+number_of_strs: 0
+number_of_regions: 1
+
+Panel 26: Diabetes with additional phenotypes suggestive of a monogenic aetiology
+number_of_genes: 64
+number_of_strs: 0
+number_of_regions: 1
+
+Panel 652: Dilated cardiomyopathy - adult and teen
+number_of_genes: 58
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 47: Dilated Cardiomyopathy and conduction defects
+number_of_genes: 85
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 9: Disorders of sex development
+number_of_genes: 67
+number_of_strs: 0
+number_of_regions: 2
+
+Panel 235: Distal myopathies
+number_of_genes: 31
+number_of_strs: 2
+number_of_regions: 0
+
+Panel 209: Ductal plate malformation
+number_of_genes: 150
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 265: Early onset dementia (encompassing fronto-temporal dementia and prion disease)
+number_of_genes: 32
+number_of_strs: 9
+number_of_regions: 0
+
+Panel 192: Early onset dystonia
+number_of_genes: 112
+number_of_strs: 4
+number_of_regions: 0
+
+Panel 553: Ectodermal dysplasia
+number_of_genes: 77
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 136: Ectodermal dysplasia without a known gene mutation
+number_of_genes: 30
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 53: Ehlers Danlos syndromes
+number_of_genes: 80
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 648: Endocrine neoplasms
+number_of_genes: 14
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 271: Endometrial cancer pertinent cancer susceptibility
+number_of_genes: 6
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 562: Epidermodysplasia verruciformis
+number_of_genes: 7
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 119: Epidermolysis bullosa
+number_of_genes: 21
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 554: Epidermolysis bullosa and congenital skin fragility
+number_of_genes: 47
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 91: Erythropoietic protoporphyria, mild variant
+number_of_genes: 3
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 314: Extreme early-onset hypertension
+number_of_genes: 27
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 158: Familial breast cancer
+number_of_genes: 26
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 50: Familial cerebral small vessel disease
+number_of_genes: 17
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 305: Familial cicatricial alopecia
+number_of_genes: 25
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 152: Familial diabetes
+number_of_genes: 56
+number_of_strs: 0
+number_of_regions: 1
+
+Panel 110: Familial disseminated superficial actinic porokeratosis
+number_of_genes: 7
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 7: Familial dysautonomia
+number_of_genes: 23
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 23: Familial hidradenitis suppurativa
+number_of_genes: 11
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 63: Familial Hirschsprung Disease
+number_of_genes: 63
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 6: Familial hypercholesterolaemia
+number_of_genes: 43
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 772: Familial hypercholesterolaemia - targeted panel
+number_of_genes: 6
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 480: Familial hyperparathyroidism
+number_of_genes: 11
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 312: Familial hypoparathyroidism
+number_of_genes: 9
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 522: Familial melanoma
+number_of_genes: 8
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 394: Familial Meniere Disease
+number_of_genes: 130
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 11: Familial Neural Tube Defects
+number_of_genes: 44
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 212: Familial non syndromic congenital heart disease
+number_of_genes: 52
+number_of_strs: 0
+number_of_regions: 8
+
+Panel 318: Familial prostate cancer
+number_of_genes: 14
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 200: Familial pulmonary fibrosis
+number_of_genes: 75
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 290: Familial rhabdomyosarcoma
+number_of_genes: 18
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 552: Familial tumoral calcinosis
+number_of_genes: 4
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 167: Familial Tumours Syndromes of the central & peripheral Nervous system
+number_of_genes: 21
+number_of_strs: 0
+number_of_regions: 1
+
+Panel 478: Fetal anomalies
+number_of_genes: 1919
+number_of_strs: 2
+number_of_regions: 1
+
+Panel 144: Fetal hydrops
+number_of_genes: 91
+number_of_strs: 1
+number_of_regions: 0
+
+Panel 33: Gastrointestinal epithelial barrier disorders
+number_of_genes: 83
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 61: Gastrointestinal neuromuscular disorders
+number_of_genes: 30
+number_of_strs: 1
+number_of_regions: 0
+
+Panel 132: Generalised pustular psoriasis
+number_of_genes: 12
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 412: Gene therapy clinical trials
+number_of_genes: 21
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 402: Genetic epilepsy syndromes
+number_of_genes: 759
+number_of_strs: 2
+number_of_regions: 15
+
+Panel 201: Genodermatoses with malignancies
+number_of_genes: 13
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 227: Genomic imprinting
+number_of_genes: 231
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 254: GI tract tumours
+number_of_genes: 30
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 249: Glaucoma (developmental)
+number_of_genes: 232
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 528: Glycogen storage disease
+number_of_genes: 29
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 720: Groopman et al 2019 - Genes with diagnostic variants
+number_of_genes: 66
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 473: Growth failure in early childhood
+number_of_genes: 155
+number_of_strs: 0
+number_of_regions: 5
+
+Panel 59: Haematological malignancies cancer susceptibility
+number_of_genes: 97
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 407: Haematological malignancies for rare disease
+number_of_genes: 89
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 99: Haematuria
+number_of_genes: 8
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 115: Head and neck cancer pertinent cancer susceptibility
+number_of_genes: 12
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 126: Hearing loss
+number_of_genes: 406
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 20: Hereditary ataxia
+number_of_genes: 165
+number_of_strs: 14
+number_of_regions: 3
+
+Panel 466: Hereditary ataxia - adult onset
+number_of_genes: 244
+number_of_strs: 14
+number_of_regions: 4
+
+Panel 488: Hereditary ataxia and cerebellar anomalies - childhood onset
+number_of_genes: 449
+number_of_strs: 14
+number_of_regions: 3
+
+Panel 157: Hereditary Erythrocytosis
+number_of_genes: 17
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 123: Hereditary haemorrhagic telangiectasia
+number_of_genes: 15
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 85: Hereditary neuropathy
+number_of_genes: 283
+number_of_strs: 11
+number_of_regions: 2
+
+Panel 846: Hereditary neuropathy NOT PMP22 copy number
+number_of_genes: 305
+number_of_strs: 1
+number_of_regions: 0
+
+Panel 165: Hereditary spastic paraplegia
+number_of_genes: 115
+number_of_strs: 10
+number_of_regions: 0
+
+Panel 567: Hereditary spastic paraplegia - adult onset
+number_of_genes: 104
+number_of_strs: 10
+number_of_regions: 0
+
+Panel 568: Hereditary spastic paraplegia - childhood onset
+number_of_genes: 129
+number_of_strs: 10
+number_of_regions: 0
+
+Panel 78: Holoprosencephaly
+number_of_genes: 25
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 310: Hydroa vacciniforme
+number_of_genes: 3
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 179: Hydrocephalus
+number_of_genes: 108
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 267: Hyperammonaemia
+number_of_genes: 106
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 236: Hyperthyroidism
+number_of_genes: 8
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 49: Hypertrophic cardiomyopathy - teen and adult
+number_of_genes: 74
+number_of_strs: 1
+number_of_regions: 0
+
+Panel 481: Hypocalciuric hypercalcaemia
+number_of_genes: 3
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 92: Hypogonadotropic hypogonadism
+number_of_genes: 47
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 650: Hypogonadotropic hypogonadism idiopathic
+number_of_genes: 45
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 482: Hypophosphataemia or rickets
+number_of_genes: 18
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 490: Hypotonic infant
+number_of_genes: 3916
+number_of_strs: 22
+number_of_regions: 66
+
+Panel 555: Ichthyosis and erythrokeratoderma
+number_of_genes: 71
+number_of_strs: 0
+number_of_regions: 1
+
+Panel 277: Idiopathic ventricular fibrillation
+number_of_genes: 5
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 467: Inborn errors of metabolism
+number_of_genes: 912
+number_of_strs: 3
+number_of_regions: 1
+
+Panel 176: Infantile enterocolitis & monogenic inflammatory bowel disease
+number_of_genes: 69
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 246: Infantile nystagmus
+number_of_genes: 18
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 175: Inherited bleeding disorders
+number_of_genes: 119
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 503: Inherited MMR deficiency (Lynch syndrome)
+number_of_genes: 5
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 171: Inherited non-medullary thyroid cancer
+number_of_genes: 30
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 143: Inherited ovarian cancer (without breast cancer)
+number_of_genes: 26
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 524: Inherited pancreatic cancer
+number_of_genes: 12
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 97: Inherited phaeochromocytoma and paraganglioma
+number_of_genes: 20
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 649: Inherited phaeochromocytoma and paraganglioma excluding NF1
+number_of_genes: 17
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 504: Inherited polyposis
+number_of_genes: 18
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 525: Inherited predisposition to acute myeloid leukaemia (AML)
+number_of_genes: 15
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 523: Inherited predisposition to GIST
+number_of_genes: 7
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 521: Inherited renal cancer
+number_of_genes: 16
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 42: Inherited white matter disorders
+number_of_genes: 173
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 174: Insulin resistance (including lipodystrophy)
+number_of_genes: 26
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 285: Intellectual disability
+number_of_genes: 2569
+number_of_strs: 12
+number_of_regions: 57
+
+Panel 514: Intestinal failure
+number_of_genes: 47
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 315: Intracerebral calcification disorders
+number_of_genes: 33
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 515: Iron metabolism disorders
+number_of_genes: 26
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 131: IUGR and IGF abnormalities
+number_of_genes: 112
+number_of_strs: 0
+number_of_regions: 5
+
+Panel 239: Juvenile dermatomyositis
+number_of_genes: 5
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 173: Kabuki syndrome
+number_of_genes: 5
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 248: Ketotic hypoglycaemia
+number_of_genes: 45
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 213: Kleine-Levin syndrome
+number_of_genes: 13
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 549: Laterality disorders and isomerism
+number_of_genes: 63
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 530: Leber hereditary optic neuropathy
+number_of_genes: 5
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 238: Left Ventricular Noncompaction Cardiomyopathy
+number_of_genes: 16
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 384: Limb disorders
+number_of_genes: 256
+number_of_strs: 0
+number_of_regions: 1
+
+Panel 185: Limb girdle muscular dystrophy
+number_of_genes: 95
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 546: Lipodystrophy - childhood onset
+number_of_genes: 20
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 527: Lipoprotein lipase deficiency
+number_of_genes: 10
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 76: Long QT syndrome
+number_of_genes: 23
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 218: Lung cancer pertinent cancer susceptibility
+number_of_genes: 0
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 529: Lysosomal storage disorder
+number_of_genes: 56
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 96: Malformations of cortical development
+number_of_genes: 116
+number_of_strs: 0
+number_of_regions: 1
+
+Panel 133: Melanoma pertinent cancer susceptibility
+number_of_genes: 3
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 83: Membranoproliferative glomerulonephritis
+number_of_genes: 9
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 112: Mitochondrial disorders
+number_of_genes: 479
+number_of_strs: 2
+number_of_regions: 1
+
+Panel 534: Mitochondrial disorder with complex I deficiency
+number_of_genes: 51
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 535: Mitochondrial disorder with complex II deficiency
+number_of_genes: 8
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 536: Mitochondrial disorder with complex III deficiency
+number_of_genes: 15
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 537: Mitochondrial disorder with complex IV deficiency
+number_of_genes: 41
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 538: Mitochondrial disorder with complex V deficiency
+number_of_genes: 19
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 533: Mitochondrial DNA maintenance disorder
+number_of_genes: 28
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 532: Mitochondrial liver disease
+number_of_genes: 11
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 472: Monogenic diabetes
+number_of_genes: 77
+number_of_strs: 0
+number_of_regions: 1
+
+Panel 18: Monogenic nephrogenic diabetes insipidus
+number_of_genes: 5
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 564: Mosaic skin disorders - deep sequencing
+number_of_genes: 49
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 75: Mucopolysaccharideosis, Gaucher, Fabry
+number_of_genes: 18
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 87: Multi-organ autoimmune diabetes
+number_of_genes: 42
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 36: Multiple endocrine tumours
+number_of_genes: 16
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 211: Multiple Epiphyseal Dysplasia
+number_of_genes: 11
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 19: Multiple lipomas
+number_of_genes: 4
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 558: Multiple monogenic benign skin tumours
+number_of_genes: 45
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 385: Neonatal cholestasis
+number_of_genes: 94
+number_of_strs: 0
+number_of_regions: 1
+
+Panel 149: Nephrocalcinosis or nephrolithiasis
+number_of_genes: 48
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 474: Neurodegenerative disorders - adult onset
+number_of_genes: 403
+number_of_strs: 16
+number_of_regions: 4
+
+Panel 183: Neuroendocrine cancer pertinent cancer susceptibility
+number_of_genes: 12
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 255: Neurofibromatosis Type 1
+number_of_genes: 30
+number_of_strs: 0
+number_of_regions: 1
+
+Panel 724: Neurological ciliopathies
+number_of_genes: 65
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 736: Neurological segmental overgrowth
+number_of_genes: 12
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 465: Neuromuscular disorders
+number_of_genes: 435
+number_of_strs: 7
+number_of_regions: 8
+
+Panel 526: Neuronal ceroid lipofuscinosis
+number_of_genes: 14
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 219: Neurotransmitter disorders
+number_of_genes: 18
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 513: Non-acute porphyrias
+number_of_genes: 9
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 296: Non-CF bronchiectasis
+number_of_genes: 17
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 253: Non-syndromic familial congenital anorectal malformations
+number_of_genes: 51
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 189: Non-syndromic hypotrichosis
+number_of_genes: 13
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 128: Ocular and oculo-cutaneous albinism
+number_of_genes: 15
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 294: Ocular coloboma
+number_of_genes: 65
+number_of_strs: 0
+number_of_regions: 2
+
+Panel 722: Ophthalmological ciliopathies
+number_of_genes: 93
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 186: Optic neuropathy
+number_of_genes: 63
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 196: Osteogenesis imperfecta
+number_of_genes: 190
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 943: Osteopetrosis
+number_of_genes: 20
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 117: Ovarian cancer pertinent cancer susceptibility
+number_of_genes: 9
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 486: Paediatric disorders
+number_of_genes: 6909
+number_of_strs: 17
+number_of_regions: 72
+
+Panel 479: Paediatric disorders - additional genes
+number_of_genes: 56
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 79: Paediatric motor neuronopathies
+number_of_genes: 39
+number_of_strs: 2
+number_of_regions: 5
+
+Panel 288: Pain syndromes
+number_of_genes: 30
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 215: Palmoplantar keratoderma and erythrokeratodermas
+number_of_genes: 46
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 556: Palmoplantar keratodermas
+number_of_genes: 69
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 386: Pancreatitis
+number_of_genes: 18
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 86: Parathyroid Cancer
+number_of_genes: 7
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 39: Parkinson Disease and Complex Parkinsonism
+number_of_genes: 71
+number_of_strs: 9
+number_of_regions: 0
+
+Panel 541: Paroxysmal central nervous system disorders
+number_of_genes: 85
+number_of_strs: 5
+number_of_regions: 1
+
+Panel 24: Peeling skin syndrome
+number_of_genes: 13
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 60: Periodic fever syndromes
+number_of_genes: 30
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 114: Peroxisomal disorders
+number_of_genes: 38
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 94: PHACE(S) syndrome
+number_of_genes: 6
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 559: Pigmentary skin disorders
+number_of_genes: 129
+number_of_strs: 0
+number_of_regions: 1
+
+Panel 483: Pituitary hormone deficiency
+number_of_genes: 52
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 311: Pityriasis rubra pilaris
+number_of_genes: 1
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 105: Pneumothorax - familial
+number_of_genes: 35
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 653: Polycystic liver disease interim
+number_of_genes: 20
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 539: Possible mitochondrial disorder - nuclear genes
+number_of_genes: 378
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 178: Primary ciliary disorders
+number_of_genes: 144
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 398: Primary immunodeficiency
+number_of_genes: 526
+number_of_strs: 0
+number_of_regions: 2
+
+Panel 65: Primary lymphoedema
+number_of_genes: 56
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 155: Primary ovarian insufficiency
+number_of_genes: 69
+number_of_strs: 1
+number_of_regions: 0
+
+Panel 566: Primary pigmented nodular adrenocortical disease
+number_of_genes: 4
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 506: Progressive cardiac conduction disease
+number_of_genes: 21
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 17: Prostate cancer pertinent cancer susceptibility
+number_of_genes: 5
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 106: Proteinuric renal disease
+number_of_genes: 108
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 193: Pulmonary arterial hypertension
+number_of_genes: 21
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 531: Pyruvate dehydrogenase (PDH) deficiency
+number_of_genes: 26
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 247: Radial dysplasia
+number_of_genes: 60
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 518: Rare anaemia
+number_of_genes: 99
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 565: Rare genetic inflammatory skin disorders
+number_of_genes: 68
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 150: Rare multisystem ciliopathy disorders
+number_of_genes: 205
+number_of_strs: 0
+number_of_regions: 2
+
+Panel 728: Rare multisystem ciliopathy Super panel
+number_of_genes: 327
+number_of_strs: 0
+number_of_regions: 2
+
+Panel 48: RASopathies
+number_of_genes: 24
+number_of_strs: 0
+number_of_regions: 1
+
+Panel 8: Refuted genes
+number_of_genes: 5
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 154: Renal cancer pertinent cancer susceptibility
+number_of_genes: 10
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 725: Renal ciliopathies
+number_of_genes: 101
+number_of_strs: 0
+number_of_regions: 2
+
+Panel 902: Renal superpanel - broad
+number_of_genes: 985
+number_of_strs: 0
+number_of_regions: 11
+
+Panel 903: Renal superpanel - narrow
+number_of_genes: 545
+number_of_strs: 0
+number_of_regions: 5
+
+Panel 292: Renal tubulopathies
+number_of_genes: 62
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 550: Respiratory ciliopathies including non-CF bronchiectasis
+number_of_genes: 76
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 307: Retinal disorders
+number_of_genes: 404
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 600: Rhabdoid tumour predisposition
+number_of_genes: 2
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 66: Rhabdomyolysis and metabolic muscle disorders
+number_of_genes: 61
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 217: Sarcoma cancer susceptibility
+number_of_genes: 33
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 734: Sarcoma susceptibility
+number_of_genes: 42
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 98: Segmental overgrowth disorders
+number_of_genes: 17
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 130: Severe early-onset obesity
+number_of_genes: 42
+number_of_strs: 0
+number_of_regions: 3
+
+Panel 262: Severe familial anorexia
+number_of_genes: 1
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 228: Severe hypertriglyceridaemia
+number_of_genes: 8
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 162: Severe microcephaly
+number_of_genes: 236
+number_of_strs: 0
+number_of_regions: 5
+
+Panel 62: Severe multi-system atopic disease with high IgE
+number_of_genes: 8
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 921: Severe Paediatric Disorders
+number_of_genes: 2691
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 224: Short QT syndrome
+number_of_genes: 40
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 199: Silver Russell syndrome
+number_of_genes: 9
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 726: Skeletal ciliopathies
+number_of_genes: 68
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 309: Skeletal dysplasia
+number_of_genes: 602
+number_of_strs: 1
+number_of_regions: 6
+
+Panel 229: Skeletal Muscle Channelopathies
+number_of_genes: 22
+number_of_strs: 2
+number_of_regions: 0
+
+Panel 542: Skeletal muscle channelopathy
+number_of_genes: 17
+number_of_strs: 2
+number_of_regions: 0
+
+Panel 3: Stickler syndrome
+number_of_genes: 10
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 180: Structural basal ganglia disorders
+number_of_genes: 76
+number_of_strs: 1
+number_of_regions: 0
+
+Panel 509: Structural eye disease
+number_of_genes: 486
+number_of_strs: 0
+number_of_regions: 2
+
+Panel 841: Sudden cardiac death
+number_of_genes: 269
+number_of_strs: 1
+number_of_regions: 0
+
+Panel 45: Sudden death in young people
+number_of_genes: 35
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 551: Surfactant deficiency
+number_of_genes: 8
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 82: Testicular cancer pertinent cancer susceptibility
+number_of_genes: 0
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 700: Thoracic aortic aneurysm and dissection
+number_of_genes: 67
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 1: Thoracic aortic aneurysm or dissection
+number_of_genes: 65
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 122: Thoracic dystrophies
+number_of_genes: 133
+number_of_strs: 1
+number_of_regions: 0
+
+Panel 945: Thrombocythaemia
+number_of_genes: 5
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 516: Thrombophilia
+number_of_genes: 21
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 421: Thyroid cancer pertinent cancer susceptibility
+number_of_genes: 5
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 548: Tubulointerstitial kidney disease
+number_of_genes: 25
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 243: Tumour predisposition - childhood onset
+number_of_genes: 117
+number_of_strs: 0
+number_of_regions: 1
+
+Panel 195: Ultra-rare undescribed monogenic disorders
+number_of_genes: 0
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 302: Undiagnosed metabolic disorders
+number_of_genes: 752
+number_of_strs: 1
+number_of_regions: 1
+
+Panel 216: Undiagnosed monogenic disorder seen in a specialist genetics clinic
+number_of_genes: 0
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 156: Unexplained kidney failure in young people
+number_of_genes: 170
+number_of_strs: 0
+number_of_regions: 3
+
+Panel 678: Unexplained paediatric onset end-stage renal disease
+number_of_genes: 232
+number_of_strs: 0
+number_of_regions: 3
+
+Panel 273: Upper gastrointestinal cancer pertinent cancer susceptibility
+number_of_genes: 4
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 101: VACTERL-like phenotypes
+number_of_genes: 62
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 563: Vascular skin disorders
+number_of_genes: 37
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 222: Vici Syndrome and other autophagy disorders
+number_of_genes: 12
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 928: Viral resistance
+number_of_genes: 24
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 579: White matter disorders - adult onset
+number_of_genes: 89
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 476: White matter disorders and cerebral calcification - narrow panel
+number_of_genes: 234
+number_of_strs: 0
+number_of_regions: 0
+
+Panel 496: White matter disorders - childhood onset
+number_of_genes: 4194
+number_of_strs: 17
+number_of_regions: 59
+
+Panel 77: Xeroderma pigmentosum, Trichothiodystrophy or Cockayne syndrome
+number_of_genes: 21
+number_of_strs: 0
+number_of_regions: 0

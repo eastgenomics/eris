@@ -1,0 +1,63 @@
+
+Information is from the PanelApp handbook
+https://panelapp.genomicsengland.co.uk/media/files/PanelApp_Handbook_V18_120210506.pdf
+
+
+PENETRANCE
+
+This is set as a default to "complete". Please provide information regarding the penetrance in the Comments box in the Evaluate Gene tool.
+
+
+MODE OF INHERITANCE
+
+- MONOALLELIC, autosomal or pseudoautosomal, not imprinted: A variant on one allele of this gene can cause the disease, and imprinting has not been implicated.
+-MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed): A variant on the paternally-inherited allele of this gene can cause the disease, if the alternate allele is imprinted (function muted).
+-MONOALLELIC, autosomal or pseudoautosomal, paternally imprinted (maternal allele expressed): A variant on the maternally-inherited allele of this gene can cause the disease, if the alternate allele is imprinted (function muted).
+-MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown: A variant on one allele of this gene can cause the disease. This is the default used for autosomal dominant mode of inheritance where no knowledge of the imprinting status of the gene required to cause the disease is known. Mapped to the following commonly used terms from different sources: autosomal dominant, dominant, AD, DOMINANT.
+-BIALLELIC, autosomal or pseudoautosomal: A variant on both alleles of this gene is required to cause the disease. Mapped to the following commonly used terms from different sources: autosomal recessive, recessive, AR, RECESSIVE.
+-BOTH monoallelic and biallelic, autosomal or pseudoautosomal: The disease can be caused by a variant on one or both alleles of this gene. Mapped to the following commonly used terms from different sources: autosomal recessive or autosomal dominant, recessive or dominant, AR/AD, AD/AR, DOMINANT/RECESSIVE, RECESSIVE/DOMINANT.
+-BOTH monoallelic and biallelic, autosomal or pseudoautosomal (but BIALLELIC mutations cause a more SEVERE disease form), autosomal or pseudoautosomal: A variant on one allele of this gene can cause the disease, however a variant on both alleles of this gene can result in a more severe form of the disease/phenotype.
+-X-LINKED: hemizygous mutation in males, biallelic mutations in females: A variant in this gene can cause the disease in males as they have one X-chromosome allele, whereas a variant on both X-chromosome alleles is required to cause the disease in females. Mapped to the following commonly used term from different sources: X-linked recessive, XLR, hemizygous.
+-X linked: hemizygous mutation in males, monoallelic mutations in females may cause disease (may be less severe, later onset than males): A variant in this gene can cause the disease in males as they have one X-chromosome allele. A variant on one allele of this gene may also cause the disease in females, though the disease/phenotype may be less severe and may have a later-onset than is seen in males. X-linked inactivation and mosaicism in different tissues complicate whether a female presents with the disease, and can change over their lifetime. This term is the default setting used for X-linked genes, where it is not known definitely whether females require a variant on each allele of this gene in order to be affected. Mapped to the following commonly used terms from different sources: X-linked dominant, XLD, x-linked, X-LINKED, X-linked.
+-MITOCHONDRIAL: The gene is in the mitochondrial genome and variants within this can cause this disease, maternally inherited. Mapped to the following commonly used term from different sources: Mitochondrial.
+-Unknown: Mapped to the following commonly used terms from different sources: Unknown, NA, information not provided.
+-Other - please specify in evaluation comments: For example, if the mode of inheritance is digenic, please indicate this in the comments and which other gene is involved.
+
+
+MODE OF PATHOGENICITY
+
+For each gene in a gene panel in PanelApp, it is assumed that loss-of-function variants in this gene can cause the disease/phenotype unless an exception to this rule is known. In the PanelApp, we would like to collect information regarding exceptions to this rule. An example of an exception is the PCSK9 gene, where loss-of-function variants are not relevant for a hypercholesterolemic phenotype as they are associated with increased LDL-cholesterol uptake via LDLR PMID: 25911073.
+
+In the PanelApp, we classify loss-of-function variants as those with the following Sequence Ontology (SO) terms: transcript ablation, splice acceptor variant, splice donor variant, stop gained, frameshift variant, stop lost, initiator codon variant/start lost.
+
+SO Terms and descriptions sourced from Ensembl:
+
+-transcript ablation: A feature ablation whereby the deleted region includes a transcript feature (SO:0001893)
+-splice acceptor variant: A splice variant that changes the 2 base region at the 3' end of an intron (SO:0001574)
+-splice donor variant: A splice variant that changes the 2 base region at the 5' end of an intron (SO:0001575)
+-stop gained: A sequence variant whereby at least one base of a codon is changed, resulting in a premature stop codon, leading to a shortened transcript (SO:0001587)
+-frameshift variant: A sequence variant which causes a disruption of the translational reading frame, because the number of nucleotides inserted or deleted is not a multiple of three (SO:0001589)
+-stop lost: A sequence variant where at least one base of the terminator codon (stop) is changed, resulting in an elongated transcript (SO:0001578)
+-initiator codon variant: A codon variant that changes at least one base of the first codon of a transcript/start lost: a codon variant that changes at least one base of the canonical start codon (SO:0001582)
+
+---------------------------------------------
+
+REGION-SPECIFIC INFORMATION
+
+'Regions' refer to CNVs
+All region names are prefixed with ‘ISCA’ and end with either ‘-Loss’ or ‘-Gain’.
+
+CNVs in PanelApp only have GRCh38 coordinates
+
+Haploinsufficiency score is for region loss and comes from ClinGen
+Triplosensitivity score is for region gain and comes from ClinGen
+
+Variant type for regions can be cnv_loss or cnv_gain
+
+
+REQUIRED PERCENT OF OVERLAP
+
+Note that the ‘Required percent of overlap’ score has a default value of 80%. This score is
+intended for internal use only as it relates to the Genomics England internal CNV calling
+algorithm, and may be different for different CNV detection methods
+

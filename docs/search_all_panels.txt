@@ -1,0 +1,86 @@
+Possible confidence values:
+
+['0', '1', '2', '3']
+
+Possible MOI values:
+
+'BIALLELIC, autosomal or pseudoautosomal',
+'MONOALLELIC, autosomal or pseudoautosomal',
+'MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted',
+'MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown', 
+'MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)', 
+'MONOALLELIC, autosomal or pseudoautosomal, paternally imprinted (maternal allele expressed)',
+'MONOALLELIC, autosomal or pseudoautosomal, paternally imprinted (maternal allele expressed) ',
+'BOTH monoallelic and biallelic, autosomal or pseudoautosomal',
+'BOTH monoallelic and biallelic (but BIALLELIC mutations cause a more SEVERE disease form), autosomal or pseudoautosomal',
+'X-LINKED: hemizygous mutation in males, biallelic mutations in females',
+'X-LINKED: hemizygous mutation in males, monoallelic mutations in females may cause disease (may be less severe, later onset than males)', 
+ 'X linked: hemizygous mutation in males, monoallelic mutations in females may cause disease (may be less severe, later onset than males)',
+'MITOCHONDRIAL',
+'Other - please specifiy in evaluation comments',
+'Other - please specify in evaluation comments',
+'Other',
+'Unknown',
+''
+
+Possible MOP values:
+
+'gain-of-function',
+'loss-of-function (truncating variants and curated list of variants)', 
+'Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype -please provide details in the comments',
+'Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments', 
+'Other - please provide details in the comments',
+'Other - please provide details in the comments ',
+'other - please provide details in the comments',
+'Other',
+'FALSE',
+' ',
+'',
+None
+
+Possible penetrance values:
+
+'Complete',
+'Incomplete',
+'unknown',
+None
+
+STRs
+
+Possible entity names:
+
+['AR_CAG', 'ATN1_CAG', 'ATXN10_ATTCT', 'ATXN1_CAG', 'ATXN2_CAG', 'ATXN3_CAG', 'ATXN7_CAG', 'C9orf72_GGGGCC', 'CACNA1A_CAG', 'CNBP_CCTG', 'CSTB_CCCCGCCCCGCG', 'DMPK_CTG', 'FMR1_CGG', 'FXN_GAA', 'GLS_GCA', 'HTT_CAG', 'JPH3_CTG', 'NOP56_GGCCTG', 'NOP56_GGCCTGTT', 'PPP2R2B_CAG', 'TBP_CAG']
+
+Possible sequences:
+
+['ATTCT', 'CAG', 'CAGG', 'CCCCGCCCCGCG', 'CGG', 'CTG', 'GAA', 'GCA', 'GGCCTG', 'GGCCTGTT', 'GGGGCC']
+
+Possible normal counts:
+
+[15, 18, 19, 24, 27, 28, 29, 32, 33, 35, 36, 41, 44, 45, 50, 55]
+
+Possible pathogenic counts:
+
+[20, 30, 35, 37, 38, 40, 43, 45, 48, 49, 50, 60, 66, 75, 200, 400, 650, 800]
+
+Regions
+
+Possible entity names:
+
+['ISCA-37390-Loss', 'ISCA-37392-Gain', 'ISCA-37392-Loss', 'ISCA-37393-Gain', 'ISCA-37394-Loss', 'ISCA-37396-Loss', 'ISCA-37397-Gain', 'ISCA-37397-Loss', 'ISCA-37400-Gain', 'ISCA-37400-Loss', 'ISCA-37401-Loss', 'ISCA-37404-Gain', 'ISCA-37404-Loss', 'ISCA-37405-Loss', 'ISCA-37406-Loss', 'ISCA-37408-Loss', 'ISCA-37411-Loss', 'ISCA-37415-Gain', 'ISCA-37415-Loss', 'ISCA-37417-Loss', 'ISCA-37418-Gain', 'ISCA-37418-Loss', 'ISCA-37420-Loss', 'ISCA-37421-Gain', 'ISCA-37421-Loss', 'ISCA-37423-Gain', 'ISCA-37423-Loss', 'ISCA-37424-Loss', 'ISCA-37425-Gain', 'ISCA-37425-Loss', 'ISCA-37429-Loss', 'ISCA-37430-Gain', 'ISCA-37430-Loss', 'ISCA-37431-Gain', 'ISCA-37431-Loss', 'ISCA-37432-Gain', 'ISCA-37432-Loss', 'ISCA-37433-Gain', 'ISCA-37433-Loss', 'ISCA-37434-Loss', 'ISCA-37436-Gain', 'ISCA-37436-Loss', 'ISCA-37439-Gain', 'ISCA-37440-Loss', 'ISCA-37441-Loss', 'ISCA-37442-Gain', 'ISCA-37443-Loss', 'ISCA-37446-Gain', 'ISCA-37446-Loss', 'ISCA-37467-Gain', 'ISCA-37468-Loss', 'ISCA-37478-Gain', 'ISCA-37478-Loss', 'ISCA-37486-Loss', 'ISCA-37493-Loss', 'ISCA-37494-Gain', 'ISCA-37494-Loss', 'ISCA-37500-Loss', 'ISCA-37501-Loss', 'ISCA-46290-Gain', 'ISCA-46295-Loss', 'ISCA-46299-Gain', 'ISCA-46302-Gain']
+
+Possible haplo scores:
+
+['', '3', '30', None]
+
+Possible triple scores:
+
+['', '2', '3', None]
+
+Possible overlap percents:
+
+[60]
+
+Possible variant types:
+
+['cnv_gain', 'cnv_loss']
