@@ -73,8 +73,11 @@ class Panel(models.Model):
     """ Defines a single internal panel """
 
     external_id = models.TextField(verbose_name='External panel ID')
-    source = models.TextField(verbose_name='Panel source')
-    version = models.CharField(verbose_name='Panel version', max_length = 10)
+    panel_source = models.TextField(verbose_name='Panel source')
+
+    panel_version = models.CharField(
+        verbose_name='Panel version',
+        max_length = 10)
 
     reference_genome_id = models.ForeignKey(
         ReferenceGenome,
@@ -85,8 +88,8 @@ class Panel(models.Model):
         verbose_name_plural = 'panels'
         indexes = [models.Index(fields=[
             'external_id',
-            'source',
-            'version',
+            'panel_source',
+            'panel_version',
             'reference_genome_id'])]
 
     def __str__(self):
