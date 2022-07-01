@@ -62,7 +62,7 @@ class Data:
             panel [dict]: PanelApp data on one panel
 
         returns:
-            info_dict [dict]: dict of panel info
+            info_dict [dict]: initial dict of core panel info
         """
 
         info_dict = {

@@ -83,7 +83,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': BASE_DIR / 'db.mysql',
         'OPTIONS': {
-            'init_command': 'SET default_storage_engine=INNODB',}
+            'init_command': 'SET default_storage_engine=INNODB',},
+        'ATOMIC_REQUESTS' : True,
     }
 }
 

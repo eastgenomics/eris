@@ -10,49 +10,6 @@ https://github.com/eastgenomics/panel_requests/tree/dev
 from django.db import models
 
 
-class ClinicalIndication(models.Model):
-    """ Defines a single clinical indication """
-
-    code = models.CharField(verbose_name = 'CI code', max_length = 10)
-    name = models.TextField(verbose_name = 'CI name')
-    gemini_name = models.TextField(verbose_name = 'Gemini name')
-    source = models.TextField(verbose_name = 'CI source')
-
-    class Meta:
-        db_table = 'clinical_indication'
-        verbose_name_plural = 'clinical_indications'
-        indexes = [models.Index(fields=[
-            'code',
-            'name',
-            'gemini_name',
-            'source'])]
-
-    def __str__(self):
-        return self.id
-
-
-class ClinicalIndicationSource(models.Model):
-    """ Defines a source for a clinical indication """
-
-    clinical_indication_id = models.ForeignKey(
-        ClinicalIndication,
-        verbose_name='Clinical indication')
-
-    source = models.TextField(verbose_name = 'Source name')
-    date = models.DateField(verbose_name = 'Date')
-
-    class Meta:
-        db_table = 'clinical_indication_source'
-        verbose_name_plural = 'clinical_indication_sources'
-        indexes = [models.Index(fields=[
-            'clinical_indication_id',
-            'source',
-            'date'])]
-
-    def __str__(self):
-        return self.id
-
-
 class ReferenceGenome(models.Model):
     """ Defines a reference genome build """
 
@@ -96,20 +53,62 @@ class Panel(models.Model):
         return self.id
 
 
+class CiPanelAssociationSource(models.Model):
+    """ Defines a source for the association between a specific clinical
+    indication and a specific panel """
+
+    source = models.TextField(verbose_name = 'Source name')
+    date = models.DateField(verbose_name = 'Date')
+
+    class Meta:
+        db_table = 'ci_panel_association_source'
+        verbose_name_plural = 'ci_panel_association_sources'
+        indexes = [models.Index(fields=[
+            'source',
+            'date',])]
+
+    def __str__(self):
+        return self.id
+
+
+class ClinicalIndication(models.Model):
+    """ Defines a single clinical indication """
+
+    code = models.CharField(verbose_name = 'CI code', max_length = 10)
+    name = models.TextField(verbose_name = 'CI name')
+    gemini_name = models.TextField(verbose_name = 'Gemini name')
+
+    class Meta:
+        db_table = 'clinical_indication'
+        verbose_name_plural = 'clinical_indications'
+        indexes = [models.Index(fields=[
+            'code',
+            'name',
+            'gemini_name',])]
+
+    def __str__(self):
+        return self.id
+
+
 class ClinicalIndicationPanel(models.Model):
     """ Defines an association between a clinical indication and a panel """
+
+    source_id = models.ForeignKey(
+        CiPanelAssociationSource,
+        verbose_name = 'CI-panel association source')
 
     clinical_indication_id = models.ForeignKey(
         ClinicalIndication,
         verbose_name = 'Clinical indication')
 
     panel_id = models.ForeignKey(Panel, verbose_name = 'Panel')
-    current = models.BooleanField(verbose_name = 'Currently in use')
+    current = models.BooleanField(verbose_name = 'Association is current')
 
     class Meta:
         db_table = 'clinical_indication_panel'
         verbose_name_plural = 'clinical_indication_panels'
         indexes = [models.Index(fields=[
+            'source_id',
             'clinical_indication_id',
             'panel_id',
             'current'])]
