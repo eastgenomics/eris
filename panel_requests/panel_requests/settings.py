@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 
 import os
-from config import SECRET_KEY
+from config import SECRET_KEY, DB_USER, DB_PASSWORD
 from pathlib import Path
 
 
@@ -81,10 +81,13 @@ WSGI_APPLICATION = 'panel_requests.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': BASE_DIR / 'db.mysql',
-        'OPTIONS': {
-            'init_command': 'SET default_storage_engine=INNODB',},
+        'OPTIONS': {'init_command' : 'SET storage_engine=INNODB;'},
         'ATOMIC_REQUESTS' : True,
+        'NAME': 'panel_requests',
+        'USER' : DB_USER,
+        'PASSWORD' : DB_PASSWORD,
+        'HOST' : '',
+        'PORT' : '',
     }
 }
 
