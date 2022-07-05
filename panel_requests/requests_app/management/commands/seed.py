@@ -50,9 +50,14 @@ Usage examples:
 
 
 from django.core.management.base import BaseCommand
-import panel_requests.requests_app.management.commands.parse_pa as parse_pa
-import panel_requests.requests_app.management.commands.parse_form as parse_form
-import panel_requests.requests_app.management.commands.insert as inserter
+
+from . import parse_pa as parse_pa
+from . import parse_form as parse_form
+from . import insert as inserter
+
+# import panel_requests.requests_app.management.commands.parse_pa as parse_pa
+# import panel_requests.requests_app.management.commands.parse_form as parse_form
+# import panel_requests.requests_app.management.commands.insert as inserter
 
 
 class Command(BaseCommand):
@@ -109,12 +114,12 @@ class Command(BaseCommand):
 
 
     def import_td_data(self, td_source, td_current):
-        """ Import test directory data from <YUJIN'S SCRIPT> """
+        """ Import test directory data """
 
         # ...
         # return parsed_data
 
-        """ this function needs to import the output of Yujin's script
+        """ this function needs to import the output of Yu-jin's script
         so it can be fed to the inserter """
 
 
@@ -157,20 +162,23 @@ class Command(BaseCommand):
         specified source, then calls insert.py to insert cleaned data
         into the database. """
 
+        print('Supplied args: {} \
+            \nSupplied kwargs: {}'.format(args, kwargs))
+
         # source must be specified
 
-        if args['source']:
+        if kwargs['source']:
 
-            source = args['source'][0]
+            source = kwargs['source'][0]
 
             # import test directory data (td_source and td_current required)
 
             if (source == 'd') and \
-                (kwargs['--td_source']) and \
-                (kwargs['--td_current']):
+                (kwargs['td_source']) and \
+                (kwargs['td_current']):
 
-                td_source = kwargs['--td_source'][0]
-                td_current = kwargs['--td_current'][0]
+                td_source = kwargs['td_source'][0]
+                td_current = kwargs['td_current'][0]
 
                 parsed_data = self.import_td_data(td_source, td_current)
                 type = 'directory'
@@ -179,7 +187,7 @@ class Command(BaseCommand):
             # import and parse data from a request form (filepath required)
 
             if (source == 'f') and \
-                (kwargs['--filepath']):
+                (kwargs['filepath']):
 
                 # filepath = kwargs['--filepath'][0]
 
@@ -192,12 +200,12 @@ class Command(BaseCommand):
             # import and parse an unmodified PanelApp panel (panel id required)
 
             elif (source == 'p') and \
-                (kwargs['--panel_id']):
+                (kwargs['panel_id']):
 
-                panel_id = kwargs['--panel_id'][0]
+                panel_id = kwargs['panel_id'][0]
 
-                if kwargs['--panel_version']:
-                    panel_version = kwargs['--panel_version'][0]
+                if kwargs['panel_version']:
+                    panel_version = kwargs['panel_version'][0]
 
                 else:
                     panel_version = None  # gets current panel version

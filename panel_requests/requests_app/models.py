@@ -15,13 +15,14 @@ class ReferenceGenome(models.Model):
 
     reference_build = models.CharField(
         verbose_name = 'Genome build',
-        max_length = 255,)
+        max_length = 255,
+        unique = True,)
 
     class Meta:
         db_table = 'reference_genome'
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class Panel(models.Model):
@@ -46,14 +47,9 @@ class Panel(models.Model):
 
     class Meta:
         db_table = 'panel'
-        indexes = [models.Index(fields=[
-            'external_id',
-            'panel_source',
-            'panel_version',
-            'reference_genome'])]
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class CiPanelAssociationSource(models.Model):
@@ -65,12 +61,9 @@ class CiPanelAssociationSource(models.Model):
 
     class Meta:
         db_table = 'ci_panel_association_source'
-        indexes = [models.Index(fields=[
-            'source',
-            'date',])]
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class ClinicalIndication(models.Model):
@@ -85,13 +78,9 @@ class ClinicalIndication(models.Model):
 
     class Meta:
         db_table = 'clinical_indication'
-        indexes = [models.Index(fields=[
-            'code',
-            'name',
-            'gemini_name',])]
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class ClinicalIndicationPanel(models.Model):
@@ -116,14 +105,9 @@ class ClinicalIndicationPanel(models.Model):
 
     class Meta:
         db_table = 'clinical_indication_panel'
-        indexes = [models.Index(fields=[
-            'source',
-            'clinical_indication',
-            'panel',
-            'current'])]
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class ClinicalIndicationPanelUsage(models.Model):
@@ -140,25 +124,25 @@ class ClinicalIndicationPanelUsage(models.Model):
 
     class Meta:
         db_table = 'clinical_indication_panel_usage'
-        indexes = [models.Index(fields=[
-            'clinical_indication_panel',
-            'start_date',
-            'end_date'])]
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class Hgnc(models.Model):
     """ Defines a single HGNC ID (for a gene) """
 
-    id = models.IntegerField(primary_key = True)
+    id = models.CharField(
+        primary_key = True,
+        unique = True,
+        verbose_name = 'HGNC ID',
+        max_length = 255)
 
     class Meta:
         db_table = 'hgnc'
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class Gene(models.Model):
@@ -173,20 +157,23 @@ class Gene(models.Model):
         db_table = 'gene'
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class Confidence(models.Model):
     """ Defines the confidence level with which a gene or region is
     associated with a panel """
 
-    confidence_level = models.IntegerField(verbose_name = 'Confidence level')
+    confidence_level = models.CharField(
+        verbose_name = 'Confidence level',
+        unique = True,
+        max_length = 255,)
 
     class Meta:
         db_table = 'confidence'
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class Penetrance(models.Model):
@@ -195,13 +182,14 @@ class Penetrance(models.Model):
 
     penetrance = models.TextField(
         verbose_name = 'Penetrance',
-        max_length = 255,)
+        max_length = 255,
+        unique = True,)
 
     class Meta:
         db_table = 'penetrance'
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class ModeOfInheritance(models.Model):
@@ -210,14 +198,15 @@ class ModeOfInheritance(models.Model):
 
     mode_of_inheritance = models.TextField(
         verbose_name = 'Mode of inheritance',
-        max_length = 255,)
+        max_length = 255,
+        unique = True,)
 
     class Meta:
         db_table = 'mode_of_inheritance'
         verbose_name_plural = 'modes_of_inheritance'
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class ModeOfPathogenicity(models.Model):
@@ -226,14 +215,15 @@ class ModeOfPathogenicity(models.Model):
 
     mode_of_pathogenicity = models.TextField(
         verbose_name = 'Mode of pathogenicity',
-        max_length = 255,)
+        max_length = 255,
+        unique = True,)
 
     class Meta:
         db_table = 'mode_of_pathogenicity'
         verbose_name_plural = 'modes_of_pathogenicity'
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class PanelGene(models.Model):
@@ -275,28 +265,24 @@ class PanelGene(models.Model):
 
     class Meta:
         db_table = 'panel_gene'
-        indexes = [models.Index(fields=[
-            'panel',
-            'gene',
-            'confidence',
-            'moi',
-            'mop',
-            'penetrance'])]
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class Transcript(models.Model):
     """ Defines a single transcript by RefSeq ID """
 
-    refseq_id = models.CharField(verbose_name = 'RefSeq ID', max_length = 255)
+    refseq_id = models.CharField(
+        verbose_name = 'RefSeq ID',
+        max_length = 255,
+        unique = True,)
 
     class Meta:
         db_table = 'transcript'
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class PanelGeneTranscript(models.Model):
@@ -319,68 +305,73 @@ class PanelGeneTranscript(models.Model):
 
     class Meta:
         db_table = 'panel_gene_transcript'
-        indexes = [models.Index(fields=[
-            'panel_gene',
-            'transcript'])]
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class Haploinsufficiency(models.Model):
     """ Defines the haploinsufficiency score of the associated phenotype
     in the context of the associated clinical indication """
 
-    haploinsufficiency = models.IntegerField(
-        verbose_name = 'Haploinsufficiency score')
+    haploinsufficiency = models.CharField(
+        verbose_name = 'Haploinsufficiency score',
+        unique = True,
+        max_length = 255,)
 
     class Meta:
         db_table = 'haploinsufficiency'
         verbose_name_plural = 'haploinsufficiencies'
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class Triplosensitivity(models.Model):
     """ Defines the triplosensitivity score of the associated phenotype
     in the context of the associated clinical indication """
 
-    triplosensitivity = models.IntegerField(
-        verbose_name = 'Triplosensitivity score')
+    triplosensitivity = models.CharField(
+        verbose_name = 'Triplosensitivity score',
+        unique = True,
+        max_length = 255,)
 
     class Meta:
         db_table = 'triplosensitivity'
         verbose_name_plural = 'triplosensitivities'
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class RequiredOverlap(models.Model):
     """ GEL internal field relating to CNV detection method """
 
-    required_overlap = models.IntegerField(
-        verbose_name = 'Required percent overlap')
+    required_overlap = models.CharField(
+        verbose_name = 'Required percent overlap',
+        unique = True,
+        max_length = 255,)
 
     class Meta:
         db_table = 'required_overlap'
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class VariantType(models.Model):
     """ Defines the type of variant  """
 
     variant_type = models.CharField(
-        verbose_name = 'Variant type', max_length = 255)
+        verbose_name = 'Variant type',
+        max_length = 255,
+        unique = True,)
 
     class Meta:
         db_table = 'variant_type'
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class Region(models.Model):
@@ -388,15 +379,15 @@ class Region(models.Model):
 
     name = models.CharField(verbose_name = 'Region name', max_length = 255)
     chrom = models.CharField(verbose_name = 'Chromosome', max_length = 255)
-    start = models.IntegerField(verbose_name = 'Region start')
-    end = models.IntegerField(verbose_name = 'Region end')
+    start = models.CharField(verbose_name = 'Region start', max_length = 255)
+    end = models.CharField(verbose_name = 'Region end', max_length = 255)
+    type = models.CharField(verbose_name = 'Region type', max_length = 255)
 
     class Meta:
         db_table = 'region'
-        indexes = [models.Index(fields=['name', 'chrom', 'start', 'end'])]
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class PanelRegion(models.Model):
@@ -458,20 +449,9 @@ class PanelRegion(models.Model):
 
     class Meta:
         db_table = 'panel_region'
-        indexes = [models.Index(fields=[
-            'panel',
-            'confidence',
-            'moi',
-            'mop',
-            'penetrance',
-            'region',
-            'haplo',
-            'triplo',
-            'overlap',
-            'vartype'])]
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class RegionAnnotation(models.Model):
@@ -489,13 +469,6 @@ class RegionAnnotation(models.Model):
 
     class Meta:
         db_table = 'region_annotation'
-        indexes = [models.Index(fields=[
-            'region',
-            'attribute',
-            'value',
-            'timestamp',
-            'source',
-            ])]
 
     def __str__(self):
-        return self.id
+        return str(self.id)

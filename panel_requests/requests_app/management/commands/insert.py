@@ -110,13 +110,13 @@ def insert_data(parsed_data, data_type):
             external_id = parsed_data['external_id'],
             panel_source = parsed_data['panel_source'],
             panel_version = parsed_data['panel_version'],
-            reference_genome_id = ref_genome_37,)
+            reference_genome_id = ref_genome_37.id,)
 
         panel_38, created = Panel.objects.get_or_create(
             external_id = parsed_data['external_id'],
             panel_source = parsed_data['panel_source'],
             panel_version = parsed_data['panel_version'],
-            reference_genome_id = ref_genome_38,)
+            reference_genome_id = ref_genome_38.id,)
 
         # for each panel gene, populate the gene attribute models
 
@@ -126,7 +126,7 @@ def insert_data(parsed_data, data_type):
                 id = single_gene['hgnc_id'],)
 
             gene, created = Gene.objects.get_or_create(
-                hgnc_id = hgnc,)
+                hgnc_id = hgnc.id,)
 
             confidence, created = Confidence.objects.get_or_create(
                 confidence_level = single_gene['confidence_level'],)
@@ -134,36 +134,55 @@ def insert_data(parsed_data, data_type):
             moi, created = ModeOfInheritance.objects.get_or_create(
                 mode_of_inheritance = single_gene['mode_of_inheritance'],)
 
-            mop, created = ModeOfPathogenicity.objects.get_or_create(
-                mode_of_pathogenicity = single_gene['mode_of_pathogenicity'],)
+            # value for 'mode_of_pathogenicity' might be empty
+            if single_gene['mode_of_pathogenicity']:
+                mop, created = ModeOfPathogenicity.objects.get_or_create(
+                    mode_of_pathogenicity = single_gene[
+                        'mode_of_pathogenicity'],)
 
-            penetrance, created = Penetrance.objects.get_or_create(
-                penetrance = single_gene['penetrance'],)
+            else:
+                mop, created = ModeOfPathogenicity.objects.get_or_create(
+                    mode_of_pathogenicity = 'None',)
 
-            transcript, created = Transcript.objects.get_or_create(
-                refseq_id = single_gene['transcript'],)
+            # value for 'penetrance' might be empty
+            if single_gene['penetrance']:
+                penetrance, created = Penetrance.objects.get_or_create(
+                    penetrance = single_gene['penetrance'],)
+
+            else:
+                penetrance, created = Penetrance.objects.get_or_create(
+                    penetrance = 'None',)
+
+            # value for 'transcript' might be empty
+            if single_gene['transcript']:
+                transcript, created = Transcript.objects.get_or_create(
+                    refseq_id = single_gene['transcript'],)
+
+            else:
+                transcript, created = Transcript.objects.get_or_create(
+                    refseq_id = 'None',)
 
             # link the gene to both panel instances (37 and 38)
 
             for panel_instance in panel_37, panel_38:
 
                 panel_gene, created = PanelGene.objects.get_or_create(
-                    panel_id = panel_instance,
-                    gene_id = gene,
-                    confidence_id = confidence,
-                    moi_id = moi,
-                    mop_id = mop,
-                    penetrance_id = penetrance,
+                    panel_id = panel_instance.id,
+                    gene_id = gene.id,
+                    confidence_id = confidence.id,
+                    moi_id = moi.id,
+                    mop_id = mop.id,
+                    penetrance_id = penetrance.id,
                     justification = single_gene['gene_justification'],)
 
                 # link each PanelGene instance to the appropriate transcript
 
                 panel_gene_transcript, created = PanelGeneTranscript.objects\
                     .get_or_create(
-                        panel_gene_id = panel_gene,
-                        transcript_id = transcript,
-                        justification = single_gene['\
-                            transcript_justification'])
+                        panel_gene_id = panel_gene.id,
+                        transcript_id = transcript.id,
+                        justification = single_gene[
+                            'transcript_justification'])
 
         # for each panel region, populate the region attribute models
 
@@ -175,11 +194,24 @@ def insert_data(parsed_data, data_type):
             moi, created = ModeOfInheritance.objects.get_or_create(
                 mode_of_inheritance = single_region['mode_of_inheritance'],)
 
-            mop, created = ModeOfPathogenicity.objects.get_or_create(
-                mode_of_pathogenicity = single_region['mode_of_pathogenicity'])
+            # value for 'mode_of_pathogenicity' might be empty
+            if single_region['mode_of_pathogenicity']:
+                mop, created = ModeOfPathogenicity.objects.get_or_create(
+                    mode_of_pathogenicity = single_region[
+                        'mode_of_pathogenicity'])
 
-            penetrance, created = Penetrance.objects.get_or_create(
-                penetrance = single_region['penetrance'],)
+            else:
+                mop, created = ModeOfPathogenicity.objects.get_or_create(
+                    mode_of_pathogenicity = 'None')
+
+            # value for 'penetrance' might be empty
+            if single_region['penetrance']:
+                penetrance, created = Penetrance.objects.get_or_create(
+                    penetrance = single_region['penetrance'],)
+
+            else:
+                penetrance, created = Penetrance.objects.get_or_create(
+                    penetrance = 'None',)
 
             vartype, created = VariantType.objects.get_or_create(
                 variant_type = single_region['variant_type'],)
@@ -187,11 +219,23 @@ def insert_data(parsed_data, data_type):
             overlap, created = RequiredOverlap.objects.get_or_create(
                 required_overlap = single_region['required_overlap'],)
 
-            haplo, created = Haploinsufficiency.objects.get_or_create(
-                haploinsufficiency = single_region['haploinsufficiency'],)
+            # value for 'haploinsufficiency' might be empty
+            if single_region['haploinsufficiency']:
+                haplo, created = Haploinsufficiency.objects.get_or_create(
+                    haploinsufficiency = single_region['haploinsufficiency'],)
 
-            triplo, created = Triplosensitivity.objects.get_or_create(
-                triplosensitivity = single_region['triplosensitivity'],)
+            else:
+                haplo, created = Haploinsufficiency.objects.get_or_create(
+                    haploinsufficiency = 'None',)
+
+            # value for 'triplosensitivity' might be empty
+            if single_region['triplosensitivity']:
+                triplo, created = Triplosensitivity.objects.get_or_create(
+                    triplosensitivity = single_region['triplosensitivity'],)
+
+            else:
+                triplo, created = Triplosensitivity.objects.get_or_create(
+                    triplosensitivity = 'None',)
 
             # create the two genome build-specific regions
 
@@ -218,17 +262,17 @@ def insert_data(parsed_data, data_type):
                 # link each region to the appropriate panel
 
                 panel_region, created = PanelRegion.objects.get_or_create(
-                    panel_id = panel_instance,
-                    confidence_id = confidence,
-                    moi_id = moi,
-                    mop_id = mop,
-                    penetrance_id = penetrance,
-                    region_id = region,
-                    haplo_id = haplo,
-                    triplo_id = triplo,
-                    overlap_id = overlap,
-                    vartype_id = vartype,
-                    justification = region['justification'],)
+                    panel_id = panel_instance.id,
+                    confidence_id = confidence.id,
+                    moi_id = moi.id,
+                    mop_id = mop.id,
+                    penetrance_id = penetrance.id,
+                    region_id = region.id,
+                    haplo_id = haplo.id,
+                    triplo_id = triplo.id,
+                    overlap_id = overlap.id,
+                    vartype_id = vartype.id,
+                    justification = single_region['justification'],)
 
 
     ## Insert data from a test directory
@@ -256,13 +300,13 @@ def insert_data(parsed_data, data_type):
 
                 ci_panel, created = ClinicalIndicationPanel.objects\
                     .get_or_create(
-                        source_id = source,
-                        clinical_indication_id = ci,
-                        panel_id = panel,
+                        source_id = source.id,
+                        clinical_indication_id = ci.id,
+                        panel_id = panel.id,
                         current = True,)
 
                 ci_panel_usage, created = ClinicalIndicationPanelUsage.objects\
                     .get_or_create(
-                        clinical_indication_panel_id = ci_panel,
+                        clinical_indication_panel_id = ci_panel.id,
                         start_date = parsed_data['date'],
                         end_date = None,)

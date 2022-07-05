@@ -127,13 +127,13 @@ class Data:
                 'penetrance' : region['penetrance'],
                 'name' : region['verbose_name'],
                 'chrom' : region['chromosome'],
-                'start_37' : None,  # need to liftover from grch38
-                'end_37' : None,
+                'start_37' : 'None',  # need to liftover from grch38
+                'end_37' : 'None',
                 'start_38' : region['grch38_coordinates'][0],
                 'end_38' : region['grch38_coordinates'][1],
                 'type' : 'CNV',  # all PA regions are CNVs
-                'variant_type' : region['variant_type'],
-                'required_overlap' : region['required_overlap'],
+                'variant_type' : region['type_of_variants'],
+                'required_overlap' : region['required_overlap_percentage'],
                 'haploinsufficiency' : region['haploinsufficiency_score'],
                 'triplosensitivity' : region['triplosensitivity_score'],
                 'justification' : 'PanelApp',
