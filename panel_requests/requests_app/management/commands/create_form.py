@@ -60,7 +60,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "req_date",
             nargs = 1,
-            help = "Date request was submitted",)
+            help = "Date the request was submitted",)
 
         parser.add_argument(
             "requester",
@@ -70,18 +70,20 @@ class Command(BaseCommand):
         parser.add_argument(
             "ci_code",
             nargs = 1,
-            help = "CI code to create request form for",)
+            help = "The CI code to create request form for (e.g. R149.1)",)
 
         parser.add_argument(
             "ref_genome",
             nargs = 1,
             choices = ['GRCh37', 'GRCh38'],
-            help = "Reference genome build to use",)
+            help = "The reference genome build to use",)
 
 
     def get_panel_records(self, ci_code, ref_genome):
-        """ Given a clinical indication code, retrieve Panel records of
-        any panel(s) currently associated with that clinical indication.
+        """ Retrieve Panel records from the database where the panel is
+        associated with the specified CI code and reference genome
+        version, and where that panel is currently in use for the
+        specified clinical indication.
 
         args:
             ci_code [str]: supplied at command line
@@ -100,8 +102,9 @@ class Command(BaseCommand):
 
 
     def retrieve_panel_entities(self, ref_genome, panel_records):
-        """ For each panel record, retrieve all associated gene and
-        region records.
+        """ For each retrieved panel record, retrieve all associated
+        gene and region records and combine in a dict. Return a list of
+        these dicts.
 
         args:
             ref_genome [str]: supplied at command line
@@ -135,13 +138,13 @@ class Command(BaseCommand):
 
 
     def get_gene_records(self, panel_dict):
-        """ Retrieve gene data for a single panel.
+        """ Retrieve all gene records associated with a panel record.
 
         args:
-            panel_dict [dict]
+            panel_dict [dict]: information about a single panel record
 
         returns:
-            gene_data [list of dicts]
+            gene_data [list of dicts]: each element is info on one gene
         """
 
         gene_data = []
@@ -197,13 +200,13 @@ class Command(BaseCommand):
 
 
     def get_region_records(self, panel_dict):
-        """ Retrieve region data for a single panel.
+        """ Retrieve all region records associated with a panel record.
 
         args:
-            panel_dict [dict]:
+            panel_dict [dict]: information about a single panel record
 
         returns:
-            region_data [list of dicts]
+            region_data [list of dicts]: each element is info on one region
         """
 
         region_data = []
@@ -289,7 +292,7 @@ class Command(BaseCommand):
 
 
     def create_head_df(self, req_date, requester, ci_code, ref_genome):
-        """ Create a dataframe of general request information.
+        """ Create a header dataframe of general request information.
 
         args:
             req_date [str]: supplied at command line
@@ -322,52 +325,38 @@ class Command(BaseCommand):
 
     def create_panel_df(self, panel_dicts):
         """ Create a dataframe of information about panels currently
-        associated with the relevant clinical indication.
+        associated with the specified clinical indication.
 
         args:
-            panel_dicts [list of dicts]
+            panel_dicts [list of dicts]: each dict is one panel
 
         returns:
             panel_df [pandas dataframe]
         """
 
-        # create lists to populate columns
+        # dataframe columns are lists of data elements
 
         sources = [panel['source'] for panel in panel_dicts]
         ids = [panel['ext_id'] for panel in panel_dicts]
         versions = [panel['ext_version'] for panel in panel_dicts]
 
-        # check lists are all the same length
+        # create the df
 
-        if (len(sources) == len(ids)) and \
-            (len(sources) == len(versions)):
-
-            # if they are, make the df
-
-            panel_df = pd.DataFrame({
-                'Current panels' : [''] * len(sources),
-                'Panel source': sources,
-                'External ID': ids,
-                'External version' : versions})
-
-        else:
-
-            print('Columns of panel_df are different lengths.\n' \
-                'sources: {}\n' \
-                'ids: {}\n' \
-                'versions: {}'.format(sources, ids, versions))
-
-            panel_df = 'problem with panel df'
+        panel_df = pd.DataFrame({
+            'Current panels' : [''] * len(sources),
+            'Panel source': sources,
+            'External ID': ids,
+            'External version' : versions})
 
         return panel_df
 
 
     def create_gene_df(self, panel_dicts):
-        """ Create a dataframe of genes covered by the clinical
-        indication's current panels.
+        """ Create a dataframe listing all genes currently covered by
+        the specified CI's panels.
 
         args:
-            panel_dicts [list of dicts]
+            panel_dicts [list of dicts]: each dict is one panel
 
         returns:
             gene_df [pandas dataframe]
@@ -414,11 +403,11 @@ class Command(BaseCommand):
 
 
     def create_region_df(self, panel_dicts):
-        """ Create a dataframe of genes covered by the clinical
-        indication's current panels.
+        """ Create a dataframe listing all regions currently covered by
+        the specified CI's panels.
 
         args:
-            panel_dicts [list of dicts]
+            panel_dicts [list of dicts]: each dict is one panel
 
         returns:
             region_df [pandas dataframe]
@@ -523,31 +512,16 @@ class Command(BaseCommand):
         return gene_df, region_df
 
 
-    def append_df(self, filename, df):
-
-        # get current file contents as a df
-        existing_file = pd.read_excel(filename)
-
-        # concatenate new df to existing df
-        new_file = pd.concat([existing_file, df], ignore_index=True)
-
-        # write the combination back out to the same filename
-        new_file.to_excel(filename, index=False)
-
-
     def write_blank_form(self, filename, head_df, gene_df, region_df):
         """ Construct a blank request form as an Excel file. This will
-        be returned if there are no panels currently associated with the
-        specified clinical indication in the database.
+        be returned if there are no panels in the database currently
+        associated with the specified clinical indication.
 
         args:
-            filename [str]: for output request form
+            filename [str]: name of output request form
             head_df [pandas dataframe]: general info about request
             gene_df [pandas dataframe]: all genes covered by these panels
             region_df [pandas dataframe]: all regions covered by these panels
-
-        returns:
-            filename [str]
         """
 
         writer = pd.ExcelWriter(filename, engine='xlsxwriter')
@@ -598,9 +572,6 @@ class Command(BaseCommand):
             panel_df [pandas dataframe]: list of current panels for this CI
             gene_df [pandas dataframe]: all genes covered by these panels
             region_df [pandas dataframe]: all regions covered by these panels
-
-        returns:
-            filename [str]
         """
 
         writer = pd.ExcelWriter(filename, engine='xlsxwriter')
@@ -628,7 +599,7 @@ class Command(BaseCommand):
             startcol = col,
             index = False)
 
-        # increment row by number of panels
+        # increment row by length of panel df
 
         for df_row in panel_df.iterrows():
             row += 1
@@ -644,7 +615,7 @@ class Command(BaseCommand):
             startcol = col,
             index = False)
 
-        # increment row by number of genes
+        # increment row by length of gene df
 
         for df_row in gene_df.iterrows():
             row += 1
@@ -678,11 +649,11 @@ class Command(BaseCommand):
             ci_code = kwargs['ci_code'][0]
             ref_genome = kwargs['ref_genome'][0]
 
-            # get records for panels currently linked to that CI code
+            # retrieve records of panels currently linked to that CI code
 
             panel_records = self.get_panel_records(ci_code, ref_genome)
 
-            # Construct a df of general info about the request
+            # construct header df of general info about the request
 
             head_df = self.create_head_df(
                 req_date,
@@ -690,12 +661,14 @@ class Command(BaseCommand):
                 ci_code,
                 ref_genome)
 
+            # if that CI currently has no panels, create a blank form
+
             if len(panel_records) == 0:
 
                 print('\nNo panels are currently associated with this ' \
                     'clinical indication.\n\n')
 
-                # define blank gene/region tables
+                # create blank gene/region dfs
 
                 gene_df, region_df = self.create_blank_dfs()
 
@@ -711,6 +684,8 @@ class Command(BaseCommand):
                     gene_df,
                     region_df)
 
+            # if the CI has 1+ current panel, create a populated form
+
             else:
                 # get genes and regions for each panel
 
@@ -718,7 +693,7 @@ class Command(BaseCommand):
                     ref_genome,
                     panel_records)
 
-                # create dataframes
+                # create panel, gene and region dataframes
 
                 panel_df = self.create_panel_df(panel_dicts)
                 gene_df = self.create_gene_df(panel_dicts)
