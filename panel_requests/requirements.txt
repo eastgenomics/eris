@@ -1,2 +1,4 @@
+datetime
+pandas
 panelapp
-
+xlsxwriter

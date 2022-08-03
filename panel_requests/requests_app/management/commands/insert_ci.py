@@ -4,7 +4,7 @@
 a test directory file is inserted into the database models.
 """
 
-""" Test directory data should be a dict with the keys:
+""" Test directory data should be a json dict with the keys:
 
 {
 source,
@@ -22,6 +22,12 @@ indications : [
 	],
 }
 """
+
+
+### STILL TO DO
+# remove existing links between cis and panels if no longer supported
+# collect hgnc ids into a separate panel
+# deal with panelapp ids which don't have a panel in the db
 
 
 from django.db import transaction
@@ -52,44 +58,108 @@ from requests_app.models import (
 
 
 @transaction.atomic
-def insert_data(parsed_data):
+def insert_data(json_data, td_current):
 
-    ## define the two reference genomes
+    if td_current == 'Y':
+        current_td = True
 
-    ref_genome_37, created = ReferenceGenome.objects.get_or_create(
-        reference_build = 'GRCh37')
-
-    ref_genome_38, created = ReferenceGenome.objects.get_or_create(
-        reference_build = 'GRCh38')
+    elif td_current == 'N':
+        current_td = False
 
     # define the test directory as the source
 
+    formatted_date = '20{}-{}-{}'.format(  # format may change with td version
+        json_data['source'][:2],
+        json_data['source'][2:4],
+        json_data['source'][4:6])
+
     source, created = CiPanelAssociationSource.objects.get_or_create(
-        source = parsed_data['source'],
-        date = parsed_data['date'],)
+        source = json_data['source'],
+        date = formatted_date,)
 
     # create each clinical indication
 
-    for indication in parsed_data['indications']:
+    for indication in json_data['indications']:
 
         ci, created = ClinicalIndication.objects.get_or_create(
             code = indication['code'],
             name = indication['name'],
             gemini_name = indication['gemini_name'],)
 
-        # link each CI to its associated panels
+        # link each ci to its panels specified in the td (if any)
 
-        for panel in indication['panels']:
+        hgnc_list = []
 
-            ci_panel, created = ClinicalIndicationPanel.objects\
-                .get_or_create(
-                    source_id = source.id,
-                    clinical_indication_id = ci.id,
-                    panel_id = panel.id,
-                    current = True,)
+        if indication['panels']:
+            for element in indication['panels']:
 
-            ci_panel_usage, created = ClinicalIndicationPanelUsage.objects\
-                .get_or_create(
-                    clinical_indication_panel_id = ci_panel.id,
-                    start_date = parsed_data['date'],
-                    end_date = None,)
+                # add any individual hgnc ids to a separate list
+
+                if (element) and (element[:4].upper() == 'HGNC'):
+                    hgnc_list.append(element[5:])
+
+                # for panelapp panel ids, retrieve panel objects and link to ci
+
+                elif element:
+
+                    # get all panel records with that panelapp id
+                    # there should be either 0 or a multiple of 2 (bc genomes)
+
+                    panel_records = Panel.objects.filter(
+                        panel_source = 'panelapp',
+                        external_id = element).values()
+
+                    # print a notification if there are no records
+
+                    if len(panel_records) == 0:
+
+                        print('No record has panelapp ID {}'.format(element))
+
+                    # if there are records:
+
+                    else:
+
+                        # identify the most recent panel version
+
+                        max_v = '0'
+
+                        for record in panel_records:
+                            if float(record['panel_version']) > float(max_v):
+
+                                max_v = record['panel_version']
+
+                        # restrict queryset to records with that version
+
+                        most_recent = panel_records.filter(
+                            panel_version = max_v).values()
+
+                        # link these records to the ci
+
+                        for record in most_recent:
+
+                            ci_panel, created = ClinicalIndicationPanel.\
+                                objects.get_or_create(
+                                    source_id = source.id,
+                                    clinical_indication_id = ci.id,
+                                    panel_id = record['id'],
+                                    current = current_td)
+
+                            # if this link is new, also make a usage record
+
+                            if created:
+
+                                (ci_panel_usage,
+                                created) = ClinicalIndicationPanelUsage.\
+                                objects.get_or_create(
+                                    clinical_indication_panel_id = ci_panel.id,
+                                    start_date = formatted_date,
+                                    end_date = None)
+
+                                # do we need to do different things here
+                                # depending on whether the td version is the
+                                # current one or not? more things to consider
+
+        # deal with the list of hgnc ids
+        # does a panel of those genes already exist?
+        # if not, make a panel (issue with metadata :/ )
+        # either way, link it to the ci

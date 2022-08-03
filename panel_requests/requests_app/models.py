@@ -120,7 +120,10 @@ class ClinicalIndicationPanelUsage(models.Model):
         on_delete = models.PROTECT,)
 
     start_date = models.DateField(verbose_name = 'Start date')
-    end_date = models.DateField(verbose_name = 'End date')
+
+    end_date = models.DateField(
+        verbose_name = 'End date',
+        null = True)
 
     class Meta:
         db_table = 'clinical_indication_panel_usage'
