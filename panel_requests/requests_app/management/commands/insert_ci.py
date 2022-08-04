@@ -32,6 +32,7 @@ indications : [
 
 from datetime import datetime as dt
 from django.db import transaction
+from packaging import version
 
 from requests_app.models import (
     ReferenceGenome,
@@ -120,12 +121,9 @@ def insert_data(json_data, td_current):
 
                         # identify the most recent panel version
 
-                        max_v = '0'
-
-                        for record in panel_records:
-                            if float(record['panel_version']) > float(max_v):
-
-                                max_v = record['panel_version']
+                        max_v = str(max(
+                            [version.parse(record['panel_version']) \
+                                for record in panel_records]))
 
                         # restrict queryset to records with that version
 
