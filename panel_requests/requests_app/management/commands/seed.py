@@ -146,6 +146,9 @@ class Command(BaseCommand):
             info_dict = data.parse_gene_info(panel_data, info_dict)
             parsed_data = data.parse_region_info(panel_data, info_dict)
 
+        else:
+            print('Data could not be retrieved for panel {}.'.format(panel_id))
+
         return parsed_data
 
 
