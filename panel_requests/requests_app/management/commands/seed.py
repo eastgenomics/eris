@@ -160,6 +160,8 @@ class Command(BaseCommand):
             parsed_data [list of dicts]: data dicts for all panels
         """
 
+        print('Parsing data for all PanelApp panels...')
+
         parsed_data = []
 
         # get a list of ids for all current PA panels
@@ -173,6 +175,8 @@ class Command(BaseCommand):
             panel_data = self.parse_single_pa_panel(panel_id, None)
 
             parsed_data.append(panel_data)
+
+        print('Data parsing completed.')
 
         return parsed_data
 
@@ -219,9 +223,7 @@ class Command(BaseCommand):
 
                 if panel_id == 'all':
 
-                    print('Parsing PanelApp data for all panels...')
                     parsed_data = self.parse_all_pa_panels()
-                    print('Data parsing completed.')
 
                 # parse data from a single PanelApp panel
 
@@ -232,23 +234,16 @@ class Command(BaseCommand):
                     else:
                         panel_version = None
 
-                    print('Parsing PanelApp data for panel {}...'.format(
-                        panel_id))
-
                     parsed_data = [self.parse_single_pa_panel(
                         panel_id,
                         panel_version)]
-
-                    print('Data parsing completed.')
 
                 # insert parsed data (list of panel dicts) into the db
 
                 for panel_dict in parsed_data:
                     if panel_dict:
 
-                        print('Inserting data into database...')
                         insert_panel.insert_data(panel_dict)
-                        print('Data insertion completed.')
 
 
             ## import and parse data from a request form (filepath required)
@@ -271,18 +266,13 @@ class Command(BaseCommand):
                 td_json = kwargs['td_json']
                 td_current = kwargs['td_current']
 
-                print('Loading test directory data from file...')
-
                 path = 'requests_app/management/commands/{}'.format(td_json)
 
                 with open(path) as reader:
                     json_data = json.load(reader)
 
-                print('Test directory data loaded.')
-
-                print('Inserting data into database...')
                 insert_ci.insert_data(json_data, td_current)
-                print('Data insertion completed.')
+
 
             ## a valid combination of arguments is required
 
