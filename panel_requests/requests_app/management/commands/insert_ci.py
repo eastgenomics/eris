@@ -94,7 +94,7 @@ def insert_data(json_data, td_current):
 
                 # add any individual hgnc ids to a separate list
 
-                if (element) and (element[:4].upper() == 'HGNC'):
+                if element and (element.upper().startswith("HGNC:")):
                     hgnc_list.append(element[5:])
 
                 # for panelapp panel ids, retrieve panel objects and link to ci
