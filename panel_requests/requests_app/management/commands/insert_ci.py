@@ -27,7 +27,7 @@ indications : [
 ### STILL TO DO
 # remove existing links between cis and panels if no longer supported
 # collect hgnc ids into a separate panel
-# deal with panelapp ids which don't have a panel in the db
+# deal with panelapp ids which aren't in the db (looking at you 489)
 
 
 from django.db import transaction
@@ -86,7 +86,7 @@ def insert_data(json_data, td_current):
             name = indication['name'],
             gemini_name = indication['gemini_name'],)
 
-        # link each ci to its panels specified in the td (if any)
+        # link each ci to its panels as specified in the td (if any)
 
         hgnc_list = []
 

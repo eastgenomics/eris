@@ -1,4 +1,5 @@
-datetime
-pandas
-panelapp
-xlsxwriter
+Django==3.2.8
+mysqlclient==2.1.0
+pandas==1.4.1
+panelapp==0.7.3
+XlsxWriter==1.2.9
