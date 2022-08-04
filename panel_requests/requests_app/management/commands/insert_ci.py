@@ -30,6 +30,7 @@ indications : [
 # deal with panelapp ids which aren't in the db (looking at you 489)
 
 
+from datetime import datetime as dt
 from django.db import transaction
 
 from requests_app.models import (
@@ -68,14 +69,12 @@ def insert_data(json_data, td_current):
 
     # define the test directory as the source
 
-    formatted_date = '20{}-{}-{}'.format(  # format may change with td version
-        json_data['source'][:2],
-        json_data['source'][2:4],
-        json_data['source'][4:6])
+    date_object = dt.strptime(json_data['date'], "%y%m%d")
+    dt.strftime(date_object, "%Y-%m-%d")
 
     source, created = CiPanelAssociationSource.objects.get_or_create(
         source = json_data['source'],
-        date = formatted_date,)
+        date = date_object,)
 
     # create each clinical indication
 
@@ -152,7 +151,7 @@ def insert_data(json_data, td_current):
                                 created) = ClinicalIndicationPanelUsage.\
                                 objects.get_or_create(
                                     clinical_indication_panel_id = ci_panel.id,
-                                    start_date = formatted_date,
+                                    start_date = date_object,
                                     end_date = None)
 
                                 # do we need to do different things here
