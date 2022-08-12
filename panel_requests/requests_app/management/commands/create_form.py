@@ -9,10 +9,20 @@ Usage:
 
     python manage.py create_form <req_date> <requester> <ci_code> <ref_genome>
 
-Example usage (using a CI code where panel has both regions and genes):
+
+Example usages:
+
+CI links to PA panel with both regions and genes
 
     python manage.py create_form 20220722 JJM R149.1 GRCh37
 
+CI links to list of HGNC IDs
+
+    python manage.py create_form 20220722 JJM R417.2 GRCh37
+
+CI links to nothing
+
+    python manage.py create_form 20220722 JJM R413.1 GRCh37
 """
 
 
@@ -390,6 +400,7 @@ class Command(BaseCommand):
         # create df
 
         gene_df = pd.DataFrame({
+            'Gene symbol' : [''] * len(hgncs),
             'HGNC ID': hgncs,
             'Transcript': transcripts,
             'Confidence': confs,
@@ -416,8 +427,6 @@ class Command(BaseCommand):
         # initialise df columns
 
         names = []
-        types = []
-        var_types = []
         chroms = []
         starts= []
         ends = []
@@ -427,6 +436,8 @@ class Command(BaseCommand):
         pens = []
         haplos = []
         triplos = []
+        types = []
+        var_types = []
         overlaps = []
         reasons = []
 
@@ -436,8 +447,6 @@ class Command(BaseCommand):
             for region in panel['regions']:
 
                 names.append(region['name'])
-                types.append(region['type'])
-                var_types.append(region['var_type'])
                 chroms.append(region['chrom'])
                 starts.append(region['start'])
                 ends.append(region['end'])
@@ -447,6 +456,8 @@ class Command(BaseCommand):
                 pens.append(region['pen'])
                 haplos.append(region['haplo'])
                 triplos.append(region['triplo'])
+                types.append(region['type'])
+                var_types.append(region['var_type'])
                 overlaps.append(region['overlap'])
                 reasons.append(region['reason'])
 
@@ -454,8 +465,6 @@ class Command(BaseCommand):
 
         region_df = pd.DataFrame({
             'Region name': names,
-            'Type': types,
-            'Variant type': var_types,
             'Chromosome': chroms,
             'Start': starts,
             'End': ends,
@@ -465,6 +474,8 @@ class Command(BaseCommand):
             'Penetrance': pens,
             'Haploins.': haplos,
             'Triplosens.': triplos,
+            'Type': types,
+            'Variant type': var_types,
             'Overlap': overlaps,
             'Justification': reasons,})
 
@@ -674,9 +685,11 @@ class Command(BaseCommand):
 
                 # write a blank form
 
-                filename = '{}_request_form_{}_NO_PANELS.xlsx'.format(
+                filename = 'request_form_{}_{}_{}_{}_EMPTY.xlsx'.format(
                     req_date,
-                    ci_code)
+                    requester,
+                    ci_code,
+                    ref_genome)
 
                 output_file = self.write_blank_form(
                     filename,
@@ -701,9 +714,11 @@ class Command(BaseCommand):
 
                 # construct the request form and print the filename
 
-                filename = '{}_request_form_{}.xlsx'.format(
+                filename = 'request_form_{}_{}_{}_{}.xlsx'.format(
                     req_date,
-                    ci_code)
+                    requester,
+                    ci_code,
+                    ref_genome)
 
                 output_file = self.write_data(
                     filename,

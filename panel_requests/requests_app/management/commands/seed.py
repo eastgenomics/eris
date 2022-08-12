@@ -138,7 +138,7 @@ class Command(BaseCommand):
 
         panel_data = data.get_panelapp_panel(panel_id, panel_version)
 
-        # parse out data on the panel and its genes and regions
+        # extract the required data for the panel and its genes and regions
 
         if panel_data:
 
@@ -271,7 +271,13 @@ class Command(BaseCommand):
                 with open(path) as reader:
                     json_data = json.load(reader)
 
-                insert_ci.insert_data(json_data, td_current)
+                if td_current == 'Y':
+                    current_td = True
+
+                elif td_current == 'N':
+                    current_td = False
+
+                insert_ci.insert_data(json_data, current_td)
 
 
             ## a valid combination of arguments is required
