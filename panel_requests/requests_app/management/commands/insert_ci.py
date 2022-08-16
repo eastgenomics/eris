@@ -32,7 +32,6 @@ indications : [
 
 ### STILL TO DO
 # remove existing links between cis and panels if no longer supported
-# collect hgnc ids into a separate panel
 # deal with PA ids which aren't in the db (looking at you 489)
 
 
@@ -304,7 +303,7 @@ def retrieve_panels_from_pa_id(ci_code, pa_id):
 
         # if there aren't any, print a notification
 
-        print('{}: No Panel record has panelapp ID {}'.format(ci_code, pa_id))
+        print(f'{ci_code}: No Panel record has panelapp ID {pa_id}')
 
     else:
 

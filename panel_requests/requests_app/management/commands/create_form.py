@@ -14,15 +14,15 @@ Example usages:
 
 CI links to PA panel with both regions and genes
 
-    python manage.py create_form 20220722 JJM R149.1 GRCh37
+    python manage.py create_form 20220722 JJM R149.1 GRCh37 20220816_hgnc_dump
 
 CI links to list of HGNC IDs
 
-    python manage.py create_form 20220722 JJM R417.2 GRCh37
+    python manage.py create_form 20220722 JJM R417.2 GRCh37 20220816_hgnc_dump
 
 CI links to nothing
 
-    python manage.py create_form 20220722 JJM R413.1 GRCh37
+    python manage.py create_form 20220722 JJM R413.1 GRCh37 20220816_hgnc_dump
 """
 
 
@@ -33,10 +33,7 @@ from datetime import datetime as dt
 
 from django.core.management.base import BaseCommand
 
-from . import parse_pa as parse_pa
-from . import parse_form as parse_form
-from . import insert_panel as insert_panel
-from . import insert_ci as insert_ci
+from . import functions_hgnc
 
 from requests_app.models import (
     Panel,
@@ -87,6 +84,12 @@ class Command(BaseCommand):
             nargs = 1,
             choices = ['GRCh37', 'GRCh38'],
             help = "The reference genome build to use",)
+
+        parser.add_argument(
+            "hgnc_dump",
+            nargs = 1,
+            help = "Name of HGNC dump text file"
+        )
 
 
     def get_panel_records(self, ci_code, ref_genome):
@@ -361,7 +364,7 @@ class Command(BaseCommand):
         return panel_df
 
 
-    def create_gene_df(self, panel_dicts):
+    def create_gene_df(self, hgnc_df, panel_dicts):
         """ Create a dataframe listing all genes currently covered by
         the specified CI's panels.
 
@@ -374,6 +377,7 @@ class Command(BaseCommand):
 
         # initialise df columns
 
+        gene_symbols = []
         hgncs = []
         transcripts = []
         confs = []
@@ -397,10 +401,27 @@ class Command(BaseCommand):
                 gene_reasons.append(gene['gene_reason'])
                 trans_reasons.append(gene['trans_reason'])
 
+        # get current gene symbols for HGNC ids
+
+        for hgnc_number in hgncs:
+
+            hgnc_id = f'HGNC:{hgnc_number}'
+
+            symbol = functions_hgnc.get_symbol_from_hgnc(hgnc_df, hgnc_id)
+
+            if symbol:
+
+                gene_symbols.append(symbol)
+
+            else:
+
+                gene_symbols.append('')  # else list is the wrong length
+                print(f'Problem with HGNC number: {hgnc_number}')
+
         # create df
 
         gene_df = pd.DataFrame({
-            'Gene symbol' : [''] * len(hgncs),
+            'Gene symbol' : gene_symbols,
             'HGNC ID': hgncs,
             'Transcript': transcripts,
             'Confidence': confs,
@@ -650,15 +671,17 @@ class Command(BaseCommand):
 
         # read in arguments (all are required)
 
-        if (kwargs['req_date']) and \
-            (kwargs['requester']) and \
-            (kwargs['ci_code']) and \
-            (kwargs['ref_genome']):
+        if kwargs['req_date'] and \
+            kwargs['requester'] and \
+            kwargs['ci_code'] and \
+            kwargs['ref_genome'] and \
+            kwargs['hgnc_dump']:
 
             req_date = kwargs['req_date'][0]
             requester = kwargs['requester'][0]
             ci_code = kwargs['ci_code'][0]
             ref_genome = kwargs['ref_genome'][0]
+            hgnc_dump = kwargs['hgnc_dump'][0]
 
             # retrieve records of panels currently linked to that CI code
 
@@ -685,11 +708,7 @@ class Command(BaseCommand):
 
                 # write a blank form
 
-                filename = 'request_form_{}_{}_{}_{}_EMPTY.xlsx'.format(
-                    req_date,
-                    requester,
-                    ci_code,
-                    ref_genome)
+                filename = f'request_form_{req_date}_{ci_code}_{ref_genome}_{requester}_BLANK.xlsx'
 
                 output_file = self.write_blank_form(
                     filename,
@@ -709,16 +728,14 @@ class Command(BaseCommand):
                 # create panel, gene and region dataframes
 
                 panel_df = self.create_panel_df(panel_dicts)
-                gene_df = self.create_gene_df(panel_dicts)
                 region_df = self.create_region_df(panel_dicts)
+
+                hgnc_df = functions_hgnc.import_hgnc_dump(hgnc_dump)
+                gene_df = self.create_gene_df(hgnc_df, panel_dicts)
 
                 # construct the request form and print the filename
 
-                filename = 'request_form_{}_{}_{}_{}.xlsx'.format(
-                    req_date,
-                    requester,
-                    ci_code,
-                    ref_genome)
+                filename = f'request_form_{req_date}_{ci_code}_{ref_genome}_{requester}.xlsx'
 
                 output_file = self.write_data(
                     filename,
@@ -727,7 +744,7 @@ class Command(BaseCommand):
                     gene_df,
                     region_df)
 
-            print('Request form created: {}'.format(filename))
+            print(f'Request form created: {filename}')
 
         else:
             print("Arguments must be specified in this order: " \

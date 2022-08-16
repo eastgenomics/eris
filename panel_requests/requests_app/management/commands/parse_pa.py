@@ -114,8 +114,8 @@ class Data:
             if gene['confidence_level'] == '3':
 
                 gene_dict = {
-                    'transcript' : gene['transcript'],  # not always provided
-                    'hgnc_id' : gene['gene_data']['hgnc_id'][6:],
+                    'transcript' : gene['transcript'],
+                    'hgnc_id' : gene['gene_data']['hgnc_id'][5:],
                     'confidence_level' : gene['confidence_level'],
                     'mode_of_inheritance' : gene['mode_of_inheritance'],
                     'mode_of_pathogenicity' : gene['mode_of_pathogenicity'],

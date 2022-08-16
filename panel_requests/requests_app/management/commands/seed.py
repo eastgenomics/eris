@@ -147,7 +147,7 @@ class Command(BaseCommand):
             parsed_data = data.parse_region_info(panel_data, info_dict)
 
         else:
-            print('Data could not be retrieved for panel {}.'.format(panel_id))
+            print(f'Data could not be retrieved for panel {panel_id}.')
 
         return parsed_data
 
@@ -266,7 +266,7 @@ class Command(BaseCommand):
                 td_json = kwargs['td_json']
                 td_current = kwargs['td_current']
 
-                path = 'requests_app/management/commands/{}'.format(td_json)
+                path = f'requests_app/management/commands/{td_json}'
 
                 with open(path) as reader:
                     json_data = json.load(reader)
@@ -283,10 +283,10 @@ class Command(BaseCommand):
             ## a valid combination of arguments is required
 
             else:
-                print('Error reading in arguments. \
-                    \nSpecified source: {} \
-                    \nSupplied args: {} \
-                    \nSupplied kwargs: {}'.format(source, args, kwargs))
+                print(f'Error reading in arguments. \
+                    \nSpecified source: {source} \
+                    \nSupplied args: {args} \
+                    \nSupplied kwargs: {kwargs}')
 
         else:
             print("Data source must be specified. Options are d for test \
