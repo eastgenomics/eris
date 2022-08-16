@@ -80,200 +80,6 @@ def format_td_date(json_data):
     return formatted_date
 
 
-def create_record_genomes():
-    """ Get or create two ReferenceGenome records, one for each build.
-
-    returns:
-        genome_37 [Genome record]
-        genome_38 [Genome record]
-    """
-
-    genome_37, created = ReferenceGenome.objects.get_or_create(
-        reference_build = 'GRCh37')
-
-    genome_38, created = ReferenceGenome.objects.get_or_create(
-        reference_build = 'GRCh38')
-
-    return genome_37, genome_38
-
-
-def create_record_source(json_data):
-    """ Get or create a CiPanelAssociationSource record which represents
-    this TD version.
-
-    args:
-        json_data [dict]: all contents of TD
-
-    returns:
-        source [CiPanelAssociationSource record]
-    """
-
-    td_date = format_td_date(json_data)
-
-    source, created = CiPanelAssociationSource.objects.get_or_create(
-        source = json_data['source'],
-        date = td_date,)
-
-    return source, td_date
-
-
-def create_record_ci(indication):
-    """ Get or create a ClinicalIndication record.
-
-    args:
-        indication [dict]: TD data for one CI
-
-    returns:
-        ci [ClinicalIndication record]
-    """
-
-    ci, created = ClinicalIndication.objects.get_or_create(
-            code = indication['code'],
-            name = indication['name'],
-            gemini_name = indication['gemini_name'],)
-
-    return ci
-
-
-def create_record_ci_panel(current, source, ci, panel):
-    """ Get or create a ClinicalIndicationPanel record.
-
-    args:
-        current [bool]: whether this is the current td version
-        source [CiPanelAssociationSource record]
-        ci [ClinicalIndication record]
-        panel [Panel record]
-
-    returns:
-        ci_panel [ClinicalIndicationPanel record]
-        created [bool]: whether a new record was created
-    """
-
-    ci_panel, created = ClinicalIndicationPanel.objects.get_or_create(
-        source = source,
-        clinical_indication = ci,
-        panel = panel,
-        current = current)
-
-    return ci_panel, created
-
-
-def create_record_panel(genome, source, ci_code):
-    """ Get or create a Panel record.
-
-    args:
-        genome [Genome record]
-        source [str]
-        ci_code [str]
-
-    returns:
-        panel_record [Panel record]
-    """
-
-    panel_record, created = Panel.objects.get_or_create(
-        panel_source = source,
-        external_id = ci_code,
-        reference_genome = genome)
-
-    return panel_record
-
-
-def create_record_panel_gene(source, panel, gene, conf, moi, mop, pen):
-    """ Get or create a PanelGene record.
-
-    args:
-        source [str]
-        panel [Panel record]
-        gene [Gene record]
-
-    returns:
-        panel_gene [PanelGene record]
-    """
-
-    panel_gene, created = PanelGene.objects.get_or_create(
-        panel = panel,
-        gene = gene,
-        justification = source,
-        confidence = conf,
-        moi = moi,
-        mop = mop,
-        penetrance = pen)
-
-    return panel_gene
-
-
-def create_record_panel_gene_transcript(source, panel_gene, transcript):
-    """ Get or create a PanelGeneTranscript record.
-
-    args:
-        source [str]
-        panel_gene [PanelGene record]
-        transcript [Transcript record]
-
-    returns:
-        panel_gene_transcript [PanelGeneTranscript record]
-    """
-
-    panel_gene_transcript, created = PanelGeneTranscript.objects.get_or_create(
-        panel_gene = panel_gene,
-        transcript = transcript,
-        justification = source)
-
-    return panel_gene_transcript
-
-
-def create_record_usage(td_date, ci_panel):
-    """ Get or create a ClinicalIndicationPanelUsage record.
-
-    args:
-        td_date [datetime]: date of TD version
-        ci_panel [ClinicalIndicationPanel record]
-
-    returns:
-        ci_panel_usage [ClinicalIndicationPanelUsage record]
-    """
-
-    ci_panel_usage, created = ClinicalIndicationPanelUsage.objects.\
-        get_or_create(
-            clinical_indication_panel = ci_panel,
-            start_date = td_date,
-            end_date = None)
-
-    return ci_panel_usage
-
-
-def create_record_hgnc(hgnc_no):
-    """ Get or create an Hgnc record.
-
-    args:
-        hgnc_no [str]: number only, not full HGNC id
-
-    returns:
-        hgnc_record [Hgnc record]
-    """
-
-    hgnc_record, created = Hgnc.objects.get_or_create(
-        id = int(hgnc_no))
-
-    return hgnc_record
-
-
-def create_record_gene(hgnc_no):
-    """ Get or create a Gene record.
-
-    args:
-        hgnc_no [int]: number only, not full HGNC id
-
-    returns:
-        gene_record [Gene record]
-    """
-
-    gene_record, created = Gene.objects.get_or_create(
-        hgnc = hgnc_no)
-
-    return gene_record
-
-
 def retrieve_panels_from_pa_id(ci_code, pa_id):
     """ Given a PA id, retrieve any Panel records with that PA id and
     return the one with the highest PA version. If none exist, return
@@ -414,7 +220,7 @@ def retrieve_unknown_metadata_records():
     return conf, moi, mop, pen, transcript
 
 
-def make_panels_from_hgncs(current, source, ci, hgnc_list):
+def make_panels_from_hgncs(current, source, td_date, ci, hgnc_list):
     """ Given a list of HGNC numbers, create a pair of new panels whose
     genes are those associated with those IDs.
 
@@ -432,46 +238,69 @@ def make_panels_from_hgncs(current, source, ci, hgnc_list):
 
     # make sure ReferenceGenome and metadata records exist
 
-    genome_37, genome_38 = create_record_genomes()
+    genome_37, created = ReferenceGenome.objects.get_or_create(
+        reference_build = 'GRCh37')
+
+    genome_38, created = ReferenceGenome.objects.get_or_create(
+        reference_build = 'GRCh38')
 
     conf, moi, mop, pen, transcript = retrieve_unknown_metadata_records()
 
     # create two new Panel records with different ref genomes
 
-    panel_37 = create_record_panel(genome_37, source_str, ci_code_str)
-    panel_38 = create_record_panel(genome_38, source_str, ci_code_str)
+    panel_37, created = Panel.objects.get_or_create(
+        panel_source = source_str,
+        external_id = ci_code_str,
+        reference_genome = genome_37)
 
+    panel_38, created = Panel.objects.get_or_create(
+        panel_source = source_str,
+        external_id = ci_code_str,
+        reference_genome = genome_38)
 
     for panel_record in panel_37, panel_38:
         for hgnc_no in hgnc_list:
 
             # get/create Hgnc and Gene records
 
-            hgnc_record = create_record_hgnc(hgnc_no)
-            gene = create_record_gene(hgnc_record)
+            hgnc_record, created = Hgnc.objects.get_or_create(
+                id = int(hgnc_no))
+
+            gene_record, created = Gene.objects.get_or_create(
+                hgnc = hgnc_record)
 
             # create PanelGene record linking Panel to HGNC
 
-            panel_gene = create_record_panel_gene(
-                source_str,
-                panel_record,
-                gene,
-                conf,
-                moi,
-                mop,
-                pen)
+            panel_gene, created = PanelGene.objects.get_or_create(
+                panel = panel_record,
+                gene = gene_record,
+                justification = source_str,
+                confidence = conf,
+                moi = moi,
+                mop = mop,
+                penetrance = pen)
 
             # link PanelGene record to 'Not specified' Transcript record
 
-            panel_gene_transcript = create_record_panel_gene_transcript(
-                source_str,
-                panel_gene,
-                transcript)
+            panel_gene_transcript, created = PanelGeneTranscript.objects.\
+                get_or_create(
+                    panel_gene = panel_gene,
+                    transcript = transcript,
+                    justification = source_str)
 
         # link Panel record to CI via ClinicalIndicationPanel
 
-        panel_ci = create_record_ci_panel(current, source, ci, panel_record)
+        ci_panel, created = ClinicalIndicationPanel.objects.get_or_create(
+            source = source,
+            clinical_indication = ci,
+            panel = panel_record,
+            current = current)
 
+        ci_panel_usage, created = ClinicalIndicationPanelUsage.objects.\
+            get_or_create(
+                clinical_indication_panel = ci_panel,
+                start_date = td_date,
+                end_date = None)
 
 
 @transaction.atomic
@@ -487,13 +316,20 @@ def insert_data(json_data, td_current):
 
     # create a Source record for this td version
 
-    source, td_date = create_record_source(json_data)
+    td_date = format_td_date(json_data)
+
+    source, created = CiPanelAssociationSource.objects.get_or_create(
+        source = json_data['source'],
+        date = td_date,)
 
     # create a ClinicalIndication record for each CI in the TD
 
     for indication in json_data['indications']:
 
-        ci = create_record_ci(indication)
+        ci, created = ClinicalIndication.objects.get_or_create(
+            code = indication['code'],
+            name = indication['name'],
+            gemini_name = indication['gemini_name'],)
 
         # link each CI record to the appropriate Panel records
 
@@ -520,19 +356,23 @@ def insert_data(json_data, td_current):
                     if panel_records:
                         for panel in panel_records:
 
-                            ci_panel, created = create_record_ci_panel(
-                                td_current,
-                                source,
-                                ci,
-                                panel)
+                            ci_panel, created = ClinicalIndicationPanel.\
+                                objects.get_or_create(
+                                    source = source,
+                                    clinical_indication = ci,
+                                    panel = panel,
+                                    current = td_current)
 
                             # if this link is new, also make a usage record
 
                             if created:
 
-                                ci_panel_usage = create_record_usage(
-                                    td_date,
-                                    ci_panel)
+                                (ci_panel_usage,
+                                created) = ClinicalIndicationPanelUsage.\
+                                    objects.get_or_create(
+                                        clinical_indication_panel = ci_panel,
+                                        start_date = td_date,
+                                        end_date = None)
 
         # if the CI has one or more associated HGNC ids:
 
@@ -547,16 +387,28 @@ def insert_data(json_data, td_current):
             if matching_panels:
                 for match in matching_panels:
 
-                    ci_panel, created = create_record_ci_panel(
-                        td_current,
-                        source,
-                        ci,
-                        match)
+                    ci_panel, created = ClinicalIndicationPanel.objects.\
+                        get_or_create(
+                            source = source,
+                            clinical_indication = ci,
+                            panel = match,
+                            current = td_current)
+
+                    # create a new usage record if one didn't already exist
+
+                    if created:
+
+                        (ci_panel_usage,
+                        created) = ClinicalIndicationPanelUsage.objects.\
+                            get_or_create(
+                                clinical_indication_panel = ci_panel,
+                                start_date = td_date,
+                                end_date = None)
 
             # if not, make Panel records (2, bc genomes) and link to the CI
 
             else:
 
-                make_panels_from_hgncs(td_current, source, ci, hgnc_list)
+                make_panels_from_hgncs(td_current, source, td_date, ci, hgnc_list)
 
     print('Data insertion completed.')

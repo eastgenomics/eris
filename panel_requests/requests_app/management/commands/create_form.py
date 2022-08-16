@@ -749,6 +749,7 @@ class Command(BaseCommand):
             print(f'Request form created: {filename}')
 
         else:
-            print("Arguments must be specified in this order: " \
-                "request_date, requester, ci_code, ref_genome.\n" \
-                "Valid values for ref_genome are GRCh37 and GRCh38.")
+            print("The following arguments are required, and must be " \
+                "specified in this order: request_date, requester, ci_code, " \
+                "ref_genome, hgnc_dump.\nValid values for ref_genome are " \
+                "GRCh37 and GRCh38.")
