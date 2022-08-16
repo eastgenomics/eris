@@ -32,6 +32,10 @@ class Panel(models.Model):
         verbose_name='External panel ID',
         max_length = 255,)
 
+    panel_name = models.TextField(
+        verbose_name='Panel name',
+        max_length = 255,)
+
     panel_source = models.TextField(
         verbose_name='Panel source',
         max_length = 255,)

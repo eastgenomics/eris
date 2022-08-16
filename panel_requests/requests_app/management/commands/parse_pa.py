@@ -87,6 +87,7 @@ class Data:
 
         info_dict = {
             'panel_source' : 'PanelApp',
+            'panel_name' : panel['name'],
             'external_id' : panel['id'],
             'panel_version' : panel['version'],
             'genes' : [],

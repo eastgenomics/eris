@@ -86,12 +86,14 @@ def insert_data(parsed_data):
 
     panel_37, created = Panel.objects.get_or_create(
         external_id = parsed_data['external_id'],
+        panel_name = parsed_data['panel_name'],
         panel_source = parsed_data['panel_source'],
         panel_version = parsed_data['panel_version'],
         reference_genome_id = ref_genome_37.id,)
 
     panel_38, created = Panel.objects.get_or_create(
         external_id = parsed_data['external_id'],
+        panel_name = parsed_data['panel_name'],
         panel_source = parsed_data['panel_source'],
         panel_version = parsed_data['panel_version'],
         reference_genome_id = ref_genome_38.id,)

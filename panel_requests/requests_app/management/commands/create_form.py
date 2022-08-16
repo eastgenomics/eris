@@ -137,6 +137,7 @@ class Command(BaseCommand):
             panel_regions = self.get_region_records(panel_dict)
 
             panel_data = {
+                'name' : panel_dict['panel_name'],
                 'int_id' : panel_dict['id'],
                 'source' : panel_dict['panel_source'],
                 'ext_id' : panel_dict['external_id'],
@@ -350,13 +351,14 @@ class Command(BaseCommand):
         # dataframe columns are lists of data elements
 
         sources = [panel['source'] for panel in panel_dicts]
+        names = [panel['name'] for panel in panel_dicts]
         ids = [panel['ext_id'] for panel in panel_dicts]
         versions = [panel['ext_version'] for panel in panel_dicts]
 
         # create the df
 
         panel_df = pd.DataFrame({
-            'Current panels' : [''] * len(sources),
+            'Current panels' : names,
             'Panel source': sources,
             'External ID': ids,
             'External version' : versions})
