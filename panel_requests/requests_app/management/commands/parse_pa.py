@@ -1,8 +1,9 @@
 #!usr/bin/env python
 
 """
-This script (called in seed.py) defines functions to retrieve a panel's
-data from PanelApp, and parse it for insertion into the database.
+This script (called within seed.py) defines functions to retrieve a
+panel's data from PanelApp, and parse it for insertion into the
+database.
 """
 
 ### STILL TO DO: ###

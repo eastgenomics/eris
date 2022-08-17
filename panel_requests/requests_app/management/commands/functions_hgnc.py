@@ -4,9 +4,7 @@
 Functions for dealing with data from a tab-delimited text file
 ('filename') containing a dump of the HGNC database.
 
-Note that depending on when the dump file was created, the columns
-containing current, alias and previous gene symbols may have slightly
-different titles, and the script may need to be modified accordingly.
+Instructions for creating the text file can be found in the README.
 """
 
 
@@ -25,6 +23,27 @@ def import_hgnc_dump(filename):
     """
 
     hgnc_df = pd.read_csv(filename, sep='\t')
+
+    return hgnc_df
+
+
+def set_column_names(hgnc_df):
+    """ Rename the columns of the hgnc dataframe to a standardised format.
+
+    args:
+        hgnc_df [pandas dataframe]: created from text file dump
+
+    returns:
+        hgnc_df [pandas dataframe]: with updated column names
+    """
+
+    renamed_columns = [
+        'hgnc_id',
+        'symbol',
+        'prev_symbols',
+        'alias_symbols']
+
+    hgnc_df.columns = renamed_columns
 
     return hgnc_df
 
@@ -61,7 +80,7 @@ def get_hgnc_from_symbol(hgnc_df, gene_symbol):
         try:
             i = 0
 
-            for value in hgnc_df['alias_symbol']:
+            for value in hgnc_df['alias_symbols']:
                 if gene_symbol in str(value):
 
                     hgnc_id = hgnc_df.iloc[i].loc['hgnc_id']
@@ -75,7 +94,7 @@ def get_hgnc_from_symbol(hgnc_df, gene_symbol):
 
             j = 0
 
-            for value in hgnc_df['prev_symbol']:
+            for value in hgnc_df['prev_symbols']:
                 if gene_symbol in str(value):
 
                     hgnc_id = hgnc_df.iloc[j].loc['hgnc_id']

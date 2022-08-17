@@ -53,10 +53,10 @@ Usage examples:
 
 import json
 
-from . import parse_pa as parse_pa
-from . import parse_form as parse_form
-from . import insert_panel as insert_panel
-from . import insert_ci as insert_ci
+from . import parse_pa
+from . import parse_form
+from . import insert_panel
+from . import insert_ci
 
 from panelapp import queries
 
@@ -266,9 +266,7 @@ class Command(BaseCommand):
                 td_json = kwargs['td_json']
                 td_current = kwargs['td_current']
 
-                path = f'requests_app/management/commands/{td_json}'
-
-                with open(path) as reader:
+                with open(td_json) as reader:
                     json_data = json.load(reader)
 
                 if td_current == 'Y':

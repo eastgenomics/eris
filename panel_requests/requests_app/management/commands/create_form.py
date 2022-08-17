@@ -5,24 +5,7 @@ Given a clinical indication (CI) code, acquires the panel currently
 associated with that CI in the database and uses it to populate an Excel
 request form.
 
-Usage:
-
-    python manage.py create_form <req_date> <requester> <ci_code> <ref_genome>
-
-
-Example usages:
-
-CI links to PA panel with both regions and genes
-
-    python manage.py create_form 20220722 JJM R149.1 GRCh37 20220816_hgnc_dump
-
-CI links to list of HGNC IDs
-
-    python manage.py create_form 20220722 JJM R417.2 GRCh37 20220816_hgnc_dump
-
-CI links to nothing
-
-    python manage.py create_form 20220722 JJM R413.1 GRCh37 20220816_hgnc_dump
+Generic and example usages can be found in the README.
 """
 
 
@@ -701,8 +684,8 @@ class Command(BaseCommand):
 
             if len(panel_records) == 0:
 
-                print('\nNo panels are currently associated with this ' \
-                    'clinical indication.\n\n')
+                print('No panels are currently associated with this ' \
+                    'clinical indication.')
 
                 # create blank gene/region dfs
 
@@ -733,6 +716,8 @@ class Command(BaseCommand):
                 region_df = self.create_region_df(panel_dicts)
 
                 hgnc_df = functions_hgnc.import_hgnc_dump(hgnc_dump)
+                hgnc_df = functions_hgnc.set_column_names(hgnc_df)
+
                 gene_df = self.create_gene_df(hgnc_df, panel_dicts)
 
                 # construct the request form and print the filename

@@ -3,30 +3,8 @@
 """This script (called within seed.py) defines how cleaned data from
 a test directory file is inserted into the database models.
 
-Abbreviations:
-CI - clinical indication
-DB - database
-PA - PanelApp
-TD - NHS England national genomic test directory
-"""
-
-""" TD data should be a json dict with the keys:
-
-{
-source,
-date,
-indications : [
-	{
-	code,
-	name,
-	gemini_name,
-	panels : [id_1, id_2, ... , id_N],
-	}
-	{ci_2},
-	...
-	{ci_N},
-	],
-}
+Details of the required format for the test directory file can be found
+in the README.
 """
 
 
