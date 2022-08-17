@@ -12,11 +12,14 @@ Generic and example usages can be found in the README.
 import pandas as pd
 import xlsxwriter
 
+from . import functions_hgnc
+
 from datetime import datetime as dt
+from openpyxl import load_workbook
+from openpyxl.utils import get_column_letter
+from openpyxl.styles import NamedStyle, Font, PatternFill, Alignment
 
 from django.core.management.base import BaseCommand
-
-from . import functions_hgnc
 
 from requests_app.models import (
     Panel,
@@ -288,7 +291,7 @@ class Command(BaseCommand):
         return region_data
 
 
-    def create_head_df(self, req_date, requester, ci_code, ref_genome):
+    def create_generic_df(self, req_date, requester, ci_code, ref_genome):
         """ Create a header dataframe of general request information.
 
         args:
@@ -298,7 +301,7 @@ class Command(BaseCommand):
             ref_genome [str]: supplied at command line
 
         returns:
-            head_df [pandas dataframe]
+            generic_df [pandas dataframe]
         """
 
         base_df = pd.DataFrame({
@@ -313,11 +316,11 @@ class Command(BaseCommand):
                 requester,
                 ci_code,
                 ref_genome,
-                dt.today()]})
+                str(dt.today())]})
 
-        head_df = base_df.set_index('fields')
+        generic_df = base_df.set_index('fields')
 
-        return head_df
+        return generic_df
 
 
     def create_panel_df(self, panel_dicts):
@@ -364,13 +367,13 @@ class Command(BaseCommand):
 
         gene_symbols = []
         hgncs = []
-        transcripts = []
-        confs = []
-        mois = []
-        mops = []
-        pens = []
         gene_reasons = []
+        transcripts = []
         trans_reasons = []
+        confs = []
+        pens = []
+        mops = []
+        mois = []
 
         # populate columns
 
@@ -378,13 +381,13 @@ class Command(BaseCommand):
             for gene in panel['genes']:
 
                 hgncs.append(gene['hgnc'])
-                transcripts.append(gene['transcript'])
-                confs.append(gene['conf'])
-                mois.append(gene['moi'])
-                mops.append(gene['mop'])
-                pens.append(gene['pen'])
                 gene_reasons.append(gene['gene_reason'])
+                transcripts.append(gene['transcript'])
                 trans_reasons.append(gene['trans_reason'])
+                confs.append(gene['conf'])
+                pens.append(gene['pen'])
+                mops.append(gene['mop'])
+                mois.append(gene['moi'])
 
         # get current gene symbols for HGNC ids
 
@@ -408,13 +411,13 @@ class Command(BaseCommand):
         gene_df = pd.DataFrame({
             'Gene symbol' : gene_symbols,
             'HGNC ID': hgncs,
-            'Transcript': transcripts,
-            'Confidence': confs,
-            'MOI': mois,
-            'MOP': mops,
-            'Penetrance': pens,
             'Gene justification': gene_reasons,
-            'Transcript justification': trans_reasons,})
+            'Transcript': transcripts,
+            'Transcript justification': trans_reasons,
+            'Confidence': confs,
+            'Penetrance': pens,
+            'MOP': mops,
+            'MOI': mois,})
 
         return gene_df
 
@@ -436,16 +439,16 @@ class Command(BaseCommand):
         chroms = []
         starts= []
         ends = []
+        reasons = []
         confs = []
-        mois = []
-        mops = []
         pens = []
+        mops = []
+        mois = []
         haplos = []
         triplos = []
         types = []
         var_types = []
         overlaps = []
-        reasons = []
 
         # populate columns
 
@@ -456,16 +459,16 @@ class Command(BaseCommand):
                 chroms.append(region['chrom'])
                 starts.append(region['start'])
                 ends.append(region['end'])
+                reasons.append(region['reason'])
                 confs.append(region['conf'])
-                mois.append(region['moi'])
-                mops.append(region['mop'])
                 pens.append(region['pen'])
-                haplos.append(region['haplo'])
-                triplos.append(region['triplo'])
+                mops.append(region['mop'])
+                mois.append(region['moi'])
                 types.append(region['type'])
                 var_types.append(region['var_type'])
+                haplos.append(region['haplo'])
+                triplos.append(region['triplo'])
                 overlaps.append(region['overlap'])
-                reasons.append(region['reason'])
 
         # create df
 
@@ -474,16 +477,16 @@ class Command(BaseCommand):
             'Chromosome': chroms,
             'Start': starts,
             'End': ends,
+            'Justification': reasons,
             'Confidence': confs,
-            'MOI': mois,
-            'MOP': mops,
             'Penetrance': pens,
-            'Haploins.': haplos,
-            'Triplosens.': triplos,
+            'MOP': mops,
+            'MOI': mois,
             'Type': types,
             'Variant type': var_types,
-            'Overlap': overlaps,
-            'Justification': reasons,})
+            'Haploinsufficiency': haplos,
+            'Triplosensitivity': triplos,
+            'Overlap': overlaps,})
 
         return region_df
 
@@ -499,65 +502,73 @@ class Command(BaseCommand):
         """
 
         gene_df = pd.DataFrame({
-            'HGNC ID': ['e.g. 236',
+            'Gene symbol' : ['e.g. ADCY5', '',
             'Insert data for one gene per row - add more rows as required'],
-            'Transcript': ['e.g. NM_183357.3', ''],
-            'Confidence': ['e.g. 3', ''],
-            'MOI': ['e.g. BIALLELIC, autosomal or pseudoautosomal', ''],
-            'MOP': ['e.g. gain-of-function', ''],
-            'Penetrance': ['e.g. Complete', ''],
-            'Gene justification': ['e.g. PanelApp', ''],
-            'Transcript justification': ['e.g. MANE', ''],})
+            'HGNC ID': ['e.g. 236', '', ''],
+            'Gene justification': ['e.g. PanelApp', '', ''],
+            'Transcript': ['e.g. NM_183357.3', '', ''],
+            'Transcript justification': ['e.g. MANE', '', ''],
+            'Confidence': ['e.g. 3',  '',''],
+            'Penetrance': ['e.g. Complete', '', ''],
+            'MOP': ['e.g. gain-of-function', '', ''],
+            'MOI': ['e.g. BIALLELIC, autosomal or pseudoautosomal', '', ''],})
 
         region_df = pd.DataFrame({
-            'Region name': ['e.g. Xp11.23 region (includes MAOA and MAOB) Loss',
+            'Region name': ['e.g. Xp11.23 region (includes MAOA and MAOB) Loss', '',
             'Insert data for one region per row - add more rows as required'],
-            'Type': ['e.g. cnv', ''],
-            'Variant type': ['e.g. cnv_loss', ''],
-            'Chromosome': ['e.g. X', ''],
-            'Start': ['e.g. 43654906', ''],
-            'End': ['e.g. 43882474', ''],
-            'Confidence': ['e.g. 3', ''],
-            'MOI': ['e.g. MONOALLELIC, autosomal or pseudoautosomal', ''],
-            'MOP': ['e.g. gain-of-function', ''],
-            'Penetrance': ['e.g. Incomplete', ''],
-            'Haploins.': ['e.g. 3', ''],
-            'Triplosens.': ['e.g. 2', ''],
-            'Overlap': ['N/A', ''],
-            'Justification': ['e.g. PanelApp', ''],})
+            'Chromosome': ['e.g. X', '', ''],
+            'Start': ['e.g. 43654906', '', ''],
+            'End': ['e.g. 43882474', '', ''],
+            'Justification': ['e.g. PanelApp', '', ''],
+            'Confidence': ['e.g. 3', '', ''],
+            'Penetrance': ['e.g. Incomplete', '', ''],
+            'MOP': ['e.g. gain-of-function', '', ''],
+            'MOI': ['e.g. MONOALLELIC, autosomal or pseudoautosomal', '', ''],
+            'Type': ['e.g. cnv', '', ''],
+            'Variant type': ['e.g. cnv_loss', '', ''],
+            'Haploinsufficiency': ['e.g. 3', '', ''],
+            'Triplosensitivity': ['e.g. 2', '', ''],
+            'Overlap': ['N/A', '', ''],})
 
         return gene_df, region_df
 
 
-    def write_blank_form(self, filename, head_df, gene_df, region_df):
+    def write_blank_form(self, filename, generic_df, gene_df, region_df):
         """ Construct a blank request form as an Excel file. This will
-        be returned if there are no panels in the database currently
+        be executed if there are no panels in the database currently
         associated with the specified clinical indication.
 
         args:
             filename [str]: name of output request form
-            head_df [pandas dataframe]: general info about request
+            generic_df [pandas dataframe]: general info about request
             gene_df [pandas dataframe]: all genes covered by these panels
             region_df [pandas dataframe]: all regions covered by these panels
+
+        returns:
+            cell_ranges [list]: strs of cell ranges (e.g. 'A1:A7')
         """
 
         writer = pd.ExcelWriter(filename, engine='xlsxwriter')
 
-        # write header df in cell A1
-
         row = 0
         col = 0
+        header_rows = []
 
-        head_df.to_excel(
+        # write generic df in cell A1, increment row by df length
+
+        generic_df.to_excel(
             writer,
             sheet_name = 'Sheet1',
             startrow = row,
             startcol = col,
             header = False)
 
-        # header df has 5 rows > go to A7 and insert blank gene df
+        for df_row in generic_df.iterrows():
+            row += 1
 
-        row += 6
+        row += 1
+
+        # write gene df, get range of header
 
         gene_df.to_excel(
             writer,
@@ -566,9 +577,16 @@ class Command(BaseCommand):
             startcol = col,
             index = False)
 
-        # blank gene df has 3 rows > go to A11 and insert blank region df
+        header_rows.append(('gene', row + 1))
 
-        row += 4
+        # increment row by df length
+
+        for df_row in gene_df.iterrows():
+            row += 1
+
+        row += 2
+
+        # write region df, get range of header
 
         region_df.to_excel(
             writer,
@@ -577,37 +595,55 @@ class Command(BaseCommand):
             startcol = col,
             index = False)
 
+        header_rows.append(('region', row + 1))
+
+        # identify the last populated row
+
+        for df_row in region_df.iterrows():
+            row += 1
+
+        final_row = row + 1
+
         writer.save()
 
+        return header_rows, final_row
 
-    def write_data(self, filename, head_df, panel_df, gene_df, region_df):
-        """ Construct the request form as an Excel file.
+
+    def write_data(self, filename, generic_df, panel_df, gene_df, region_df):
+        """ Construct the request form as an excel file.
 
         args:
             filename [str]: for output request form
-            head_df [pandas dataframe]: general info about request
+            generic_df [pandas dataframe]: general info about request
             panel_df [pandas dataframe]: list of current panels for this CI
             gene_df [pandas dataframe]: all genes covered by these panels
             region_df [pandas dataframe]: all regions covered by these panels
+
+        returns:
+            cell_ranges [list]: strs of cell ranges (e.g. 'A1:A7')
         """
 
         writer = pd.ExcelWriter(filename, engine='xlsxwriter')
 
-        # write header df in cell A1
-
         row = 0
         col = 0
+        header_rows = []
 
-        head_df.to_excel(
+        # write generic df in cell A1, increment row by df length
+
+        generic_df.to_excel(
             writer,
             sheet_name = 'Sheet1',
             startrow = row,
             startcol = col,
             header = False)
 
-        # header df has 5 rows > go to A7 and insert panel df
+        for df_row in generic_df.iterrows():
+            row += 1
 
-        row += 6
+        row += 1  # spacer between dataframes
+
+        # write panel df, get row of header, increment row by df length
 
         panel_df.to_excel(
             writer,
@@ -616,14 +652,14 @@ class Command(BaseCommand):
             startcol = col,
             index = False)
 
-        # increment row by length of panel df
+        header_rows.append(('panel', row + 1))
 
         for df_row in panel_df.iterrows():
             row += 1
 
-        # insert gene df
-
         row += 2
+
+        # write gene df, get row of header, increment row by df length
 
         gene_df.to_excel(
             writer,
@@ -632,14 +668,14 @@ class Command(BaseCommand):
             startcol = col,
             index = False)
 
-        # increment row by length of gene df
+        header_rows.append(('gene', row + 1))
 
         for df_row in gene_df.iterrows():
             row += 1
 
-        # insert region df
-
         row += 2
+
+        # write region df, get row of header
 
         region_df.to_excel(
             writer,
@@ -648,7 +684,103 @@ class Command(BaseCommand):
             startcol = col,
             index = False)
 
+        header_rows.append(('region', row + 1))
+
+        # identify the last populated row
+
+        for df_row in region_df.iterrows():
+            row += 1
+
+        final_row = row + 1
+
         writer.save()
+
+        return header_rows, final_row
+
+
+    def format_excel(self, excel_file, cell_ranges, final_row):
+        """ Visually format an existing excel file. Apply a style to
+        dataframe header cells, and set column widths to autofit data.
+
+        args:
+            excel_file [str]: path to file
+            cell_ranges [list]: strs (e.g. 'A1:A7') of cell ranges for styling
+        """
+
+        # load in the excel file
+
+        wb = load_workbook(filename = excel_file)
+        ws = wb['Sheet1']
+
+        # define a style for a default font type and size
+
+        normal_font = NamedStyle(name = "normal_font")
+
+        normal_font.font = Font(name = 'Arial', size = 10)
+
+        normal_font.alignment = Alignment(
+            horizontal = 'left',
+            vertical = 'center')
+
+        wb.add_named_style(normal_font)
+
+        # define a style to highlight header cells
+
+        highlight = NamedStyle(name = "highlight")
+
+        highlight.font = Font(bold = True, name = 'Arial', size = 10)
+
+        highlight.alignment = Alignment(vertical = 'center')
+
+        highlight.fill = PatternFill(
+            fill_type = 'solid',
+            start_color = '00C0C0C0',  # light grey
+            end_color = '00C0C0C0')
+
+        wb.add_named_style(highlight)
+
+        # apply the default font to all populated cells
+
+        for col in 'ABCDEFGHIJKLMN':
+            for row in range(1, final_row + 1):
+
+                ws[f'{col}{row}'].style = 'normal_font'
+
+        # apply the heading style to the index of the generic df
+
+        for row in range(1, 6):
+
+            ws[f'A{row}'].style = 'highlight'
+
+        # apply the heading style to the headers of the other dfs
+
+        for cell_range in cell_ranges:
+
+            row = cell_range[1]
+
+            if cell_range[0] == 'panel':
+
+                cols = 'ABCD'
+
+            elif cell_range[0] == 'gene':
+
+                cols = 'ABCDEFGHI'
+
+            elif cell_range[0] == 'region':
+
+                cols = 'ABCDEFGHIJKLMN'
+
+            for col in cols:
+
+                ws[f'{col}{row}'].style = 'highlight'
+
+        # set all columns to be 5cm wide
+
+        for col in 'ABCDEFGHIJKLMN':
+
+            ws.column_dimensions[col].width = 25.5
+
+        wb.save(filename = excel_file)
 
 
     def handle(self, *args, **kwargs):
@@ -674,7 +806,7 @@ class Command(BaseCommand):
 
             # construct header df of general info about the request
 
-            head_df = self.create_head_df(
+            generic_df = self.create_generic_df(
                 req_date,
                 requester,
                 ci_code,
@@ -695,9 +827,9 @@ class Command(BaseCommand):
 
                 filename = f'request_form_{req_date}_{ci_code}_{ref_genome}_{requester}_BLANK.xlsx'
 
-                output_file = self.write_blank_form(
+                header_ranges, final_row = self.write_blank_form(
                     filename,
-                    head_df,
+                    generic_df,
                     gene_df,
                     region_df)
 
@@ -724,12 +856,16 @@ class Command(BaseCommand):
 
                 filename = f'request_form_{req_date}_{ci_code}_{ref_genome}_{requester}.xlsx'
 
-                output_file = self.write_data(
+                header_ranges,final_row = self.write_data(
                     filename,
-                    head_df,
+                    generic_df,
                     panel_df,
                     gene_df,
                     region_df)
+
+            # apply formatting to the created file
+
+            self.format_excel(filename, header_ranges, final_row)
 
             print(f'Request form created: {filename}')
 
