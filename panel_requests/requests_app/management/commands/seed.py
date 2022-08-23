@@ -4,50 +4,47 @@
 Coordinates functions to:
 
     1. Pull in and parse data from...
-        a. a genomic test directory file (via import_td_data)
-        b. a request form (via parse_form.py)
-        c. an unmodified PanelApp panel (via parse_pa.py)
+        a. PanelApp API (via parse_pa.py)
+        b. JSON file of parsed test directory data (via import_td_data)
+        c. Request form excel file (via parse_form.py)
 
-    2. Insert the parsed data into the database (via insert.py)
+    2. Insert the parsed data into the database (via insert_panel.py or
+    insert_ci.py)
 
 Test directory data cannot be imported before the database has been
-populated with all current PanelApp panels. This is because clinical
-indications in the test directory are all linked to specific panels.
-
-Usage:
-
-    python manage.py seed <source> <options>
-
-Options (*optional, defaults to None):
-
-    source: 'd' (test directory), 'f' (request form), or 'p' (PanelApp)
-    *--filepath [str]: Path to request form (required if source = f)
-    *--panel_id [str]: PanelApp panel id (required if source = p)
-    *--panel_version [str]: PanelApp panel version (optional if source = p)
+populated with all current PanelApp panels. This is because most
+clinical indications in the test directory are linked to specific
+panels.
 
 
-Usage examples:
+Usage examples: Importing PanelApp data
 
-1. (PARTIALLY TESTED) Import parsed data from the current version of the test directory
+- Import all current PanelApp panels
 
-    python manage.py seed d --td_json <filename> --td_current Y
+    python manage.py seed panels all
 
-2. (NOT WORKING YET) Import parsed data from a non-current version of the test directory
+- Import the current version of a single PanelApp panel
 
-    python manage.py seed d --td_json <filename> --td_current N
+    python manage.py seed panels <panel_id>
 
-3. (NOT WORKING YET) Parse a panel request form and import data
+- Import a specific version of a single PanelApp panel
 
-    python manage.py seed f --infile <filename>
+    python manage.py seed panels <panel_id> <panel_version>
 
-4. (PARTIALLY TESTED) Parse and import a single PanelApp panel
 
-    python manage.py seed p --panel_id <id> (--panel_version <version>)
+Usage examples: Importing test directory data
 
-5. (PARTIALLY TESTED) Parse and import all current PanelApp panels
+- Import data from a JSON file of parsed test directory data
+- (Y/N specifies whether this is the current TD version)
 
-    python manage.py seed p --panel_id all
+    python manage.py seed test_dir <input_json> <Y/N>
 
+
+Usage examples: Importing test directory data
+
+- Parse a panel request form and import data
+
+    python manage.py seed form <input_file>
 """
 
 
@@ -64,56 +61,52 @@ from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
-    help = "Coordinate the functions in other scripts to import and \
-        parse data, then use insert.py to insert the cleaned data into \
-        the database."
+    help = "Coordinate the functions in other scripts to import and " \
+        "parse data, then use insert.py to insert the cleaned data into " \
+        "the database."
 
     def add_arguments(self, parser):
         """ Define the source of the data to import. """
 
-        # 'source' arg is always required, and has 3 valid values
-        parser.add_argument(
-            "source",
-            nargs = 1,
-            choices = ['d', 'f', 'p'],
-            help = "Specify source of data to insert. Options: 'd' for test \
-                directory, 'f' for request form, or 'p' for PanelApp.",)
+        subparsers = parser.add_subparsers()
 
-        # '--td_json' is required if source = d
-        parser.add_argument(
-            "--td_json",
-            nargs = '?',
-            default = None,
-            help = "Path to JSON file of TD data",)
+        # subparser defining inputs for importing data from PanelApp
 
-        # '--td_current' is required if source = d, and has 2 valid values
-        parser.add_argument(
-            "--td_current",
-            nargs = '?',
-            default = None,
-            choices = ['Y', 'N'],
-            help = "Is this test directory the current version: Y/N",)
+        parser_p = subparsers.add_parser('panels', help = 'Import panel data')
 
-        # 'filepath' kwarg is required if source = f
-        parser.add_argument(
-            "--filepath",
-            nargs = '?',
-            default = None,
+        parser_p.add_argument(
+            "panel_id", type = str, help = "PanelApp panel id",)
+
+        parser_p.add_argument(
+            "panel_version", type = str, nargs = '?', default = None,
+            help = "PanelApp panel version (optional)",)
+
+        parser_p.set_defaults(which = 'panels')
+
+        # subparser defining inputs for importing data from TD
+
+        parser_d = subparsers.add_parser('test_dir', help = 'Import TD data')
+
+        parser_d.add_argument(
+            'input_json', type = str,
+            help = "Path to JSON file of parsed TD data",)
+
+        parser_d.add_argument(
+            "current", type = str, choices = ['Y', 'N'],
+            help = "Is this test directory the current version Y/N",)
+
+        parser_d.set_defaults(which = 'test_dir')
+
+        # subparser defining inputs for importing data from request form
+
+        parser_f = subparsers.add_parser('form',
+            help = 'Import request form data')
+
+        parser_f.add_argument(
+            "input_file", type = str,
             help = "Path to request form file",)
 
-        # 'panel_id' kwarg is required if source = p
-        parser.add_argument(
-            "--panel_id",
-            nargs = '?',
-            default = None,
-            help = "PanelApp panel id",)
-
-        # 'panel_version' kwarg is optional if source = p
-        parser.add_argument(
-            "--panel_version",
-            nargs = '?',
-            default = None,
-            help = "PanelApp panel version (optional)",)
+        parser_f.set_defaults(which = 'form')
 
 
     def parse_single_pa_panel(self, panel_id, panel_version):
@@ -206,86 +199,63 @@ class Command(BaseCommand):
         specified source, then calls inserter to insert cleaned data
         into the database. """
 
-        # source must be specified
+        process = kwargs['which']
 
-        if kwargs['source']:
-
-            source = kwargs['source'][0]
+        assert process, "Please specify data type: panels / test_dir / form"
 
 
-            ## import and parse PanelApp data (panel_id required)
+        ## import and parse PanelApp data (panel_version optional)
 
-            if (source == 'p') and (kwargs['panel_id']):
+        if process == 'panels':
+            panel_id = kwargs['panel_id']
 
-                panel_id = kwargs['panel_id']
+            # parse data from ALL current PanelApp panels
 
-                # parse data from all current PanelApp panels
-
-                if panel_id == 'all':
-
+            if panel_id == 'all':
                     parsed_data = self.parse_all_pa_panels()
 
-                # parse data from a single PanelApp panel
-
-                else:
-                    if kwargs['panel_version']:
-                        panel_version = kwargs['panel_version']
-
-                    else:
-                        panel_version = None
-
-                    parsed_data = [self.parse_single_pa_panel(
-                        panel_id,
-                        panel_version)]
-
-                # insert parsed data (list of panel dicts) into the db
-
-                for panel_dict in parsed_data:
-                    if panel_dict:
-
-                        insert_panel.insert_data(panel_dict)
-
-
-            ## import and parse data from a request form (filepath required)
-
-            elif (source == 'f') and (kwargs['filepath']):
-
-                filepath = kwargs['filepath']
-
-                # parsed_data = self.parse_form_data(filepath)
-
-                print("The app can't deal with request forms yet.")
-
-
-            ## import test directory data (td_json & td_current required)
-
-            elif (source == 'd') and \
-                (kwargs['td_json']) and \
-                (kwargs['td_current']):
-
-                td_json = kwargs['td_json']
-                td_current = kwargs['td_current']
-
-                with open(td_json) as reader:
-                    json_data = json.load(reader)
-
-                if td_current == 'Y':
-                    current_td = True
-
-                elif td_current == 'N':
-                    current_td = False
-
-                insert_ci.insert_data(json_data, current_td)
-
-
-            ## a valid combination of arguments is required
+            # parse data from a single PanelApp panel
 
             else:
-                print(f'Error reading in arguments. \
-                    \nSpecified source: {source} \
-                    \nSupplied args: {args} \
-                    \nSupplied kwargs: {kwargs}')
+                if kwargs['panel_version']:
+                    panel_version = kwargs['panel_version']
 
-        else:
-            print("Data source must be specified. Options are d for test \
-                directory, f for request form, or p for PanelApp.")
+                else:
+                    panel_version = None
+
+                parsed_data = [self.parse_single_pa_panel(
+                    panel_id, panel_version)]
+
+            # insert parsed data (list of panel dicts) into the db
+
+            for panel_dict in parsed_data:
+                if panel_dict:
+                    insert_panel.insert_data(panel_dict)
+
+
+        ## import test directory data (td_json & td_current required)
+
+        elif process == 'test_dir':
+
+            td_json = kwargs['input_json']
+            td_current = kwargs['current']
+
+            with open(td_json) as reader:
+                json_data = json.load(reader)
+
+            if td_current == 'Y':
+                current = True
+            elif td_current == 'N':
+                current = False
+
+            insert_ci.insert_data(json_data, current)
+
+
+        ## import and parse data from a request form (filepath required)
+
+        elif process == 'form':
+            filepath = kwargs['input_file']
+
+            # parsed_data = self.parse_form_data(filepath)
+
+            print("The app can't deal with request forms yet.")
