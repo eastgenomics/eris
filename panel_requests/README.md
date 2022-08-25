@@ -30,7 +30,7 @@ Then delete all pre-existing migrations files in requests_app/migrations (but ma
 ### 1. Insert data from PanelApp
 The generic command for this is:
 ```sh
-python manage.py seed p --panel_id all
+python manage.py seed panels all
 ```
 - This command retrieves all current panels from the PanelApp API, parses the data, and inserts it into the appropriate database models.
 - It can be executed as-is and has no variable arguments.
@@ -38,14 +38,14 @@ python manage.py seed p --panel_id all
 ### 2. Insert data from the National Genomic Test Directory
 The generic command for this is:
 ```sh
-python manage.py seed d --td_json <filename> --td_current <Y/N>
+python manage.py seed test_dir <input_json> <Y/N>
 ```
 - Example usage:
 ```sh
-python manage.py seed d --td_json 220713_RD_TD.json --td_current Y
+python manage.py seed test_dir 220713_RD_TD.json Y
 ```
 - This command retrieves data from a JSON file, inserts it into the appropriate database models, and links these to the appropriate panel data as specified within the test directory.
-- The JSON file should be created from the original test directory MS Excel file and take the following format:
+- The JSON file can be created from the original test directory MS Excel file using https://github.com/eastgenomics/test_directory_parser, and take the following format:
 ```sh
 {
 directory_version_name,
