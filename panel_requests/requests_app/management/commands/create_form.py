@@ -52,31 +52,29 @@ class Command(BaseCommand):
 
         parser.add_argument(
             "req_date",
-            nargs = 1,
-            help = "Date the request was submitted",)
+            nargs=1,
+            help="Date the request was submitted",)
 
         parser.add_argument(
             "requester",
-            nargs = 1,
-            help = "Person who submitted the request",)
+            nargs=1,
+            help="Person who submitted the request",)
 
         parser.add_argument(
             "ci_code",
-            nargs = 1,
-            help = "The CI code to create request form for (e.g. R149.1)",)
+            nargs=1,
+            help="The CI code to create request form for (e.g. R149.1)",)
 
         parser.add_argument(
             "ref_genome",
-            nargs = 1,
-            choices = ['GRCh37', 'GRCh38'],
-            help = "The reference genome build to use",)
+            nargs=1,
+            choices=['GRCh37', 'GRCh38'],
+            help="The reference genome build to use",)
 
         parser.add_argument(
             "hgnc_dump",
-            nargs = 1,
-            help = "Name of HGNC dump text file"
-        )
-
+            nargs=1,
+            help="Name of HGNC dump text file")
 
     def get_panel_records(self, ci_code, ref_genome):
         """ Retrieve Panel records from the database where the panel is
@@ -93,12 +91,11 @@ class Command(BaseCommand):
         """
 
         panel_records = Panel.objects.filter(
-            clinicalindicationpanel__clinical_indication_id__code = ci_code,
-            reference_genome__reference_build = ref_genome,
-            clinicalindicationpanel__current = True).values()
+            clinicalindicationpanel__clinical_indication_id__code=ci_code,
+            reference_genome__reference_build=ref_genome,
+            clinicalindicationpanel__current=True).values()
 
         return panel_records
-
 
     def retrieve_panel_entities(self, ref_genome, panel_records):
         """ For each retrieved panel record, retrieve all associated
@@ -123,19 +120,18 @@ class Command(BaseCommand):
             panel_regions = self.get_region_records(panel_dict)
 
             panel_data = {
-                'name' : panel_dict['panel_name'],
-                'int_id' : panel_dict['id'],
-                'source' : panel_dict['panel_source'],
-                'ext_id' : panel_dict['external_id'],
-                'ext_version' : panel_dict['panel_version'],
-                'ref_genome' : panel_genome,
-                'genes' : panel_genes,
-                'regions' : panel_regions}
+                'name': panel_dict['panel_name'],
+                'int_id': panel_dict['id'],
+                'source': panel_dict['panel_source'],
+                'ext_id': panel_dict['external_id'],
+                'ext_version': panel_dict['panel_version'],
+                'ref_genome': panel_genome,
+                'genes': panel_genes,
+                'regions': panel_regions}
 
             panel_dicts.append(panel_data)
 
         return panel_dicts
-
 
     def get_gene_records(self, panel_dict):
         """ Retrieve all gene records associated with a panel record.
@@ -150,54 +146,53 @@ class Command(BaseCommand):
         gene_data = []
 
         panel_genes = PanelGene.objects.filter(
-            panel_id = panel_dict['id']).values()
+            panel_id=panel_dict['id']).values()
 
         if len(panel_genes) > 0:
 
             for gene in panel_genes:
 
                 transcript = Transcript.objects.filter(
-                    panelgenetranscript__panel_gene_id = gene['id']
+                    panelgenetranscript__panel_gene_id=gene['id']
                     ).values()[0]['refseq_id']
 
                 transcript_reason = PanelGeneTranscript.objects.filter(
-                    panel_gene_id = gene['id']
+                    panel_gene_id=gene['id']
                     ).values()[0]['justification']
 
                 hgnc = Hgnc.objects.filter(
-                    gene__panelgene__id = gene['id']
+                    gene__panelgene__id=gene['id']
                     ).values()[0]['id']
 
                 confidence = Confidence.objects.filter(
-                    panelgene__id = gene['id']
+                    panelgene__id=gene['id']
                     ).values()[0]['confidence_level']
 
                 moi = ModeOfInheritance.objects.filter(
-                    panelgene__id = gene['id']
+                    panelgene__id=gene['id']
                     ).values()[0]['mode_of_inheritance']
 
                 mop = ModeOfPathogenicity.objects.filter(
-                    panelgene__id = gene['id']
+                    panelgene__id=gene['id']
                     ).values()[0]['mode_of_pathogenicity']
 
                 penetrance = Penetrance.objects.filter(
-                    panelgene__id = gene['id']
+                    panelgene__id=gene['id']
                     ).values()[0]['penetrance']
 
                 gene_dict = {
-                    'transcript' : transcript,
-                    'hgnc' : hgnc,
-                    'conf' : confidence,
-                    'moi' : moi,
-                    'mop' : mop,
-                    'pen' : penetrance,
-                    'gene_reason' : gene['justification'],
-                    'trans_reason' : transcript_reason,}
+                    'transcript': transcript,
+                    'hgnc': hgnc,
+                    'conf': confidence,
+                    'moi': moi,
+                    'mop': mop,
+                    'pen': penetrance,
+                    'gene_reason': gene['justification'],
+                    'trans_reason': transcript_reason}
 
                 gene_data.append(gene_dict)
 
         return gene_data
-
 
     def get_region_records(self, panel_dict):
         """ Retrieve all region records associated with a panel record.
@@ -212,84 +207,83 @@ class Command(BaseCommand):
         region_data = []
 
         panel_regions = PanelRegion.objects.filter(
-            panel_id = panel_dict['id']).values()
+            panel_id=panel_dict['id']).values()
 
         if len(panel_regions) > 0:
 
             for region in panel_regions:
 
                 confidence = Confidence.objects.filter(
-                    panelregion__id = region['id']
+                    panelregion__id=region['id']
                     ).values()[0]['confidence_level']
 
                 moi = ModeOfInheritance.objects.filter(
-                    panelregion__id = region['id']
+                    panelregion__id=region['id']
                     ).values()[0]['mode_of_inheritance']
 
                 mop = ModeOfPathogenicity.objects.filter(
-                    panelregion__id = region['id']
+                    panelregion__id=region['id']
                     ).values()[0]['mode_of_pathogenicity']
 
                 penetrance = Penetrance.objects.filter(
-                    panelregion__id = region['id']
+                    panelregion__id=region['id']
                     ).values()[0]['penetrance']
 
                 name = Region.objects.filter(
-                    panelregion__id = region['id']
+                    panelregion__id=region['id']
                     ).values()[0]['name']
 
                 chromosome = Region.objects.filter(
-                    panelregion__id = region['id']
+                    panelregion__id=region['id']
                     ).values()[0]['chrom']
 
                 start = Region.objects.filter(
-                    panelregion__id = region['id']
+                    panelregion__id=region['id']
                     ).values()[0]['start']
 
                 end = Region.objects.filter(
-                    panelregion__id = region['id']
+                    panelregion__id=region['id']
                     ).values()[0]['end']
 
                 region_type = Region.objects.filter(
-                    panelregion__id = region['id']
+                    panelregion__id=region['id']
                     ).values()[0]['type']
 
                 variant_type = VariantType.objects.filter(
-                    panelregion__id = region['id']
+                    panelregion__id=region['id']
                     ).values()[0]['variant_type']
 
                 haplo = Haploinsufficiency.objects.filter(
-                    panelregion__id = region['id']
+                    panelregion__id=region['id']
                     ).values()[0]['haploinsufficiency']
 
                 triplo = Triplosensitivity.objects.filter(
-                    panelregion__id = region['id']
+                    panelregion__id=region['id']
                     ).values()[0]['triplosensitivity']
 
                 overlap = RequiredOverlap.objects.filter(
-                    panelregion__id = region['id']
+                    panelregion__id=region['id']
                     ).values()[0]['required_overlap']
 
                 region_dict = {
-                    'conf' : confidence,
-                    'moi' : moi,
-                    'mop' : mop,
-                    'pen' : penetrance,
-                    'name' : name,
-                    'chrom' : chromosome,
-                    'start' : start,
-                    'end' : end,
-                    'type' : region_type,
-                    'var_type' : variant_type,
-                    'haplo' : haplo,
-                    'triplo' : triplo,
-                    'overlap' : overlap,
-                    'reason' : region['justification']}
+                    'conf': confidence,
+                    'moi': moi,
+                    'mop': mop,
+                    'pen': penetrance,
+                    'name': name,
+                    'chrom': chromosome,
+                    'start': start,
+                    'end': end,
+                    'type': region_type,
+                    'var_type': variant_type,
+                    'haplo': haplo,
+                    'triplo': triplo,
+                    'overlap': overlap,
+                    'reason': region['justification']}
 
                 region_data.append(region_dict)
 
         return region_data
-
 
     def create_generic_df(self, req_date, requester, ci_code, ref_genome):
         """ Create a header dataframe of general request information.
@@ -305,13 +299,13 @@ class Command(BaseCommand):
         """
 
         base_df = pd.DataFrame({
-            'fields' : [
+            'fields': [
                 'Request date',
                 'Requested by',
                 'Clinical indication',
                 'Reference genome',
                 'Form generated'],
-            'data' : [
+            'data': [
                 req_date,
                 requester,
                 ci_code,
@@ -321,7 +315,6 @@ class Command(BaseCommand):
         generic_df = base_df.set_index('fields')
 
         return generic_df
-
 
     def create_panel_df(self, panel_dicts):
         """ Create a dataframe of information about panels currently
@@ -344,13 +337,12 @@ class Command(BaseCommand):
         # create the df
 
         panel_df = pd.DataFrame({
-            'Current panels' : names,
+            'Current panels': names,
             'Panel source': sources,
             'External ID': ids,
-            'External version' : versions})
+            'External version': versions})
 
         return panel_df
-
 
     def create_gene_df(self, hgnc_df, panel_dicts):
         """ Create a dataframe listing all genes currently covered by
@@ -409,7 +401,7 @@ class Command(BaseCommand):
         # create df
 
         gene_df = pd.DataFrame({
-            'Gene symbol' : gene_symbols,
+            'Gene symbol': gene_symbols,
             'HGNC ID': hgncs,
             'Gene justification': gene_reasons,
             'Transcript': transcripts,
@@ -417,10 +409,9 @@ class Command(BaseCommand):
             'Confidence': confs,
             'Penetrance': pens,
             'MOP': mops,
-            'MOI': mois,})
+            'MOI': mois})
 
         return gene_df
-
 
     def create_region_df(self, panel_dicts):
         """ Create a dataframe listing all regions currently covered by
@@ -437,7 +428,7 @@ class Command(BaseCommand):
 
         names = []
         chroms = []
-        starts= []
+        starts = []
         ends = []
         reasons = []
         confs = []
@@ -486,10 +477,9 @@ class Command(BaseCommand):
             'Variant type': var_types,
             'Haploinsufficiency': haplos,
             'Triplosensitivity': triplos,
-            'Overlap': overlaps,})
+            'Overlap': overlaps})
 
         return region_df
-
 
     def create_blank_dfs(self):
         """ For cases where a clinical indication has no associated
@@ -502,36 +492,36 @@ class Command(BaseCommand):
         """
 
         gene_df = pd.DataFrame({
-            'Gene symbol' : ['e.g. ADCY5', '',
-            'Insert data for one gene per row - add more rows as required'],
-            'HGNC ID': ['e.g. 236', '', ''],
-            'Gene justification': ['e.g. PanelApp', '', ''],
-            'Transcript': ['e.g. NM_183357.3', '', ''],
-            'Transcript justification': ['e.g. MANE', '', ''],
-            'Confidence': ['e.g. 3',  '',''],
-            'Penetrance': ['e.g. Complete', '', ''],
-            'MOP': ['e.g. gain-of-function', '', ''],
-            'MOI': ['e.g. BIALLELIC, autosomal or pseudoautosomal', '', ''],})
+            'Gene symbol': ['e.g. ADCY5', '',
+                'Insert data for 1 gene/row - add rows as required'],
+                'HGNC ID': ['e.g. 236', '', ''],
+                'Gene justification': ['e.g. PanelApp', '', ''],
+                'Transcript': ['e.g. NM_183357.3', '', ''],
+                'Transcript justification': ['e.g. MANE', '', ''],
+                'Confidence': ['e.g. 3', '', ''],
+                'Penetrance': ['e.g. Complete', '', ''],
+                'MOP': ['e.g. gain-of-function', '', ''],
+                'MOI': ['e.g. MITOCHONDRIAL', '', '']})
 
         region_df = pd.DataFrame({
-            'Region name': ['e.g. Xp11.23 region (includes MAOA and MAOB) Loss', '',
-            'Insert data for one region per row - add more rows as required'],
-            'Chromosome': ['e.g. X', '', ''],
-            'Start': ['e.g. 43654906', '', ''],
-            'End': ['e.g. 43882474', '', ''],
-            'Justification': ['e.g. PanelApp', '', ''],
-            'Confidence': ['e.g. 3', '', ''],
-            'Penetrance': ['e.g. Incomplete', '', ''],
-            'MOP': ['e.g. gain-of-function', '', ''],
-            'MOI': ['e.g. MONOALLELIC, autosomal or pseudoautosomal', '', ''],
-            'Type': ['e.g. cnv', '', ''],
-            'Variant type': ['e.g. cnv_loss', '', ''],
-            'Haploinsufficiency': ['e.g. 3', '', ''],
-            'Triplosensitivity': ['e.g. 2', '', ''],
-            'Overlap': ['N/A', '', ''],})
+            'Region name': [
+                'e.g. Xp11.23 region (includes MAOA and MAOB) Loss', '',
+                'Insert data for 1 region/row - add rows as required'],
+                'Chromosome': ['e.g. X', '', ''],
+                'Start': ['e.g. 43654906', '', ''],
+                'End': ['e.g. 43882474', '', ''],
+                'Justification': ['e.g. PanelApp', '', ''],
+                'Confidence': ['e.g. 3', '', ''],
+                'Penetrance': ['e.g. Incomplete', '', ''],
+                'MOP': ['e.g. gain-of-function', '', ''],
+                'MOI': ['e.g. MITOCHONDRIAL', '', ''],
+                'Type': ['e.g. cnv', '', ''],
+                'Variant type': ['e.g. cnv_loss', '', ''],
+                'Haploinsufficiency': ['e.g. 3', '', ''],
+                'Triplosensitivity': ['e.g. 2', '', ''],
+                'Overlap': ['N/A', '', '']})
 
         return gene_df, region_df
-
 
     def write_blank_form(self, filename, generic_df, gene_df, region_df):
         """ Construct a blank request form as an Excel file. This will
@@ -558,10 +548,10 @@ class Command(BaseCommand):
 
         generic_df.to_excel(
             writer,
-            sheet_name = 'Sheet1',
-            startrow = row,
-            startcol = col,
-            header = False)
+            sheet_name='Sheet1',
+            startrow=row,
+            startcol=col,
+            header=False)
 
         for df_row in generic_df.iterrows():
             row += 1
@@ -572,10 +562,10 @@ class Command(BaseCommand):
 
         gene_df.to_excel(
             writer,
-            sheet_name = 'Sheet1',
-            startrow = row,
-            startcol = col,
-            index = False)
+            sheet_name='Sheet1',
+            startrow=row,
+            startcol=col,
+            index=False)
 
         header_rows.append(('gene', row + 1))
 
@@ -590,10 +580,10 @@ class Command(BaseCommand):
 
         region_df.to_excel(
             writer,
-            sheet_name = 'Sheet1',
-            startrow = row,
-            startcol = col,
-            index = False)
+            sheet_name='Sheet1',
+            startrow=row,
+            startcol=col,
+            index=False)
 
         header_rows.append(('region', row + 1))
 
@@ -607,7 +597,6 @@ class Command(BaseCommand):
         writer.save()
 
         return header_rows, final_row
-
 
     def write_data(self, filename, generic_df, panel_df, gene_df, region_df):
         """ Construct the request form as an excel file.
@@ -633,10 +622,10 @@ class Command(BaseCommand):
 
         generic_df.to_excel(
             writer,
-            sheet_name = 'Sheet1',
-            startrow = row,
-            startcol = col,
-            header = False)
+            sheet_name='Sheet1',
+            startrow=row,
+            startcol=col,
+            header=False)
 
         for df_row in generic_df.iterrows():
             row += 1
@@ -647,10 +636,10 @@ class Command(BaseCommand):
 
         panel_df.to_excel(
             writer,
-            sheet_name = 'Sheet1',
-            startrow = row,
-            startcol = col,
-            index = False)
+            sheet_name='Sheet1',
+            startrow=row,
+            startcol=col,
+            index=False)
 
         header_rows.append(('panel', row + 1))
 
@@ -663,10 +652,10 @@ class Command(BaseCommand):
 
         gene_df.to_excel(
             writer,
-            sheet_name = 'Sheet1',
-            startrow = row,
-            startcol = col,
-            index = False)
+            sheet_name='Sheet1',
+            startrow=row,
+            startcol=col,
+            index=False)
 
         header_rows.append(('gene', row + 1))
 
@@ -679,10 +668,10 @@ class Command(BaseCommand):
 
         region_df.to_excel(
             writer,
-            sheet_name = 'Sheet1',
-            startrow = row,
-            startcol = col,
-            index = False)
+            sheet_name='Sheet1',
+            startrow=row,
+            startcol=col,
+            index=False)
 
         header_rows.append(('region', row + 1))
 
@@ -697,7 +686,6 @@ class Command(BaseCommand):
 
         return header_rows, final_row
 
-
     def format_excel(self, excel_file, cell_ranges, final_row):
         """ Visually format an existing excel file. Apply a style to
         dataframe header cells, and set column widths to autofit data.
@@ -709,33 +697,33 @@ class Command(BaseCommand):
 
         # load in the excel file
 
-        wb = load_workbook(filename = excel_file)
+        wb = load_workbook(filename=excel_file)
         ws = wb['Sheet1']
 
         # define a style for a default font type and size
 
-        normal_font = NamedStyle(name = "normal_font")
+        normal_font = NamedStyle(name="normal_font")
 
-        normal_font.font = Font(name = 'Arial', size = 10)
+        normal_font.font = Font(name='Arial', size=10)
 
         normal_font.alignment = Alignment(
-            horizontal = 'left',
-            vertical = 'center')
+            horizontal='left',
+            vertical='center')
 
         wb.add_named_style(normal_font)
 
         # define a style to highlight header cells
 
-        highlight = NamedStyle(name = "highlight")
+        highlight = NamedStyle(name="highlight")
 
-        highlight.font = Font(bold = True, name = 'Arial', size = 10)
+        highlight.font = Font(bold=True, name='Arial', size=10)
 
-        highlight.alignment = Alignment(vertical = 'center')
+        highlight.alignment = Alignment(vertical='center')
 
         highlight.fill = PatternFill(
-            fill_type = 'solid',
-            start_color = '00C0C0C0',  # light grey
-            end_color = '00C0C0C0')
+            fill_type='solid',
+            start_color='00C0C0C0',  # light grey
+            end_color='00C0C0C0')
 
         wb.add_named_style(highlight)
 
@@ -780,8 +768,7 @@ class Command(BaseCommand):
 
             ws.column_dimensions[col].width = 25.5
 
-        wb.save(filename = excel_file)
-
+        wb.save(filename=excel_file)
 
     def handle(self, *args, **kwargs):
         """ Execute the functions to create a request form """
@@ -816,7 +803,7 @@ class Command(BaseCommand):
 
             if len(panel_records) == 0:
 
-                print('No panels are currently associated with this ' \
+                print('No panels are currently associated with this '
                     'clinical indication.')
 
                 # create blank gene/region dfs
@@ -825,7 +812,8 @@ class Command(BaseCommand):
 
                 # write a blank form
 
-                filename = f'request_form_{req_date}_{ci_code}_{ref_genome}_{requester}_BLANK.xlsx'
+                filename = 'request_form_' \
+                    f'{req_date}_{ci_code}_{ref_genome}_{requester}_BLANK.xlsx'
 
                 header_ranges, final_row = self.write_blank_form(
                     filename,
@@ -854,9 +842,10 @@ class Command(BaseCommand):
 
                 # construct the request form and print the filename
 
-                filename = f'request_form_{req_date}_{ci_code}_{ref_genome}_{requester}.xlsx'
+                filename = 'request_form_' \
+                    f'{req_date}_{ci_code}_{ref_genome}_{requester}.xlsx'
 
-                header_ranges,final_row = self.write_data(
+                header_ranges, final_row = self.write_data(
                     filename,
                     generic_df,
                     panel_df,
@@ -870,7 +859,7 @@ class Command(BaseCommand):
             print(f'Request form created: {filename}')
 
         else:
-            print("The following arguments are required, and must be " \
-                "specified in this order: request_date, requester, ci_code, " \
-                "ref_genome, hgnc_dump.\nValid values for ref_genome are " \
+            print("The following arguments are required, and must be "
+                "specified in this order: request_date, requester, ci_code, "
+                "ref_genome, hgnc_dump.\nValid values for ref_genome are "
                 "GRCh37 and GRCh38.")

@@ -72,42 +72,41 @@ class Command(BaseCommand):
 
         # subparser defining inputs for importing data from PanelApp
 
-        parser_p = subparsers.add_parser('panels', help = 'Import panel data')
+        parser_p = subparsers.add_parser('panels', help='Import panel data')
 
         parser_p.add_argument(
-            "panel_id", type = str, help = "PanelApp panel id",)
+            "panel_id", type=str, help="PanelApp panel id",)
 
         parser_p.add_argument(
-            "panel_version", type = str, nargs = '?', default = None,
-            help = "PanelApp panel version (optional)",)
+            "panel_version", type=str, nargs='?', default=None,
+            help="PanelApp panel version (optional)",)
 
-        parser_p.set_defaults(which = 'panels')
+        parser_p.set_defaults(which='panels')
 
         # subparser defining inputs for importing data from TD
 
-        parser_d = subparsers.add_parser('test_dir', help = 'Import TD data')
+        parser_d = subparsers.add_parser('test_dir', help='Import TD data')
 
         parser_d.add_argument(
-            'input_json', type = str,
-            help = "Path to JSON file of parsed TD data",)
+            'input_json', type=str,
+            help="Path to JSON file of parsed TD data",)
 
         parser_d.add_argument(
-            "current", type = str, choices = ['Y', 'N'],
-            help = "Is this test directory the current version Y/N",)
+            "current", type=str, choices=['Y', 'N'],
+            help="Is this test directory the current version Y/N",)
 
-        parser_d.set_defaults(which = 'test_dir')
+        parser_d.set_defaults(which='test_dir')
 
         # subparser defining inputs for importing data from request form
 
         parser_f = subparsers.add_parser('form',
-            help = 'Import request form data')
+            help='Import request form data')
 
         parser_f.add_argument(
-            "input_file", type = str,
-            help = "Path to request form file",)
+            "input_file", type=str,
+            help="Path to request form file",)
 
-        parser_f.set_defaults(which = 'form')
-
+        parser_f.set_defaults(which='form')
 
     def parse_single_pa_panel(self, panel_id, panel_version):
         """ Use parse_pa.py functions to import and parse data from a
@@ -124,8 +123,8 @@ class Command(BaseCommand):
         parsed_data = None
 
         data = parse_pa.Data(
-            panel_id = panel_id,
-            panel_version = panel_version)
+            panel_id=panel_id,
+            panel_version=panel_version)
 
         # retrieve panel data from PanelApp
 
@@ -143,7 +142,6 @@ class Command(BaseCommand):
             print(f'Data could not be retrieved for panel {panel_id}.')
 
         return parsed_data
-
 
     def parse_all_pa_panels(self):
         """ Get a list of IDs for all current PanelApp panels, then
@@ -173,7 +171,6 @@ class Command(BaseCommand):
 
         return parsed_data
 
-
     def parse_form_data(self, filepath):
         """ Use parse_form.py to import and parse data from a panel
         request form.
@@ -193,7 +190,6 @@ class Command(BaseCommand):
 
         """ parse_form.py hasn't been written yet. """
 
-
     def handle(self, *args, **kwargs):
         """ Coordinates functions to import and parse data from
         specified source, then calls inserter to insert cleaned data
@@ -203,8 +199,7 @@ class Command(BaseCommand):
 
         assert process, "Please specify data type: panels / test_dir / form"
 
-
-        ## import and parse PanelApp data (panel_version optional)
+        # import and parse PanelApp data (panel_version optional)
 
         if process == 'panels':
             panel_id = kwargs['panel_id']
@@ -212,7 +207,7 @@ class Command(BaseCommand):
             # parse data from ALL current PanelApp panels
 
             if panel_id == 'all':
-                    parsed_data = self.parse_all_pa_panels()
+                parsed_data = self.parse_all_pa_panels()
 
             # parse data from a single PanelApp panel
 
@@ -232,8 +227,7 @@ class Command(BaseCommand):
                 if panel_dict:
                     insert_panel.insert_data(panel_dict)
 
-
-        ## import test directory data (td_json & td_current required)
+        # import test directory data (td_json & td_current required)
 
         elif process == 'test_dir':
 
@@ -250,8 +244,7 @@ class Command(BaseCommand):
 
             insert_ci.insert_data(json_data, current)
 
-
-        ## import and parse data from a request form (filepath required)
+        # import and parse data from a request form (filepath required)
 
         elif process == 'form':
             filepath = kwargs['input_file']

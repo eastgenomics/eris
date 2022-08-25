@@ -8,7 +8,7 @@ in the README.
 """
 
 
-### STILL TO DO
+# STILL TO DO
 # remove existing links between cis and panels if no longer supported
 # deal with PA ids which aren't in the db (looking at you 489)
 
@@ -80,8 +80,8 @@ def retrieve_panels_from_pa_id(ci_code, pa_id):
     # retrieve Panel records directly created from PA panels with that id
 
     matching_records = Panel.objects.filter(
-        panel_source = 'panelapp',
-        external_id = pa_id).values()
+        panel_source='panelapp',
+        external_id=pa_id).values()
 
     if len(matching_records) == 0:
 
@@ -100,9 +100,9 @@ def retrieve_panels_from_pa_id(ci_code, pa_id):
         # restrict the queryset to records with that version
 
         panel_records = Panel.objects.filter(
-            panel_source = 'panelapp',
-            panel_version = max_v,
-            external_id = pa_id)
+            panel_source='panelapp',
+            panel_version=max_v,
+            external_id=pa_id)
 
     return panel_records
 
@@ -132,8 +132,8 @@ def retrieve_panels_from_hgncs(query_hgnc_list):
     # retrieve non-PA Panel records with no associated regions
 
     non_pa_records = Panel.objects.exclude(
-        panel_source = 'panelapp',
-        panelregion__isnull = False,
+        panel_source='panelapp',
+        panelregion__isnull=False,
         )
 
     # if such panels exist, check their gene list
@@ -147,7 +147,7 @@ def retrieve_panels_from_hgncs(query_hgnc_list):
             # get a list of HGNC numbers for that Panel record
 
             hgnc_records = Hgnc.objects.filter(
-                gene__panelgene__panel__id = panel.id).values()
+                gene__panelgene__panel__id=panel.id).values()
 
             panel_hgnc_list = [str(record['id']) for record in hgnc_records]
             panel_hgnc_list.sort()
@@ -181,19 +181,19 @@ def retrieve_unknown_metadata_records():
     """
 
     conf, created = Confidence.objects.get_or_create(
-        confidence_level = 'Not specified')
+        confidence_level='Not specified')
 
     moi, created = ModeOfInheritance.objects.get_or_create(
-        mode_of_inheritance = 'Not specified')
+        mode_of_inheritance='Not specified')
 
     mop, created = ModeOfPathogenicity.objects.get_or_create(
-        mode_of_pathogenicity = 'Not specified')
+        mode_of_pathogenicity='Not specified')
 
     pen, created = Penetrance.objects.get_or_create(
-        penetrance = 'Not specified')
+        penetrance='Not specified')
 
     transcript, created = Transcript.objects.get_or_create(
-        refseq_id = 'Not specified')
+        refseq_id='Not specified')
 
     return conf, moi, mop, pen, transcript
 
@@ -217,24 +217,24 @@ def make_panels_from_hgncs(current, source, td_date, ci, hgnc_list):
     # make sure ReferenceGenome and metadata records exist
 
     genome_37, created = ReferenceGenome.objects.get_or_create(
-        reference_build = 'GRCh37')
+        reference_build='GRCh37')
 
     genome_38, created = ReferenceGenome.objects.get_or_create(
-        reference_build = 'GRCh38')
+        reference_build='GRCh38')
 
     conf, moi, mop, pen, transcript = retrieve_unknown_metadata_records()
 
     # create two new Panel records with different ref genomes
 
     panel_37, created = Panel.objects.get_or_create(
-        panel_source = source_str,
-        external_id = ci_code_str,
-        reference_genome = genome_37)
+        panel_source=source_str,
+        external_id=ci_code_str,
+        reference_genome=genome_37)
 
     panel_38, created = Panel.objects.get_or_create(
-        panel_source = source_str,
-        external_id = ci_code_str,
-        reference_genome = genome_38)
+        panel_source=source_str,
+        external_id=ci_code_str,
+        reference_genome=genome_38)
 
     for panel_record in panel_37, panel_38:
         for hgnc_no in hgnc_list:
@@ -242,43 +242,43 @@ def make_panels_from_hgncs(current, source, td_date, ci, hgnc_list):
             # get/create Hgnc and Gene records
 
             hgnc_record, created = Hgnc.objects.get_or_create(
-                id = int(hgnc_no))
+                id=int(hgnc_no))
 
             gene_record, created = Gene.objects.get_or_create(
-                hgnc = hgnc_record)
+                hgnc=hgnc_record)
 
             # create PanelGene record linking Panel to HGNC
 
             panel_gene, created = PanelGene.objects.get_or_create(
-                panel = panel_record,
-                gene = gene_record,
-                justification = source_str,
-                confidence = conf,
-                moi = moi,
-                mop = mop,
-                penetrance = pen)
+                panel=panel_record,
+                gene=gene_record,
+                justification=source_str,
+                confidence=conf,
+                moi=moi,
+                mop=mop,
+                penetrance=pen)
 
             # link PanelGene record to 'Not specified' Transcript record
 
             panel_gene_transcript, created = PanelGeneTranscript.objects.\
                 get_or_create(
-                    panel_gene = panel_gene,
-                    transcript = transcript,
-                    justification = source_str)
+                    panel_gene=panel_gene,
+                    transcript=transcript,
+                    justification=source_str)
 
         # link Panel record to CI via ClinicalIndicationPanel
 
         ci_panel, created = ClinicalIndicationPanel.objects.get_or_create(
-            source = source,
-            clinical_indication = ci,
-            panel = panel_record,
-            current = current)
+            source=source,
+            clinical_indication=ci,
+            panel=panel_record,
+            current=current)
 
         ci_panel_usage, created = ClinicalIndicationPanelUsage.objects.\
             get_or_create(
-                clinical_indication_panel = ci_panel,
-                start_date = td_date,
-                end_date = None)
+                clinical_indication_panel=ci_panel,
+                start_date=td_date,
+                end_date=None)
 
 
 @transaction.atomic
@@ -297,17 +297,17 @@ def insert_data(json_data, td_current):
     td_date = format_td_date(json_data)
 
     source, created = CiPanelAssociationSource.objects.get_or_create(
-        source = json_data['source'],
-        date = td_date,)
+        source=json_data['source'],
+        date=td_date,)
 
     # create a ClinicalIndication record for each CI in the TD
 
     for indication in json_data['indications']:
 
         ci, created = ClinicalIndication.objects.get_or_create(
-            code = indication['code'],
-            name = indication['name'],
-            gemini_name = indication['gemini_name'],)
+            code=indication['code'],
+            name=indication['name'],
+            gemini_name=indication['gemini_name'],)
 
         # link each CI record to the appropriate Panel records
 
@@ -336,21 +336,21 @@ def insert_data(json_data, td_current):
 
                             ci_panel, created = ClinicalIndicationPanel.\
                                 objects.get_or_create(
-                                    source = source,
-                                    clinical_indication = ci,
-                                    panel = panel,
-                                    current = td_current)
+                                    source=source,
+                                    clinical_indication=ci,
+                                    panel=panel,
+                                    current=td_current)
 
                             # if this link is new, also make a usage record
 
                             if created:
 
                                 (ci_panel_usage,
-                                created) = ClinicalIndicationPanelUsage.\
+                                    created) = ClinicalIndicationPanelUsage.\
                                     objects.get_or_create(
-                                        clinical_indication_panel = ci_panel,
-                                        start_date = td_date,
-                                        end_date = None)
+                                        clinical_indication_panel=ci_panel,
+                                        start_date=td_date,
+                                        end_date=None)
 
         # if the CI has one or more associated HGNC ids:
 
@@ -367,26 +367,27 @@ def insert_data(json_data, td_current):
 
                     ci_panel, created = ClinicalIndicationPanel.objects.\
                         get_or_create(
-                            source = source,
-                            clinical_indication = ci,
-                            panel = match,
-                            current = td_current)
+                            source=source,
+                            clinical_indication=ci,
+                            panel=match,
+                            current=td_current)
 
                     # create a new usage record if one didn't already exist
 
                     if created:
 
                         (ci_panel_usage,
-                        created) = ClinicalIndicationPanelUsage.objects.\
+                            created) = ClinicalIndicationPanelUsage.objects.\
                             get_or_create(
-                                clinical_indication_panel = ci_panel,
-                                start_date = td_date,
-                                end_date = None)
+                                clinical_indication_panel=ci_panel,
+                                start_date=td_date,
+                                end_date=None)
 
             # if not, make Panel records (2, bc genomes) and link to the CI
 
             else:
 
-                make_panels_from_hgncs(td_current, source, td_date, ci, hgnc_list)
+                make_panels_from_hgncs(
+                    td_current, source, td_date, ci, hgnc_list)
 
     print('Data insertion completed.')

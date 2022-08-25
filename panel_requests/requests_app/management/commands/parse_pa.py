@@ -6,7 +6,7 @@ panel's data from PanelApp, and parse it for insertion into the
 database.
 """
 
-### STILL TO DO: ###
+# STILL TO DO:
 
 # PanelApp genes don't reliably have a specific transcript defined, this needs
 # addressing in here somehow
@@ -21,13 +21,12 @@ from panelapp import api
 
 class Data:
 
-    def __init__(self, panel_id, panel_version = None):
+    def __init__(self, panel_id, panel_version=None):
 
         self.panel_id = panel_id
         self.panel_version = panel_version
 
-
-    def get_panelapp_panel(self, panel_id, panel_version = None):
+    def get_panelapp_panel(self, panel_id, panel_version=None):
         """ Returns a dict representing a specific version of a PanelApp
         panel. If version is not specified, retrieves the current
         version of that panel.
@@ -57,7 +56,6 @@ class Data:
 
         return result
 
-
     def check_panel_data(self, panel_data):
         """ Checks whether panel is empty, i.e. whether the result of
         get_panelapp_panel is None.
@@ -69,12 +67,11 @@ class Data:
             empty_panel [bool]: True if value of panel_data is None
         """
 
-        if panel_data == None:
+        if not panel_data:
             return True
 
         else:
             return False
-
 
     def setup_output_dict(self, panel):
         """ Initialise a dict to hold relevant panel information.
@@ -87,16 +84,15 @@ class Data:
         """
 
         info_dict = {
-            'panel_source' : 'PanelApp',
-            'panel_name' : panel['name'],
-            'external_id' : panel['id'],
-            'panel_version' : panel['version'],
-            'genes' : [],
-            'regions' : [],
+            'panel_source': 'PanelApp',
+            'panel_name': panel['name'],
+            'external_id': panel['id'],
+            'panel_version': panel['version'],
+            'genes': [],
+            'regions': [],
             }
 
         return info_dict
-
 
     def parse_gene_info(self, panel, info_dict):
         """ Iterate over every gene in the panel and retrieve the data
@@ -116,20 +112,19 @@ class Data:
             if gene['confidence_level'] == '3':
 
                 gene_dict = {
-                    'transcript' : gene['transcript'],
-                    'hgnc_id' : gene['gene_data']['hgnc_id'][5:],
-                    'confidence_level' : gene['confidence_level'],
-                    'mode_of_inheritance' : gene['mode_of_inheritance'],
-                    'mode_of_pathogenicity' : gene['mode_of_pathogenicity'],
-                    'penetrance' : gene['penetrance'],
-                    'gene_justification' : 'PanelApp',
-                    'transcript_justification' : 'PanelApp',
+                    'transcript': gene['transcript'],
+                    'hgnc_id': gene['gene_data']['hgnc_id'][5:],
+                    'confidence_level': gene['confidence_level'],
+                    'mode_of_inheritance': gene['mode_of_inheritance'],
+                    'mode_of_pathogenicity': gene['mode_of_pathogenicity'],
+                    'penetrance': gene['penetrance'],
+                    'gene_justification': 'PanelApp',
+                    'transcript_justification': 'PanelApp',
                     }
 
                 info_dict['genes'].append(gene_dict)
 
         return info_dict
-
 
     def parse_region_info(self, panel, info_dict):
         """ Iterate over every region in the panel and retrieve the data
@@ -149,22 +144,22 @@ class Data:
             if region['confidence_level'] == '3':
 
                 region_dict = {
-                    'confidence_level' : region['confidence_level'],
-                    'mode_of_inheritance' : region['mode_of_inheritance'],
-                    'mode_of_pathogenicity' : region['mode_of_pathogenicity'],
-                    'penetrance' : region['penetrance'],
-                    'name' : region['verbose_name'],
-                    'chrom' : region['chromosome'],
-                    'start_37' : 'None',  # need to liftover from grch38
-                    'end_37' : 'None',
-                    'start_38' : region['grch38_coordinates'][0],
-                    'end_38' : region['grch38_coordinates'][1],
-                    'type' : 'CNV',  # all PA regions are CNVs
-                    'variant_type' : region['type_of_variants'],
-                    'required_overlap' : region['required_overlap_percentage'],
-                    'haploinsufficiency' : region['haploinsufficiency_score'],
-                    'triplosensitivity' : region['triplosensitivity_score'],
-                    'justification' : 'PanelApp',
+                    'confidence_level': region['confidence_level'],
+                    'mode_of_inheritance': region['mode_of_inheritance'],
+                    'mode_of_pathogenicity': region['mode_of_pathogenicity'],
+                    'penetrance': region['penetrance'],
+                    'name': region['verbose_name'],
+                    'chrom': region['chromosome'],
+                    'start_37': 'None',  # need to liftover from grch38
+                    'end_37': 'None',
+                    'start_38': region['grch38_coordinates'][0],
+                    'end_38': region['grch38_coordinates'][1],
+                    'type': 'CNV',  # all PA regions are CNVs
+                    'variant_type': region['type_of_variants'],
+                    'required_overlap': region['required_overlap_percentage'],
+                    'haploinsufficiency': region['haploinsufficiency_score'],
+                    'triplosensitivity': region['triplosensitivity_score'],
+                    'justification': 'PanelApp',
                     }
 
                 info_dict['regions'].append(region_dict)
