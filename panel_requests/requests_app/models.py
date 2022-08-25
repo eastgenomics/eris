@@ -14,9 +14,9 @@ class ReferenceGenome(models.Model):
     """ Defines a reference genome build """
 
     reference_build = models.CharField(
-        verbose_name = 'Genome build',
-        max_length = 255,
-        unique = True,)
+        verbose_name='Genome build',
+        max_length=255,
+        unique=True,)
 
     class Meta:
         db_table = 'reference_genome'
@@ -30,24 +30,24 @@ class Panel(models.Model):
 
     external_id = models.TextField(
         verbose_name='External panel ID',
-        max_length = 255,)
+        max_length=255,)
 
     panel_name = models.TextField(
         verbose_name='Panel name',
-        max_length = 255,)
+        max_length=255,)
 
     panel_source = models.TextField(
         verbose_name='Panel source',
-        max_length = 255,)
+        max_length=255,)
 
     panel_version = models.CharField(
         verbose_name='Panel version',
-        max_length = 255,)
+        max_length=255,)
 
     reference_genome = models.ForeignKey(
         ReferenceGenome,
-        verbose_name = 'Reference genome ID',
-        on_delete = models.PROTECT,)
+        verbose_name='Reference genome ID',
+        on_delete=models.PROTECT,)
 
     class Meta:
         db_table = 'panel'
@@ -60,8 +60,8 @@ class CiPanelAssociationSource(models.Model):
     """ Defines a source for the association between a specific clinical
     indication and a specific panel """
 
-    source = models.TextField(verbose_name = 'Source name', max_length = 255,)
-    date = models.DateField(verbose_name = 'Date')
+    source = models.TextField(verbose_name='Source name', max_length=255,)
+    date = models.DateField(verbose_name='Date')
 
     class Meta:
         db_table = 'ci_panel_association_source'
@@ -73,12 +73,12 @@ class CiPanelAssociationSource(models.Model):
 class ClinicalIndication(models.Model):
     """ Defines a single clinical indication """
 
-    code = models.CharField(verbose_name = 'CI code', max_length = 255,)
-    name = models.TextField(verbose_name = 'CI name', max_length = 255,)
+    code = models.CharField(verbose_name='CI code', max_length=255,)
+    name = models.TextField(verbose_name='CI name', max_length=255,)
 
     gemini_name = models.TextField(
-        verbose_name = 'Gemini name',
-        max_length = 255,)
+        verbose_name='Gemini name',
+        max_length=255,)
 
     class Meta:
         db_table = 'clinical_indication'
@@ -92,20 +92,20 @@ class ClinicalIndicationPanel(models.Model):
 
     source = models.ForeignKey(
         CiPanelAssociationSource,
-        verbose_name = 'CI-panel association source',
-        on_delete = models.PROTECT,)
+        verbose_name='CI-panel association source',
+        on_delete=models.PROTECT,)
 
     clinical_indication = models.ForeignKey(
         ClinicalIndication,
-        verbose_name = 'Clinical indication',
-        on_delete = models.PROTECT,)
+        verbose_name='Clinical indication',
+        on_delete=models.PROTECT,)
 
     panel = models.ForeignKey(
         Panel,
-        verbose_name = 'Panel',
-        on_delete = models.PROTECT,)
+        verbose_name='Panel',
+        on_delete=models.PROTECT,)
 
-    current = models.BooleanField(verbose_name = 'Association is current')
+    current = models.BooleanField(verbose_name='Association is current')
 
     class Meta:
         db_table = 'clinical_indication_panel'
@@ -121,13 +121,13 @@ class ClinicalIndicationPanelUsage(models.Model):
     clinical_indication_panel = models.ForeignKey(
         ClinicalIndicationPanel,
         verbose_name='Clinical indication',
-        on_delete = models.PROTECT,)
+        on_delete=models.PROTECT,)
 
-    start_date = models.DateField(verbose_name = 'Start date')
+    start_date = models.DateField(verbose_name='Start date')
 
     end_date = models.DateField(
-        verbose_name = 'End date',
-        null = True)
+        verbose_name='End date',
+        null=True)
 
     class Meta:
         db_table = 'clinical_indication_panel_usage'
@@ -140,10 +140,10 @@ class Hgnc(models.Model):
     """ Defines a single HGNC ID (for a gene) """
 
     id = models.CharField(
-        primary_key = True,
-        unique = True,
-        verbose_name = 'HGNC ID',
-        max_length = 255)
+        primary_key=True,
+        unique=True,
+        verbose_name='HGNC ID',
+        max_length=255)
 
     class Meta:
         db_table = 'hgnc'
@@ -158,7 +158,7 @@ class Gene(models.Model):
     hgnc = models.ForeignKey(
         Hgnc,
         verbose_name='HGNC ID',
-        on_delete = models.PROTECT,)
+        on_delete=models.PROTECT,)
 
     class Meta:
         db_table = 'gene'
@@ -172,9 +172,9 @@ class Confidence(models.Model):
     associated with a panel """
 
     confidence_level = models.CharField(
-        verbose_name = 'Confidence level',
-        unique = True,
-        max_length = 255,)
+        verbose_name='Confidence level',
+        unique=True,
+        max_length=255,)
 
     class Meta:
         db_table = 'confidence'
@@ -188,9 +188,9 @@ class Penetrance(models.Model):
     context of the associated clinical indication """
 
     penetrance = models.TextField(
-        verbose_name = 'Penetrance',
-        max_length = 255,
-        unique = True,)
+        verbose_name='Penetrance',
+        max_length=255,
+        unique=True,)
 
     class Meta:
         db_table = 'penetrance'
@@ -204,9 +204,9 @@ class ModeOfInheritance(models.Model):
     the context of the associated clinical indication """
 
     mode_of_inheritance = models.TextField(
-        verbose_name = 'Mode of inheritance',
-        max_length = 255,
-        unique = True,)
+        verbose_name='Mode of inheritance',
+        max_length=255,
+        unique=True,)
 
     class Meta:
         db_table = 'mode_of_inheritance'
@@ -221,9 +221,9 @@ class ModeOfPathogenicity(models.Model):
     the context of the associated clinical indication """
 
     mode_of_pathogenicity = models.TextField(
-        verbose_name = 'Mode of pathogenicity',
-        max_length = 255,
-        unique = True,)
+        verbose_name='Mode of pathogenicity',
+        max_length=255,
+        unique=True,)
 
     class Meta:
         db_table = 'mode_of_pathogenicity'
@@ -238,37 +238,37 @@ class PanelGene(models.Model):
 
     panel = models.ForeignKey(
         Panel,
-        verbose_name = 'Panel ID',
-        on_delete = models.PROTECT,)
+        verbose_name='Panel ID',
+        on_delete=models.PROTECT,)
 
     gene = models.ForeignKey(
         Gene,
-        verbose_name = 'Gene ID',
-        on_delete = models.PROTECT,)
+        verbose_name='Gene ID',
+        on_delete=models.PROTECT,)
 
     confidence = models.ForeignKey(
         Confidence,
-        verbose_name = 'Confidence ID',
-        on_delete = models.PROTECT,)
+        verbose_name='Confidence ID',
+        on_delete=models.PROTECT,)
 
     moi = models.ForeignKey(
         ModeOfInheritance,
-        verbose_name = 'Mode of inheritance ID',
-        on_delete = models.PROTECT,)
+        verbose_name='Mode of inheritance ID',
+        on_delete=models.PROTECT,)
 
     mop = models.ForeignKey(
         ModeOfPathogenicity,
-        verbose_name = 'Mode of pathogenicity ID',
-        on_delete = models.PROTECT,)
+        verbose_name='Mode of pathogenicity ID',
+        on_delete=models.PROTECT,)
 
     penetrance = models.ForeignKey(
         Penetrance,
-        verbose_name = 'Penetrance ID',
-        on_delete = models.PROTECT,)
+        verbose_name='Penetrance ID',
+        on_delete=models.PROTECT,)
 
     justification = models.TextField(
-        verbose_name = 'Justification',
-        max_length = 255,)
+        verbose_name='Justification',
+        max_length=255,)
 
     class Meta:
         db_table = 'panel_gene'
@@ -281,9 +281,9 @@ class Transcript(models.Model):
     """ Defines a single transcript by RefSeq ID """
 
     refseq_id = models.CharField(
-        verbose_name = 'RefSeq ID',
-        max_length = 255,
-        unique = True,)
+        verbose_name='RefSeq ID',
+        max_length=255,
+        unique=True,)
 
     class Meta:
         db_table = 'transcript'
@@ -298,17 +298,17 @@ class PanelGeneTranscript(models.Model):
 
     panel_gene = models.ForeignKey(
         PanelGene,
-        verbose_name = 'Panel/gene link ID',
-        on_delete = models.PROTECT,)
+        verbose_name='Panel/gene link ID',
+        on_delete=models.PROTECT,)
 
     transcript = models.ForeignKey(
         Transcript,
-        verbose_name = 'Transcript ID',
-        on_delete = models.PROTECT,)
+        verbose_name='Transcript ID',
+        on_delete=models.PROTECT,)
 
     justification = models.TextField(
-        verbose_name = 'justification',
-        max_length = 255,)
+        verbose_name='justification',
+        max_length=255,)
 
     class Meta:
         db_table = 'panel_gene_transcript'
@@ -322,9 +322,9 @@ class Haploinsufficiency(models.Model):
     in the context of the associated clinical indication """
 
     haploinsufficiency = models.CharField(
-        verbose_name = 'Haploinsufficiency score',
-        unique = True,
-        max_length = 255,)
+        verbose_name='Haploinsufficiency score',
+        unique=True,
+        max_length=255,)
 
     class Meta:
         db_table = 'haploinsufficiency'
@@ -339,9 +339,9 @@ class Triplosensitivity(models.Model):
     in the context of the associated clinical indication """
 
     triplosensitivity = models.CharField(
-        verbose_name = 'Triplosensitivity score',
-        unique = True,
-        max_length = 255,)
+        verbose_name='Triplosensitivity score',
+        unique=True,
+        max_length=255,)
 
     class Meta:
         db_table = 'triplosensitivity'
@@ -355,9 +355,9 @@ class RequiredOverlap(models.Model):
     """ GEL internal field relating to CNV detection method """
 
     required_overlap = models.CharField(
-        verbose_name = 'Required percent overlap',
-        unique = True,
-        max_length = 255,)
+        verbose_name='Required percent overlap',
+        unique=True,
+        max_length=255,)
 
     class Meta:
         db_table = 'required_overlap'
@@ -370,9 +370,9 @@ class VariantType(models.Model):
     """ Defines the type of variant  """
 
     variant_type = models.CharField(
-        verbose_name = 'Variant type',
-        max_length = 255,
-        unique = True,)
+        verbose_name='Variant type',
+        max_length=255,
+        unique=True,)
 
     class Meta:
         db_table = 'variant_type'
@@ -384,11 +384,11 @@ class VariantType(models.Model):
 class Region(models.Model):
     """ Defines a single region (CNV) """
 
-    name = models.CharField(verbose_name = 'Region name', max_length = 255)
-    chrom = models.CharField(verbose_name = 'Chromosome', max_length = 255)
-    start = models.CharField(verbose_name = 'Region start', max_length = 255)
-    end = models.CharField(verbose_name = 'Region end', max_length = 255)
-    type = models.CharField(verbose_name = 'Region type', max_length = 255)
+    name = models.CharField(verbose_name='Region name', max_length=255)
+    chrom = models.CharField(verbose_name='Chromosome', max_length=255)
+    start = models.CharField(verbose_name='Region start', max_length=255)
+    end = models.CharField(verbose_name='Region end', max_length=255)
+    type = models.CharField(verbose_name='Region type', max_length=255)
 
     class Meta:
         db_table = 'region'
@@ -402,57 +402,57 @@ class PanelRegion(models.Model):
 
     panel = models.ForeignKey(
         Panel,
-        verbose_name = 'Panel ID',
-        on_delete = models.PROTECT,)
+        verbose_name='Panel ID',
+        on_delete=models.PROTECT,)
 
     confidence = models.ForeignKey(
         Confidence,
-        verbose_name = 'Confidence level ID',
-        on_delete = models.PROTECT,)
+        verbose_name='Confidence level ID',
+        on_delete=models.PROTECT,)
 
     moi = models.ForeignKey(
         ModeOfInheritance,
-        verbose_name = 'Mode of inheritance ID',
-        on_delete = models.PROTECT,)
+        verbose_name='Mode of inheritance ID',
+        on_delete=models.PROTECT,)
 
     mop = models.ForeignKey(
         ModeOfPathogenicity,
-        verbose_name = 'Mode of pathogenicity ID',
-        on_delete = models.PROTECT,)
+        verbose_name='Mode of pathogenicity ID',
+        on_delete=models.PROTECT,)
 
     penetrance = models.ForeignKey(
         Penetrance,
-        verbose_name = 'Penetrance ID',
-        on_delete = models.PROTECT,)
+        verbose_name='Penetrance ID',
+        on_delete=models.PROTECT,)
 
     region = models.ForeignKey(
         Region,
-        verbose_name = 'Region ID',
-        on_delete = models.PROTECT,)
+        verbose_name='Region ID',
+        on_delete=models.PROTECT,)
 
     haplo = models.ForeignKey(
         Haploinsufficiency,
-        verbose_name = 'Haploinsufficiency ID',
-        on_delete = models.PROTECT,)
+        verbose_name='Haploinsufficiency ID',
+        on_delete=models.PROTECT,)
 
     triplo = models.ForeignKey(
         Triplosensitivity,
-        verbose_name = 'Triplosensitivity ID',
-        on_delete = models.PROTECT,)
+        verbose_name='Triplosensitivity ID',
+        on_delete=models.PROTECT,)
 
     overlap = models.ForeignKey(
         RequiredOverlap,
-        verbose_name = 'Required overlap ID',
-        on_delete = models.PROTECT,)
+        verbose_name='Required overlap ID',
+        on_delete=models.PROTECT,)
 
     vartype = models.ForeignKey(
         VariantType,
-        verbose_name = 'Variant type ID',
-        on_delete = models.PROTECT,)
+        verbose_name='Variant type ID',
+        on_delete=models.PROTECT,)
 
     justification = models.TextField(
-        verbose_name = 'Justification',
-        max_length = 255)
+        verbose_name='Justification',
+        max_length=255)
 
     class Meta:
         db_table = 'panel_region'
@@ -466,13 +466,13 @@ class RegionAnnotation(models.Model):
 
     region = models.ForeignKey(
         Region,
-        verbose_name = 'Region ID',
-        on_delete = models.PROTECT,)
+        verbose_name='Region ID',
+        on_delete=models.PROTECT,)
 
-    attribute = models.TextField(verbose_name = 'Attribute', max_length = 255)
-    value = models.TextField(verbose_name = 'Value', max_length = 255)
-    timestamp = models.DateTimeField(verbose_name = 'Timestamp')
-    source = models.TextField(verbose_name = 'Source', max_length = 255)
+    attribute = models.TextField(verbose_name='Attribute', max_length=255)
+    value = models.TextField(verbose_name='Value', max_length=255)
+    timestamp = models.DateTimeField(verbose_name='Timestamp')
+    source = models.TextField(verbose_name='Source', max_length=255)
 
     class Meta:
         db_table = 'region_annotation'
