@@ -123,7 +123,7 @@ class Command(BaseCommand):
 
         parsed_data = None
 
-        data = parse_pa.Data(
+        data = parse_pa.PanelParser(
             panel_id=panel_id,
             panel_version=panel_version)
 

@@ -237,12 +237,12 @@ def make_panels_from_hgncs(current, source, td_date, ci, hgnc_list):
         reference_genome=genome_38)
 
     for panel_record in panel_37, panel_38:
-        for hgnc_no in hgnc_list:
+        for hgnc_id in hgnc_list:
 
             # get/create Hgnc and Gene records
 
             hgnc_record, created = Hgnc.objects.get_or_create(
-                id=int(hgnc_no))
+                id=hgnc_id)
 
             gene_record, created = Gene.objects.get_or_create(
                 hgnc=hgnc_record)
@@ -319,7 +319,7 @@ def insert_data(json_data, td_current):
                 # add any individual hgnc ids to a separate list
 
                 if element and (element.upper().startswith("HGNC:")):
-                    hgnc_list.append(element[5:])
+                    hgnc_list.append(element)
 
                 # for PA panel ids, retrieve any matching Panel records
 

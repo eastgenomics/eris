@@ -8,7 +8,7 @@ data from a request form and parse it for insertion into the database.
 # work on this is waiting until the panelapp route is working
 
 
-class Data:
+class FormParser:
 
     def __init__(self, filepath):
         self.filepath = filepath

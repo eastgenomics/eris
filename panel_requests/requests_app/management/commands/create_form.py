@@ -383,9 +383,7 @@ class Command(BaseCommand):
 
         # get current gene symbols for HGNC ids
 
-        for hgnc_number in hgncs:
-
-            hgnc_id = f'HGNC:{hgnc_number}'
+        for hgnc_id in hgncs:
 
             symbol = functions_hgnc.get_symbol_from_hgnc(hgnc_df, hgnc_id)
 
@@ -396,7 +394,7 @@ class Command(BaseCommand):
             else:
 
                 gene_symbols.append('')  # else list is the wrong length
-                print(f'Problem with HGNC number: {hgnc_number}')
+                print(f'Problem with HGNC number: {hgnc_id}')
 
         # create df
 

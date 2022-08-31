@@ -19,7 +19,7 @@ from panelapp import Panelapp
 from panelapp import api
 
 
-class Data:
+class PanelParser:
 
     def __init__(self, panel_id, panel_version=None):
 
@@ -113,7 +113,7 @@ class Data:
 
                 gene_dict = {
                     'transcript': gene['transcript'],
-                    'hgnc_id': gene['gene_data']['hgnc_id'][5:],
+                    'hgnc_id': gene['gene_data']['hgnc_id'],
                     'confidence_level': gene['confidence_level'],
                     'mode_of_inheritance': gene['mode_of_inheritance'],
                     'mode_of_pathogenicity': gene['mode_of_pathogenicity'],
