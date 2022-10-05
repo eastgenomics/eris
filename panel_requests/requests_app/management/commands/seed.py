@@ -1,6 +1,5 @@
 #!usr/bin/env python
 
-
 """
 Coordinates functions to:
 
@@ -22,15 +21,15 @@ Usage examples: Importing PanelApp data
 
 - Import all current PanelApp panels
 
-    python manage.py seed panels all
+    python manage.py seed panelapp all
 
 - Import the current version of a single PanelApp panel
 
-    python manage.py seed panels <panel_id>
+    python manage.py seed panelapp <panel_id>
 
 - Import a specific version of a single PanelApp panel
 
-    python manage.py seed panels <panel_id> <panel_version>
+    python manage.py seed panelapp <panel_id> <panel_version>
 
 
 Usage examples: Importing test directory data
@@ -73,7 +72,7 @@ class Command(BaseCommand):
 
         # subparser defining inputs for importing data from PanelApp
 
-        parser_p = subparsers.add_parser('panels', help='Import panel data')
+        parser_p = subparsers.add_parser('panelapp', help='Import panel data')
 
         parser_p.add_argument(
             "panel_id", type=str, help="PanelApp panel id",)
@@ -82,7 +81,7 @@ class Command(BaseCommand):
             "panel_version", type=str, nargs='?', default=None,
             help="PanelApp panel version (optional)",)
 
-        parser_p.set_defaults(which='panels')
+        parser_p.set_defaults(which='panelapp')
 
         # subparser defining inputs for importing data from TD
 
@@ -123,21 +122,21 @@ class Command(BaseCommand):
 
         parsed_data = None
 
-        data = parse_pa.PanelParser(
+        parser = parse_pa.PanelParser(
             panel_id=panel_id,
             panel_version=panel_version)
 
         # retrieve panel data from PanelApp
 
-        panel_data = data.get_panelapp_panel(panel_id, panel_version)
+        panel_data = parser.get_panelapp_panel(panel_id, panel_version)
 
         # extract the required data for the panel and its genes and regions
 
         if panel_data:
 
-            info_dict = data.setup_output_dict(panel_data)
-            info_dict = data.parse_gene_info(panel_data, info_dict)
-            parsed_data = data.parse_region_info(panel_data, info_dict)
+            info_dict = parser.setup_output_dict(panel_data)
+            info_dict = parser.parse_gene_info(panel_data, info_dict)
+            parsed_data = parser.parse_region_info(panel_data, info_dict)
 
         else:
             print(f'Data could not be retrieved for panel {panel_id}.')
@@ -183,13 +182,19 @@ class Command(BaseCommand):
             parsed_data [dict]: data to insert into db
         """
 
-        # data = parse_form.Data(filepath)
-        # request_data = data.get_form_data(filepath)
-        # info_dict = data.setup_output_dict(request_data)
-        # ...
-        # return parsed_data
+        parser = parse_form.FormParser(filepath=filepath)
 
-        """ parse_form.py hasn't been written yet. """
+        info, panel_df, gene_df, region_df = parser.get_form_data(filepath)
+
+        ci = info['Clinical indication']
+        req_date = info['Request date']
+        genome = info['Reference genome']
+
+        info_dict = parser.setup_output_dict(ci, req_date, genome, panel_df)
+        info_dict = parser.parse_genes(info_dict, gene_df)
+        parsed_data = parser.parse_regions(genome, info_dict, region_df)
+
+        return parsed_data
 
     def handle(self, *args, **kwargs):
         """ Coordinates functions to import and parse data from
@@ -202,8 +207,10 @@ class Command(BaseCommand):
 
         # import and parse PanelApp data (panel_version optional)
 
-        if process == 'panels':
+        if process == 'panelapp':
+
             panel_id = kwargs['panel_id']
+            genomes = ['GRCh37', 'GRCh38']
 
             # parse data from ALL current PanelApp panels
 
@@ -226,7 +233,8 @@ class Command(BaseCommand):
 
             for panel_dict in parsed_data:
                 if panel_dict:
-                    insert_panel.insert_data(panel_dict)
+                    for genome in genomes:
+                        insert_panel.insert_data(panel_dict, genome)
 
         # import test directory data (td_json & td_current required)
 
@@ -248,8 +256,19 @@ class Command(BaseCommand):
         # import and parse data from a request form (filepath required)
 
         elif process == 'form':
+
             filepath = kwargs['input_file']
 
-            # parsed_data = self.parse_form_data(filepath)
+            # read in data from the form
 
-            print("The app can't deal with request forms yet.")
+            parsed_data = self.parse_form_data(filepath)
+
+            ci = parsed_data['ci']
+            genome = parsed_data['ref_genome']
+            req_date = parsed_data['req_date']
+
+            # create new panel, gene and region records
+
+            insert_panel.insert_data(parsed_data, genome)
+
+            # update ci-panel links

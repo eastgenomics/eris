@@ -14,6 +14,7 @@ import xlsxwriter
 
 from . import functions_hgnc
 
+from copy import copy
 from datetime import datetime as dt
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
@@ -590,7 +591,7 @@ class Command(BaseCommand):
         for df_row in region_df.iterrows():
             row += 1
 
-        final_row = row + 1
+        final_row = row + 6
 
         writer.save()
 
@@ -678,7 +679,7 @@ class Command(BaseCommand):
         for df_row in region_df.iterrows():
             row += 1
 
-        final_row = row + 1
+        final_row = row + 6
 
         writer.save()
 
@@ -705,23 +706,39 @@ class Command(BaseCommand):
         normal_font.font = Font(name='Arial', size=10)
 
         normal_font.alignment = Alignment(
-            horizontal='left',
-            vertical='center')
+            horizontal='left', vertical='center')
 
         wb.add_named_style(normal_font)
 
-        # define a style to highlight header cells
+        # define a style to highlight column headings
 
-        highlight = NamedStyle(name="highlight")
+        col_headings = NamedStyle(name="col_headings")
 
-        highlight.font = Font(bold=True, name='Arial', size=10)
+        col_headings.font = Font(name='Arial', size=10, bold=True)
 
-        highlight.alignment = Alignment(vertical='center')
+        col_headings.alignment = Alignment(
+            horizontal='left', vertical='center')
 
-        highlight.fill = PatternFill(
+        col_headings.fill = PatternFill(
             fill_type='solid',
             start_color='00C0C0C0',  # light grey
             end_color='00C0C0C0')
+
+        wb.add_named_style(col_headings)
+
+        # define a style to highlight the end of the form
+
+        highlight = NamedStyle(name="highlight")
+
+        highlight.font = Font(name='Arial', size=10, bold=True)
+
+        highlight.alignment = Alignment(
+            horizontal='left', vertical='center')
+
+        highlight.fill = PatternFill(
+            fill_type='solid',
+            start_color='00FFCC00',  # yellow
+            end_color='00FFCC00')
 
         wb.add_named_style(highlight)
 
@@ -736,7 +753,7 @@ class Command(BaseCommand):
 
         for row in range(1, 6):
 
-            ws[f'A{row}'].style = 'highlight'
+            ws[f'A{row}'].style = 'col_headings'
 
         # apply the heading style to the headers of the other dfs
 
@@ -757,6 +774,19 @@ class Command(BaseCommand):
                 cols = 'ABCDEFGHIJKLMN'
 
             for col in cols:
+
+                ws[f'{col}{row}'].style = 'col_headings'
+
+        # mark the final rows
+
+        ws[f'A{final_row - 2}'] = 'Please do not change any headings, ' \
+            'or the order of the columns.'
+
+        ws[f'A{final_row}'] = 'END OF FORM'
+        ws[f'B{final_row}'] = 'Please do not enter anything below this row.'
+
+        for row in [final_row - 2, final_row]:
+            for col in ['A', 'B', 'C']:
 
                 ws[f'{col}{row}'].style = 'highlight'
 
