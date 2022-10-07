@@ -1,3 +1,4 @@
+#!usr/bin/env python
 
 """ Defines how cleaned data from either panelapp or a request form,
 representing a single panel, is inserted into the database models.
@@ -44,6 +45,7 @@ parse_form) should be a dict with the keys:
 """
 
 
+from datetime import datetime as dt
 from django.db import transaction
 
 from requests_app.models import (
@@ -174,6 +176,12 @@ def insert_data(parsed_data):
         moi, created = ModeOfInheritance.objects.get_or_create(
             mode_of_inheritance=single_region['mode_of_inheritance'],)
 
+        vartype, created = VariantType.objects.get_or_create(
+            variant_type=single_region['variant_type'],)
+
+        overlap, created = RequiredOverlap.objects.get_or_create(
+            required_overlap=single_region['required_overlap'],)
+
         # value for 'mode_of_pathogenicity' might be empty
         if single_region['mode_of_pathogenicity']:
             mop, created = ModeOfPathogenicity.objects.get_or_create(
@@ -192,12 +200,6 @@ def insert_data(parsed_data):
         else:
             penetrance, created = Penetrance.objects.get_or_create(
                 penetrance='None',)
-
-        vartype, created = VariantType.objects.get_or_create(
-            variant_type=single_region['variant_type'],)
-
-        overlap, created = RequiredOverlap.objects.get_or_create(
-            required_overlap=single_region['required_overlap'],)
 
         # value for 'haploinsufficiency' might be empty
         if single_region['haploinsufficiency']:
@@ -253,3 +255,74 @@ def insert_data(parsed_data):
                 overlap_id=overlap.id,
                 vartype_id=vartype.id,
                 justification=single_region['justification'],)
+
+    return panel_37, panel_38
+
+
+@transaction.atomic
+def update_ci_panel_links(r_code, link_source, req_date, new_panels):
+    """ Update records for associations between a CI and its panels when
+    a new panel is imported.
+
+    args:
+        r_code [str]
+        link_source [str]: e.g. a test directory or request form
+        date [str]: date of source
+        new_panels [list]: new Panel records (i.e. for both genome builds)
+    """
+
+    date = dt.strptime(req_date, '%Y%m%d')
+
+    # get the CI record (there should be exactly 1 for each R code)
+
+    ci_records = ClinicalIndication.objects.filter(code=r_code)
+
+    assert len(ci_records) == 1, \
+        f'Error: {r_code} has {len(ci_records)} CI records (should be 1)'
+
+    # get existing links to Panel records (should be either 0 or 2)
+
+    ci_panels = ClinicalIndicationPanel.objects.filter(
+        clinical_indication=ci_records[0].id)
+
+    assert len(ci_panels) in [0, 2], \
+        f'Error: {r_code} has {len(ci_panels)} panel links (should be 0 or 2)'
+
+    # change existing ci-panel links so they're no longer current
+
+    if ci_panels:
+        for link in ci_panels:
+
+            link.current = False
+            link.save()
+
+            # update link's usage record (should be exactly 1) with end date
+
+            usages = ClinicalIndicationPanelUsage.objects.filter(
+                clinical_indication_panel=link.id)
+
+            assert len(usages) == 1, \
+                f'Error: An {r_code}-panel link has {len(usages)}'\
+                ' usage records (should be 1)'
+
+            usages[0].end_date = date
+            usages[0].save()
+
+    # create new ci-panel link, usage and source records
+
+    for panel in new_panels:
+
+        source, created = CiPanelAssociationSource.objects.get_or_create(
+            source=link_source,
+            date=date)
+
+        ci_panel, created = ClinicalIndicationPanel.objects.get_or_create(
+            source=source,
+            clinical_indication=ci_records[0],
+            panel=panel,
+            current=True)
+
+        usage, created = ClinicalIndicationPanelUsage.objects.get_or_create(
+            clinical_indication_panel=ci_panel,
+            start_date=date,
+            end_date=None)

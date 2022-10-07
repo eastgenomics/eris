@@ -40,7 +40,7 @@ Usage examples: Importing test directory data
     python manage.py seed test_dir <input_json> <Y/N>
 
 
-Usage examples: Importing test directory data
+Usage examples: Importing request form data
 
 - Parse a panel request form and import data
 
@@ -186,13 +186,12 @@ class Command(BaseCommand):
 
         info, panel_df, gene_df, region_df = parser.get_form_data(filepath)
 
-        ci = info['Clinical indication']
-        req_date = info['Request date']
-        genome = info['Reference genome']
+        ci = info['ci']
+        req_date = info['req_date']
 
-        info_dict = parser.setup_output_dict(ci, req_date, genome, panel_df)
+        info_dict = parser.setup_output_dict(ci, req_date, panel_df)
         info_dict = parser.parse_genes(info_dict, gene_df)
-        parsed_data = parser.parse_regions(genome, info_dict, region_df)
+        parsed_data = parser.parse_regions(info_dict, region_df)
 
         return parsed_data
 
@@ -210,7 +209,6 @@ class Command(BaseCommand):
         if process == 'panelapp':
 
             panel_id = kwargs['panel_id']
-            genomes = ['GRCh37', 'GRCh38']
 
             # parse data from ALL current PanelApp panels
 
@@ -233,8 +231,7 @@ class Command(BaseCommand):
 
             for panel_dict in parsed_data:
                 if panel_dict:
-                    for genome in genomes:
-                        insert_panel.insert_data(panel_dict, genome)
+                    insert_panel.insert_data(panel_dict)
 
         # import test directory data (td_json & td_current required)
 
@@ -251,7 +248,7 @@ class Command(BaseCommand):
             elif td_current == 'N':
                 current = False
 
-            insert_ci.insert_data(json_data, current)
+            new_panels = insert_ci.insert_data(json_data, current)
 
         # import and parse data from a request form (filepath required)
 
@@ -259,16 +256,15 @@ class Command(BaseCommand):
 
             filepath = kwargs['input_file']
 
-            # read in data from the form
+            # read in data from the form and insert panel into DB
 
             parsed_data = self.parse_form_data(filepath)
+            new_panels = insert_panel.insert_data(parsed_data)
+
+            # update ci-panel associations
 
             ci = parsed_data['ci']
-            genome = parsed_data['ref_genome']
-            req_date = parsed_data['req_date']
+            date = parsed_data['req_date']
+            source = f'request_{date}_{ci}'
 
-            # create new panel, gene and region records
-
-            insert_panel.insert_data(parsed_data, genome)
-
-            # update ci-panel links
+            insert_panel.update_ci_panel_links(ci, source, date, new_panels)

@@ -1,3 +1,4 @@
+#!usr/bin/env python
 
 """
 This script (called in seed.py) will define functions to import panel
@@ -23,7 +24,10 @@ class FormParser:
             fp [str]: path to request form
 
         returns:
-            form_contents []: entire unparsed file contents
+            general_info [dict]
+            panel_df [pandas df]
+            gene_df [pandas df]
+            region_df [pandas df]
         """
 
         wb = load_workbook(filename=fp)
@@ -55,77 +59,78 @@ class FormParser:
         # create dict of general request info
 
         general_info = {
-            'Request date': ws['B1'].value,
-            'Requested by': ws['B2'].value,
-            'Clinical indication': ws['B3'].value,
-            'Reference genome': ws['B4'].value,
-            'Form generated': ws['B5'].value}
+            'req_date': ws['B1'].value,
+            'requester': ws['B2'].value,
+            'ci': ws['B3'].value,
+            'form_created_date': ws['B4'].value}
 
         # create df from panels info
 
         panel_df = pd.DataFrame({
-            'Current panels':
+            'names':
                 [cell[0].value for cell in ws[f'A{p_start}': f'A{p_end}']],
-            'Panel source':
+            'sources':
                 [cell[0].value for cell in ws[f'B{p_start}': f'B{p_end}']],
-            'External ID':
+            'ext_ids':
                 [cell[0].value for cell in ws[f'C{p_start}': f'C{p_end}']],
-            'External version':
+            'ext_versions':
                 [cell[0].value for cell in ws[f'D{p_start}': f'D{p_end}']]})
 
         # create df from genes info
 
         gene_df = pd.DataFrame({
-            'Gene symbol':
-                [cell[0].value for cell in ws[f'A{g_start}': f'A{g_end}']],
-            'HGNC ID':
+            'hgncs':
                 [cell[0].value for cell in ws[f'B{g_start}': f'B{g_end}']],
-            'Gene justification':
+            'reasons':
                 [cell[0].value for cell in ws[f'C{g_start}': f'C{g_end}']],
-            'Transcript':
+            'transcripts':
                 [cell[0].value for cell in ws[f'D{g_start}': f'D{g_end}']],
-            'Transcript justification':
+            'trans_reasons':
                 [cell[0].value for cell in ws[f'E{g_start}': f'E{g_end}']],
-            'Confidence':
+            'confs':
                 [cell[0].value for cell in ws[f'F{g_start}': f'F{g_end}']],
-            'Penetrance':
+            'pens':
                 [cell[0].value for cell in ws[f'G{g_start}': f'G{g_end}']],
-            'MOP':
+            'mops':
                 [cell[0].value for cell in ws[f'H{g_start}': f'H{g_end}']],
-            'MOI':
+            'mois':
                 [cell[0].value for cell in ws[f'I{g_start}': f'I{g_end}']]})
 
         # create df from regions info
 
         region_df = pd.DataFrame({
-            'Region name':
+            'names':
                 [cell[0].value for cell in ws[f'A{r_start}': f'A{r_end}']],
-            'Chromosome':
+            'chroms':
                 [cell[0].value for cell in ws[f'B{r_start}': f'B{r_end}']],
-            'Start':
+            'starts_37':
                 [cell[0].value for cell in ws[f'C{r_start}': f'C{r_end}']],
-            'End':
+            'ends_37':
                 [cell[0].value for cell in ws[f'D{r_start}': f'D{r_end}']],
-            'Justification':
+            'starts_38':
                 [cell[0].value for cell in ws[f'E{r_start}': f'E{r_end}']],
-            'Confidence':
+            'ends_38':
                 [cell[0].value for cell in ws[f'F{r_start}': f'F{r_end}']],
-            'Penetrance':
+            'reasons':
                 [cell[0].value for cell in ws[f'G{r_start}': f'G{r_end}']],
-            'MOP':
+            'confs':
                 [cell[0].value for cell in ws[f'H{r_start}': f'H{r_end}']],
-            'MOI':
+            'pens':
                 [cell[0].value for cell in ws[f'I{r_start}': f'I{r_end}']],
-            'Type':
+            'mops':
                 [cell[0].value for cell in ws[f'J{r_start}': f'J{r_end}']],
-            'Variant type':
+            'mois':
                 [cell[0].value for cell in ws[f'K{r_start}': f'K{r_end}']],
-            'Haploinsufficiency':
+            'types':
                 [cell[0].value for cell in ws[f'L{r_start}': f'L{r_end}']],
-            'Triplosensitivity':
+            'var_types':
                 [cell[0].value for cell in ws[f'M{r_start}': f'M{r_end}']],
-            'Overlap':
-                [cell[0].value for cell in ws[f'N{r_start}': f'N{r_end}']]})
+            'haplos':
+                [cell[0].value for cell in ws[f'N{r_start}': f'N{r_end}']],
+            'triplos':
+                [cell[0].value for cell in ws[f'O{r_start}': f'O{r_end}']],
+            'overlaps':
+                [cell[0].value for cell in ws[f'P{r_start}': f'P{r_end}']]})
 
         return general_info, panel_df, gene_df, region_df
 
@@ -133,24 +138,26 @@ class FormParser:
         """ Initialise a dict to hold relevant panel information.
 
         args:
-            panel [dict]: PanelApp data for one panel
+            ci [str]: clinical indication to link the panel to
+            req_date [str]: date of new panel request
+            panel_df [pandas df]: PA panels new panel is based on
 
         returns:
             info_dict [dict]: initial dict of core panel info
         """
 
-        # I'm assuming that we want to store the external IDs and versions of
-        # the original PA panels that a custom panel is based on?
+        # waiting for scientist input on what they want human-readable
+        # panel names to look like
 
-        pa_ids = [value for value in panel_df['External ID']]
-        pa_versions = [value for value in panel_df['External version']]
+        pa_ids = [value for value in panel_df['ext_ids']]
+        pa_versions = [value for value in panel_df['ext_versions']]
 
         info_dict = {
             'ci': ci,
             'req_date': req_date,
             'panel_source': 'Request',
             'panel_name': f'{ci}_request_{req_date}',
-            'external_id': pa_ids,  # will be a list...
+            'external_id': pa_ids,  # not convinced this is the best value
             'panel_version': pa_versions,
             'genes': [],
             'regions': [],
@@ -164,59 +171,61 @@ class FormParser:
         genes with 'confidence_level' == '3'; i.e. 'green' genes.
 
         args:
-            panel [dict]: PanelApp data on one panel
             info_dict [dict]: holds data needed to populate db models
+            gene_df [pandas df]: genes to include in new panel
 
         returns:
             info_dict [dict]: updated with gene data
         """
 
-        for row in gene_df.iterrows():
+        for index, row in gene_df.iterrows():
 
             gene_dict = {
-                'hgnc_id': row[1]['HGNC ID'],
-                'gene_justification': row[1]['Gene justification'],
-                'confidence_level': row[1]['Confidence'],
-                'mode_of_inheritance': row[1]['MOI'],
-                'mode_of_pathogenicity': row[1]['MOP'],
-                'penetrance': row[1]['Penetrance'],
-                'transcript': row[1]['Transcript'],
-                'transcript_justification': row[1]['Transcript justification']}
+                'hgnc_id': row['hgncs'],
+                'gene_justification': row['reasons'],
+                'confidence_level': row['confs'],
+                'mode_of_inheritance': row['mois'],
+                'mode_of_pathogenicity': row['mops'],
+                'penetrance': row['pens'],
+                'transcript': row['transcripts'],
+                'transcript_justification': row['trans_reasons']}
 
             info_dict['genes'].append(gene_dict)
 
         return info_dict
 
-    def parse_regions(self, ref_genome, info_dict, region_df):
+    def parse_regions(self, info_dict, region_df):
         """ Iterate over every region in the panel and retrieve the data
         needed to populate panel_region and associated models. Only use
         regions with 'confidence_level' == '3'; i.e. 'green' regions.
 
         args:
-            panel [dict]: PanelApp data for one panel
             info_dict [dict]: holds data needed to populate db models
+            region_df [pandas df]: regions to include in new panel
 
         returns:
             info_dict [dict]: updated with region data
         """
 
-        for row in region_df.iterrows():
+        for index, row in region_df.iterrows():
 
             region_dict = {
-                'confidence_level': row[1]['Confidence'],
-                'mode_of_inheritance': row[1]['MOI'],
-                'mode_of_pathogenicity': row[1]['MOP'],
-                'penetrance': row[1]['Penetrance'],
-                'name': row[1]['Region name'],
-                'chrom': row[1]['Chromosome'],
-                'start': row[1]['Start (GRCh37)'],
-                'end': row[1]['End (GRCh37)'],
-                'type': row[1]['Type'],
-                'variant_type': row[1]['Variant type'],
-                'required_overlap': row[1]['Overlap'],
-                'haploinsufficiency': row[1]['Haploinsufficiency'],
-                'triplosensitivity': row[1]['Triplosensitivity'],
-                'justification': row[1]['Justification']}
+                'confidence_level': row['confs'],
+                'mode_of_inheritance': row['mois'],
+                'mode_of_pathogenicity': row['mops'],
+                'penetrance': row['pens'],
+                'name': row['names'],
+                'chrom': row['chroms'],
+                'start_37': row['starts_37'],
+                'end_37': row['ends_37'],
+                'start_38': row['starts_38'],
+                'end_38': row['ends_38'],
+                'type': row['types'],
+                'variant_type': row['var_types'],
+                'required_overlap': row['overlaps'],
+                'haploinsufficiency': row['haplos'],
+                'triplosensitivity': row['triplos'],
+                'justification': row['reasons']}
 
             info_dict['regions'].append(region_dict)
 
