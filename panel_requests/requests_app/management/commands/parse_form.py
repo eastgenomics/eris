@@ -51,7 +51,7 @@ class FormParser:
                 g_end = row_count - 2
 
             elif row[0] == 'END OF FORM':
-                r_end = row_count - 5
+                r_end = row_count - 6
                 break
 
             row_count += 1
@@ -74,7 +74,8 @@ class FormParser:
             'ext_ids':
                 [cell[0].value for cell in ws[f'C{p_start}': f'C{p_end}']],
             'ext_versions':
-                [cell[0].value for cell in ws[f'D{p_start}': f'D{p_end}']]})
+                [cell[0].value for cell in ws[f'D{p_start}': f'D{p_end}']]}
+                )
 
         # create df from genes info
 
@@ -149,19 +150,18 @@ class FormParser:
         # waiting for scientist input on what they want human-readable
         # panel names to look like
 
-        pa_ids = [value for value in panel_df['ext_ids']]
-        pa_versions = [value for value in panel_df['ext_versions']]
+        # we also haven't decided what the id and version should look like
+        # for non-panelapp panels
 
         info_dict = {
             'ci': ci,
             'req_date': req_date,
             'panel_source': 'Request',
             'panel_name': f'{ci}_request_{req_date}',
-            'external_id': pa_ids,  # not convinced this is the best value
-            'panel_version': pa_versions,
+            'external_id': 'PLACEHOLDER',
+            'panel_version': 'PLACEHOLDER',
             'genes': [],
-            'regions': [],
-            }
+            'regions': []}
 
         return info_dict
 
@@ -180,17 +180,19 @@ class FormParser:
 
         for index, row in gene_df.iterrows():
 
-            gene_dict = {
-                'hgnc_id': row['hgncs'],
-                'gene_justification': row['reasons'],
-                'confidence_level': row['confs'],
-                'mode_of_inheritance': row['mois'],
-                'mode_of_pathogenicity': row['mops'],
-                'penetrance': row['pens'],
-                'transcript': row['transcripts'],
-                'transcript_justification': row['trans_reasons']}
+            if row['hgncs']:
 
-            info_dict['genes'].append(gene_dict)
+                gene_dict = {
+                    'hgnc_id': row['hgncs'],
+                    'gene_justification': row['reasons'],
+                    'confidence_level': row['confs'],
+                    'mode_of_inheritance': row['mois'],
+                    'mode_of_pathogenicity': row['mops'],
+                    'penetrance': row['pens'],
+                    'transcript': row['transcripts'],
+                    'transcript_justification': row['trans_reasons']}
+
+                info_dict['genes'].append(gene_dict)
 
         return info_dict
 
@@ -209,24 +211,26 @@ class FormParser:
 
         for index, row in region_df.iterrows():
 
-            region_dict = {
-                'confidence_level': row['confs'],
-                'mode_of_inheritance': row['mois'],
-                'mode_of_pathogenicity': row['mops'],
-                'penetrance': row['pens'],
-                'name': row['names'],
-                'chrom': row['chroms'],
-                'start_37': row['starts_37'],
-                'end_37': row['ends_37'],
-                'start_38': row['starts_38'],
-                'end_38': row['ends_38'],
-                'type': row['types'],
-                'variant_type': row['var_types'],
-                'required_overlap': row['overlaps'],
-                'haploinsufficiency': row['haplos'],
-                'triplosensitivity': row['triplos'],
-                'justification': row['reasons']}
+            if row['chroms']:
 
-            info_dict['regions'].append(region_dict)
+                region_dict = {
+                    'confidence_level': row['confs'],
+                    'mode_of_inheritance': row['mois'],
+                    'mode_of_pathogenicity': row['mops'],
+                    'penetrance': row['pens'],
+                    'name': row['names'],
+                    'chrom': row['chroms'],
+                    'start_37': row['starts_37'],
+                    'end_37': row['ends_37'],
+                    'start_38': row['starts_38'],
+                    'end_38': row['ends_38'],
+                    'type': row['types'],
+                    'variant_type': row['var_types'],
+                    'required_overlap': row['overlaps'],
+                    'haploinsufficiency': row['haplos'],
+                    'triplosensitivity': row['triplos'],
+                    'justification': row['reasons']}
+
+                info_dict['regions'].append(region_dict)
 
         return info_dict

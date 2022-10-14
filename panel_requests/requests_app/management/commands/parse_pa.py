@@ -23,30 +23,40 @@ class PanelParser:
 
     def __init__(self, panel_id, panel_version=None):
 
-        self.panel_id = panel_id
-        self.panel_version = panel_version
+        self.panel_id = str(panel_id)
 
-    def get_panelapp_panel(self, panel_id, panel_version=None):
-        """ Returns a dict representing a specific version of a PanelApp
-        panel. If version is not specified, retrieves the current
-        version of that panel.
+        if panel_version:
+            self.panel_version = str(panel_version)
 
-        Note that 'Panelapp.Panel' doesn't work for all panel versions -
-        some older versions don't contain the 'hgnc_symbol' field.
+        else:
+            self.panel_version = None
+
+    def get_panelapp_panel(self, id, version=None):
+        """ Retrieve PanelApp panel object for specified panel ID and version.
 
         args:
-            panel_id [str]: PanelApp panel ID
-            panel_version [str/None]: PanelApp panel version
+            id [str]: id of panelapp panel
+            version [str/None]: gets current panel version if not specified
 
         returns:
-            panel: dict of PanelApp data on specified version of panel
+            result [dict]: data for specified version of specified panel
         """
 
-        try:
-            result = Panelapp.Panel(str(panel_id)).get_data()
+        panel_id = str(id)
 
-        # the above doesn't work for some older panel versions
-        except AttributeError:
+        if version:
+            panel_version = str(version)
+
+        else:
+            panel_version = None
+
+        try:
+            result = Panelapp.Panel(panel_id, panel_version).get_data()
+
+        # some older panel versions are awkward for variable reasons
+        except Exception as error:
+
+            print(f'Error with 1st panel retrieval attempt: {error}')
 
             path = ["panels", panel_id]
             param = {"version": panel_version}
@@ -55,23 +65,6 @@ class PanelParser:
             result = api.get_panelapp_response(url)
 
         return result
-
-    def check_panel_data(self, panel_data):
-        """ Checks whether panel is empty, i.e. whether the result of
-        get_panelapp_panel is None.
-
-        args:
-            panel_data [dict]: PanelApp data for one panel
-
-        returns:
-            empty_panel [bool]: True if value of panel_data is None
-        """
-
-        if not panel_data:
-            return True
-
-        else:
-            return False
 
     def setup_output_dict(self, panel):
         """ Initialise a dict to hold relevant panel information.

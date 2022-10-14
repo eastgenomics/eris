@@ -9,6 +9,7 @@ Instructions for creating the text file can be found in the README.
 
 
 import pandas as pd
+import random
 
 
 def import_hgnc_dump(filename):
@@ -27,7 +28,7 @@ def import_hgnc_dump(filename):
     return hgnc_df
 
 
-def set_column_names(hgnc_df):
+def rename_columns(hgnc_df):
     """ Rename the columns of the hgnc dataframe to a standardised format.
 
     args:
@@ -129,3 +130,46 @@ def get_symbol_from_hgnc(hgnc_df, hgnc_id):
         gene_symbol = None
 
     return gene_symbol
+
+
+def random_hgncs(hgnc_df):
+    """ Given an HGNC dataframe, select 25 random genes to test with.
+
+    returns:
+        test_data [list]: 25 dicts with hgnc id, current symbol, and a
+            randomly selected alternative symbol (if any exist)
+    """
+
+    test_data = []
+
+    num_ids = len(hgnc_df.index)
+
+    for i in range(25):
+
+        # choose a random gene row
+
+        row = random.randint(1, num_ids)
+
+        # choose a random non-current gene symbol from previous/aliases
+
+        if hgnc_df.loc[row, 'prev_symbols'] or \
+            hgnc_df.loc[row, 'alias_symbols']:
+
+            all_non_current = hgnc_df.loc[row, 'prev_symbols'] + \
+                hgnc_df.loc[row, 'alias_symbols']
+
+            non_current = random.choice(all_non_current)
+
+        else:
+            non_current = None
+
+        # return hgnc id, current symbol, and random previous symbol
+
+        row_dict = {
+            'hgnc': hgnc_df.loc[row, 'hgnc_id'],
+            'current': hgnc_df.loc[row, 'symbol'],
+            'other': non_current}
+
+        test_data.append(row_dict)
+
+    return test_data

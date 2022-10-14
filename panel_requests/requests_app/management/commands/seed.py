@@ -20,31 +20,26 @@ panels.
 Usage examples: Importing PanelApp data
 
 - Import all current PanelApp panels
-
     python manage.py seed panelapp all
 
 - Import the current version of a single PanelApp panel
-
     python manage.py seed panelapp <panel_id>
 
 - Import a specific version of a single PanelApp panel
-
     python manage.py seed panelapp <panel_id> <panel_version>
 
 
-Usage examples: Importing test directory data
+Usage examples: Importing parsed test directory data
 
-- Import data from a JSON file of parsed test directory data
-- (Y/N specifies whether this is the current TD version)
-
+- Import data from a JSON file of parsed test directory data (current version)
     python manage.py seed test_dir <input_json> <Y/N>
 
 
-Usage examples: Importing request form data
+Usage examples: Parsing and importing a request form
 
 - Parse a panel request form and import data
-
     python manage.py seed form <input_file>
+
 """
 
 
@@ -182,6 +177,8 @@ class Command(BaseCommand):
             parsed_data [dict]: data to insert into db
         """
 
+        print('Parsing request form...')
+
         parser = parse_form.FormParser(filepath=filepath)
 
         info, panel_df, gene_df, region_df = parser.get_form_data(filepath)
@@ -192,6 +189,8 @@ class Command(BaseCommand):
         info_dict = parser.setup_output_dict(ci, req_date, panel_df)
         info_dict = parser.parse_genes(info_dict, gene_df)
         parsed_data = parser.parse_regions(info_dict, region_df)
+
+        print('Form parsing completed.')
 
         return parsed_data
 
@@ -229,9 +228,13 @@ class Command(BaseCommand):
 
             # insert parsed data (list of panel dicts) into the db
 
+            print('Importing panels into database...')
+
             for panel_dict in parsed_data:
                 if panel_dict:
                     insert_panel.insert_data(panel_dict)
+
+            print('Done.')
 
         # import test directory data (td_json & td_current required)
 

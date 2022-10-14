@@ -517,128 +517,54 @@ class Command(BaseCommand):
         added to.
 
         returns:
+            panel_df [pandas dataframe]
             gene_df [pandas dataframe]
             region_df [pandas dataframe]
         """
 
+        panel_df = pd.DataFrame({
+           'Current panels': ['None currently associated with this clinical '
+                'indication'],
+            'Panel source': [''],
+            'External ID': [''],
+            'External version': ['']})
+
         gene_df = pd.DataFrame({
-            'Gene symbol': ['e.g. ADCY5', '',
-                'Insert data for 1 gene/row - add rows as required'],
-                'HGNC ID': ['e.g. 236', '', ''],
-                'Gene justification': ['e.g. PanelApp', '', ''],
-                'Transcript': ['e.g. NM_183357.3', '', ''],
-                'Transcript justification': ['e.g. MANE', '', ''],
-                'Confidence': ['e.g. 3', '', ''],
-                'Penetrance': ['e.g. Complete', '', ''],
-                'MOP': ['e.g. gain-of-function', '', ''],
-                'MOI': ['e.g. MITOCHONDRIAL', '', '']})
+            'Gene symbol': ['None currently in panel'],
+            'HGNC ID': [''],
+            'Gene justification': [''],
+            'Transcript': [''],
+            'Transcript justification': [''],
+            'Confidence': [''],
+            'Penetrance': [''],
+            'MOP': [''],
+            'MOI': ['']})
 
         region_df = pd.DataFrame({
-            'Region name': [
-                'e.g. Xp11.23 region (includes MAOA and MAOB) Loss', '',
-                'Insert data for 1 region/row - add rows as required'],
-                'Chromosome': ['e.g. X', '', ''],
-                'Start (GRCh37)': ['e.g. 43654906', '', ''],
-                'End (GRCh37)': ['e.g. 43882474', '', ''],
-                'Start (GRCh38)': ['e.g. 43654906', '', ''],
-                'End (GRCh38)': ['e.g. 43882474', '', ''],
-                'Justification': ['e.g. PanelApp', '', ''],
-                'Confidence': ['e.g. 3', '', ''],
-                'Penetrance': ['e.g. Incomplete', '', ''],
-                'MOP': ['e.g. gain-of-function', '', ''],
-                'MOI': ['e.g. MITOCHONDRIAL', '', ''],
-                'Type': ['e.g. cnv', '', ''],
-                'Variant type': ['e.g. cnv_loss', '', ''],
-                'Haploinsufficiency': ['e.g. 3', '', ''],
-                'Triplosensitivity': ['e.g. 2', '', ''],
-                'Overlap': ['N/A', '', '']})
+            'Region name': ['None currently in panel'],
+            'Chromosome': [''],
+            'Start (GRCh37)': [''],
+            'End (GRCh37)': [''],
+            'Start (GRCh38)': [''],
+            'End (GRCh38)': [''],
+            'Justification': [''],
+            'Confidence': [''],
+            'Penetrance': [''],
+            'MOP': [''],
+            'MOI': [''],
+            'Type': [''],
+            'Variant type': [''],
+            'Haploinsufficiency': [''],
+            'Triplosensitivity': [''],
+            'Overlap': ['']})
 
-        return gene_df, region_df
+        return panel_df, gene_df, region_df
 
-    def write_blank_form(self, filename, generic_df, gene_df, region_df):
-        """ Construct a blank request form as an Excel file. This will
-        be executed if there are no panels in the database currently
-        associated with the specified clinical indication.
-
-        args:
-            filename [str]: name of output request form
-            generic_df [pandas dataframe]: general info about request
-            gene_df [pandas dataframe]: all genes covered by these panels
-            region_df [pandas dataframe]: all regions covered by these panels
-
-        returns:
-            cell_ranges [list]: strs of cell ranges (e.g. 'A1:A7')
-        """
-
-        writer = pd.ExcelWriter(filename, engine='xlsxwriter')
-
-        row = 0
-        col = 0
-
-        # holds the row of each table header
-        header_rows = {}
-
-        # write generic df in cell A1, increment row by df length
-
-        header_rows['general'] = row + 1
-
-        generic_df.to_excel(
-            writer,
-            sheet_name='Sheet1',
-            startrow=row,
-            startcol=col,
-            header=False)
-
-        for df_row in generic_df.iterrows():
-            row += 1
-
-        row += 1
-
-        # write gene df, get range of header
-
-        header_rows['gene'] = row + 1
-
-        gene_df.to_excel(
-            writer,
-            sheet_name='Sheet1',
-            startrow=row,
-            startcol=col,
-            index=False)
-
-        # increment row by df length
-
-        for df_row in gene_df.iterrows():
-            row += 1
-
-        row += 2
-
-        # write region df, get range of header
-
-        header_rows['region'] = row + 1
-
-        region_df.to_excel(
-            writer,
-            sheet_name='Sheet1',
-            startrow=row,
-            startcol=col,
-            index=False)
-
-        # identify the last populated row
-
-        for df_row in region_df.iterrows():
-            row += 1
-
-        header_rows['final'] = row + 6
-
-        writer.save()
-
-        return header_rows
-
-    def write_data(self, filename, generic_df, panel_df, gene_df, region_df):
+    def write_data(self, fp, generic_df, panel_df, gene_df, region_df):
         """ Construct the request form as an excel file.
 
         args:
-            filename [str]: for output request form
+            fp [str]: to write request form to
             generic_df [pandas dataframe]: general info about request
             panel_df [pandas dataframe]: list of current panels for this CI
             gene_df [pandas dataframe]: all genes covered by these panels
@@ -648,7 +574,7 @@ class Command(BaseCommand):
             cell_ranges [list]: strs of cell ranges (e.g. 'A1:A7')
         """
 
-        writer = pd.ExcelWriter(filename, engine='xlsxwriter')
+        writer = pd.ExcelWriter(fp, engine='xlsxwriter')
 
         row = 0
         col = 0
@@ -720,7 +646,7 @@ class Command(BaseCommand):
         for df_row in region_df.iterrows():
             row += 1
 
-        header_rows['final'] = row + 6
+        header_rows['final'] = row + 7
 
         writer.save()
 
@@ -816,15 +742,20 @@ class Command(BaseCommand):
             for col in cols:
                 ws[f'{col}{row}'].style = 'col_headings'
 
-        # mark the final rows
+        # add form instructions in the final rows
 
-        ws[f'A{final_row - 2}'] = 'Please do not change any headings, ' \
-            'or the order of the columns.'
+        ws[f'A{final_row - 4}'] = 'Each row should contain data for one ' \
+            'gene or region - add or remove rows as required.'
+
+        ws[f'A{final_row - 3}'] = 'Please leave 1 blank row between tables.'
+
+        ws[f'A{final_row - 2}'] = 'Please do not change any headings, or ' \
+            'the order of the columns.'
 
         ws[f'A{final_row}'] = 'END OF FORM'
         ws[f'B{final_row}'] = 'Please do not enter anything below this row.'
 
-        for row in [final_row - 2, final_row]:
+        for row in range(final_row - 4, final_row + 1):
             for col in ['A', 'B', 'C']:
 
                 ws[f'{col}{row}'].style = 'highlight'
@@ -852,9 +783,7 @@ class Command(BaseCommand):
             ci_code = kwargs['ci_code'][0]
             hgnc_dump = kwargs['hgnc_dump'][0]
 
-            # retrieve records of panels currently linked to that CI code
-
-            panel_records = self.get_panel_records(ci_code)
+            file = f'request_form_{req_date}_{ci_code}_{requester}.xlsx'
 
             # construct header df of general info about the request
 
@@ -863,62 +792,54 @@ class Command(BaseCommand):
                 requester,
                 ci_code)
 
-            # if that CI currently has no panels, create a blank form
+            # generate blank dataframes
 
-            if len(panel_records) == 0:
+            panel_df = pd.DataFrame()
+            gene_df = pd.DataFrame()
+            region_df = pd.DataFrame()
 
-                print('No panels are currently associated with this '
-                    'clinical indication.')
+            panels_empty, genes_empty, regions_empty = self.create_blank_dfs()
 
-                # create blank gene/region dfs
+            # retrieve records of panels currently linked to that CI code
 
-                gene_df, region_df = self.create_blank_dfs()
+            panel_records = self.get_panel_records(ci_code)
 
-                # write a blank form
-
-                filename = 'request_form_' \
-                    f'{req_date}_{ci_code}_{requester}_BLANK.xlsx'
-
-                header_rows = self.write_blank_form(
-                    filename,
-                    generic_df,
-                    gene_df,
-                    region_df)
-
-            # if the CI has 1+ current panel, create a populated form
-
-            else:
-                # get genes and regions for each panel
-
-                panel_dicts = self.retrieve_panel_entities(panel_records)
+            if panel_records:
 
                 # create panel, gene and region dataframes
 
-                panel_df = self.create_panel_df(panel_dicts)
-                region_df = self.create_region_df(panel_dicts)
+                panel_dicts = self.retrieve_panel_entities(panel_records)
 
                 hgnc_df = functions_hgnc.import_hgnc_dump(hgnc_dump)
-                hgnc_df = functions_hgnc.set_column_names(hgnc_df)
+                hgnc_df = functions_hgnc.rename_columns(hgnc_df)
 
+                panel_df = self.create_panel_df(panel_dicts)
+                region_df = self.create_region_df(panel_dicts)
                 gene_df = self.create_gene_df(hgnc_df, panel_dicts)
 
-                # construct the request form and print the filename
+            # construct the request form and print the filename
 
-                filename = 'request_form_' \
-                    f'{req_date}_{ci_code}_{requester}.xlsx'
+            if len(panel_df) == 0:
+                panel_df = panels_empty
 
-                header_rows = self.write_data(
-                    filename,
-                    generic_df,
-                    panel_df,
-                    gene_df,
-                    region_df)
+            if len(gene_df) == 0:
+                gene_df = genes_empty
+
+            if len(region_df) == 0:
+                region_df = regions_empty
+
+            headers = self.write_data(
+                file,
+                generic_df,
+                panel_df,
+                gene_df,
+                region_df)
 
             # apply formatting to the created file
 
-            self.format_excel(filename, header_rows)
+            self.format_excel(file, headers)
 
-            print(f'Request form created: {filename}')
+            print(f'Request form created: {file}')
 
         else:
             print("The following arguments are required, and must be "

@@ -290,7 +290,7 @@ def insert_data(json_data, td_current):
         td_current [bool]: is this the current TD version
     """
 
-    print('Inserting test directory data into the database...')
+    print('Inserting test directory data into database...')
 
     # create a Source record for this td version
 

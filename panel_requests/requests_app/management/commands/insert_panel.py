@@ -271,6 +271,8 @@ def update_ci_panel_links(r_code, link_source, req_date, new_panels):
         new_panels [list]: new Panel records (i.e. for both genome builds)
     """
 
+    print('Updating database links between panels and clinical indication...')
+
     date = dt.strptime(req_date, '%Y%m%d')
 
     # get the CI record (there should be exactly 1 for each R code)
@@ -280,10 +282,11 @@ def update_ci_panel_links(r_code, link_source, req_date, new_panels):
     assert len(ci_records) == 1, \
         f'Error: {r_code} has {len(ci_records)} CI records (should be 1)'
 
-    # get existing links to Panel records (should be either 0 or 2)
+    # get current links to Panel records (should be either 0 or 2)
 
     ci_panels = ClinicalIndicationPanel.objects.filter(
-        clinical_indication=ci_records[0].id)
+        clinical_indication=ci_records[0].id,
+        current=True)
 
     assert len(ci_panels) in [0, 2], \
         f'Error: {r_code} has {len(ci_panels)} panel links (should be 0 or 2)'
@@ -326,3 +329,5 @@ def update_ci_panel_links(r_code, link_source, req_date, new_panels):
             clinical_indication_panel=ci_panel,
             start_date=date,
             end_date=None)
+
+    print('Database updated.')
