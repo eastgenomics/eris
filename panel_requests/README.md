@@ -10,8 +10,8 @@ Descriptions of the various gene and region metadata attributes can be found in 
 ## Create or update database models
 Make any changes to the models.py file, then execute:
 ```sh
-python manage.py makemigrations
-python manage.py migrate
+python manage.py makemigrations requests_app
+python manage.py migrate requests_app
 ```
 
 ## Clear all records and models from an existing database
@@ -70,25 +70,24 @@ The two arguments for this command are:
 ## Create a request form
 The generic command for this is:
 ```sh
-python manage.py create_form <request_date> <requester> <ci_code> <genome_build> <hgnc_filename>
+python manage.py create_form <request_date> <requester> <ci_code> <hgnc_filename>
 ```
 - Example usages:
 ```sh
 # The CI links to a PanelApp panel which has both regions and genes
-python manage.py create_form 20220817 JJM R149.1 GRCh37 20220817_hgnc_dump.txt
+python manage.py create_form 20220817 JJM R149.1 20220817_hgnc_dump.txt
 
 # The CI links to a list of HGNC IDs
-python manage.py create_form 20220817 JJM R417.2 GRCh37 20220817_hgnc_dump.txt
+python manage.py create_form 20220817 JJM R417.2 20220817_hgnc_dump.txt
 
 # The CI links to nothing
-python manage.py create_form 20220817 JJM R413.1 GRCh37 20220817_hgnc_dump.txt
+python manage.py create_form 20220817 JJM R413.1 20220817_hgnc_dump.txt
 ```
 
-This command requires 5 arguments, the first 4 of which should come from the user request:
+This command requires 4 arguments, the first 3 of which should come from the user request:
 - Request date (in YYYYMMDD format)
 - Requester initials
 - The clinical indication R code
-- The reference genome build to use (GRCh37 or GRCh38)
 - The path to a text file dump of the HGNC database
 
 To create the HGNC text file:
