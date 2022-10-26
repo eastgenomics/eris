@@ -97,7 +97,7 @@ To create the HGNC text file:
 - Copy the entire resulting text output (ctrl + A), and paste into a text editor
 - Save as '<YYYYMMDD>_hgnc_dump.txt' in the same folder as the manage.py script
 
-Executing the command will generate an MS Excel file named 'request_form_<req_date>-<ci_code>-<ref_genome>_<requester>.xlsx' in the same folder as the manage.py script.
+Executing the command will generate an MS Excel file named 'request_form_<req_date>_<ci_code>_<requester>.xlsx' in the same folder as the manage.py script.
 
 The file consists of four pandas dataframes:
 1. Generic information about the request (request date, clinical indication used, genome build used etc.)
@@ -106,3 +106,17 @@ The file consists of four pandas dataframes:
 4. A list of the regions in these panels and their associated metadata
 
 More information about each metadata field can be found in the PanelApp handbook at https://panelapp.genomicsengland.co.uk/media/files/PanelApp_Handbook_V18_120210506.pdf
+
+## Import a completed panel request form and update models
+The generic command for this is:
+``` sh
+python manage.py seed form <fp>
+```
+- Example usage:
+``` sh
+python manage.py seed form request_form_20221014_R149.1_JJM.xlsx
+```
+
+The command takes 1 argument (fp) which is the path to the completed request form.
+
+Executing the command reads in and parses a request form, creates a new panel instance from the request, links the relevant clinical indication to the new panel, and updates the link to the previous panel so that it is no longer current.
