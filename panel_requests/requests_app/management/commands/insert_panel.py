@@ -48,7 +48,7 @@ parse_form) should be a dict with the keys:
 from datetime import datetime as dt
 from django.db import transaction
 
-from requests_app.models import (
+from panel_requests.requests_app.models import (
     ReferenceGenome,
     Panel,
     CiPanelAssociationSource,

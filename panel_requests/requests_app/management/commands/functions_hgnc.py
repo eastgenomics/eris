@@ -71,7 +71,6 @@ def get_hgnc_from_symbol(hgnc_df, gene_symbol):
     try:
 
         target_index = hgnc_df.index[hgnc_df['symbol'] == gene_symbol]
-
         hgnc_id = hgnc_df.loc[target_index[0], 'hgnc_id']
 
     except IndexError:
@@ -141,35 +140,38 @@ def random_hgncs(hgnc_df):
     """
 
     test_data = []
-
+    hgnc_df = hgnc_df.applymap(lambda x: str(x).strip())
     num_ids = len(hgnc_df.index)
 
-    for i in range(25):
+    while len(test_data) < 25:
 
-        # choose a random gene row
+        # choose a random df row, store hgnc id and current symbol
 
         row = random.randint(1, num_ids)
+        row_hgnc = hgnc_df.loc[row, 'hgnc_id']
+        row_current = hgnc_df.loc[row, 'symbol']
 
-        # choose a random non-current gene symbol from previous/aliases
+        # list all previous/alias symbols in that row, pick one at random
 
-        if hgnc_df.loc[row, 'prev_symbols'] or \
-            hgnc_df.loc[row, 'alias_symbols']:
+        all_non_current = []
+        prev = hgnc_df.loc[row, 'prev_symbols']
+        alias = hgnc_df.loc[row, 'alias_symbols']
 
-            all_non_current = hgnc_df.loc[row, 'prev_symbols'] + \
-                hgnc_df.loc[row, 'alias_symbols']
+        for symbol_string in prev, alias:
+            if symbol_string.lower() != 'nan':
+                for ele in symbol_string.split(','):
+                    all_non_current.append(ele.strip())
 
+        if all_non_current:
             non_current = random.choice(all_non_current)
 
-        else:
-            non_current = None
+            # return the row's hgnc, current symbol, and previous symbol
 
-        # return hgnc id, current symbol, and random previous symbol
+            row_dict = {
+                'row_hgnc': row_hgnc,
+                'row_current': row_current,
+                'row_previous': non_current}
 
-        row_dict = {
-            'hgnc': hgnc_df.loc[row, 'hgnc_id'],
-            'current': hgnc_df.loc[row, 'symbol'],
-            'other': non_current}
-
-        test_data.append(row_dict)
+            test_data.append(row_dict)
 
     return test_data

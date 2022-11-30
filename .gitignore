@@ -1,0 +1,10 @@
+config.py
+import_all_pa_panels.py
+parsers_only.py
+
+settings.json
+*.xlsx
+
+*__pycache__*
+migrations*
+

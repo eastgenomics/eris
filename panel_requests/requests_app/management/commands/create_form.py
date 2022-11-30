@@ -22,7 +22,7 @@ from openpyxl.styles import NamedStyle, Font, PatternFill, Alignment
 
 from django.core.management.base import BaseCommand
 
-from requests_app.models import (
+from panel_requests.requests_app.models import (
     ReferenceGenome,
     Panel,
     ClinicalIndication,

@@ -56,31 +56,26 @@ class TestHgnc:
         'other': <randomly selected alternative symbol, if any exist>}
     """
 
-    def test_hgnc_from_symbol():
-        """ Tests get_hgnc_from_symbol, using both the current gene
-        symbol and an alternative symbol for 25 randomly selected HGNC
-        IDs. """
-
-        hgnc_df = hgnc.import_hgnc_dump(hgnc_file)
-        hgnc_df = hgnc.rename_columns(hgnc_df)
-
-        random_hgncs = hgnc.random_hgncs(hgnc_df)
+    def test_hgnc_from_symbol(self):
+        """ Tests get_hgnc_from_symbol using the current gene symbol for
+        25 randomly selected HGNC IDs. """
 
         errors = []
+        hgnc_df = hgnc.import_hgnc_dump(hgnc_file)
+        hgnc_df = hgnc.rename_columns(hgnc_df)
+        random_hgncs = hgnc.random_hgncs(hgnc_df)
 
         for ele in random_hgncs:
-            for symbol in 'current', 'other':
 
-                result = hgnc.get_hgnc_from_symbol(hgnc_df, ele[symbol])
+            result = hgnc.get_hgnc_from_symbol(hgnc_df, ele['row_current'])
 
-                if result != ele['hgnc']:
+            if result != ele['row_hgnc']:
 
-                    errors.append(
-                        f'{ele[symbol]} returned {result}, not {ele["hgnc"]}')
+                errors.append(f"DF row: {ele}\nFunction result: {result}")
 
         assert not errors, '\n'.join(errors)
 
-    def test_symbol_from_hgnc():
+    def test_symbol_from_hgnc(self):
         """ Tests get_symbol_from_hgnc using the HGNC ids of 25 randomly
         selected genes. """
 
@@ -93,12 +88,12 @@ class TestHgnc:
 
         for ele in random_hgncs:
 
-            result = hgnc.get_symbol_from_hgnc(hgnc_df, ele['hgnc'])
+            result = hgnc.get_symbol_from_hgnc(hgnc_df, ele['row_hgnc'])
 
-            if result != ele['current']:
+            if result != ele['row_current']:
 
-                errors.append(
-                    f"{ele['hgnc']} returned {result}, not {ele['current']}")
+                errors.append(f"{ele['row_hgnc']} returned {result}, "
+                    f"not {ele['row_current']}")
 
         assert not errors, '\n'.join(errors)
 
@@ -110,22 +105,26 @@ class TestSeed:
     - handle
     """
 
-    def test_parse_single_panel():
+    def test_parse_single_panel(self):
         """ Tests parse_single_pa_panel from seed.py. This involves
         calling all four functions within parse_pa.py.
 
         testing_parse_panel.txt contains the json output of
         parse_single_pa_panel for PA panel 90 v1.80. """
 
-        result = seed.Command(
-            which='panelapp', panel_id='90', panel_version='1.80').handle()
+        command = seed.Command(
+            test=True, which='panelapp', panel_id='90', panel_version='1.80')
+
+        result = command.handle()
+
+        print(result)
 
         with open(parsed_panel, 'r') as reader:
             correct_output = json.load(reader)
 
         assert result == correct_output
 
-    def test_parse_forms():
+    def test_parse_forms(self):
         """ Tests parse_form_data from seed.py.This involves calling all
         four functions within parse_form.py.
 
@@ -142,7 +141,8 @@ class TestSeed:
 
         for input_form, parsed_form in files.items():
 
-            result = seed.Command(which='form', input_file=input_form).handle()
+            result = seed.Command(
+                test=True, which='form', input_file=input_form).handle()
 
             with open(parsed_form, 'r') as reader:
                 correct_output = json.load(reader)
@@ -153,56 +153,56 @@ class TestSeed:
         assert not errors, '\n'.join(errors)
 
 
-class TestForm:
-    def test_form_creation():
-        """ Tests for functions in create_form.py. Doesn't cover
-        write_blank_form, write_data or format_excel. """
+# class TestForm:
+#     def test_form_creation():
+#         """ Tests for functions in create_form.py. Doesn't cover
+#         write_blank_form, write_data or format_excel. """
 
-        errors = []
+#         errors = []
 
-        results = create_form.Command(
-            req_date='20221012', requester='JJM',
-            ci_code='R149.1', hgnc_dump=hgnc_file).handle()
+#         results = create_form.Command(
+#             req_date='20221012', requester='JJM',
+#             ci_code='R149.1', hgnc_dump=hgnc_file).handle()
 
-        file = 'request_form_20221012_R149.1_JJM.xlsx'
+#         file = 'request_form_20221012_R149.1_JJM.xlsx'
 
-        headers = {
-            'general': 1, 'panel': 6, 'gene': 9, 'region': 38, 'final': 46}
+#         headers = {
+#             'general': 1, 'panel': 6, 'gene': 9, 'region': 38, 'final': 46}
 
-        generic_df = pd.DataFrame({
-            'fields': [
-                'Request date',
-                'Requested by',
-                'Clinical indication',
-                'Form generated'],
-            'data': [
-                '20221012',
-                'JJM',
-                'R149.1',
-                '2022-10-12 15:43:36.788535']}).set_index('fields')
+#         generic_df = pd.DataFrame({
+#             'fields': [
+#                 'Request date',
+#                 'Requested by',
+#                 'Clinical indication',
+#                 'Form generated'],
+#             'data': [
+#                 '20221012',
+#                 'JJM',
+#                 'R149.1',
+#                 '2022-10-12 15:43:36.788535']}).set_index('fields')
 
-        panel_df =
+#         panel_df =
 
-        gene_df =
+#         gene_df =
 
-        region_df =
+#         region_df =
 
-        if results[0] != file:
-            errors.append(f'Incorrect filename: {results[0]}')
+#         if results[0] != file:
+#             errors.append(f'Incorrect filename: {results[0]}')
 
-        if results[1] != headers:
-            errors.append(f'Incorrect row headers: {results[1]}')
+#         if results[1] != headers:
+#             errors.append(f'Incorrect row headers: {results[1]}')
 
-        if results[2] != generic_df:
-            errors.append(f'Incorrect generic df: {results[2]}')
+#         if results[2] != generic_df:
+#             errors.append(f'Incorrect generic df: {results[2]}')
 
-        if results[3] != panel_df:
-            errors.append(f'Incorrect panels df: {results[3]}')
+#         if results[3] != panel_df:
+#             errors.append(f'Incorrect panels df: {results[3]}')
 
-        if results[4] != gene_df:
-            errors.append(f'Incorrect gene df: {results[4]}')
+#         if results[4] != gene_df:
+#             errors.append(f'Incorrect gene df: {results[4]}')
 
-        if results[5] != region_df:
-            errors.append(f'Incorrect regions df: {results[5]}')
+#         if results[5] != region_df:
+#             errors.append(f'Incorrect regions df: {results[5]}')
 
-        assert not errors, '\n'.join(errors)
+#         assert not errors, '\n'.join(errors)

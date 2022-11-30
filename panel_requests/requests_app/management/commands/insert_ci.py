@@ -17,7 +17,7 @@ from datetime import datetime as dt
 from django.db import transaction
 from packaging import version
 
-from requests_app.models import (
+from panel_requests.requests_app.models import (
     ReferenceGenome,
     Panel,
     CiPanelAssociationSource,
