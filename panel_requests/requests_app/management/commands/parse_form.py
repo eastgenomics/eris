@@ -135,7 +135,7 @@ class FormParser:
 
         return general_info, panel_df, gene_df, region_df
 
-    def setup_output_dict(self, ci, req_date, panel_df):
+    def setup_output_dict(self, ci, req_date):
         """ Initialise a dict to hold relevant panel information.
 
         args:
@@ -146,12 +146,6 @@ class FormParser:
         returns:
             info_dict [dict]: initial dict of core panel info
         """
-
-        # waiting for scientist input on what they want human-readable
-        # panel names to look like
-
-        # we also haven't decided what the id and version should look like
-        # for non-panelapp panels
 
         info_dict = {
             'ci': ci,

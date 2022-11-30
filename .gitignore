@@ -6,4 +6,4 @@ settings.json
 
 *__pycache__*
 migrations*
-
+.coverage

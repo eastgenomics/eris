@@ -18,33 +18,25 @@ import pandas as pd
 
 from .management.commands import seed
 from .management.commands import create_form
+from .management.commands import parse_form
 from .management.commands import functions_hgnc as hgnc
 
 
-hgnc_file = 'testing_files/testing_hgnc_dump.txt'
-parsed_panel = 'testing_files/testing_parse_panel.json'
-input_form_1 = 'testing_files/testing_input_form_1.xlsx'
-parsed_form_1 = 'testing_files/testing_parse_form_1.json'
-input_form_2 = 'testing_files/testing_input_form_2.xlsx'
-parsed_form_2 = 'testing_files/testing_parse_form_2.json'
-input_form_3 = 'testing_files/testing_input_form_3.xlsx'
-parsed_form_3 = 'testing_files/testing_parse_form_3.json'
+# Define paths to test files
 
+dir = 'testing_files/'
+hgnc_file = f'{dir}testing_hgnc_dump.txt'
+parsed_panel = f'{dir}testing_parse_panel.json'
 
-# handle() can return things as strings using the following syntax:
-# self.stdout.write('whatever you want to return')
+test_forms = {
+    1: f'{dir}testing_input_form_1.xlsx',
+    2: f'{dir}testing_input_form_2.xlsx',
+    3: f'{dir}testing_input_form_3.xlsx'}
 
-# you can test this using:
-
-#from io import StringIO
-# from django.core.management import call_command
-# from django.test import TestCase
-
-# class ClosepollTest(TestCase):
-#     def test_command_output(self):
-#         out = StringIO()
-#         call_command('closepoll', stdout=out)
-#         self.assertIn('Expected output', out.getvalue())
+parsed_forms = {
+    1: f'{dir}testing_parse_form_1.json',
+    2: f'{dir}testing_parse_form_2.json',
+    3: f'{dir}testing_parse_form_3.json'}
 
 
 class TestHgnc:
@@ -99,10 +91,9 @@ class TestHgnc:
 
 
 class TestSeed:
-    """ Tests for the functions in seed.py. Functions not covered:
-    - add_arguments
-    - parse_all_pa_panels (hard to test as site is continuously updated)
-    - handle
+    """ Tests for the functions in seed.py. The parse_all_pa_panels
+    function isn't covered because it would mean storing a complete dump
+    of panelapp, which would be Large.
     """
 
     def test_parse_single_panel(self):
@@ -125,84 +116,22 @@ class TestSeed:
         assert result == correct_output
 
     def test_parse_forms(self):
-        """ Tests parse_form_data from seed.py.This involves calling all
-        four functions within parse_form.py.
-
-        testing_parse_form_1.json contains the output of parse_form_data
-        for testing_input_form_1.xlsx, which is the request form
-        generated for CI R149.1. """
+        """ Tests parse_form_data from seed.py. This involves
+        calling all four functions within parse_pa.py. """
 
         errors = []
 
-        files = {
-            input_form_1: parsed_form_1,
-            input_form_2: parsed_form_2,
-            input_form_3: parsed_form_3}
+        for index, form in test_forms.items():
 
-        for input_form, parsed_form in files.items():
+            parsed_form = parsed_forms[index]
 
             result = seed.Command(
-                test=True, which='form', input_file=input_form).handle()
+                test=True, which='form', input_file=form).handle()
 
             with open(parsed_form, 'r') as reader:
                 correct_output = json.load(reader)
 
             if result != correct_output:
-                errors.append(f'Form {input_form} parsed incorrectly.')
+                errors.append(f'Form {form} parsed incorrectly.')
 
         assert not errors, '\n'.join(errors)
-
-
-# class TestForm:
-#     def test_form_creation():
-#         """ Tests for functions in create_form.py. Doesn't cover
-#         write_blank_form, write_data or format_excel. """
-
-#         errors = []
-
-#         results = create_form.Command(
-#             req_date='20221012', requester='JJM',
-#             ci_code='R149.1', hgnc_dump=hgnc_file).handle()
-
-#         file = 'request_form_20221012_R149.1_JJM.xlsx'
-
-#         headers = {
-#             'general': 1, 'panel': 6, 'gene': 9, 'region': 38, 'final': 46}
-
-#         generic_df = pd.DataFrame({
-#             'fields': [
-#                 'Request date',
-#                 'Requested by',
-#                 'Clinical indication',
-#                 'Form generated'],
-#             'data': [
-#                 '20221012',
-#                 'JJM',
-#                 'R149.1',
-#                 '2022-10-12 15:43:36.788535']}).set_index('fields')
-
-#         panel_df =
-
-#         gene_df =
-
-#         region_df =
-
-#         if results[0] != file:
-#             errors.append(f'Incorrect filename: {results[0]}')
-
-#         if results[1] != headers:
-#             errors.append(f'Incorrect row headers: {results[1]}')
-
-#         if results[2] != generic_df:
-#             errors.append(f'Incorrect generic df: {results[2]}')
-
-#         if results[3] != panel_df:
-#             errors.append(f'Incorrect panels df: {results[3]}')
-
-#         if results[4] != gene_df:
-#             errors.append(f'Incorrect gene df: {results[4]}')
-
-#         if results[5] != region_df:
-#             errors.append(f'Incorrect regions df: {results[5]}')
-
-#         assert not errors, '\n'.join(errors)

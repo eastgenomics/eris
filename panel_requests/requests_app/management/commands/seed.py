@@ -211,7 +211,7 @@ class Command(BaseCommand):
         ci = info['ci']
         req_date = info['req_date']
 
-        info_dict = parser.setup_output_dict(ci, req_date, panel_df)
+        info_dict = parser.setup_output_dict(ci, req_date)
         info_dict = parser.parse_genes(info_dict, gene_df)
         parsed_data = parser.parse_regions(info_dict, region_df)
 
