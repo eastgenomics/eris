@@ -75,13 +75,13 @@ python manage.py create_form <request_date> <requester> <ci_code> <hgnc_filename
 - Example usages:
 ```sh
 # The CI links to a PanelApp panel which has both regions and genes
-python manage.py create_form 20220817 JJM R149.1 20220817_hgnc_dump.txt
+python manage.py create_form 20221201 user R149.1 20221201_hgnc_dump.txt
 
 # The CI links to a list of HGNC IDs
-python manage.py create_form 20220817 JJM R417.2 20220817_hgnc_dump.txt
+python manage.py create_form 20221201 user R417.2 20221201_hgnc_dump.txt
 
 # The CI links to nothing
-python manage.py create_form 20220817 JJM R413.1 20220817_hgnc_dump.txt
+python manage.py create_form 20221201 user R413.1 20221201_hgnc_dump.txt
 ```
 
 This command requires 4 arguments, the first 3 of which should come from the user request:
@@ -114,9 +114,25 @@ python manage.py seed form <fp>
 ```
 - Example usage:
 ``` sh
-python manage.py seed form request_form_20221014_R149.1_JJM.xlsx
+python manage.py seed form request_form_20221201_R149.1_user.xlsx
 ```
 
 The command takes 1 argument (fp) which is the path to the completed request form.
 
 Executing the command reads in and parses a request form, creates a new panel instance from the request, links the relevant clinical indication to the new panel, and updates the link to the previous panel so that it is no longer current.
+
+## Running unit tests
+Unit tests are defined in requests_app/tests.py, and can be run from within the top-level panel_requests directory.
+
+- Example usages:
+```sh
+# Basic execution
+pytest
+
+# Output is quiet or verbose
+pytest -q
+pytest -v
+
+# Output includes line coverage
+pytest --cov=panel_requests panel_requests/requests_app/tests.py
+```
