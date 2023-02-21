@@ -49,12 +49,12 @@ class Command(BaseCommand):
         "currently associated with that CI in the database and uses it " \
         "to populate an Excel request form."
 
-    def __init__(self, *args, **kwargs):
+    # def __init__(self, *args, **kwargs):
 
-        self.req_date = kwargs['req_date']
-        self.requester = kwargs['requester']
-        self.ci_code = kwargs['ci_code']
-        self.hgnc_dump = kwargs['hgnc_dump']
+    #     self.req_date = kwargs['req_date']
+    #     self.requester = kwargs['requester']
+    #     self.ci_code = kwargs['ci_code']
+    #     self.hgnc_dump = kwargs['hgnc_dump']
 
     def add_arguments(self, parser):
         """ Define the CI to generate a request form for """
@@ -780,18 +780,21 @@ class Command(BaseCommand):
 
         # read in arguments (all are required)
 
-        if self.req_date and self.requester and self.ci_code and \
-            self.hgnc_dump:
+        req_date = kwargs['req_date'][0]
+        requester = kwargs['requester'][0]
+        ci_code = kwargs['ci_code'][0]
+        hgnc_dump = kwargs['hgnc_dump'][0]
 
-            file = f'request_form_{self.req_date}_{self.ci_code}' \
-                f'_{self.requester}.xlsx'
+        if req_date and requester and ci_code and hgnc_dump:
+
+            file = f'request_form_{req_date}_{ci_code}_{requester}.xlsx'
 
             # construct header df of general info about the request
 
             generic_df = self.create_generic_df(
-                self.req_date,
-                self.requester,
-                self.ci_code)
+                req_date,
+                requester,
+                ci_code)
 
             # generate blank dataframes
 
@@ -803,7 +806,7 @@ class Command(BaseCommand):
 
             # retrieve records of panels currently linked to that CI code
 
-            panel_records = self.get_panel_records(self.ci_code)
+            panel_records = self.get_panel_records(ci_code)
 
             if panel_records:
 
@@ -811,7 +814,7 @@ class Command(BaseCommand):
 
                 panel_dicts = self.retrieve_panel_entities(panel_records)
 
-                hgnc_df = functions_hgnc.import_hgnc_dump(self.hgnc_dump)
+                hgnc_df = functions_hgnc.import_hgnc_dump(hgnc_dump)
                 hgnc_df = functions_hgnc.rename_columns(hgnc_df)
 
                 panel_df = self.create_panel_df(panel_dicts)

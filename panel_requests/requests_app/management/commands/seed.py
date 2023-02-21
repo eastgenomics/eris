@@ -60,21 +60,21 @@ class Command(BaseCommand):
         "parse data, then use insert.py to insert the cleaned data into " \
         "the database."
 
-    def __init__(self, *args, **kwargs):
+    # def __init__(self, *args, **kwargs):
 
-        self.which = kwargs['which']
-        self.test = kwargs['test']
+    #     self.which = kwargs['which']
+    #     self.test = kwargs['test']
 
-        if self.which == 'panelapp':
-            self.panel_id = kwargs['panel_id']
-            self.panel_version = kwargs['panel_version']
+    #     if self.which == 'panelapp':
+    #         self.panel_id = kwargs['panel_id']
+    #         self.panel_version = kwargs['panel_version']
 
-        elif self.which == 'test_dir':
-            self.input_json = kwargs['input_json']
-            self.current = kwargs['current']
+    #     elif self.which == 'test_dir':
+    #         self.input_json = kwargs['input_json']
+    #         self.current = kwargs['current']
 
-        elif self.which == 'form':
-            self.input_file = kwargs['input_file']
+    #     elif self.which == 'form':
+    #         self.input_file = kwargs['input_file']
 
     def add_arguments(self, parser):
         """ Define the source of the data to import. """
@@ -224,34 +224,41 @@ class Command(BaseCommand):
         specified source, then calls inserter to insert cleaned data
         into the database. """
 
-        process = self.which
+        process = kwargs['which']
 
-        assert process, "Please specify data type: panels / test_dir / form"
+        if 'test' in kwargs.keys():
+            test = True
+        else:
+            test = False
+
+        assert process, "Please specify data type: panelapp / test_dir / form"
 
         # import and parse PanelApp data (panel_version optional)
 
         if process == 'panelapp':
 
+            panel_id = kwargs['panel_id']
+
             # parse data from ALL current PanelApp panels
 
-            if self.panel_id == 'all':
+            if panel_id == 'all':
                 parsed_data = self.parse_all_pa_panels()
 
             # parse data from a single PanelApp panel
 
             else:
-                if self.panel_version:
-                    panel_version = self.panel_version
+                if kwargs['panel_version']:
+                    panel_version = kwargs['panel_version']
 
                 else:
                     panel_version = None
 
                 parsed_data = [self.parse_single_pa_panel(
-                    self.panel_id, panel_version)]
+                    panel_id, panel_version)]
 
             # insert parsed data (list of panel dicts) into the db
 
-            if not self.test:
+            if not test:
 
                 print('Importing panels into database...')
 
@@ -261,21 +268,19 @@ class Command(BaseCommand):
 
                 print('Done.')
 
-            return parsed_data
-
         # import test directory data (td_json & td_current required)
 
         elif process == 'test_dir':
 
-            with open(self.input_json) as reader:
+            with open(kwargs['input_json']) as reader:
                 json_data = json.load(reader)
 
-            if self.current == 'Y':
+            if kwargs['current'] == 'Y':
                 current = True
-            elif self.current == 'N':
+            elif kwargs['current'] == 'N':
                 current = False
 
-            if not self.test:
+            if not test:
                 new_panels = insert_ci.insert_data(json_data, current)
 
         # import and parse data from a request form (filepath required)
@@ -284,7 +289,7 @@ class Command(BaseCommand):
 
             # read in data from the form
 
-            parsed_data = self.parse_form_data(self.input_file)
+            parsed_data = self.parse_form_data(kwargs['input_file'])
 
             ci = parsed_data['ci']
             date = parsed_data['req_date']
@@ -292,10 +297,8 @@ class Command(BaseCommand):
 
             # insert new panel and update previous panel links
 
-            if not self.test:
+            if not test:
                 new_panels = insert_panel.insert_data(parsed_data)
 
                 insert_panel.update_ci_panel_links(
                     ci, source, date, new_panels)
-
-            return parsed_data
