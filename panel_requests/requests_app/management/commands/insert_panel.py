@@ -70,180 +70,195 @@ from panel_requests.requests_app.models import (
     VariantType,
     Region,
     PanelRegion,
-    RegionAnnotation)
+)
 
 
 @transaction.atomic
 def insert_data(parsed_data):
-
     # define the two reference genomes
 
-    ref_genome_37, created = ReferenceGenome.objects.get_or_create(
-        reference_build='GRCh37')
+    ref_genome_37, _ = ReferenceGenome.objects.get_or_create(reference_build="GRCh37")
 
-    ref_genome_38, created = ReferenceGenome.objects.get_or_create(
-        reference_build='GRCh38')
+    ref_genome_38, _ = ReferenceGenome.objects.get_or_create(reference_build="GRCh38")
 
     # create two new panels (one for each genome build)
 
-    panel_37, created = Panel.objects.get_or_create(
-        external_id=parsed_data['external_id'],
-        panel_name=parsed_data['panel_name'],
-        panel_source=parsed_data['panel_source'],
-        panel_version=parsed_data['panel_version'],
-        reference_genome_id=ref_genome_37.id,)
+    panel_37, _ = Panel.objects.get_or_create(
+        external_id=parsed_data["external_id"],
+        panel_name=parsed_data["panel_name"],
+        panel_source=parsed_data["panel_source"],
+        panel_version=parsed_data["panel_version"],
+        reference_genome_id=ref_genome_37.id,
+    )
 
-    panel_38, created = Panel.objects.get_or_create(
-        external_id=parsed_data['external_id'],
-        panel_name=parsed_data['panel_name'],
-        panel_source=parsed_data['panel_source'],
-        panel_version=parsed_data['panel_version'],
-        reference_genome_id=ref_genome_38.id,)
+    panel_38, _ = Panel.objects.get_or_create(
+        external_id=parsed_data["external_id"],
+        panel_name=parsed_data["panel_name"],
+        panel_source=parsed_data["panel_source"],
+        panel_version=parsed_data["panel_version"],
+        reference_genome_id=ref_genome_38.id,
+    )
 
     # for each panel gene, populate the gene attribute models
 
-    for single_gene in parsed_data['genes']:
+    for single_gene in parsed_data["genes"]:
+        hgnc, _ = Hgnc.objects.get_or_create(
+            id=single_gene["hgnc_id"],
+        )
 
-        hgnc, created = Hgnc.objects.get_or_create(
-            id=single_gene['hgnc_id'],)
+        gene, _ = Gene.objects.get_or_create(
+            hgnc_id=hgnc.id,
+        )
 
-        gene, created = Gene.objects.get_or_create(
-            hgnc_id=hgnc.id,)
+        confidence, _ = Confidence.objects.get_or_create(
+            confidence_level=single_gene["confidence_level"],
+        )
 
-        confidence, created = Confidence.objects.get_or_create(
-            confidence_level=single_gene['confidence_level'],)
-
-        moi, created = ModeOfInheritance.objects.get_or_create(
-            mode_of_inheritance=single_gene['mode_of_inheritance'],)
+        moi, _ = ModeOfInheritance.objects.get_or_create(
+            mode_of_inheritance=single_gene["mode_of_inheritance"],
+        )
 
         # value for 'mode_of_pathogenicity' might be empty
-        if single_gene['mode_of_pathogenicity']:
-            mop, created = ModeOfPathogenicity.objects.get_or_create(
-                mode_of_pathogenicity=single_gene[
-                    'mode_of_pathogenicity'],)
+        if single_gene["mode_of_pathogenicity"]:
+            mop, _ = ModeOfPathogenicity.objects.get_or_create(
+                mode_of_pathogenicity=single_gene["mode_of_pathogenicity"],
+            )
 
         else:
-            mop, created = ModeOfPathogenicity.objects.get_or_create(
-                mode_of_pathogenicity='None',)
+            mop, _ = ModeOfPathogenicity.objects.get_or_create(
+                mode_of_pathogenicity="None",
+            )
 
         # value for 'penetrance' might be empty
-        if single_gene['penetrance']:
-            penetrance, created = Penetrance.objects.get_or_create(
-                penetrance=single_gene['penetrance'],)
+        if single_gene["penetrance"]:
+            penetrance, _ = Penetrance.objects.get_or_create(
+                penetrance=single_gene["penetrance"],
+            )
 
         else:
-            penetrance, created = Penetrance.objects.get_or_create(
-                penetrance='None',)
+            penetrance, _ = Penetrance.objects.get_or_create(
+                penetrance="None",
+            )
 
         # value for 'transcript' might be empty
-        if single_gene['transcript']:
-            transcript, created = Transcript.objects.get_or_create(
-                refseq_id=single_gene['transcript'],)
+        if single_gene["transcript"]:
+            transcript, _ = Transcript.objects.get_or_create(
+                refseq_id=single_gene["transcript"],
+            )
 
         else:
-            transcript, created = Transcript.objects.get_or_create(
-                refseq_id='None',)
+            transcript, _ = Transcript.objects.get_or_create(
+                refseq_id="None",
+            )
 
         # link the gene to both panel instances (37 and 38)
 
         for panel_instance in panel_37, panel_38:
-
-            panel_gene, created = PanelGene.objects.get_or_create(
+            panel_gene, _ = PanelGene.objects.get_or_create(
                 panel_id=panel_instance.id,
                 gene_id=gene.id,
                 confidence_id=confidence.id,
                 moi_id=moi.id,
                 mop_id=mop.id,
                 penetrance_id=penetrance.id,
-                justification=single_gene['gene_justification'],)
+                justification=single_gene["gene_justification"],
+            )
 
             # link each PanelGene instance to the appropriate transcript
 
-            panel_gene_transcript, created = PanelGeneTranscript.objects\
-                .get_or_create(
-                    panel_gene_id=panel_gene.id,
-                    transcript_id=transcript.id,
-                    justification=single_gene[
-                        'transcript_justification'])
+            _, _ = PanelGeneTranscript.objects.get_or_create(
+                panel_gene_id=panel_gene.id,
+                transcript_id=transcript.id,
+                justification=single_gene["transcript_justification"],
+            )
 
     # for each panel region, populate the region attribute models
 
-    for single_region in parsed_data['regions']:
+    for single_region in parsed_data["regions"]:
+        confidence, _ = Confidence.objects.get_or_create(
+            confidence_level=single_region["confidence_level"],
+        )
 
-        confidence, created = Confidence.objects.get_or_create(
-            confidence_level=single_region['confidence_level'],)
+        moi, _ = ModeOfInheritance.objects.get_or_create(
+            mode_of_inheritance=single_region["mode_of_inheritance"],
+        )
 
-        moi, created = ModeOfInheritance.objects.get_or_create(
-            mode_of_inheritance=single_region['mode_of_inheritance'],)
+        vartype, _ = VariantType.objects.get_or_create(
+            variant_type=single_region["variant_type"],
+        )
 
-        vartype, created = VariantType.objects.get_or_create(
-            variant_type=single_region['variant_type'],)
-
-        overlap, created = RequiredOverlap.objects.get_or_create(
-            required_overlap=single_region['required_overlap'],)
+        overlap, _ = RequiredOverlap.objects.get_or_create(
+            required_overlap=single_region["required_overlap"],
+        )
 
         # value for 'mode_of_pathogenicity' might be empty
-        if single_region['mode_of_pathogenicity']:
-            mop, created = ModeOfPathogenicity.objects.get_or_create(
-                mode_of_pathogenicity=single_region[
-                    'mode_of_pathogenicity'])
+        if single_region["mode_of_pathogenicity"]:
+            mop, _ = ModeOfPathogenicity.objects.get_or_create(
+                mode_of_pathogenicity=single_region["mode_of_pathogenicity"]
+            )
 
         else:
-            mop, created = ModeOfPathogenicity.objects.get_or_create(
-                mode_of_pathogenicity='None')
+            mop, _ = ModeOfPathogenicity.objects.get_or_create(
+                mode_of_pathogenicity="None"
+            )
 
         # value for 'penetrance' might be empty
-        if single_region['penetrance']:
-            penetrance, created = Penetrance.objects.get_or_create(
-                penetrance=single_region['penetrance'],)
+        if single_region["penetrance"]:
+            penetrance, _ = Penetrance.objects.get_or_create(
+                penetrance=single_region["penetrance"],
+            )
 
         else:
-            penetrance, created = Penetrance.objects.get_or_create(
-                penetrance='None',)
+            penetrance, _ = Penetrance.objects.get_or_create(
+                penetrance="None",
+            )
 
         # value for 'haploinsufficiency' might be empty
-        if single_region['haploinsufficiency']:
-            haplo, created = Haploinsufficiency.objects.get_or_create(
-                haploinsufficiency=single_region['haploinsufficiency'],)
+        if single_region["haploinsufficiency"]:
+            haplo, _ = Haploinsufficiency.objects.get_or_create(
+                haploinsufficiency=single_region["haploinsufficiency"],
+            )
 
         else:
-            haplo, created = Haploinsufficiency.objects.get_or_create(
-                haploinsufficiency='None',)
+            haplo, _ = Haploinsufficiency.objects.get_or_create(
+                haploinsufficiency="None",
+            )
 
         # value for 'triplosensitivity' might be empty
-        if single_region['triplosensitivity']:
-            triplo, created = Triplosensitivity.objects.get_or_create(
-                triplosensitivity=single_region['triplosensitivity'],)
+        if single_region["triplosensitivity"]:
+            triplo, _ = Triplosensitivity.objects.get_or_create(
+                triplosensitivity=single_region["triplosensitivity"],
+            )
 
         else:
-            triplo, created = Triplosensitivity.objects.get_or_create(
-                triplosensitivity='None',)
+            triplo, _ = Triplosensitivity.objects.get_or_create(
+                triplosensitivity="None",
+            )
 
         # create the two genome build-specific regions
 
         for panel_instance in panel_37, panel_38:
-
             if panel_instance == panel_37:
-
-                region, created = Region.objects.get_or_create(
-                    name=single_region['name'],
-                    chrom=single_region['chrom'],
-                    start=single_region['start_37'],
-                    end=single_region['end_37'],
-                    type=single_region['type'],)
+                region, _ = Region.objects.get_or_create(
+                    name=single_region["name"],
+                    chrom=single_region["chrom"],
+                    start=single_region["start_37"],
+                    end=single_region["end_37"],
+                    type=single_region["type"],
+                )
 
             elif panel_instance == panel_38:
-
-                region, created = Region.objects.get_or_create(
-                    name=single_region['name'],
-                    chrom=single_region['chrom'],
-                    start=single_region['start_38'],
-                    end=single_region['end_38'],
-                    type=single_region['type'],)
+                region, _ = Region.objects.get_or_create(
+                    name=single_region["name"],
+                    chrom=single_region["chrom"],
+                    start=single_region["start_38"],
+                    end=single_region["end_38"],
+                    type=single_region["type"],
+                )
 
             # link each region to the appropriate panel
 
-            panel_region, created = PanelRegion.objects.get_or_create(
+            _, _ = PanelRegion.objects.get_or_create(
                 panel_id=panel_instance.id,
                 confidence_id=confidence.id,
                 moi_id=moi.id,
@@ -254,14 +269,15 @@ def insert_data(parsed_data):
                 triplo_id=triplo.id,
                 overlap_id=overlap.id,
                 vartype_id=vartype.id,
-                justification=single_region['justification'],)
+                justification=single_region["justification"],
+            )
 
     return panel_37, panel_38
 
 
 @transaction.atomic
 def update_ci_panel_links(r_code, link_source, req_date, new_panels):
-    """ Update records for associations between a CI and its panels when
+    """Update records for associations between a CI and its panels when
     a new panel is imported.
 
     args:
@@ -271,42 +287,46 @@ def update_ci_panel_links(r_code, link_source, req_date, new_panels):
         new_panels [list]: new Panel records (i.e. for both genome builds)
     """
 
-    print('Updating database links between panels and clinical indication...')
+    print("Updating database links between panels and clinical indication...")
 
-    date = dt.strptime(req_date, '%Y%m%d')
+    date = dt.strptime(req_date, "%Y%m%d")
 
     # get the CI record (there should be exactly 1 for each R code)
 
     ci_records = ClinicalIndication.objects.filter(code=r_code)
 
-    assert len(ci_records) == 1, \
-        f'Error: {r_code} has {len(ci_records)} CI records (should be 1)'
+    assert (
+        len(ci_records) == 1
+    ), f"Error: {r_code} has {len(ci_records)} CI records (should be 1)"
 
     # get current links to Panel records (should be either 0 or 2)
 
     ci_panels = ClinicalIndicationPanel.objects.filter(
-        clinical_indication=ci_records[0].id,
-        current=True)
+        clinical_indication=ci_records[0].id, current=True
+    )
 
-    assert len(ci_panels) in [0, 2], \
-        f'Error: {r_code} has {len(ci_panels)} panel links (should be 0 or 2)'
+    assert len(ci_panels) in [
+        0,
+        2,
+    ], f"Error: {r_code} has {len(ci_panels)} panel links (should be 0 or 2)"
 
     # change existing ci-panel links so they're no longer current
 
     if ci_panels:
         for link in ci_panels:
-
             link.current = False
             link.save()
 
             # update link's usage record (should be exactly 1) with end date
 
             usages = ClinicalIndicationPanelUsage.objects.filter(
-                clinical_indication_panel=link.id)
+                clinical_indication_panel=link.id
+            )
 
-            assert len(usages) == 1, \
-                f'Error: An {r_code}-panel link has {len(usages)}'\
-                ' usage records (should be 1)'
+            assert len(usages) == 1, (
+                f"Error: An {r_code}-panel link has {len(usages)}"
+                " usage records (should be 1)"
+            )
 
             usages[0].end_date = date
             usages[0].save()
@@ -314,20 +334,16 @@ def update_ci_panel_links(r_code, link_source, req_date, new_panels):
     # create new ci-panel link, usage and source records
 
     for panel in new_panels:
+        source, _ = CiPanelAssociationSource.objects.get_or_create(
+            source=link_source, date=date
+        )
 
-        source, created = CiPanelAssociationSource.objects.get_or_create(
-            source=link_source,
-            date=date)
+        ci_panel, _ = ClinicalIndicationPanel.objects.get_or_create(
+            source=source, clinical_indication=ci_records[0], panel=panel, current=True
+        )
 
-        ci_panel, created = ClinicalIndicationPanel.objects.get_or_create(
-            source=source,
-            clinical_indication=ci_records[0],
-            panel=panel,
-            current=True)
+        _, _ = ClinicalIndicationPanelUsage.objects.get_or_create(
+            clinical_indication_panel=ci_panel, start_date=date, end_date=None
+        )
 
-        usage, created = ClinicalIndicationPanelUsage.objects.get_or_create(
-            clinical_indication_panel=ci_panel,
-            start_date=date,
-            end_date=None)
-
-    print('Database updated.')
+    print("Database updated.")

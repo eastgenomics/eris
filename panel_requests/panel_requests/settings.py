@@ -12,8 +12,10 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 
 import os
-from config import SECRET_KEY, DB_USER, DB_PASSWORD
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -24,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = SECRET_KEY
+SECRET_KEY = os.environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -81,13 +83,13 @@ WSGI_APPLICATION = 'panel_requests.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'OPTIONS': {'init_command': 'SET storage_engine=INNODB;'},
+        'OPTIONS': {'init_command': 'SET default_storage_engine=INNODB;'},
         'ATOMIC_REQUESTS': True,
-        'NAME': 'panel_requests',
-        'USER': DB_USER,
-        'PASSWORD': DB_PASSWORD,
-        'HOST': '',
-        'PORT': ''
+        'NAME': os.environ['DB_NAME'],
+        'USER': os.environ['DB_USER'],
+        'PASSWORD': os.environ['DB_PASSWORD'],
+        'HOST': os.environ['DB_HOST'],
+        'PORT': os.environ['DB_PORT']
     }
 }
 
