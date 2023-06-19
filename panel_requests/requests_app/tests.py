@@ -80,7 +80,8 @@ class TestHgnc:
 
             if result != ele["row_current"]:
                 errors.append(
-                    f"{ele['row_hgnc']} returned {result}, " f"not {ele['row_current']}"
+                    f"{ele['row_hgnc']} returned {result}, "
+                    f"not {ele['row_current']}"
                 )
 
         assert not errors, "\n".join(errors)
@@ -121,7 +122,9 @@ class TestSeed:
         for index, form in test_forms.items():
             parsed_form = parsed_forms[index]
 
-            result = seed.Command(test=True, which="form", input_file=form).handle()
+            result = seed.Command(
+                test=True, which="form", input_file=form
+            ).handle()
 
             with open(parsed_form, "r") as reader:
                 correct_output = json.load(reader)

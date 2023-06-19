@@ -10,49 +10,41 @@ https://github.com/eastgenomics/panel_requests/tree/dev
 from django.db import models
 
 
-class ReferenceGenome(models.Model):
-    """Defines a reference genome build"""
-
-    reference_build = models.CharField(
-        verbose_name="Genome build",
-        max_length=255,
-        unique=True,
-    )
-
-    class Meta:
-        db_table = "reference_genome"
-
-    def __str__(self):
-        return str(self.id)
-
-
 class Panel(models.Model):
     """Defines a single internal panel"""
 
+    # this is the PanelApp Panel id itself
     external_id = models.TextField(
-        verbose_name="External panel ID",
-        max_length=255,
+        verbose_name="External Panel ID", max_length=255, null=True
     )
 
-    panel_name = models.TextField(
-        verbose_name="Panel name",
-        max_length=255,
-    )
+    panel_name = models.TextField(verbose_name="Panel Name", max_length=255)
 
     panel_source = models.TextField(
-        verbose_name="Panel source",
+        verbose_name="Panel Source",
         max_length=255,
     )
 
     panel_version = models.CharField(
-        verbose_name="Panel version",
-        max_length=255,
+        verbose_name="Panel Version", max_length=255, null=True
     )
 
-    reference_genome = models.ForeignKey(
-        ReferenceGenome,
-        verbose_name="Reference genome ID",
-        on_delete=models.PROTECT,
+    grch37 = models.BooleanField(verbose_name="GRCh37")
+
+    grch38 = models.BooleanField(verbose_name="GRCh38")
+
+    test_directory = models.BooleanField(
+        verbose_name="created by TD import",
+        null=True,
+        default=False,
+    )
+
+    created_date = models.DateField(
+        verbose_name="created date", auto_now_add=True
+    )
+
+    created_time = models.TimeField(
+        verbose_name="created time", auto_now_add=True
     )
 
     class Meta:
@@ -62,30 +54,11 @@ class Panel(models.Model):
         return str(self.id)
 
 
-class CiPanelAssociationSource(models.Model):
-    """Defines a source for the association between a specific clinical
-    indication and a specific panel"""
-
-    source = models.TextField(
-        verbose_name="Source name",
-        max_length=255,
-    )
-    date = models.DateField(verbose_name="Date")
-
-    class Meta:
-        db_table = "ci_panel_association_source"
-
-    def __str__(self):
-        return str(self.id)
-
-
 class ClinicalIndication(models.Model):
     """Defines a single clinical indication"""
 
-    code = models.CharField(
-        verbose_name="CI code",
-        max_length=255,
-    )
+    code = models.CharField(verbose_name="CI code", max_length=255)
+
     name = models.TextField(
         verbose_name="CI name",
         max_length=255,
@@ -104,27 +77,48 @@ class ClinicalIndication(models.Model):
 
 
 class ClinicalIndicationPanel(models.Model):
-    """Defines an association between a clinical indication and a panel"""
+    """
+    Defines an association between a clinical indication and a panel
+    and when that association is made
 
-    source = models.ForeignKey(
-        CiPanelAssociationSource,
-        verbose_name="CI-panel association source",
-        on_delete=models.PROTECT,
+    e.g. Normally when importing new Test Directory
+    a new association between Clinical Indication and new version of
+    Panel might be made
+    """
+
+    config_source = models.TextField(
+        verbose_name="Config source",
+        max_length=255,
+    )
+
+    td_version = models.CharField(
+        verbose_name="TD version",
+        max_length=255,
+    )
+
+    created_date = models.DateField(
+        verbose_name="created date", auto_now_add=True
+    )
+    created_time = models.TimeField(
+        verbose_name="created time", auto_now_add=True
+    )
+    last_updated = models.DateField(
+        verbose_name="last updated", null=True, auto_now=True
     )
 
     clinical_indication = models.ForeignKey(
         ClinicalIndication,
-        verbose_name="Clinical indication",
+        verbose_name="Clinical Indication id",
         on_delete=models.PROTECT,
     )
 
     panel = models.ForeignKey(
         Panel,
-        verbose_name="Panel",
+        verbose_name="Panel id",
         on_delete=models.PROTECT,
     )
 
-    current = models.BooleanField(verbose_name="Association is current")
+    current = models.BooleanField(verbose_name="Latest association")
 
     class Meta:
         db_table = "clinical_indication_panel"
@@ -133,52 +127,36 @@ class ClinicalIndicationPanel(models.Model):
         return str(self.id)
 
 
-class ClinicalIndicationPanelUsage(models.Model):
-    """Defines the period of time in which the specified panel is/was
-    associated with the specified clinical indication"""
+class ClinicalIndicationPanelHistory(models.Model):
+    clinical_indication = models.ForeignKey(
+        ClinicalIndication,
+        verbose_name="Clinical Indication id",
+        on_delete=models.PROTECT,
+    )
+
+    panel = models.ForeignKey(
+        Panel,
+        verbose_name="Panel id",
+        on_delete=models.PROTECT,
+    )
+
+    created_date = models.DateField(
+        verbose_name="created date", auto_now_add=True
+    )
+    created_time = models.TimeField(
+        verbose_name="created time", auto_now_add=True
+    )
 
     clinical_indication_panel = models.ForeignKey(
         ClinicalIndicationPanel,
-        verbose_name="Clinical indication",
         on_delete=models.PROTECT,
+        verbose_name="Clinical Indication Panel id",
     )
 
-    start_date = models.DateField(verbose_name="Start date")
-
-    end_date = models.DateField(verbose_name="End date", null=True)
+    note = models.CharField(verbose_name="Note", max_length=255)
 
     class Meta:
-        db_table = "clinical_indication_panel_usage"
-
-    def __str__(self):
-        return str(self.id)
-
-
-class Hgnc(models.Model):
-    """Defines a single HGNC ID (for a gene)"""
-
-    id = models.CharField(
-        primary_key=True, unique=True, verbose_name="HGNC ID", max_length=255
-    )
-
-    class Meta:
-        db_table = "hgnc"
-
-    def __str__(self):
-        return str(self.id)
-
-
-class Gene(models.Model):
-    """Defines a single gene by its HGNC ID"""
-
-    hgnc = models.ForeignKey(
-        Hgnc,
-        verbose_name="HGNC ID",
-        on_delete=models.PROTECT,
-    )
-
-    class Meta:
-        db_table = "gene"
+        db_table = "clinical_indication_panel_history"
 
     def __str__(self):
         return str(self.id)
@@ -189,9 +167,7 @@ class Confidence(models.Model):
     associated with a panel"""
 
     confidence_level = models.CharField(
-        verbose_name="Confidence level",
-        unique=True,
-        max_length=255,
+        verbose_name="Confidence level", max_length=255, null=True
     )
 
     class Meta:
@@ -206,9 +182,7 @@ class Penetrance(models.Model):
     context of the associated clinical indication"""
 
     penetrance = models.CharField(
-        verbose_name="Penetrance",
-        max_length=255,
-        unique=True,
+        verbose_name="Penetrance", max_length=255, null=True
     )
 
     class Meta:
@@ -223,9 +197,7 @@ class ModeOfInheritance(models.Model):
     the context of the associated clinical indication"""
 
     mode_of_inheritance = models.CharField(
-        verbose_name="Mode of inheritance",
-        max_length=255,
-        unique=True,
+        verbose_name="Mode of inheritance", max_length=255, null=True
     )
 
     class Meta:
@@ -241,14 +213,66 @@ class ModeOfPathogenicity(models.Model):
     the context of the associated clinical indication"""
 
     mode_of_pathogenicity = models.CharField(
-        verbose_name="Mode of pathogenicity",
-        max_length=255,
-        unique=True,
+        verbose_name="Mode of pathogenicity", max_length=255, null=True
     )
 
     class Meta:
         db_table = "mode_of_pathogenicity"
         verbose_name_plural = "modes_of_pathogenicity"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class Gene(models.Model):
+    """
+    Defines a single gene by its HGNC ID
+
+    :field: hgnc
+    :field: gene_symbol
+    :field: alias_symbol
+    """
+
+    hgnc_id = models.CharField(
+        verbose_name="HGNC id", max_length=255, unique=True
+    )
+
+    gene_symbol = models.CharField(
+        verbose_name="Gene Symbol", max_length=255, null=True
+    )
+
+    alias_symbols = models.CharField(
+        verbose_name="Alias Symbols", max_length=255, null=True
+    )
+
+    previous_symbols = models.CharField(
+        verbose_name="Previous Symbols", max_length=255, null=True
+    )
+
+    class Meta:
+        db_table = "gene"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class Transcript(models.Model):
+    """Defines a single transcript by RefSeq ID"""
+
+    transcript = models.CharField(
+        verbose_name="Transcript", max_length=255, null=True
+    )
+
+    source = models.CharField(
+        verbose_name="MANE or HGMD", max_length=255, null=True, default=None
+    )
+
+    gene = models.ForeignKey(
+        Gene, verbose_name="Gene id", on_delete=models.PROTECT
+    )
+
+    class Meta:
+        db_table = "transcript"
 
     def __str__(self):
         return str(self.id)
@@ -305,58 +329,12 @@ class PanelGene(models.Model):
         return str(self.id)
 
 
-class Transcript(models.Model):
-    """Defines a single transcript by RefSeq ID"""
-
-    refseq_id = models.CharField(
-        verbose_name="RefSeq ID",
-        max_length=255,
-        unique=True,
-    )
-
-    class Meta:
-        db_table = "transcript"
-
-    def __str__(self):
-        return str(self.id)
-
-
-class PanelGeneTranscript(models.Model):
-    """Defines a link between a single transcript and a single gene, in
-    the context of a specific panel"""
-
-    panel_gene = models.ForeignKey(
-        PanelGene,
-        verbose_name="Panel/gene link ID",
-        on_delete=models.PROTECT,
-    )
-
-    transcript = models.ForeignKey(
-        Transcript,
-        verbose_name="Transcript ID",
-        on_delete=models.PROTECT,
-    )
-
-    justification = models.TextField(
-        verbose_name="justification",
-        max_length=255,
-    )
-
-    class Meta:
-        db_table = "panel_gene_transcript"
-
-    def __str__(self):
-        return str(self.id)
-
-
 class Haploinsufficiency(models.Model):
     """Defines the haploinsufficiency score of the associated phenotype
     in the context of the associated clinical indication"""
 
     haploinsufficiency = models.CharField(
-        verbose_name="Haploinsufficiency score",
-        unique=True,
-        max_length=255,
+        verbose_name="Haploinsufficiency score", max_length=255, null=True
     )
 
     class Meta:
@@ -372,9 +350,7 @@ class Triplosensitivity(models.Model):
     in the context of the associated clinical indication"""
 
     triplosensitivity = models.CharField(
-        verbose_name="Triplosensitivity score",
-        unique=True,
-        max_length=255,
+        verbose_name="Triplosensitivity score", max_length=255, null=True
     )
 
     class Meta:
@@ -389,9 +365,7 @@ class RequiredOverlap(models.Model):
     """GEL internal field relating to CNV detection method"""
 
     required_overlap = models.CharField(
-        verbose_name="Required percent overlap",
-        unique=True,
-        max_length=255,
+        verbose_name="Required percent overlap", max_length=255, null=True
     )
 
     class Meta:
@@ -405,9 +379,7 @@ class VariantType(models.Model):
     """Defines the type of variant"""
 
     variant_type = models.CharField(
-        verbose_name="Variant type",
-        max_length=255,
-        unique=True,
+        verbose_name="Variant type", max_length=255, null=True
     )
 
     class Meta:
@@ -422,24 +394,22 @@ class Region(models.Model):
 
     name = models.CharField(verbose_name="Region name", max_length=255)
     chrom = models.CharField(verbose_name="Chromosome", max_length=255)
-    start = models.CharField(verbose_name="Region start", max_length=255)
-    end = models.CharField(verbose_name="Region end", max_length=255)
+    start_37 = models.CharField(
+        verbose_name="Region start grch37", max_length=255, null=True
+    )
+    end_37 = models.CharField(
+        verbose_name="Region end grch37", max_length=255, null=True
+    )
+    start_38 = models.CharField(
+        verbose_name="Region start grch38", max_length=255, null=True
+    )
+    end_38 = models.CharField(
+        verbose_name="Region end grch38", max_length=255, null=True
+    )
     type = models.CharField(verbose_name="Region type", max_length=255)
 
-    class Meta:
-        db_table = "region"
-
-    def __str__(self):
-        return str(self.id)
-
-
-class PanelRegion(models.Model):
-    """Defines a link between a single panel and a single region"""
-
     panel = models.ForeignKey(
-        Panel,
-        verbose_name="Panel ID",
-        on_delete=models.PROTECT,
+        Panel, verbose_name="panel id", on_delete=models.PROTECT
     )
 
     confidence = models.ForeignKey(
@@ -463,12 +433,6 @@ class PanelRegion(models.Model):
     penetrance = models.ForeignKey(
         Penetrance,
         verbose_name="Penetrance ID",
-        on_delete=models.PROTECT,
-    )
-
-    region = models.ForeignKey(
-        Region,
-        verbose_name="Region ID",
         on_delete=models.PROTECT,
     )
 
@@ -496,10 +460,12 @@ class PanelRegion(models.Model):
         on_delete=models.PROTECT,
     )
 
-    justification = models.TextField(verbose_name="Justification", max_length=255)
+    justification = models.TextField(
+        verbose_name="Justification", max_length=255
+    )
 
     class Meta:
-        db_table = "panel_region"
+        db_table = "region"
 
     def __str__(self):
         return str(self.id)

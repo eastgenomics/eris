@@ -136,3 +136,25 @@ pytest -v
 # Output includes line coverage
 pytest --cov=panel_requests panel_requests/requests_app/tests.py
 ```
+## Generate genepanel tsv
+```
+Make a HGNC dump txt file here: https://www.genenames.org/download/custom/
+Include columns:
+- HGNC id
+- Locus Type
+- Approved Name
+
+python manage.py generate genepanels --hgnc testing_files/hgnc_dump_23052023.txt --output /home/jason/github/eris/testing_files
+```
+
+# Get Started
+```
+python manage.py migrate requests_app
+python manage.py seed panelapp all
+
+```
+
+# Seed Function
+`python manage.py seed <panelapp/panel-id> <all/1.0>`
+`python manage.py seed td <path to td json file> <Y/N>`
+`python manage.py seed transcript --hgnc <path to hgnc.txt> --mane <path to mane.csv> --gff <path to parsed gff.tsv> --g2refseq <path to g2refseq.csv from HGMD database> --markname <path to markname.csv from HGMD database>`

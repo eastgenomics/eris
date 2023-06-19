@@ -1,0 +1,194 @@
+#!usr/bin/env python
+
+# TODO:PanelApp doesn't have grch37 coordinates for all regions
+
+
+from panelapp.Panelapp import Panel
+from panelapp import queries
+
+
+def _clean_val(val: str):
+    """
+    Deal with empty strings and lists.
+
+    args:
+        val [str]: value to be cleaned
+
+    """
+    if isinstance(val, str):
+        return val.strip() if val.strip() else None
+    elif isinstance(val, list):
+        return ",".join([v for v in val]) if val else None
+    else:
+        return val
+
+
+def _add_gene_info(panel: Panel, info_dict: dict) -> dict:
+    """
+    Iterate over every gene in the panel and retrieve the data
+    Add data to info_dict
+
+    args:
+        panel [Panel]: PanelApp data for one panel
+        info_dict [dict]: holds data needed to populate db models
+    """
+
+    gene_data = {}
+
+    # fetching all genes information from PanelApp Panel
+    for gene in panel.data.get("genes", []):
+        hgnc_id = gene.get("gene_data", {}).get("hgnc_id")
+        if hgnc_id:
+            gene_data[hgnc_id] = gene
+
+    # fetching all confidence 3 genes
+    for gene in panel.genes.get("3", []):
+        hgnc_id = gene.get("hgnc_id")
+
+        if not hgnc_id:
+            print(f"Skipping {gene}. No HGNC id found.")
+            continue
+
+        gene_info = gene_data.get(hgnc_id, {})
+
+        gene_dict = {
+            "transcript": _clean_val(gene_info.get("transcript")),
+            "hgnc_id": hgnc_id,
+            "confidence_level": gene_info.get("confidence_level"),
+            "mode_of_inheritance": _clean_val(
+                gene_info.get("mode_of_inheritance")
+            ),
+            "mode_of_pathogenicity": _clean_val(
+                gene_info.get("mode_of_pathogenicity")
+            ),
+            "penetrance": _clean_val(gene_info.get("penetrance")),
+            "gene_justification": "PanelApp",
+            "transcript_justification": "PanelApp",
+            "alias_symbols": _clean_val(
+                gene_info["gene_data"].get("alias", None)
+            ),
+            "gene_symbol": gene_info["gene_data"].get("gene_symbol"),
+        }
+
+        info_dict["genes"].append(gene_dict)
+
+    return info_dict
+
+
+def _add_region_info(panel: Panel, info_dict: dict):
+    """
+    Iterate over every region in the panel and retrieve the data
+
+    args:
+        panel [Panel]: PanelApp data for one panel
+        info_dict [dict]: holds data needed to populate db models
+    """
+
+    if panel.data.get("regions"):
+        for region in panel.data["regions"]:
+            # only add confidence level 3 regions
+            if region.get("confidence_level") == "3":
+                # define start and end coordinates grch37
+                if not region.get("grch37_coordinates"):
+                    start_37, end_37 = None, None
+                else:
+                    start_37, end_37 = region.get("grch37_coordinates")
+
+                # define start and end coordinates grch38
+                if not region.get("grch38_coordinates"):
+                    start_38, end_38 = None, None
+                else:
+                    start_38, end_38 = region.get("grch38_coordinates")
+
+                region_dict = {
+                    "confidence_level": region.get("confidence_level"),
+                    "mode_of_inheritance": _clean_val(
+                        region.get("mode_of_inheritance")
+                    ),
+                    "mode_of_pathogenicity": _clean_val(
+                        region.get("mode_of_pathogenicity")
+                    ),
+                    "penetrance": _clean_val(region.get("penetrance")),
+                    "name": region.get("verbose_name"),
+                    "chrom": region.get("chromosome"),
+                    "start_37": start_37,
+                    "end_37": end_37,
+                    "start_38": start_38,
+                    "end_38": end_38,
+                    "type": "CNV",  # all PA regions are CNVs
+                    "variant_type": _clean_val(region.get("type_of_variants")),
+                    "required_overlap": _clean_val(
+                        region.get("required_overlap_percentage")
+                    ),
+                    "haploinsufficiency": _clean_val(
+                        region.get("haploinsufficiency_score")
+                    ),
+                    "triplosensitivity": _clean_val(
+                        region.get("triplosensitivity_score")
+                    ),
+                    "justification": "PanelApp",
+                }
+
+                info_dict["regions"].append(region_dict)
+
+    return info_dict
+
+
+def _parse_single_pa_panel(panel: Panel) -> dict:
+    if not hasattr(panel, "name"):
+        print(f"Error with panel id {panel.id}. Panel have no name")
+        return {}
+
+    if not hasattr(panel, "version"):
+        print(f"Error with panel id {panel.id}. Panel have no version")
+        return {}
+
+    if not hasattr(panel, "id"):
+        print(f"Error with panel name {panel.name}. Panel have no id")
+        return {}
+
+    info_dict = {
+        "panel_source": "PanelApp",
+        "panel_name": panel.name,
+        "external_id": panel.id,
+        "panel_version": panel.version,
+        "genes": [],
+        "regions": [],
+    }
+
+    _add_gene_info(panel, info_dict)
+    _add_region_info(panel, info_dict)
+
+    return info_dict
+
+
+def parse_all_pa_panels() -> list:
+    """Get a list of IDs for all current PanelApp panels, then
+    parse and import all of these panels to the DB.
+
+    returns:
+        parsed_data [list of dicts]: data dicts for all panels
+    """
+
+    print("Fetching data for all PanelApp panels...")
+
+    parsed_data = []
+
+    # get a list of ids for all current PA panels
+
+    all_panels: dict[int, Panel] = queries.get_all_signedoff_panels()
+    print(f"Fetched {len(all_panels)} panels")
+
+    # retrieve and parse each panel
+
+    for _, panel in all_panels.items():
+        panel_data = _parse_single_pa_panel(panel)
+
+        if not panel_data:
+            continue
+
+        parsed_data.append(panel_data)
+
+    print("Data parsing completed.")
+
+    return parsed_data
