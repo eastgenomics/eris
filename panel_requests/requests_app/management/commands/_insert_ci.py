@@ -4,7 +4,6 @@
 
 import os
 
-from datetime import datetime
 from django.db import transaction
 
 from panel_requests.requests_app.models import (

@@ -27,11 +27,11 @@ python manage.py seed panels all
 ### 2. Insert data from the National Genomic Test Directory
 The generic command for this is:
 ```
-python manage.py seed td <input_json> <Y/N>
+python manage.py seed td <input_json>
 ```
 - Example usage:
 ```
-python manage.py seed td 220713_RD_TD.json Y
+python manage.py seed td 220713_RD_TD.json
 ```
 - This command retrieves data from a JSON file, inserts it into the appropriate database models, and link the clinical indication to the appropriate Panel record as specified
 - The JSON file can be created from the original test directory MS Excel file using https://github.com/eastgenomics/test_directory_parser, and take the following format:

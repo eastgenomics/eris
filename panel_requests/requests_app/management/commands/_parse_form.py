@@ -1,12 +1,28 @@
 #!usr/bin/env python
 
+import os
+import datetime as dt
 import pandas as pd
 from openpyxl import load_workbook
 
 
 class FormParser:
-    def __init__(self, filepath):
-        self.filepath = filepath
+    def __init__(self, filepath: str):
+        self.filepath = self.validate_filepath(filepath)
+
+    def validate_filepath(self, filepath: str) -> bool:
+        """Check that the filepath is valid.
+
+        args:
+            filepath [str]: path to request form
+        """
+        if os.path.exists(filepath):
+            return True
+
+        if not filepath.endswith(".xlsx"):
+            raise ValueError(f"Filepath {filepath} should end with .xlsx")
+
+        raise ValueError(f"Filepath {filepath} does not exist.")
 
     def get_form_data(self, fp: str):
         """Pull in data from the request form file and parse into 4
@@ -78,6 +94,9 @@ class FormParser:
                 "ext_versions": [
                     cell[0].value for cell in ws[f"D{p_start}":f"D{p_end}"]
                 ],
+                "panel_id_in_database": [
+                    cell[0].value for cell in ws[f"E{p_start}":f"E{p_end}"]
+                ],
             }
         )
 
@@ -85,6 +104,9 @@ class FormParser:
 
         gene_df = pd.DataFrame(
             {
+                "gene_symbols": [
+                    cell[0].value for cell in ws[f"A{g_start}":f"A{g_end}"]
+                ],
                 "hgncs": [
                     cell[0].value for cell in ws[f"B{g_start}":f"B{g_end}"]
                 ],
@@ -94,20 +116,17 @@ class FormParser:
                 "transcripts": [
                     cell[0].value for cell in ws[f"D{g_start}":f"D{g_end}"]
                 ],
-                "trans_reasons": [
-                    cell[0].value for cell in ws[f"E{g_start}":f"E{g_end}"]
-                ],
                 "confs": [
-                    cell[0].value for cell in ws[f"F{g_start}":f"F{g_end}"]
+                    cell[0].value for cell in ws[f"E{g_start}":f"F{g_end}"]
                 ],
                 "pens": [
-                    cell[0].value for cell in ws[f"G{g_start}":f"G{g_end}"]
+                    cell[0].value for cell in ws[f"F{g_start}":f"G{g_end}"]
                 ],
                 "mops": [
-                    cell[0].value for cell in ws[f"H{g_start}":f"H{g_end}"]
+                    cell[0].value for cell in ws[f"G{g_start}":f"H{g_end}"]
                 ],
                 "mois": [
-                    cell[0].value for cell in ws[f"I{g_start}":f"I{g_end}"]
+                    cell[0].value for cell in ws[f"H{g_start}":f"I{g_end}"]
                 ],
             }
         )
@@ -169,7 +188,18 @@ class FormParser:
 
         return general_info, panel_df, gene_df, region_df
 
-    def setup_output_dict(self, ci, req_date):
+    def _validate_form_data(self, ci: str, req_date: str) -> bool:
+        if not ci:
+            raise ValueError("CI not found in request form.")
+
+        try:
+            dt.datetime.strptime(req_date, "%d%m%Y")
+        except ValueError:
+            raise ValueError("Request date not in correct format.")
+
+        return True
+
+    def setup_output_dict(self, info: dict, panels: pd.DataFrame) -> dict:
         """Initialise a dict to hold relevant panel information.
 
         args:
@@ -180,21 +210,28 @@ class FormParser:
         returns:
             info_dict [dict]: initial dict of core panel info
         """
+        ci = info.get("ci")
+        request_date = info.get("req_date")
+        requester = info.get("requester")
+
+        self._validate_form_data(ci, request_date)
 
         info_dict = {
             "ci": ci,
-            "req_date": req_date,
-            "panel_source": "Request",
-            "panel_name": f"{ci}_request_{req_date}",
-            "external_id": "PLACEHOLDER",  # TODO: could use previous panel id
-            "panel_version": "PLACEHOLDER",  # TODO: could use previous panel version
+            # required for panel record creation
+            "panel_name": panels["names"][0],
+            "panel_source": f"ExcelForm_{request_date}_{requester}",
+            "panel_version": panels["ext_versions"][0],
+            "external_id": panels["ext_ids"][0],
+            "panel_id_in_database": panels["panel_id_in_database"][0],
+            # required for panel record creation
             "genes": [],
             "regions": [],
         }
 
         return info_dict
 
-    def parse_genes(self, info_dict, gene_df):
+    def parse_genes(self, info_dict: dict, gene_df: pd.DataFrame) -> dict:
         """Iterate over every gene in the panel and retrieve the data
         needed to populate panel_gene and associated models. Only use
         genes with 'confidence_level' == '3'; i.e. 'green' genes.
@@ -207,24 +244,24 @@ class FormParser:
             info_dict [dict]: updated with gene data
         """
 
-        for index, row in gene_df.iterrows():
+        for _, row in gene_df.iterrows():
             if row["hgncs"]:
                 gene_dict = {
                     "hgnc_id": row["hgncs"],
+                    "gene_symbol": row["gene_symbols"],
                     "gene_justification": row["reasons"],
                     "confidence_level": row["confs"],
                     "mode_of_inheritance": row["mois"],
                     "mode_of_pathogenicity": row["mops"],
                     "penetrance": row["pens"],
                     "transcript": row["transcripts"],
-                    "transcript_justification": row["trans_reasons"],
                 }
 
                 info_dict["genes"].append(gene_dict)
 
         return info_dict
 
-    def parse_regions(self, info_dict, region_df):
+    def parse_regions(self, info_dict: dict, region_df: pd.DataFrame) -> dict:
         """Iterate over every region in the panel and retrieve the data
         needed to populate panel_region and associated models. Only use
         regions with 'confidence_level' == '3'; i.e. 'green' regions.
@@ -237,7 +274,7 @@ class FormParser:
             info_dict [dict]: updated with region data
         """
 
-        for index, row in region_df.iterrows():
+        for _, row in region_df.iterrows():
             if row["chroms"]:
                 region_dict = {
                     "confidence_level": row["confs"],

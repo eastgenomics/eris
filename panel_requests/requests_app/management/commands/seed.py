@@ -4,21 +4,15 @@ python manage.py seed --help
 
 import os
 import json
-import csv
-import collections
 
 from ._parse_pa import parse_all_pa_panels
 from . import _parse_form
-from ._insert_panel import insert_data_into_db
+from ._insert_panel import insert_data_into_db, insert_form_data
 from ._parse_transcript import seed_transcripts
 from . import _insert_ci
-from panelapp.Panelapp import Panel
-import datetime as dt
-
-from panel_requests.requests_app.models import Gene, Transcript
 
 
-from panelapp import queries
+
 
 from django.core.management.base import BaseCommand
 
@@ -69,12 +63,12 @@ class Command(BaseCommand):
             help="Path to JSON file of parsed TD data",
         )
 
-        td.add_argument(
-            "current",
-            type=str,
-            choices=["Y", "N"],
-            help="Is this test directory the current version Y/N",
-        )
+        # td.add_argument(
+        #     "current",
+        #     type=str,
+        #     choices=["Y", "N"],
+        #     help="Is this test directory the current version Y/N",
+        # )
 
         # TODO: deal with this
         # Parser for form command e.g. form <input_file>
@@ -121,7 +115,6 @@ class Command(BaseCommand):
         )
 
     def parse_form_data(self, filepath: str):
-        # TODO: function current not available
         """Use parse_form.py to import and parse data from a panel
         request form.
 
@@ -138,21 +131,19 @@ class Command(BaseCommand):
 
         info, panel_df, gene_df, region_df = parser.get_form_data(filepath)
 
-        # TODO: multiple panel associated with one CI
-        ci = info["ci"]
-        req_date = info["req_date"]
+        # Currently only support 1 panel per form
+        if panel_df.shape[0] != 1:
+            raise ValueError("Panel data in xlsx not in correct format")
 
-        info_dict = parser.setup_output_dict(ci, req_date)
+        info_dict = parser.setup_output_dict(info, panel_df)
         info_dict = parser.parse_genes(info_dict, gene_df)
         parsed_data = parser.parse_regions(info_dict, region_df)
-
-        print(parsed_data)
 
         print("Form parsing completed.")
 
         return parsed_data
 
-    def handle(self, *args, **kwargs):
+    def handle(self, *args, **kwargs) -> None:
         """Coordinates functions to import and parse data from
         specified source, then calls inserter to insert cleaned data
         into the database."""
@@ -196,7 +187,6 @@ class Command(BaseCommand):
         # python manage.py seed td <input_json> <Y/N>
         elif command == "td":
             input_directory = kwargs.get("input")
-            current: bool = kwargs.get("current") == "Y"
 
             if not self._validate_td(input_directory):
                 raise ValueError("Invalid input file")
@@ -216,18 +206,8 @@ class Command(BaseCommand):
 
             parsed_data = self.parse_form_data(form_input)
 
-            return
-
-            ci = parsed_data["ci"]
-            date = parsed_data["req_date"]
-            source = f"request_{date}_{ci}"
-
-            # insert new panel and update previous panel links
-
             if not test_mode:
-                insert_data_into_db(parsed_data)
-
-                # _insert_panel.update_ci_panel_links(ci, source, date, new_panels)
+                insert_form_data(parsed_data)
 
         # python manage.py seed transcript --hgnc <path> --mane <path> --gff <path> --g2refseq <path> --markname <path> --error
         elif command == "transcript":

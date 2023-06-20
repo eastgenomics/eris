@@ -7,8 +7,8 @@ request form.
 
 Generic and example usages can be found in the README.
 
-python manage.py form --help
-python manage.py form 20221201 user R149.1
+python manage.py form <ddmmyyyy> <user> <ci_code>
+python manage.py form 20062023 user R149.1
 """
 # TODO: dealing with empty Panel or Gene records have yet been looked at
 
@@ -292,6 +292,7 @@ class Command(BaseCommand):
         sources = []
         ids = []
         versions = []
+        panel_ids = []
 
         for panel in panel_data:
             for _, panel_dict in panel.items():
@@ -299,6 +300,7 @@ class Command(BaseCommand):
                 sources.append(panel_dict["source"])
                 ids.append(panel_dict["ext_id"])
                 versions.append(panel_dict["ext_version"])
+                panel_ids.append(panel_dict["db_id"])
 
         # create the df
 
@@ -308,6 +310,7 @@ class Command(BaseCommand):
                 "Panel Source": sources,
                 "External ID": ids,
                 "External Version": versions,
+                "Panel ID in Database": panel_ids,
             }
         )
 
@@ -328,7 +331,6 @@ class Command(BaseCommand):
 
         gene_symbols = []
         hgncs = []
-        panel_ids = []
         panel_gene_justification = []
         transcripts = []
 
@@ -344,9 +346,6 @@ class Command(BaseCommand):
                 for gene in panel_dict.get("genes", []):
                     gene_symbols.append(gene["gene_symbol"])
                     hgncs.append(gene["hgnc"])
-                    panel_ids.append(
-                        panel_dict["db_id"]
-                    )  # associated panel id in db
                     panel_gene_justification.append(
                         gene["panel_gene_justification"]
                     )
@@ -362,7 +361,6 @@ class Command(BaseCommand):
             {
                 "Gene Symbol": gene_symbols,
                 "HGNC ID": hgncs,
-                "Panel ID in Database": panel_ids,
                 "PanelGene Justification": panel_gene_justification,
                 "Transcript": transcripts,
                 "Confidence": confs,
@@ -371,8 +369,6 @@ class Command(BaseCommand):
                 "MOI": mois,
             }
         )
-
-        print(gene_df.shape)
 
         return gene_df
 
@@ -466,23 +462,23 @@ class Command(BaseCommand):
 
         panel_df = pd.DataFrame(
             {
-                "Current panels": [
+                "Current Panels": [
                     "None currently associated with this clinical "
                     "indication"
                 ],
                 "Panel source": [""],
                 "External ID": [""],
-                "External version": [""],
+                "External Version": [""],
+                "Panel ID in Database": [""],
             }
         )
 
         gene_df = pd.DataFrame(
             {
-                "Gene symbol": ["None currently in panel"],
+                "Gene Symbol": ["None currently in panel"],
                 "HGNC ID": [""],
-                "Gene justification": [""],
+                "PanelGene Justification": [""],
                 "Transcript": [""],
-                "Transcript justification": [""],
                 "Confidence": [""],
                 "Penetrance": [""],
                 "MOP": [""],
@@ -492,7 +488,7 @@ class Command(BaseCommand):
 
         region_df = pd.DataFrame(
             {
-                "Region name": ["None currently in panel"],
+                "Region Name": ["None currently in panel"],
                 "Chromosome": [""],
                 "Start (GRCh37)": [""],
                 "End (GRCh37)": [""],
@@ -504,7 +500,7 @@ class Command(BaseCommand):
                 "MOP": [""],
                 "MOI": [""],
                 "Type": [""],
-                "Variant type": [""],
+                "Variant Type": [""],
                 "Haploinsufficiency": [""],
                 "Triplosensitivity": [""],
                 "Overlap": [""],
@@ -547,7 +543,7 @@ class Command(BaseCommand):
             header=False,
         )
 
-        for df_row in generic_df.iterrows():
+        for _ in generic_df.iterrows():
             row += 1
 
         row += 1  # spacer between dataframes
@@ -564,7 +560,7 @@ class Command(BaseCommand):
             index=False,
         )
 
-        for df_row in panel_df.iterrows():
+        for _ in panel_df.iterrows():
             row += 1
 
         row += 2
@@ -581,7 +577,7 @@ class Command(BaseCommand):
             index=False,
         )
 
-        for df_row in gene_df.iterrows():
+        for _ in gene_df.iterrows():
             row += 1
 
         row += 2
@@ -600,7 +596,7 @@ class Command(BaseCommand):
 
         # identify the last populated row
 
-        for df_row in region_df.iterrows():
+        for _ in region_df.iterrows():
             row += 1
 
         header_rows["final"] = row + 7
@@ -686,10 +682,10 @@ class Command(BaseCommand):
             row = header_rows[header]
 
             if header == "panel":
-                cols = "ABCD"
+                cols = "ABCDE"
 
             elif header == "gene":
-                cols = "ABCDEFGHI"
+                cols = "ABCDEFGH"
 
             elif header == "region":
                 cols = "ABCDEFGHIJKLMNOP"
@@ -792,9 +788,6 @@ class Command(BaseCommand):
             # create panel, gene and region dataframes
 
             panels_data = self.retrieve_panel_entities(panel_records)
-
-            if not panels_data:
-                raise ValueError("No Panel record data found for this CI")
 
             panel_df = self._create_panel_df(panels_data)
             region_df = self._create_region_df(panels_data)

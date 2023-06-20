@@ -3,6 +3,8 @@
 
 from panel_requests.requests_app.models import (
     Panel,
+    ClinicalIndication,
+    ClinicalIndicationPanel,
     Gene,
     Confidence,
     Penetrance,
@@ -130,75 +132,134 @@ def insert_data_into_db(parsed_data: dict) -> None:
     return None
 
 
-# @transaction.atomic
-# def update_ci_panel_links(r_code, link_source, req_date, new_panels):
-#     """Update records for associations between a CI and its panels when
-#     a new panel is imported.
+def insert_form_data(parsed_data: dict) -> None:
+    # TODO: make new Panel record if panel doesn't exist
+    # TODO: if new panel made, link CI-panel
 
-#     args:
-#         r_code [str]
-#         link_source [str]: e.g. a test directory or request form
-#         date [str]: date of source
-#         new_panels [list]: new Panel records (i.e. for both genome builds)
-#     """
+    panel_id_in_db = parsed_data.get("panel_id_in_database")
+    ci = parsed_data.get("ci")
+    panel_source = parsed_data.get("panel_source")
 
-#     print("Updating database links between panels and clinical indication...")
+    try:
+        # check if CI code is in the database
+        ci_instance = ClinicalIndication.objects.get(code=ci)
+    except ClinicalIndication.DoesNotExist:
+        raise ValueError(f"CI code {ci} not found in database")
 
-#     date = dt.strptime(req_date, "%Y%m%d")
+    try:
+        # check if CI is linked to the panel-id in the database
+        ClinicalIndicationPanel.objects.get(
+            clinical_indication_id=ci_instance.id,
+            panel_id=panel_id_in_db,
+        )
+    except ClinicalIndicationPanel.DoesNotExist:
+        raise ValueError(
+            f"CI-panel link for {ci} and {panel_id_in_db} not found in database"
+        )
 
-#     # get the CI record (there should be exactly 1 for each R code)
+    if panel_id_in_db:
+        try:
+            # check if panel-id is in the database
+            panel_instance = Panel.objects.get(id=panel_id_in_db)
+        except Panel.DoesNotExist:  # create new Panel record?
+            raise ValueError(
+                f"Panel ID {panel_id_in_db} not found in database"
+            )
+    else:
+        raise ValueError("Panel ID not found")
 
-#     ci_records = ClinicalIndication.objects.filter(code=r_code)
+    existing_genes_in_panel = PanelGene.objects.filter(
+        panel_id=panel_id_in_db
+    ).values_list("gene_id__hgnc_id", flat=True)
 
-#     assert (
-#         len(ci_records) == 1
-#     ), f"Error: {r_code} has {len(ci_records)} CI records (should be 1)"
+    for gene in parsed_data["genes"]:
+        if gene["hgnc_id"] in existing_genes_in_panel:
+            continue  # check and update metadata?
+        else:
+            gene_instance, created = Gene.objects.get_or_create(
+                hgnc_id=gene["hgnc_id"],
+                gene_symbol=gene["gene_symbol"],
+            )
 
-#     # get current links to Panel records (should be either 0 or 2)
+            conf, _ = Confidence.objects.get_or_create(
+                confidence_level=gene.get("confidence_level")
+            )
+            moi, _ = ModeOfInheritance.objects.get_or_create(
+                mode_of_inheritance=gene.get("mode_of_inheritance")
+            )
+            mop, _ = ModeOfPathogenicity.objects.get_or_create(
+                mode_of_pathogenicity=gene.get("mode_of_pathogenicity")
+            )
+            penetrance, _ = Penetrance.objects.get_or_create(
+                penetrance=gene.get("penetrance")
+            )
 
-#     ci_panels = ClinicalIndicationPanel.objects.filter(
-#         clinical_indication=ci_records[0].id, current=True
-#     )
+            if created:
+                print(
+                    f"New Gene record created: {gene_instance.hgnc_id} {gene_instance.gene_symbol}"
+                )
+                PanelGene.objects.create(
+                    panel_id=panel_id_in_db,
+                    gene_id=gene_instance.id,
+                    confidence_id=conf.id,
+                    moi_id=moi.id,
+                    mop_id=mop.id,
+                    penetrance_id=penetrance.id,
+                    justification=panel_source,
+                )
 
-#     assert len(ci_panels) in [
-#         0,
-#         2,
-#     ], f"Error: {r_code} has {len(ci_panels)} panel links (should be 0 or 2)"
+    for single_region in parsed_data["regions"]:
+        confidence_instance, _ = Confidence.objects.get_or_create(
+            confidence_level=single_region["confidence_level"],
+        )
 
-#     # change existing ci-panel links so they're no longer current
+        moi_instance, _ = ModeOfInheritance.objects.get_or_create(
+            mode_of_inheritance=single_region["mode_of_inheritance"],
+        )
 
-#     if ci_panels:
-#         for link in ci_panels:
-#             link.current = False
-#             link.save()
+        vartype_instance, _ = VariantType.objects.get_or_create(
+            variant_type=single_region["variant_type"],
+        )
 
-#             # update link's usage record (should be exactly 1) with end date
+        overlap_instance, _ = RequiredOverlap.objects.get_or_create(
+            required_overlap=single_region["required_overlap"],
+        )
 
-#             usages = ClinicalIndicationPanelUsage.objects.filter(
-#                 clinical_indication_panel=link.id
-#             )
+        mop_instance, _ = ModeOfPathogenicity.objects.get_or_create(
+            mode_of_pathogenicity=single_region["mode_of_pathogenicity"]
+        )
 
-#             assert len(usages) == 1, (
-#                 f"Error: An {r_code}-panel link has {len(usages)}"
-#                 " usage records (should be 1)"
-#             )
+        penetrance_instance, _ = Penetrance.objects.get_or_create(
+            penetrance=single_region["penetrance"],
+        )
 
-#             usages[0].end_date = date
-#             usages[0].save()
+        haplo_instance, _ = Haploinsufficiency.objects.get_or_create(
+            haploinsufficiency=single_region["haploinsufficiency"],
+        )
 
-#     # create new ci-panel link, usage and source records
+        triplo_instance, _ = Triplosensitivity.objects.get_or_create(
+            triplosensitivity=single_region["triplosensitivity"],
+        )
 
-#     for panel in new_panels:
-#         source, _ = CiPanelAssociationSource.objects.get_or_create(
-#             source=link_source, date=date
-#         )
-
-#         ci_panel, _ = ClinicalIndicationPanel.objects.get_or_create(
-#             source=source, clinical_indication=ci_records[0], panel=panel, current=True
-#         )
-
-#         _, _ = ClinicalIndicationPanelUsage.objects.get_or_create(
-#             clinical_indication_panel=ci_panel, start_date=date, end_date=None
-#         )
-
-#     print("Database updated.")
+        # create the two genome build-specific regions
+        Region.objects.get_or_create(
+            name=single_region.get("name"),
+            chrom=single_region.get("chrom"),
+            start_37=single_region.get("start_37"),
+            end_37=single_region.get("end_37"),
+            start_38=single_region.get("start_38"),
+            end_38=single_region.get("end_38"),
+            type=single_region.get("type"),
+            panel_id=panel_instance.id,
+            confidence_id=confidence_instance.id,
+            moi_id=moi_instance.id,
+            mop_id=mop_instance.id,
+            penetrance_id=penetrance_instance.id,
+            haplo_id=haplo_instance.id,
+            triplo_id=triplo_instance.id,
+            overlap_id=overlap_instance.id,
+            vartype_id=vartype_instance.id,
+            defaults={
+                "justification": panel_source,
+            },
+        )
