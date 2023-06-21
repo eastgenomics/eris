@@ -12,8 +12,6 @@ from ._insert_ci import insert_data
 from ._parse_form import FormParser
 
 
-
-
 from django.core.management.base import BaseCommand
 
 
