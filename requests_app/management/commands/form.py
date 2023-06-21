@@ -350,7 +350,7 @@ class Command(BaseCommand):
                         gene["panel_gene_justification"]
                     )
 
-                    transcripts.append(", ".join(gene.get("transcript", [])))
+                    transcripts.append(", ".join(gene.get("transcript") if gene.get('transcript') else ''))
 
                     confs.append(gene["conf"])
                     pens.append(gene["pen"])
