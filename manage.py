@@ -8,7 +8,7 @@ def main():
     """Run administrative tasks."""
 
     os.environ.setdefault(
-        "DJANGO_SETTINGS_MODULE", "panel_requests.panel_requests.settings"
+        "DJANGO_SETTINGS_MODULE", "panel_requests.settings"
     )
 
     try:

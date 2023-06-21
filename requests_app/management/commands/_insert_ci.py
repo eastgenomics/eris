@@ -6,7 +6,7 @@ import os
 
 from django.db import transaction
 
-from panel_requests.requests_app.models import (
+from requests_app.models import (
     Panel,
     ClinicalIndication,
     ClinicalIndicationPanel,

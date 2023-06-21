@@ -2,7 +2,7 @@ import csv
 import collections
 import datetime as dt
 
-from panel_requests.requests_app.models import Gene, Transcript
+from requests_app.models import Gene, Transcript
 
 
 def seed_transcripts(

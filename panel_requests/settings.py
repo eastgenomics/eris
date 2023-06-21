@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "panel_requests.requests_app.apps.RequestsAppConfig",
+    "requests_app.apps.RequestsAppConfig",
 ]
 
 MIDDLEWARE = [
@@ -83,11 +83,11 @@ WSGI_APPLICATION = "panel_requests.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ["DB_NAME"],
-        "USER": os.environ["DB_USER"],
-        "PASSWORD": os.environ["DB_PASSWORD"],
-        "HOST": os.environ["DB_HOST"],
-        "PORT": os.environ["DB_PORT"],
+        "NAME": os.environ.get("DB_NAME", 'eris'),
+        "USER": os.environ.get("DB_USER", 'root'),
+        "PASSWORD": os.environ.get("DB_PASSWORD", 'root'),
+        "HOST": os.environ.get("DB_HOST", 'localhost'),
+        "PORT": os.environ.get("DB_PORT", '5432'),
     }
 }
 

@@ -1,12 +1,3 @@
-#!usr/bin/env python
-
-
-"""
-Git repo at:
-https://github.com/eastgenomics/panel_requests/tree/dev
-"""
-
-
 from django.db import models
 
 

@@ -1,8 +1,0 @@
-Django==3.2.8
-mysql==0.0.3
-mysql-connector-python==8.0.30
-mysqlclient==2.1.1
-openpyxl==3.0.4
-pandas==1.4.1
-panelapp==0.7.3
-XlsxWriter==1.2.9

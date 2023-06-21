@@ -6,10 +6,10 @@ import os
 import json
 
 from ._parse_pa import parse_all_pa_panels
-from . import _parse_form
 from ._insert_panel import insert_data_into_db, insert_form_data
 from ._parse_transcript import seed_transcripts
-from . import _insert_ci
+from ._insert_ci import insert_data
+from ._parse_form import FormParser
 
 
 
@@ -127,7 +127,7 @@ class Command(BaseCommand):
 
         print("Parsing request form...")
 
-        parser = _parse_form.FormParser(filepath=filepath)
+        parser = FormParser(filepath=filepath)
 
         info, panel_df, gene_df, region_df = parser.get_form_data(filepath)
 
@@ -195,7 +195,7 @@ class Command(BaseCommand):
                 json_data = json.load(reader)
 
             if not test_mode:
-                _insert_ci.insert_data(json_data)
+                insert_data(json_data)
 
         # python manage.py seed form <input_file>
         elif command == "form":

@@ -1,7 +1,7 @@
 """
 python manage.py generate --help
 """
-from panel_requests.requests_app.models import (
+from requests_app.models import (
     ClinicalIndicationPanel,
     PanelGene,
     Transcript,

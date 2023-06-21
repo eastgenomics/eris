@@ -21,7 +21,7 @@ from openpyxl.styles import NamedStyle, Font, PatternFill, Alignment
 
 from django.core.management.base import BaseCommand
 
-from panel_requests.requests_app.models import (
+from requests_app.models import (
     Panel,
     Gene,
     Confidence,
