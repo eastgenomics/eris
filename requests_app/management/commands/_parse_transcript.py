@@ -4,6 +4,9 @@ import datetime as dt
 
 from requests_app.models import Gene, Transcript
 
+# TODO: dealing with already seeded HGNC and gene
+# TODO: there should only be one clinical-transcript per HGNC 
+
 
 def seed_transcripts(
     hgnc_file: str,

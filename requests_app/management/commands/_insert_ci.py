@@ -209,6 +209,10 @@ def insert_data(json_data: dict) -> None:
     print("Inserting test directory data into database...")
 
     td_source = json_data.get("td_source")
+
+    if not td_source:
+        raise ValueError("Missing td_source in test directory json file")
+
     td_version = _get_td_version(td_source)
 
     try:
@@ -274,7 +278,7 @@ def insert_data(json_data: dict) -> None:
         ci_instance, _ = ClinicalIndication.objects.get_or_create(
             code=indication["code"],
             name=indication["name"],
-            gemini_name=indication["gemini_name"],
+            test_method=indication["test_method"],
         )
 
         # link each CI record to the appropriate Panel records

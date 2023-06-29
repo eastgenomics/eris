@@ -55,8 +55,8 @@ class ClinicalIndication(models.Model):
         max_length=255,
     )
 
-    gemini_name = models.TextField(
-        verbose_name="Gemini name",
+    test_method = models.CharField(
+        verbose_name="Test method",
         max_length=255,
     )
 
