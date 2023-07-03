@@ -163,16 +163,19 @@ class Command(BaseCommand):
 
             # parse data from requested current PanelApp panel
             parsed_data = parse_specified_pa_panels(panel_id)
+            if not parsed_data:
+                print("Parsing failed - see error messages.")
 
-            if not test_mode:
-                print("Importing panels into database...")
+            else:
+                if not test_mode:
+                    print("Importing panels into database...")
 
-                # insert panel data into database
-                for panel_dict in parsed_data:
-                    if panel_dict:
-                        insert_data_into_db(panel_dict)
+                    # insert panel data into database
+                    for panel_dict in parsed_data:
+                        if panel_dict:
+                            insert_data_into_db(panel_dict)
 
-                print("Done.")
+                    print("Done.")
 
         # python manage.py seed td <input_json> <Y/N>
         elif command == "td":

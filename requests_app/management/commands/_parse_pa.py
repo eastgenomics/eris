@@ -241,6 +241,9 @@ def parse_specified_pa_panels(panel_id) -> list:
 
     else:
         panel = queries.get_signedoff_panel(panel_id)
+        if not panel:
+            print("Error fetching panel ID {} from PanelApp - it may not be valid".format(panel_id))
+            return None
 
         print("Fetched {} panels".format(panel["count"]))
 
