@@ -134,21 +134,17 @@ class Command(BaseCommand):
             confidence = Confidence.objects.get(
                 id=record["confidence_id"]
             ).confidence_level
-            penetrance = Penetrance.objects.get(
-                id=record["penetrance_id"]
-            ).penetrance
-            moi = ModeOfInheritance.objects.get(
-                id=record["moi_id"]
-            ).mode_of_inheritance
+            penetrance = Penetrance.objects.get(id=record["penetrance_id"]).penetrance
+            moi = ModeOfInheritance.objects.get(id=record["moi_id"]).mode_of_inheritance
             mop = ModeOfPathogenicity.objects.get(
                 id=record["mop_id"]
             ).mode_of_pathogenicity
             gene_instance = Gene.objects.get(id=gene_id)
             justification = record["justification"]
 
-            transcript = Transcript.objects.filter(
-                gene_id=gene_id
-            ).values_list("transcript", flat=True)
+            transcript = Transcript.objects.filter(gene_id=gene_id).values_list(
+                "transcript", flat=True
+            )
 
             gene_data.append(
                 {
@@ -187,18 +183,12 @@ class Command(BaseCommand):
             confidence = Confidence.objects.get(
                 id=record["confidence_id"]
             ).confidence_level
-            penetrance = Penetrance.objects.get(
-                id=record["penetrance_id"]
-            ).penetrance
-            moi = ModeOfInheritance.objects.get(
-                id=record["moi_id"]
-            ).mode_of_inheritance
+            penetrance = Penetrance.objects.get(id=record["penetrance_id"]).penetrance
+            moi = ModeOfInheritance.objects.get(id=record["moi_id"]).mode_of_inheritance
             mop = ModeOfPathogenicity.objects.get(
                 id=record["mop_id"]
             ).mode_of_pathogenicity
-            variant_type = VariantType.objects.get(
-                id=record["vartype_id"]
-            ).variant_type
+            variant_type = VariantType.objects.get(id=record["vartype_id"]).variant_type
             haplo = Haploinsufficiency.objects.get(
                 id=record["haplo_id"]
             ).haploinsufficiency
@@ -346,11 +336,13 @@ class Command(BaseCommand):
                 for gene in panel_dict.get("genes", []):
                     gene_symbols.append(gene["gene_symbol"])
                     hgncs.append(gene["hgnc"])
-                    panel_gene_justification.append(
-                        gene["panel_gene_justification"]
-                    )
+                    panel_gene_justification.append(gene["panel_gene_justification"])
 
-                    transcripts.append(", ".join(gene.get("transcript") if gene.get('transcript') else ''))
+                    transcripts.append(
+                        ", ".join(
+                            gene.get("transcript") if gene.get("transcript") else ""
+                        )
+                    )
 
                     confs.append(gene["conf"])
                     pens.append(gene["pen"])
@@ -463,8 +455,7 @@ class Command(BaseCommand):
         panel_df = pd.DataFrame(
             {
                 "Current Panels": [
-                    "None currently associated with this clinical "
-                    "indication"
+                    "None currently associated with this clinical " "indication"
                 ],
                 "Panel source": [""],
                 "External ID": [""],
@@ -637,9 +628,7 @@ class Command(BaseCommand):
 
         col_headings.font = Font(name="Arial", size=10, bold=True)
 
-        col_headings.alignment = Alignment(
-            horizontal="left", vertical="center"
-        )
+        col_headings.alignment = Alignment(horizontal="left", vertical="center")
 
         col_headings.fill = PatternFill(
             fill_type="solid",
@@ -703,8 +692,7 @@ class Command(BaseCommand):
         ws[f"A{final_row - 3}"] = "Please leave 1 blank row between tables."
 
         ws[f"A{final_row - 2}"] = (
-            "Please do not change any headings, or "
-            "the order of the columns."
+            "Please do not change any headings, or " "the order of the columns."
         )
 
         ws[f"A{final_row}"] = "END OF FORM"
@@ -727,9 +715,7 @@ class Command(BaseCommand):
         except ValueError or TypeError:
             raise ValueError("Incorrect date format, should be ddmmyyyy")
 
-        all_cis = set(
-            ClinicalIndication.objects.all().values_list("code", flat=True)
-        )
+        all_cis = set(ClinicalIndication.objects.all().values_list("code", flat=True))
 
         if ci_code not in all_cis:
             raise ValueError("CI code not found in database")
@@ -764,9 +750,7 @@ class Command(BaseCommand):
 
         self._validate_args(request_date, ci_code)
 
-        output_filename = (
-            f"request_form_{request_date}_{ci_code}_{requester}.xlsx"
-        )
+        output_filename = f"request_form_{request_date}_{ci_code}_{requester}.xlsx"
 
         # construct header df of general info about the request
 

@@ -82,7 +82,7 @@ WSGI_APPLICATION = "panel_requests.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
         "NAME": os.environ.get("DB_NAME", "eris"),
         "USER": os.environ.get("DB_USER", "root"),
         "PASSWORD": os.environ.get("DB_PASSWORD", "root"),
@@ -99,18 +99,9 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation."
         "UserAttributeSimilarityValidator"
     },
-    {
-        "NAME": "django.contrib.auth.password_validation."
-        "MinimumLengthValidator"
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation."
-        "CommonPasswordValidator"
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation."
-        "NumericPasswordValidator"
-    },
+    {"NAME": "django.contrib.auth.password_validation." "MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation." "CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation." "NumericPasswordValidator"},
 ]
 
 

@@ -18,24 +18,78 @@ from requests_app.models import (
     Region,
 )
 
+from ._utils import sortable_version
+from django.db.models import QuerySet
+from django.db import transaction
 
+
+@transaction.atomic
 def insert_data_into_db(parsed_data: dict) -> None:
     """
     Insert data from parsed JSON into database.
     """
+    panel_external_id: str = parsed_data["external_id"]
+    panel_name: str = parsed_data["panel_name"]
+    panel_version: str = parsed_data["panel_version"]
 
     # created Panel record
-    panel_instance, _ = Panel.objects.get_or_create(
-        external_id=parsed_data["external_id"],
-        panel_name=parsed_data["panel_name"],
-        panel_source=parsed_data["panel_source"],
-        panel_version=parsed_data["panel_version"],
-        grch37=True,
-        grch38=True,
-        test_directory=False,
+    # if there's a change in panel_name or panel_version
+    # we create a new record
+    panel_instance, created = Panel.objects.get_or_create(
+        external_id=panel_external_id,
+        panel_name=panel_name,
+        panel_version=sortable_version(panel_version),
+        defaults={
+            "panel_source": parsed_data["panel_source"],
+            "grch37": True,
+            "grch38": True,
+            "test_directory": False,
+        },
     )
 
-    # create Gene record for each gene
+    # if created meaning new Panel record have
+    # different name or version
+    # regardless of panel_source
+    if created:
+        # handle previous Panel with similar external_id
+        # disable previous CI-Panel link
+
+        # filter by external_id
+        # because Panel name or version might be different
+        previous_panel_instances: list[Panel] = Panel.objects.filter(
+            external_id=panel_external_id,
+            panel_version__lt=sortable_version(panel_version),
+        )  # expect multiple
+
+        # We expect PanelApp to always fetch the latest
+        # version of the panel thus version control is not needed
+
+        # do not delete previous Panel record!!
+
+        # disable CI-Panel link if any
+        # a Panel "might" have multiple CI-Panel link
+        for previous_panel in previous_panel_instances:
+            previous_ci_panel_instances: QuerySet[
+                ClinicalIndicationPanel
+            ] = ClinicalIndicationPanel.objects.filter(
+                panel_id=previous_panel.id,
+                current=True,  # get those that are active
+            )
+
+            # for each previous CI-Panel instance, disable
+            if previous_ci_panel_instances:
+                for ci_panel_instance in previous_ci_panel_instances:
+                    ci_panel_instance.current = False
+                    ci_panel_instance.save()
+
+                    print(
+                        'Disabled previous CI-Panel link {} for Panel "{}"'.format(
+                            ci_panel_instance.id,
+                            previous_panel.panel_name,
+                        )
+                    )
+
+    # attaching each Gene record to Panel record
     for single_gene in parsed_data["genes"]:
         gene_instance, _ = Gene.objects.update_or_create(
             hgnc_id=single_gene["hgnc_id"],
@@ -108,7 +162,7 @@ def insert_data_into_db(parsed_data: dict) -> None:
             triplosensitivity=single_region["triplosensitivity"],
         )
 
-        # create the two genome build-specific regions
+        # attach Region record to Panel record
         Region.objects.get_or_create(
             name=single_region["name"],
             chrom=single_region["chrom"],
@@ -128,8 +182,6 @@ def insert_data_into_db(parsed_data: dict) -> None:
             vartype_id=vartype_instance.id,
             justification=single_region["justification"],
         )
-
-    return None
 
 
 def insert_form_data(parsed_data: dict) -> None:
@@ -162,9 +214,7 @@ def insert_form_data(parsed_data: dict) -> None:
             # check if panel-id is in the database
             panel_instance = Panel.objects.get(id=panel_id_in_db)
         except Panel.DoesNotExist:  # create new Panel record?
-            raise ValueError(
-                f"Panel ID {panel_id_in_db} not found in database"
-            )
+            raise ValueError(f"Panel ID {panel_id_in_db} not found in database")
     else:
         raise ValueError("Panel ID not found")
 

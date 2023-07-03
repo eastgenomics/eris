@@ -30,13 +30,9 @@ class Panel(models.Model):
         default=False,
     )
 
-    created_date = models.DateField(
-        verbose_name="created date", auto_now_add=True
-    )
+    created_date = models.DateField(verbose_name="created date", auto_now_add=True)
 
-    created_time = models.TimeField(
-        verbose_name="created time", auto_now_add=True
-    )
+    created_time = models.TimeField(verbose_name="created time", auto_now_add=True)
 
     class Meta:
         db_table = "panel"
@@ -48,7 +44,8 @@ class Panel(models.Model):
 class ClinicalIndication(models.Model):
     """Defines a single clinical indication"""
 
-    code = models.CharField(verbose_name="CI code", max_length=255)
+    r_code = models.CharField(verbose_name="R code", max_length=255)
+    r_version = models.CharField(verbose_name="R version", max_length=255)
 
     name = models.TextField(
         verbose_name="CI name",
@@ -87,12 +84,8 @@ class ClinicalIndicationPanel(models.Model):
         max_length=255,
     )
 
-    created_date = models.DateField(
-        verbose_name="created date", auto_now_add=True
-    )
-    created_time = models.TimeField(
-        verbose_name="created time", auto_now_add=True
-    )
+    created_date = models.DateField(verbose_name="created date", auto_now_add=True)
+    created_time = models.TimeField(verbose_name="created time", auto_now_add=True)
     last_updated = models.DateField(
         verbose_name="last updated", null=True, auto_now=True
     )
@@ -131,12 +124,8 @@ class ClinicalIndicationPanelHistory(models.Model):
         on_delete=models.PROTECT,
     )
 
-    created_date = models.DateField(
-        verbose_name="created date", auto_now_add=True
-    )
-    created_time = models.TimeField(
-        verbose_name="created time", auto_now_add=True
-    )
+    created_date = models.DateField(verbose_name="created date", auto_now_add=True)
+    created_time = models.TimeField(verbose_name="created time", auto_now_add=True)
 
     clinical_indication_panel = models.ForeignKey(
         ClinicalIndicationPanel,
@@ -172,9 +161,7 @@ class Penetrance(models.Model):
     """Defines the penetrance of the associated phenotype in the
     context of the associated clinical indication"""
 
-    penetrance = models.CharField(
-        verbose_name="Penetrance", max_length=255, null=True
-    )
+    penetrance = models.CharField(verbose_name="Penetrance", max_length=255, null=True)
 
     class Meta:
         db_table = "penetrance"
@@ -224,9 +211,7 @@ class Gene(models.Model):
     :field: alias_symbol
     """
 
-    hgnc_id = models.CharField(
-        verbose_name="HGNC id", max_length=255, unique=True
-    )
+    hgnc_id = models.CharField(verbose_name="HGNC id", max_length=255, unique=True)
 
     gene_symbol = models.CharField(
         verbose_name="Gene Symbol", max_length=255, null=True
@@ -250,17 +235,13 @@ class Gene(models.Model):
 class Transcript(models.Model):
     """Defines a single transcript by RefSeq ID"""
 
-    transcript = models.CharField(
-        verbose_name="Transcript", max_length=255, null=True
-    )
+    transcript = models.CharField(verbose_name="Transcript", max_length=255, null=True)
 
     source = models.CharField(
         verbose_name="MANE or HGMD", max_length=255, null=True, default=None
     )
 
-    gene = models.ForeignKey(
-        Gene, verbose_name="Gene id", on_delete=models.PROTECT
-    )
+    gene = models.ForeignKey(Gene, verbose_name="Gene id", on_delete=models.PROTECT)
 
     class Meta:
         db_table = "transcript"
@@ -399,9 +380,7 @@ class Region(models.Model):
     )
     type = models.CharField(verbose_name="Region type", max_length=255)
 
-    panel = models.ForeignKey(
-        Panel, verbose_name="panel id", on_delete=models.PROTECT
-    )
+    panel = models.ForeignKey(Panel, verbose_name="panel id", on_delete=models.PROTECT)
 
     confidence = models.ForeignKey(
         Confidence,
@@ -451,9 +430,7 @@ class Region(models.Model):
         on_delete=models.PROTECT,
     )
 
-    justification = models.TextField(
-        verbose_name="Justification", max_length=255
-    )
+    justification = models.TextField(verbose_name="Justification", max_length=255)
 
     class Meta:
         db_table = "region"
