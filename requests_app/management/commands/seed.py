@@ -158,10 +158,10 @@ class Command(BaseCommand):
         # python manage.py seed panelapp <all/panel_id> <version>
         if command == "panelapp":
             panel_id = kwargs.get("panel")
-            kwargs.get("version")
+            version = kwargs.get("version")
+            # TODO: version not used yet?
 
-            # parse data from requested current PanelApp panels
-
+            # parse data from requested current PanelApp panel
             parsed_data = parse_specified_pa_panels(panel_id)
 
             if not test_mode:

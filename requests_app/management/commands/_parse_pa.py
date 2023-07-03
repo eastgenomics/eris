@@ -134,17 +134,66 @@ def _add_region_info(panel: Panel, info_dict: dict):
     return info_dict
 
 
+def _parse_pa_panel_as_dict(panel: dict) -> dict:
+    """
+    Parses output of single-panel fetching method, which is a dict
+    Returns an information dictionary.
+    """
+    panel = panel["results"]
+    if len(panel) != 1:
+        print(f"Error with panel id {panel.id}. More than one result returned")
+    panel = panel[0]
+
+    try:
+        name = panel["name"]
+    except KeyError:
+        print(f"Error with panel id {panel.id}. Panel has no name")
+        return {}
+    
+    try:
+        version = panel["version"]
+    except KeyError:
+        print(f"Error with panel id {panel.id}. Panel has no version")
+        return {}
+
+    try:
+        panel_id = panel["id"]
+    except KeyError:
+        print(f"Error with panel name {panel.id}. Panel has no id")
+        return {}
+
+
+    info_dict = {
+        "panel_source": "PanelApp",
+        "panel_name": name,
+        "external_id": panel_id,
+        "panel_version": version,
+        "genes": [],
+        "regions": [],
+    }
+
+    as_panel_class = Panel(panel_id=panel_id, version=version)
+
+    _add_gene_info(as_panel_class, info_dict)
+    _add_region_info(as_panel_class, info_dict)
+
+    return info_dict    
+
+
 def _parse_single_pa_panel(panel: Panel) -> dict:
+    """
+    Parse output of all-panel fetching function, which is a Panel object
+    """
     if not hasattr(panel, "name"):
-        print(f"Error with panel id {panel.id}. Panel have no name")
+        print(f"Error with panel id {panel.id}. Panel has no name")
         return {}
 
     if not hasattr(panel, "version"):
-        print(f"Error with panel id {panel.id}. Panel have no version")
+        print(f"Error with panel id {panel.id}. Panel has no version")
         return {}
 
     if not hasattr(panel, "id"):
-        print(f"Error with panel name {panel.name}. Panel have no id")
+        print(f"Error with panel name {panel.id}. Panel has no id")
         return {}
 
     info_dict = {
@@ -178,17 +227,27 @@ def parse_specified_pa_panels(panel_id) -> list:
     parsed_data = []
     
     # get a list of ids for specified current PA panels
+    if panel_id == "all":
+        all_panels: dict[int, Panel] = queries.get_all_signedoff_panels()
+        print(f"Fetched {len(all_panels)} panels")
 
-    all_panels: dict[int, Panel] = queries.get_signedoff_panels(panel_id)
-    print(f"Fetched {len(all_panels)} panels")
+        for _, panel in all_panels.items():
+            panel_data = _parse_single_pa_panel(panel)
 
-    # retrieve and parse each panel
+            if not panel_data:
+                continue
 
-    for _, panel in all_panels.items():
-        panel_data = _parse_single_pa_panel(panel)
+            parsed_data.append(panel_data)
+
+    else:
+        panel = queries.get_signedoff_panel(panel_id)
+
+        print("Fetched {} panels".format(panel["count"]))
+
+        panel_data = _parse_pa_panel_as_dict(panel)
 
         if not panel_data:
-            continue
+            print("Parsing failed for panel ID {}".format(panel_id))
 
         parsed_data.append(panel_data)
 
