@@ -162,21 +162,24 @@ def _parse_single_pa_panel(panel: Panel) -> dict:
     return info_dict
 
 
-def parse_all_pa_panels() -> list:
-    """Get a list of IDs for all current PanelApp panels, then
-    parse and import all of these panels to the DB.
-
+def parse_specified_pa_panels(panel_id) -> list:
+    """
+    For panels specified by name, get IDs and other information for the most recent 
+    signed-off version(s). An 'all' option will call all panels instead.
+    Parse and import the panels to the DB
+    params: 
+        panel_ids
     returns:
         parsed_data [list of dicts]: data dicts for all panels
     """
 
-    print("Fetching data for all PanelApp panels...")
+    print("Fetching data for requested PanelApp panels...")
 
     parsed_data = []
+    
+    # get a list of ids for specified current PA panels
 
-    # get a list of ids for all current PA panels
-
-    all_panels: dict[int, Panel] = queries.get_all_signedoff_panels()
+    all_panels: dict[int, Panel] = queries.get_signedoff_panels(panel_id)
     print(f"Fetched {len(all_panels)} panels")
 
     # retrieve and parse each panel

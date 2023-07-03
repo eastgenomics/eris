@@ -5,7 +5,7 @@ python manage.py seed --help
 import os
 import json
 
-from ._parse_pa import parse_all_pa_panels
+from ._parse_pa import parse_specified_pa_panels
 from ._insert_panel import insert_data_into_db, insert_form_data
 from ._parse_transcript import seed_transcripts
 from ._insert_ci import insert_data
@@ -160,17 +160,9 @@ class Command(BaseCommand):
             panel_id = kwargs.get("panel")
             kwargs.get("version")
 
-            # parse data from ALL current PanelApp panels
+            # parse data from requested current PanelApp panels
 
-            if panel_id == "all":
-                parsed_data = parse_all_pa_panels()
-
-            # parse data from a single PanelApp panel
-            else:
-                # TODO: This functionality is not usable yet
-                # parsed_data = [self.parse_single_pa_panel(panel_id, panel_version)]
-                print("Fetching single Panel function not usable yet")
-                return None
+            parsed_data = parse_specified_pa_panels(panel_id)
 
             if not test_mode:
                 print("Importing panels into database...")
