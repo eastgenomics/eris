@@ -143,7 +143,7 @@ def _parse_pa_panel_as_dict(panel: dict) -> dict:
     except KeyError:
         print(f"Error with panel id {panel.id}. Panel has no name")
         return {}
-    
+
     try:
         version = panel["version"]
     except KeyError:
@@ -155,7 +155,6 @@ def _parse_pa_panel_as_dict(panel: dict) -> dict:
     except KeyError:
         print(f"Error with panel name {panel.id}. Panel has no id")
         return {}
-
 
     info_dict = {
         "panel_source": "PanelApp",
@@ -171,7 +170,7 @@ def _parse_pa_panel_as_dict(panel: dict) -> dict:
     _add_gene_info(as_panel_class, info_dict)
     _add_region_info(as_panel_class, info_dict)
 
-    return info_dict    
+    return info_dict
 
 
 def _parse_single_pa_panel(panel: Panel) -> dict:
@@ -229,7 +228,7 @@ def parse_all_pa_panels() -> list[dict]:
     return parsed_data
 
 
-def parse_specified_pa_panels(panel_id) -> list:
+def parse_specified_pa_panels(panel_id: str) -> list:
     """
     For panels specified by name, get IDs and other information for the most recent
     signed-off version(s). An 'all' option will call all panels instead.
@@ -244,33 +243,23 @@ def parse_specified_pa_panels(panel_id) -> list:
 
     parsed_data = []
 
-    # get a list of ids for specified current PA panels
-    if panel_id == "all":
-        all_panels: dict[int, Panel] = queries.get_all_signedoff_panels()
-        print(f"Fetched {len(all_panels)} panels")
+    panel = queries.get_signedoff_panel(panel_id)
+    if not panel:
+        print(
+            "Error fetching panel ID {} from PanelApp - it may not be valid".format(
+                panel_id
+            )
+        )
+        return None
 
-        for _, panel in all_panels.items():
-            panel_data = _parse_single_pa_panel(panel)
+    print("Fetched {} panels".format(panel["count"]))
 
-            if not panel_data:
-                continue
+    panel_data = _parse_pa_panel_as_dict(panel)
 
-            parsed_data.append(panel_data)
+    if not panel_data:
+        print("Parsing failed for panel ID {}".format(panel_id))
 
-    else:
-        panel = queries.get_signedoff_panel(panel_id)
-        if not panel:
-            print("Error fetching panel ID {} from PanelApp - it may not be valid".format(panel_id))
-            return None
-
-        print("Fetched {} panels".format(panel["count"]))
-
-        panel_data = _parse_pa_panel_as_dict(panel)
-
-        if not panel_data:
-            print("Parsing failed for panel ID {}".format(panel_id))
-
-        parsed_data.append(panel_data)
+    parsed_data.append(panel_data)
 
     print("Data parsing completed.")
 
