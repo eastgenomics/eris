@@ -16,6 +16,7 @@ from requests_app.models import (
     RequiredOverlap,
     VariantType,
     Region,
+    PanelGeneHistory,
 )
 
 from ._utils import sortable_version
@@ -121,7 +122,7 @@ def insert_data_into_db(parsed_data: dict) -> None:
         )
 
         # create PanelGene record linking Panel to HGNC
-        PanelGene.objects.get_or_create(
+        pg_instance, created = PanelGene.objects.get_or_create(
             panel_id=panel_instance.id,
             gene_id=gene_instance.id,
             confidence_id=confidence_instance.id,
@@ -130,6 +131,13 @@ def insert_data_into_db(parsed_data: dict) -> None:
             penetrance_id=penetrance_instance.id,
             justification=single_gene["gene_justification"],
         )
+
+        if created:
+            PanelGeneHistory.objects.create(
+                panel_gene_id=pg_instance.id,
+                panel_id=panel_instance.id,
+                gene_id=gene_instance.id,
+            )
 
     # for each panel region, populate the region attribute models
     for single_region in parsed_data["regions"]:
