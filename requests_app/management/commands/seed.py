@@ -148,24 +148,23 @@ class Command(BaseCommand):
 
         # python manage.py seed panelapp <all/panel_id> <version>
         if command == "panelapp":
-
             panel_id: str = kwargs.get("panel")
-            panel_version: str = kwargs.get("version") # TODO: version not used yet?
+            panel_version: str = kwargs.get("version")  # TODO: version not used yet?
 
             if panel_id == "all":
                 parsed_data = parse_all_pa_panels()
+
             elif panel_id != "all" and panel_version:
                 # parse data from requested current PanelApp panels
                 parsed_data = parse_specified_pa_panels(panel_id)
                 if not parsed_data:
-                  print("Parsing failed - see error messages.")
+                    print("Parsing failed - see error messages.")
             elif not panel_id:
                 raise ValueError("Please specify panel id")
             elif not panel_version:
                 raise ValueError("Please specify panel version")
             else:
                 raise ValueError("Invalid input")
-
 
             if not test_mode:
                 print("Importing panels into database...")
