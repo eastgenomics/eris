@@ -176,6 +176,7 @@ def parse_all_pa_panels() -> list[dict]:
         parsed_data.append(panel_data)
 
     print("Data parsing completed.")
+
     return parsed_data
 
 
