@@ -234,36 +234,30 @@ def insert_data(json_data: dict) -> None:
     for indication in json_data["indications"]:
         skip_indication: bool = False
 
-        r_code, r_version = (n.strip() for n in indication["code"].split("."))
+        r_code: str = indication["code"].strip()
 
         ci_instance, created = ClinicalIndication.objects.get_or_create(
             r_code=r_code,
-            r_version=r_version,
             name=indication["name"],
             test_method=indication["test_method"],
         )
 
         if created:
-            # query previous CI record based on R code
-            # there might be multiple old versions CI
-            previous_cis: list[ClinicalIndication] = (
-                ClinicalIndication.objects.filter(
-                    r_code=r_code,
-                )
-                .exclude(
-                    r_version=r_version,
-                )
-                .exclude(
-                    name=indication["name"],
-                )
-                .exclude(
-                    test_method=indication["test_method"],
-                )
+            # scenario where CI change name but R code is the same
+            # disable previous CI with wrong name
+            previous_cis: list[ClinicalIndication] = ClinicalIndication.objects.filter(
+                r_code=r_code
+            ).exclude(
+                name=indication["name"],
             )
+            # !! there might be R104.3 and R104.4 which are active at the same time
+            # thus both CI-Panel should be active
 
             if previous_cis:
                 # deactivate previous CI-Panel records
                 # because new one will be created
+
+                # if just created CI, there shouldn't be any CI-Panel links
                 for previous_instance in previous_cis:
                     previous_ci_panels: list[
                         ClinicalIndicationPanel
@@ -275,17 +269,18 @@ def insert_data(json_data: dict) -> None:
                     )
 
                     if previous_ci_panels:
-                        if sortable_version(
-                            previous_ci_panel.td_version
-                        ) > sortable_version(td_version):
-                            # if the previous CI-Panel link is formed
-                            # with a higher version TD
-                            # skip the current CI-Panel record
-                            skip_indication = True
-                        else:
-                            # deactivate previous CI-Panel records
-                            # one CI could have multiple CI-Panel records
-                            for previous_ci_panel in previous_ci_panels:
+                        for previous_ci_panel in previous_ci_panels:
+                            if sortable_version(
+                                previous_ci_panel.td_version
+                            ) > sortable_version(td_version):
+                                # if the previous CI-Panel link is formed
+                                # with a higher version TD
+                                # skip the current CI-Panel record
+                                skip_indication = True
+                                break
+                            else:
+                                # deactivate previous CI-Panel records
+                                # one CI could have multiple CI-Panel records
                                 print(
                                     f"Deactivating previous CI-Panel record. CI-Panel id: {previous_ci_panel.id}"
                                 )
@@ -308,8 +303,10 @@ def insert_data(json_data: dict) -> None:
             # there might already be a previous CI record
             # and a TD with different config is seeded instead
 
-            # we get previous CI-Panel records and modify config source
+            # is there possibility that a change in config
+            # will change the CI-Panel links?
 
+            # we get previous CI-Panel records and modify config source
             previous_ci_panels: QuerySet[
                 ClinicalIndicationPanel
             ] = ClinicalIndicationPanel.objects.filter(
@@ -331,8 +328,6 @@ def insert_data(json_data: dict) -> None:
 
                     cip_instance.config_source = json_data["config_source"]
                     cip_instance.save()
-
-            continue
 
         if skip_indication:
             # here if there're previous CI-Panel record in DB
@@ -413,5 +408,8 @@ def insert_data(json_data: dict) -> None:
 
         if hgnc_list:
             _make_panels_from_hgncs(json_data, ci_instance, hgnc_list)
+
+        # deal with removing CI-Panel records which are no longer in TD
+        # TODO: above
 
     print("Data insertion completed.")
