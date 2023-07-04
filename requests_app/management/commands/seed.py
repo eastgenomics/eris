@@ -28,6 +28,13 @@ class Command(BaseCommand):
 
         return True
 
+    def _validate_file_exist(self, file_paths: list[str]) -> bool:
+        for file_path in file_paths:
+            if not file_path or not os.path.isfile(file_path):
+                raise Exception(f"File {file_path} does not exist")
+
+        return True
+
     def add_arguments(self, parser) -> None:
         """Define the source of the data to import."""
 
@@ -75,28 +82,31 @@ class Command(BaseCommand):
             "--hgnc",
             type=str,
             help="Path to hgnc dump .txt file",
-            required=True,
+            default="testing_files/hgnc_dump_20230613.txt",
         )
         transcript.add_argument(
-            "--mane", type=str, help="Path to mane .csv file", required=True
+            "--mane",
+            type=str,
+            help="Path to mane .csv file",
+            default="testing_files/mane_grch37.csv",
         )
         transcript.add_argument(
             "--gff",
             type=str,
             help="Path to parsed gff .tsv file",
-            required=True,
+            default="testing_files/GCF_000001405.25_GRCh37.p13_genomic.exon_5bp_v2.0.0.tsv",
         )
         transcript.add_argument(
             "--g2refseq",
             type=str,
             help="Path to gene2refseq csv file",
-            required=True,
+            default="testing_files/gene2refseq_202306131409.csv",
         )
         transcript.add_argument(
             "--markname",
             type=str,
             help="Path to markname csv file",
-            required=True,
+            default="testing_files/markname_202306131409.csv",
         )
 
         transcript.add_argument(
@@ -216,6 +226,17 @@ class Command(BaseCommand):
             gff_file = kwargs.get("gff")
             g2refseq_file = kwargs.get("g2refseq")
             markname_file = kwargs.get("markname")
+
+            self._validate_file_exist(
+                [
+                    hgnc_file,
+                    mane_file,
+                    gff_file,
+                    g2refseq_file,
+                    markname_file,
+                ]
+            )
+
             error_log = kwargs.get("error_log", False)
 
             seed_transcripts(

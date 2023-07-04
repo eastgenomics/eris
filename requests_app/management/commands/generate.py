@@ -13,12 +13,13 @@ import collections
 import datetime as dt
 
 from django.core.management.base import BaseCommand
+from ._utils import normalize_version
 
-ACCEPTABLE_COMMANDS = ["genepanels", "genetranscript_gff", "g2t"]
+ACCEPTABLE_COMMANDS = ["genepanels", "g2t"]
 
 
 class Command(BaseCommand):
-    help = "generate genepanel"
+    help = "generate genepanels"
 
     def _validate_directory(self, path) -> bool:
         return os.path.exists(path)
@@ -33,14 +34,10 @@ class Command(BaseCommand):
                     raise ValueError("HGNC ID column not found in HGNC dump")
 
                 if "Locus type" not in row:
-                    raise ValueError(
-                        "Locus Type column not found in HGNC dump"
-                    )
+                    raise ValueError("Locus Type column not found in HGNC dump")
 
                 if "Approved name" not in row:
-                    raise ValueError(
-                        "Approved Name column not found in HGNC dump"
-                    )
+                    raise ValueError("Approved Name column not found in HGNC dump")
 
                 break
 
@@ -51,9 +48,7 @@ class Command(BaseCommand):
 
         with open(file_path, "r") as f:
             for row in csv.DictReader(f, delimiter="\t"):
-                if re.search(
-                    "rna", row["Locus type"], re.IGNORECASE
-                ) or re.search(
+                if re.search("rna", row["Locus type"], re.IGNORECASE) or re.search(
                     "mitochondrially encoded",
                     row["Approved name"],
                     re.IGNORECASE,
@@ -84,24 +79,26 @@ class Command(BaseCommand):
             )
 
         for row in ClinicalIndicationPanel.objects.filter(current=True).values(
-            "clinical_indication_id__gemini_name",
+            "clinical_indication_id__r_code",
+            "clinical_indication_id__name",
             "panel_id",
             "panel_id__panel_name",
             "panel_id__panel_version",
         ):
             relevant_panels.add(row["panel_id"])
-            ci_panels[row["clinical_indication_id__gemini_name"]].append(row)
+            ci_panels[row["clinical_indication_id__r_code"]].append(row)
 
-        for row in PanelGene.objects.filter(
-            panel_id__in=relevant_panels
-        ).values("gene_id__hgnc_id", "panel_id"):
+        for row in PanelGene.objects.filter(panel_id__in=relevant_panels).values(
+            "gene_id__hgnc_id", "panel_id"
+        ):
             panel_genes[row["panel_id"]].append(row["gene_id__hgnc_id"])
 
-        for ci_name, panel_list in ci_panels.items():
+        for r_code, panel_list in ci_panels.items():
             # for each clinical indication
             for panel_dict in panel_list:
                 # for each panel associated with that clinical indication
                 panel_id: str = panel_dict["panel_id"]
+                ci_name: str = panel_dict["clinical_indication_id__name"]
                 for hgnc in panel_genes[panel_id]:
                     # for each gene associated with that panel
                     if hgnc in ["HGNC:12029", "HGNC:5541"] or hgnc in rnas:
@@ -109,8 +106,8 @@ class Command(BaseCommand):
 
                     results.append(
                         [
-                            ci_name,
-                            f"{panel_dict['panel_id__panel_name']}_{panel_dict['panel_id__panel_version'] if panel_dict['panel_id__panel_version'] else '1.0'}",
+                            f"{r_code}_{ci_name}",
+                            f"{panel_dict['panel_id__panel_name']}_{float(normalize_version(panel_dict['panel_id__panel_version'])) if panel_dict['panel_id__panel_version'] else '1.0'}",
                             hgnc,
                         ]
                     )
@@ -119,9 +116,7 @@ class Command(BaseCommand):
 
         current_datetime = dt.datetime.today().strftime("%Y%m%d")
 
-        with open(
-            f"{output_directory}/{current_datetime}_genepanels.tsv", "w"
-        ) as f:
+        with open(f"{output_directory}/{current_datetime}_genepanels.tsv", "w") as f:
             for row in results:
                 data = "\t".join(row)
                 f.write(f"{data}\n")
@@ -146,9 +141,7 @@ class Command(BaseCommand):
                     [
                         hgnc_id,
                         transcript,
-                        "clinical_transcript"
-                        if source
-                        else "not_clinical_transcript",
+                        "clinical_transcript" if source else "not_clinical_transcript",
                     ]
                 )
 

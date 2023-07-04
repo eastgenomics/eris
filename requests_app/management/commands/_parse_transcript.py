@@ -5,7 +5,7 @@ import datetime as dt
 from requests_app.models import Gene, Transcript
 
 # TODO: dealing with already seeded HGNC and gene
-# TODO: there should only be one clinical-transcript per HGNC 
+# TODO: there should only be one clinical-transcript per HGNC
 
 
 def seed_transcripts(
@@ -22,9 +22,7 @@ def seed_transcripts(
     # gene symbols : hgnc id
     hgnc_symbols_to_hgnc_id: dict[str, str] = {}
     hgnc_id_to_approved_symbol: dict[str, str] = {}
-    hgnc_id_to_previous_symbols: dict[str, list] = collections.defaultdict(
-        list
-    )
+    hgnc_id_to_previous_symbols: dict[str, list] = collections.defaultdict(list)
     hgnc_id_to_alias_symbols: dict[str, list] = collections.defaultdict(list)
 
     with open(hgnc_file, "r") as f:
@@ -54,21 +52,13 @@ def seed_transcripts(
 
             if previous_symbols:
                 for symbol in previous_symbols.split(","):
-                    if (
-                        symbol not in hgnc_symbols_to_hgnc_id
-                        and symbol.strip()
-                    ):
+                    if symbol not in hgnc_symbols_to_hgnc_id and symbol.strip():
                         hgnc_symbols_to_hgnc_id[symbol.strip()] = hgnc
-                        hgnc_id_to_previous_symbols[hgnc].append(
-                            symbol.strip()
-                        )
+                        hgnc_id_to_previous_symbols[hgnc].append(symbol.strip())
 
             if alias_symbols:
                 for symbol in alias_symbols.split(","):
-                    if (
-                        symbol not in hgnc_symbols_to_hgnc_id
-                        and symbol.strip()
-                    ):
+                    if symbol not in hgnc_symbols_to_hgnc_id and symbol.strip():
                         hgnc_symbols_to_hgnc_id[symbol.strip()] = hgnc
                         hgnc_id_to_alias_symbols[hgnc].append(symbol.strip())
 
@@ -80,16 +70,12 @@ def seed_transcripts(
             gene.gene_symbol = None
 
         if gene.hgnc_id in hgnc_id_to_alias_symbols:
-            gene.alias_symbols = ",".join(
-                hgnc_id_to_alias_symbols[gene.hgnc_id]
-            )
+            gene.alias_symbols = ",".join(hgnc_id_to_alias_symbols[gene.hgnc_id])
         else:
             gene.alias_symbols = None
 
         if gene.hgnc_id in hgnc_id_to_previous_symbols:
-            gene.previous_symbols = ",".join(
-                hgnc_id_to_previous_symbols[gene.hgnc_id]
-            )
+            gene.previous_symbols = ",".join(hgnc_id_to_previous_symbols[gene.hgnc_id])
         else:
             gene.previous_symbols = None
 
@@ -144,13 +130,11 @@ def seed_transcripts(
     # key = hgnc id (number only)
     markname_hgmd: dict[str, list] = collections.defaultdict(list)
 
+    # TODO: the logic of selective transcript (clinical) is not here yet
+
     with open(g2refseq_file, "r") as f:
         for row in csv.DictReader(f, delimiter=","):
-            if (
-                "hgmdID" not in row
-                or "refcore" not in row
-                or "refversion" not in row
-            ):
+            if "hgmdID" not in row or "refcore" not in row or "refversion" not in row:
                 raise ValueError(
                     "Check gene2refseq columns headers. Error with gene2refseq file"
                 )
@@ -168,9 +152,7 @@ def seed_transcripts(
             markname_hgmd[row["hgncID"].strip()].append(row)
 
     gene_clinical_transcipt: dict[str, str] = {}
-    gene_non_clinical_transcripts: dict[str, list] = collections.defaultdict(
-        list
-    )
+    gene_non_clinical_transcripts: dict[str, list] = collections.defaultdict(list)
 
     all_errors = []
 
@@ -205,9 +187,7 @@ def seed_transcripts(
                     continue
 
                 if len(markname_hgmd[shortened_hgnc_id]) > 2:
-                    all_errors.append(
-                        f"{hgnc_id} have two entries in markname table."
-                    )
+                    all_errors.append(f"{hgnc_id} have two entries in markname table.")
                     gene_non_clinical_transcripts[hgnc_id].append(tx)
                     continue
 
@@ -215,9 +195,7 @@ def seed_transcripts(
                 markname_gene_id = markname_data.get("gene_id").strip()
 
                 if not markname_gene_id:
-                    all_errors.append(
-                        f"{hgnc_id} has no gene_id in markname table"
-                    )
+                    all_errors.append(f"{hgnc_id} has no gene_id in markname table")
                     gene_non_clinical_transcripts[hgnc_id].append(tx)
                     continue
 
