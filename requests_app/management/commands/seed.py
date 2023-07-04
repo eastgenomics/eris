@@ -5,7 +5,7 @@ python manage.py seed --help
 import os
 import json
 
-from ._parse_pa import parse_specified_pa_panels
+from ._parse_pa import parse_specified_pa_panels, parse_all_pa_panels
 from ._insert_panel import insert_data_into_db, insert_form_data
 from ._parse_transcript import seed_transcripts
 from ._insert_ci import insert_data
@@ -60,13 +60,6 @@ class Command(BaseCommand):
             type=str,
             help="Path to JSON file of parsed TD data",
         )
-
-        # td.add_argument(
-        #     "current",
-        #     type=str,
-        #     choices=["Y", "N"],
-        #     help="Is this test directory the current version Y/N",
-        # )
 
         # TODO: deal with this
         # Parser for form command e.g. form <input_file>
@@ -148,34 +141,41 @@ class Command(BaseCommand):
 
         print(kwargs)
 
-        test_mode = kwargs.get("debug", False)
-        command = kwargs.get("command")
+        test_mode: bool = kwargs.get("debug", False)
+        command: str = kwargs.get("command")
 
-        assert (
-            command
-        ), "Please specify command: panelapp / td / form / transcript"
+        assert command, "Please specify command: panelapp / td / form / transcript"
 
         # python manage.py seed panelapp <all/panel_id> <version>
         if command == "panelapp":
-            panel_id = kwargs.get("panel")
-            version = kwargs.get("version")
-            # TODO: version not used yet?
 
-            # parse data from requested current PanelApp panel
-            parsed_data = parse_specified_pa_panels(panel_id)
-            if not parsed_data:
-                print("Parsing failed - see error messages.")
+            panel_id: str = kwargs.get("panel")
+            panel_version: str = kwargs.get("version") # TODO: version not used yet?
 
+            if panel_id == "all":
+                parsed_data = parse_all_pa_panels()
+            elif panel_id != "all" and panel_version:
+                # parse data from requested current PanelApp panels
+                parsed_data = parse_specified_pa_panels(panel_id)
+                if not parsed_data:
+                  print("Parsing failed - see error messages.")
+            elif not panel_id:
+                raise ValueError("Please specify panel id")
+            elif not panel_version:
+                raise ValueError("Please specify panel version")
             else:
-                if not test_mode:
-                    print("Importing panels into database...")
+                raise ValueError("Invalid input")
 
-                    # insert panel data into database
-                    for panel_dict in parsed_data:
-                        if panel_dict:
-                            insert_data_into_db(panel_dict)
 
-                    print("Done.")
+            if not test_mode:
+                print("Importing panels into database...")
+
+                # insert panel data into database
+                for panel_dict in parsed_data:
+                    if panel_dict:
+                        insert_data_into_db(panel_dict)
+
+                print("Done.")
 
         # python manage.py seed td <input_json> <Y/N>
         elif command == "td":

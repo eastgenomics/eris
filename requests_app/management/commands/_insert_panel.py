@@ -25,6 +25,7 @@ from django.db import transaction
 
 @transaction.atomic
 def insert_data_into_db(parsed_data: dict) -> None:
+    # TODO: need to deal with if a Panel is retired
     """
     Insert data from parsed JSON into database.
     """
@@ -88,6 +89,8 @@ def insert_data_into_db(parsed_data: dict) -> None:
                             previous_panel.panel_name,
                         )
                     )
+
+            # TODO: disabling old CI-Panel link but new one need to wait till next TD import?
 
     # attaching each Gene record to Panel record
     for single_gene in parsed_data["genes"]:

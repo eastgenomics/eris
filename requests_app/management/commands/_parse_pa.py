@@ -55,18 +55,12 @@ def _add_gene_info(panel: Panel, info_dict: dict) -> dict:
             "transcript": _clean_val(gene_info.get("transcript")),
             "hgnc_id": hgnc_id,
             "confidence_level": gene_info.get("confidence_level"),
-            "mode_of_inheritance": _clean_val(
-                gene_info.get("mode_of_inheritance")
-            ),
-            "mode_of_pathogenicity": _clean_val(
-                gene_info.get("mode_of_pathogenicity")
-            ),
+            "mode_of_inheritance": _clean_val(gene_info.get("mode_of_inheritance")),
+            "mode_of_pathogenicity": _clean_val(gene_info.get("mode_of_pathogenicity")),
             "penetrance": _clean_val(gene_info.get("penetrance")),
             "gene_justification": "PanelApp",
             "transcript_justification": "PanelApp",
-            "alias_symbols": _clean_val(
-                gene_info["gene_data"].get("alias", None)
-            ),
+            "alias_symbols": _clean_val(gene_info["gene_data"].get("alias", None)),
             "gene_symbol": gene_info["gene_data"].get("gene_symbol"),
         }
 
@@ -211,12 +205,36 @@ def _parse_single_pa_panel(panel: Panel) -> dict:
     return info_dict
 
 
+def parse_all_pa_panels() -> list[dict]:
+    """Get a list of IDs for all current PanelApp panels, then
+    parse and import all of these panels to the DB.
+    returns:
+        parsed_data [list of parsed dict]: data dicts for all panels
+    """
+
+    print("Fetching data for all PanelApp panels...")
+
+    parsed_data = []
+
+    all_panels: dict[int, Panel] = queries.get_all_signedoff_panels()
+
+    for _, panel in all_panels.items():
+        panel_data = _parse_single_pa_panel(panel)
+        if not panel_data:
+            continue
+        parsed_data.append(panel_data)
+
+    print("Data parsing completed.")
+
+    return parsed_data
+
+
 def parse_specified_pa_panels(panel_id) -> list:
     """
-    For panels specified by name, get IDs and other information for the most recent 
+    For panels specified by name, get IDs and other information for the most recent
     signed-off version(s). An 'all' option will call all panels instead.
     Parse and import the panels to the DB
-    params: 
+    params:
         panel_ids
     returns:
         parsed_data [list of dicts]: data dicts for all panels
@@ -225,7 +243,7 @@ def parse_specified_pa_panels(panel_id) -> list:
     print("Fetching data for requested PanelApp panels...")
 
     parsed_data = []
-    
+
     # get a list of ids for specified current PA panels
     if panel_id == "all":
         all_panels: dict[int, Panel] = queries.get_all_signedoff_panels()

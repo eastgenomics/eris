@@ -101,8 +101,6 @@ def _make_panels_from_hgncs(
 
     """
 
-    skip_indication: bool = False
-
     # get current td version
     td_source: str = json_data["td_source"]
     td_version: str = _get_td_version(td_source)
@@ -129,6 +127,9 @@ def _make_panels_from_hgncs(
         },
     )
 
+    # addition of HGNC, need to retire previous CI-Panel link
+    # and make new CI-Panel link
+
     # link each HGNC (gene) to the created Panel record
     for hgnc_id in hgnc_list:
         gene_instance, _ = Gene.objects.get_or_create(hgnc_id=hgnc_id)
@@ -145,7 +146,6 @@ def _make_panels_from_hgncs(
         )
 
     # if new Panel record created
-    # if previous CI-Panel record exist
     if panel_created:
         # if HGNC panel is of lower version
         # don't create new CI-Panel record
@@ -169,12 +169,9 @@ def _make_panels_from_hgncs(
         # where Panel is created from Test Directory
         # ignore those from PanelApp
         for ci_panel in previous_ci_panels:
-            # if previous CI-Panel record is made with
-            # higher version of TD
-            # we skip the whole CI-Panel creation for current CI
+            # existing CI-Panel td version is higher than current imported td version
             if sortable_version(ci_panel.td_version) > sortable_version(td_version):
-                skip_indication = True
-                continue
+                return
 
             ci_panel.current = False
             ci_panel.save()
@@ -186,18 +183,19 @@ def _make_panels_from_hgncs(
                 note=f"Deactivated by td source {td_source}",
             )
 
-    if skip_indication:
-        return
+    # if previous CI-Panel record exist
 
     # only chance we end up here is if previous CI-Panel record
     # exists and is of lower version
     # link CI to Panel
     cpi_instance, created = ClinicalIndicationPanel.objects.get_or_create(
-        td_version=sortable_version(td_version),
-        config_source=config_source,
         clinical_indication_id=ci.id,
         panel_id=panel_instance.id,
         current=True,
+        defaults={
+            "td_version": sortable_version(td_version),
+            "config_source": config_source,
+        },
     )
 
     if created:
@@ -231,113 +229,49 @@ def insert_data(json_data: dict) -> None:
 
     assert td_version, f"Cannot parse TD version {td_version}"
 
-    for indication in json_data["indications"]:
-        skip_indication: bool = False
+    latest_td_version_in_db: ClinicalIndicationPanel = (
+        ClinicalIndicationPanel.objects.order_by("-td_version").first()
+    )
 
-        r_code, r_version = (n.strip() for n in indication["code"].split("."))
+    if not latest_td_version_in_db:
+        pass
+    else:
+        if sortable_version(td_version) <= sortable_version(
+            latest_td_version_in_db.td_version
+        ):
+            print(f"TD version {td_version} already in database. Abdandoning import.")
+            return
+
+    for indication in json_data["indications"]:
+        r_code: str = indication["code"].strip()
 
         ci_instance, created = ClinicalIndication.objects.get_or_create(
             r_code=r_code,
-            r_version=r_version,
             name=indication["name"],
-            test_method=indication["test_method"],
+            defaults={
+                "test_method": indication["test_method"],
+            },
         )
 
         if created:
-            # query previous CI record based on R code
-            # there might be multiple old versions CI
-            previous_cis: list[ClinicalIndication] = (
-                ClinicalIndication.objects.filter(
-                    r_code=r_code,
-                )
-                .exclude(
-                    r_version=r_version,
-                )
-                .exclude(
-                    name=indication["name"],
-                )
-                .exclude(
-                    test_method=indication["test_method"],
-                )
-            )
+            # TODO: this logic need revisit
+            # CI name change. Same R code tho
 
-            if previous_cis:
-                # deactivate previous CI-Panel records
-                # because new one will be created
-                for previous_instance in previous_cis:
-                    previous_ci_panels: list[
-                        ClinicalIndicationPanel
-                    ] = ClinicalIndicationPanel.objects.filter(
-                        clinical_indication_id=previous_instance.id,
-                        current=True,  # get active CI-Panel records
-                    ).order_by(
-                        "-td_version"
-                    )
-
-                    if previous_ci_panels:
-                        if sortable_version(
-                            previous_ci_panel.td_version
-                        ) > sortable_version(td_version):
-                            # if the previous CI-Panel link is formed
-                            # with a higher version TD
-                            # skip the current CI-Panel record
-                            skip_indication = True
-                        else:
-                            # deactivate previous CI-Panel records
-                            # one CI could have multiple CI-Panel records
-                            for previous_ci_panel in previous_ci_panels:
-                                print(
-                                    f"Deactivating previous CI-Panel record. CI-Panel id: {previous_ci_panel.id}"
-                                )
-                                previous_ci_panel.current = False
-                                previous_ci_panel.save()
-
-                                ClinicalIndicationPanelHistory.objects.create(
-                                    clinical_indication_panel_id=previous_ci_panel.id,
-                                    clinical_indication_id=previous_ci_panel.clinical_indication_id,
-                                    panel_id=previous_ci_panel.panel_id,
-                                    note=f"Deactivated by td source {td_source}",
-                                )
-                    else:
-                        # there is no previous CI-Panel record
-                        pass
-            else:
-                # there is no previous CI record
-                pass
-        else:
-            # there might already be a previous CI record
-            # and a TD with different config is seeded instead
-
-            # we get previous CI-Panel records and modify config source
-
-            previous_ci_panels: QuerySet[
-                ClinicalIndicationPanel
-            ] = ClinicalIndicationPanel.objects.filter(
-                clinical_indication_id=ci_instance.id,
+            previous_ci_panels = ClinicalIndicationPanel.objects.filter(
+                clinical_indication_id__r_code=r_code,
                 current=True,
-                td_version__lte=sortable_version(td_version),
             )
 
-            for cip_instance in previous_ci_panels:
-                # we update existing CI-Panel record
-                if cip_instance.config_source != json_data["config_source"]:
-                    # take a note of the change
-                    ClinicalIndicationPanelHistory.objects.create(
-                        clinical_indication_panel_id=cip_instance.id,
-                        clinical_indication_id=cip_instance.clinical_indication_id,
-                        panel_id=cip_instance.panel_id,
-                        note=f"Modified by td source {td_source}: {normalize_version(cip_instance.td_version)} -> {json_data['td_source']}, {cip_instance.config_source} -> {json_data['config_source']}",
-                    )
+            for previous_ci_panel in previous_ci_panels:
+                previous_ci_panel.current = False
+                previous_ci_panel.save()
 
-                    cip_instance.config_source = json_data["config_source"]
-                    cip_instance.save()
-
-            continue
-
-        if skip_indication:
-            # here if there're previous CI-Panel record in DB
-            # formed with TD version higher than current TD version
-            continue
+                ClinicalIndicationPanelHistory.objects.create(
+                    clinical_indication_panel_id=previous_ci_panel.id,
+                    clinical_indication_id=previous_ci_panel.clinical_indication_id,
+                    panel_id=previous_ci_panel.panel_id,
+                    note=f"Deactivated by td source {td_source}",
+                )
 
         # link each CI record to the appropriate Panel records
         hgnc_list: list[str] = []
@@ -367,9 +301,11 @@ def insert_data(json_data: dict) -> None:
                     ) = ClinicalIndicationPanel.objects.get_or_create(
                         clinical_indication_id=ci_instance.id,
                         panel_id=panel_record.id,
-                        td_version=sortable_version(td_version),
-                        config_source=json_data["config_source"],
                         current=True,
+                        defaults={
+                            "td_version": sortable_version(td_version),
+                            "config_source": json_data["config_source"],
+                        },
                     )
 
                     if created:
@@ -381,11 +317,8 @@ def insert_data(json_data: dict) -> None:
                             note=f"Created by td source {td_source}",
                         )
                     else:
-                        # only chance it gets here is if we are importing
-                        # TD of the same version but with different config source
-                        # td_source
-
-                        # in that case we simply modify the existing CI-Panel record
+                        # if CI-Panel already exist and the link is the same
+                        # just update the config source and td version
                         if (
                             sortable_version(td_version)
                             >= sortable_version(cip_instance.td_version)
@@ -413,5 +346,8 @@ def insert_data(json_data: dict) -> None:
 
         if hgnc_list:
             _make_panels_from_hgncs(json_data, ci_instance, hgnc_list)
+
+        # deal with removing CI-Panel records which are no longer in TD
+        # TODO: above
 
     print("Data insertion completed.")

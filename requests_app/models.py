@@ -45,7 +45,6 @@ class ClinicalIndication(models.Model):
     """Defines a single clinical indication"""
 
     r_code = models.CharField(verbose_name="R code", max_length=255)
-    r_version = models.CharField(verbose_name="R version", max_length=255)
 
     name = models.TextField(
         verbose_name="CI name",
