@@ -29,7 +29,7 @@ class Panel(models.Model):
         null=True,
         default=False,
     )
-    #TODO: 'python manage.py seed panelapp all' doesn't work unless I remove 'custom' below
+
     custom = models.BooleanField(
         verbose_name="custom panel",
         null=True,
@@ -117,18 +117,6 @@ class ClinicalIndicationPanel(models.Model):
 
 
 class ClinicalIndicationPanelHistory(models.Model):
-    clinical_indication = models.ForeignKey(
-        ClinicalIndication,
-        verbose_name="Clinical Indication id",
-        on_delete=models.PROTECT,
-    )
-
-    panel = models.ForeignKey(
-        Panel,
-        verbose_name="Panel id",
-        on_delete=models.PROTECT,
-    )
-
     created_date = models.DateField(
         verbose_name="created date",
         auto_now_add=True,
@@ -146,7 +134,7 @@ class ClinicalIndicationPanelHistory(models.Model):
     
     note = models.CharField(verbose_name="Note", max_length=255)
 
-    # TODO: user may change to a foreign key later
+    # TODO: user may change to a foreign key later, linking to a Users table
     user = models.CharField(verbose_name="User", max_length=255)
 
     class Meta:

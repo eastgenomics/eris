@@ -124,10 +124,15 @@ class Command(BaseCommand):
 
         results = get_panel_clin_indication_link(panel.id, indication.id)
         if results:
+            # TODO: is it possible to have more than one result?
             for result in results:
                 if result.current == True:
                     print("The panel {} and clinical indication {} are already linked and marked as \
                           current in the database. No change made.")
                     exit(1)
-                #TODO: act to link the panel and indication if they aren't already, and mark 'current' as True 
+                else:
+                    #TODO: set the result as current!
+        #else: 
+            #TODO: link the panel and indication if they aren't already, and mark 'current' as True 
+
 
