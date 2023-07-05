@@ -8,7 +8,7 @@ from requests_app.models import (
     Transcript,
 )
 from ..queries import get_panel_by_id, get_panel_by_name, \
-    get_clin_indication_by_r_code
+    get_clin_indication_by_r_code, get_panel_clin_indication_link
 
 import os
 from django.core.management.base import BaseCommand
@@ -122,6 +122,12 @@ class Command(BaseCommand):
         else:
             indication = r_code[0]
 
-        #TODO: check the panel and clinical indication aren't already linked - message if yes
-        
+        results = get_panel_clin_indication_link(panel.id, indication.id)
+        if results:
+            for result in results:
+                if result.current == True:
+                    print("The panel {} and clinical indication {} are already linked and marked as \
+                          current in the database. No change made.")
+                    exit(1)
+                #TODO: act to link the panel and indication if they aren't already, and mark 'current' as True 
 

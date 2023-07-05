@@ -56,3 +56,15 @@ def get_clin_indication_by_r_code(r_code):
         return None
 
 
+@transaction.atomic
+def get_panel_clin_indication_link(panel_id, indication_id):
+    """
+    Look up whether a clinical indication and panel ID have ever been linked
+    in the database
+    """
+    try:
+        results = ClinicalIndicationPanel.filter(panel_id=panel_id, clinical_indication_id=indication_id)
+        return results.all()
+    except ClinicalIndicationPanel.DoesNotExist:
+        return None
+    
