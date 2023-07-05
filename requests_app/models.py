@@ -532,6 +532,7 @@ class RegionAnnotation(models.Model):
         return str(self.id)
 
 
+# TODO: this table need work
 class PanelGeneTranscript(models.Model):
     """
     Defines which transcript is clinical for which gene

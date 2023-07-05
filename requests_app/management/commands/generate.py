@@ -107,7 +107,7 @@ class Command(BaseCommand):
                     results.append(
                         [
                             f"{r_code}_{ci_name}",
-                            f"{panel_dict['panel_id__panel_name']}_{float(normalize_version(panel_dict['panel_id__panel_version'])) if panel_dict['panel_id__panel_version'] else '1.0'}",
+                            f"{panel_dict['panel_id__panel_name']}_{normalize_version(panel_dict['panel_id__panel_version']) if panel_dict['panel_id__panel_version'] else '1.0'}",
                             hgnc,
                         ]
                     )

@@ -5,8 +5,11 @@ def sortable_version(version: str) -> str:
     return ".".join(bit.zfill(5) for bit in version.split("."))
 
 
-def normalize_version(padded_version: str) -> str:
+def normalize_version(padded_version: str) -> float:
     """
     Turn '00001.00001' -> '1.1'
     """
-    return ".".join(bit.lstrip("0") for bit in padded_version.split("."))
+    if not padded_version:
+        return 0.0
+
+    return float(".".join(bit.lstrip("0") for bit in padded_version.split(".")))
