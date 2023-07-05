@@ -82,15 +82,9 @@ class FormParser:
 
         panel_df = pd.DataFrame(
             {
-                "names": [
-                    cell[0].value for cell in ws[f"A{p_start}":f"A{p_end}"]
-                ],
-                "sources": [
-                    cell[0].value for cell in ws[f"B{p_start}":f"B{p_end}"]
-                ],
-                "ext_ids": [
-                    cell[0].value for cell in ws[f"C{p_start}":f"C{p_end}"]
-                ],
+                "names": [cell[0].value for cell in ws[f"A{p_start}":f"A{p_end}"]],
+                "sources": [cell[0].value for cell in ws[f"B{p_start}":f"B{p_end}"]],
+                "ext_ids": [cell[0].value for cell in ws[f"C{p_start}":f"C{p_end}"]],
                 "ext_versions": [
                     cell[0].value for cell in ws[f"D{p_start}":f"D{p_end}"]
                 ],
@@ -107,27 +101,15 @@ class FormParser:
                 "gene_symbols": [
                     cell[0].value for cell in ws[f"A{g_start}":f"A{g_end}"]
                 ],
-                "hgncs": [
-                    cell[0].value for cell in ws[f"B{g_start}":f"B{g_end}"]
-                ],
-                "reasons": [
-                    cell[0].value for cell in ws[f"C{g_start}":f"C{g_end}"]
-                ],
+                "hgncs": [cell[0].value for cell in ws[f"B{g_start}":f"B{g_end}"]],
+                "reasons": [cell[0].value for cell in ws[f"C{g_start}":f"C{g_end}"]],
                 "transcripts": [
                     cell[0].value for cell in ws[f"D{g_start}":f"D{g_end}"]
                 ],
-                "confs": [
-                    cell[0].value for cell in ws[f"E{g_start}":f"F{g_end}"]
-                ],
-                "pens": [
-                    cell[0].value for cell in ws[f"F{g_start}":f"G{g_end}"]
-                ],
-                "mops": [
-                    cell[0].value for cell in ws[f"G{g_start}":f"H{g_end}"]
-                ],
-                "mois": [
-                    cell[0].value for cell in ws[f"H{g_start}":f"I{g_end}"]
-                ],
+                "confs": [cell[0].value for cell in ws[f"E{g_start}":f"F{g_end}"]],
+                "pens": [cell[0].value for cell in ws[f"F{g_start}":f"G{g_end}"]],
+                "mops": [cell[0].value for cell in ws[f"G{g_start}":f"H{g_end}"]],
+                "mois": [cell[0].value for cell in ws[f"H{g_start}":f"I{g_end}"]],
             }
         )
 
@@ -135,54 +117,22 @@ class FormParser:
 
         region_df = pd.DataFrame(
             {
-                "names": [
-                    cell[0].value for cell in ws[f"A{r_start}":f"A{r_end}"]
-                ],
-                "chroms": [
-                    cell[0].value for cell in ws[f"B{r_start}":f"B{r_end}"]
-                ],
-                "starts_37": [
-                    cell[0].value for cell in ws[f"C{r_start}":f"C{r_end}"]
-                ],
-                "ends_37": [
-                    cell[0].value for cell in ws[f"D{r_start}":f"D{r_end}"]
-                ],
-                "starts_38": [
-                    cell[0].value for cell in ws[f"E{r_start}":f"E{r_end}"]
-                ],
-                "ends_38": [
-                    cell[0].value for cell in ws[f"F{r_start}":f"F{r_end}"]
-                ],
-                "reasons": [
-                    cell[0].value for cell in ws[f"G{r_start}":f"G{r_end}"]
-                ],
-                "confs": [
-                    cell[0].value for cell in ws[f"H{r_start}":f"H{r_end}"]
-                ],
-                "pens": [
-                    cell[0].value for cell in ws[f"I{r_start}":f"I{r_end}"]
-                ],
-                "mops": [
-                    cell[0].value for cell in ws[f"J{r_start}":f"J{r_end}"]
-                ],
-                "mois": [
-                    cell[0].value for cell in ws[f"K{r_start}":f"K{r_end}"]
-                ],
-                "types": [
-                    cell[0].value for cell in ws[f"L{r_start}":f"L{r_end}"]
-                ],
-                "var_types": [
-                    cell[0].value for cell in ws[f"M{r_start}":f"M{r_end}"]
-                ],
-                "haplos": [
-                    cell[0].value for cell in ws[f"N{r_start}":f"N{r_end}"]
-                ],
-                "triplos": [
-                    cell[0].value for cell in ws[f"O{r_start}":f"O{r_end}"]
-                ],
-                "overlaps": [
-                    cell[0].value for cell in ws[f"P{r_start}":f"P{r_end}"]
-                ],
+                "names": [cell[0].value for cell in ws[f"A{r_start}":f"A{r_end}"]],
+                "chroms": [cell[0].value for cell in ws[f"B{r_start}":f"B{r_end}"]],
+                "starts_37": [cell[0].value for cell in ws[f"C{r_start}":f"C{r_end}"]],
+                "ends_37": [cell[0].value for cell in ws[f"D{r_start}":f"D{r_end}"]],
+                "starts_38": [cell[0].value for cell in ws[f"E{r_start}":f"E{r_end}"]],
+                "ends_38": [cell[0].value for cell in ws[f"F{r_start}":f"F{r_end}"]],
+                "reasons": [cell[0].value for cell in ws[f"G{r_start}":f"G{r_end}"]],
+                "confs": [cell[0].value for cell in ws[f"H{r_start}":f"H{r_end}"]],
+                "pens": [cell[0].value for cell in ws[f"I{r_start}":f"I{r_end}"]],
+                "mops": [cell[0].value for cell in ws[f"J{r_start}":f"J{r_end}"]],
+                "mois": [cell[0].value for cell in ws[f"K{r_start}":f"K{r_end}"]],
+                "types": [cell[0].value for cell in ws[f"L{r_start}":f"L{r_end}"]],
+                "var_types": [cell[0].value for cell in ws[f"M{r_start}":f"M{r_end}"]],
+                "haplos": [cell[0].value for cell in ws[f"N{r_start}":f"N{r_end}"]],
+                "triplos": [cell[0].value for cell in ws[f"O{r_start}":f"O{r_end}"]],
+                "overlaps": [cell[0].value for cell in ws[f"P{r_start}":f"P{r_end}"]],
             }
         )
 
