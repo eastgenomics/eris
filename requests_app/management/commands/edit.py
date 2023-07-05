@@ -111,6 +111,7 @@ class Command(BaseCommand):
             else:
                 panel = panel[0]
 
+
         # validate clinical_indication ('r_code') exists - prompt for it to be added to the database otherwise
         r_code = get_clin_indication_by_r_code(r_code)
         if not r_code:
@@ -122,17 +123,10 @@ class Command(BaseCommand):
         else:
             indication = r_code[0]
 
-        results = get_panel_clin_indication_link(panel.id, indication.id)
-        if results:
-            # TODO: is it possible to have more than one result?
-            for result in results:
-                if result.current == True:
-                    print("The panel {} and clinical indication {} are already linked and marked as \
+
+        # handle logic for linking panel and clinical indication
+        result = get_panel_clin_indication_link(panel.id, indication.id)
+        if not result:
+            print("The panel {} and clinical indication {} are already linked and marked as \
                           current in the database. No change made.")
-                    exit(1)
-                else:
-                    #TODO: set the result as current!
-        #else: 
-            #TODO: link the panel and indication if they aren't already, and mark 'current' as True 
-
-
+            exit(1)

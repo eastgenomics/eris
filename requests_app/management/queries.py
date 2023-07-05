@@ -2,6 +2,7 @@ from requests_app.models import (
     Panel,
     ClinicalIndication,
     ClinicalIndicationPanel,
+    ClinicalIndicationPanelHistory,
     Gene,
     Confidence,
     Penetrance,
@@ -59,12 +60,49 @@ def get_clin_indication_by_r_code(r_code):
 @transaction.atomic
 def get_panel_clin_indication_link(panel_id, indication_id):
     """
-    Look up whether a clinical indication and panel ID have ever been linked
-    in the database
+    Link a clinical indication and panel in the database, set it to 'current', and log history.
+    If an entry already exists and is current, no action is taken.
+    If an entry exists and is NOT current, it gets set to 'current' and the history is logged.
     """
     try:
-        results = ClinicalIndicationPanel.filter(panel_id=panel_id, clinical_indication_id=indication_id)
-        return results.all()
-    except ClinicalIndicationPanel.DoesNotExist:
-        return None
+        results = ClinicalIndicationPanel.filter(
+            panel_id=panel_id,
+            clinical_indication_id=indication_id)
+        
+        if results.current:
+            return None
+
+        else:
+            # make it current and add to history
+            results.current = True
+            results.save()
+
+            ClinicalIndicationPanelHistory.objects.create(
+                user="test_user",
+                note="Existing panel/indication link set to current by user",
+                clinical_indication_panel_id=results.id
+            )
+            
+            return results
     
+    except ClinicalIndication.DoesNotExist:
+        clinical_indication_panel = ClinicalIndicationPanel.objects.create(
+            panel_id=panel_id,
+            clinical_indication_id=indication_id,
+            current=True
+        )
+        
+        # add to history
+        clinical_indication_panel_id = clinical_indication_panel.id
+        ClinicalIndicationPanelHistory.objects.create(
+            user="test_user",
+            note="Panel/indication link created and set to current by user",
+            clinical_indication_panel_id=clinical_indication_panel_id
+            )
+        
+        return clinical_indication_panel
+
+
+
+#def remove_panel_clin_indication_link(panel_id, indication_id):
+
