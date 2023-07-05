@@ -85,7 +85,7 @@ def get_panel_clin_indication_link(panel_id, indication_id):
             
             return results
     
-    except ClinicalIndication.DoesNotExist:
+    except ClinicalIndicationPanel.DoesNotExist:
         clinical_indication_panel = ClinicalIndicationPanel.objects.create(
             panel_id=panel_id,
             clinical_indication_id=indication_id,
@@ -103,6 +103,32 @@ def get_panel_clin_indication_link(panel_id, indication_id):
         return clinical_indication_panel
 
 
+@transaction.atomic
+def remove_panel_clin_indication_link(panel_id, indication_id):
+    """
+    If a panel and clinical indication are linked in the database,
+    this sets 'current' to False and logs it in the history.
+    """
+    try:
+        results = ClinicalIndicationPanel.filter(
+            panel_id=panel_id,
+            clinical_indication_id=indication_id)
+        
+        if results.current:
+            results.current = False
+            results.save()
+                    
+            # add to history
+            clinical_indication_panel_id = results.id
+            ClinicalIndicationPanelHistory.objects.create(
+                user="test_user",
+                note="Panel/indication link deactivated by user",
+                clinical_indication_panel_id=clinical_indication_panel_id
+                )
+            return results
 
-#def remove_panel_clin_indication_link(panel_id, indication_id):
+        else:
+            return None
 
+    except ClinicalIndicationPanel.DoesNotExist:
+        return None
