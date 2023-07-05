@@ -7,7 +7,8 @@ from requests_app.models import (
     PanelGene,
     Transcript,
 )
-from ..queries import check_panel_exists_by_id, check_panel_exists_by_name
+from ..queries import get_panel_by_id, get_panel_by_name, \
+    get_clin_indication_by_r_code
 
 import os
 from django.core.management.base import BaseCommand
@@ -79,6 +80,7 @@ class Command(BaseCommand):
         add_or_remove: str = kwargs.get("add_or_remove")
         r_code: str = kwargs.get("r_code")
 
+        # handling missing-data errors
         if not add_or_remove:
             raise ValueError("Please specify whether you want to add or remove the clinical \
                             indication for this panel")
@@ -89,7 +91,7 @@ class Command(BaseCommand):
             panel_id: str = kwargs.get("panel_id")
             if not panel_id:
                 raise ValueError("Please specify panel ID")
-            panel = check_panel_exists_by_id(panel_id)
+            panel = get_panel_by_id(panel_id)
             if not panel:
                 print("The panel ID {} was not found in the database".format(panel_id))
                 exit(1)
@@ -98,8 +100,7 @@ class Command(BaseCommand):
             panel_name: str = kwargs.get("panel_name")
             if not panel_name:
                 raise ValueError("Please specify panel name")
-            panel = check_panel_exists_by_name(panel_name)
-            # TODO: complain if panel has more than 1 result
+            panel = get_panel_by_name(panel_name)
             if not panel:
                 print("The panel name \"{}\" was not found in the database".format(panel_name))
                 exit(1)
@@ -110,9 +111,17 @@ class Command(BaseCommand):
             else:
                 panel = panel[0]
 
-        # TODO: validate clinical_indication ('r_code') exists - prompt for it to be added to the database otherwise
-    
-        #TODO: fetch the clinical indication - complain if absent
+        # validate clinical_indication ('r_code') exists - prompt for it to be added to the database otherwise
+        r_code = get_clin_indication_by_r_code(r_code)
+        if not r_code:
+            print("The clinical indication code \"{}\" was not found in the database".format(r_code))
+            exit(1)
+        if len(r_code) > 1:
+            print("The clinical indication \"{}\" is present twice in the database".format(r_code))
+            exit(1)
+        else:
+            indication = r_code[0]
+
         #TODO: check the panel and clinical indication aren't already linked - message if yes
         
 

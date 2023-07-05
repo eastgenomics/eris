@@ -29,7 +29,7 @@ class Panel(models.Model):
         null=True,
         default=False,
     )
-
+    #TODO: 'python manage.py seed panelapp all' doesn't work unless I remove 'custom' below
     custom = models.BooleanField(
         verbose_name="custom panel",
         null=True,
