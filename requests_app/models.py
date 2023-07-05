@@ -30,6 +30,12 @@ class Panel(models.Model):
         default=False,
     )
 
+    custom = models.BooleanField(
+        verbose_name="custom panel",
+        null=True,
+        default=False,
+    )
+
     created_date = models.DateField(verbose_name="created date", auto_now_add=True)
 
     created_time = models.TimeField(verbose_name="created time", auto_now_add=True)
@@ -123,8 +129,14 @@ class ClinicalIndicationPanelHistory(models.Model):
         on_delete=models.PROTECT,
     )
 
-    created_date = models.DateField(verbose_name="created date", auto_now_add=True)
-    created_time = models.TimeField(verbose_name="created time", auto_now_add=True)
+    created_date = models.DateField(
+        verbose_name="created date",
+        auto_now_add=True,
+    )
+    created_time = models.TimeField(
+        verbose_name="created time",
+        auto_now_add=True,
+    )
 
     clinical_indication_panel = models.ForeignKey(
         ClinicalIndicationPanel,
@@ -136,6 +148,30 @@ class ClinicalIndicationPanelHistory(models.Model):
 
     class Meta:
         db_table = "clinical_indication_panel_history"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class ClinicalIndicationTestMethodHistory(models.Model):
+    clinical_indication = models.ForeignKey(
+        ClinicalIndication,
+        verbose_name="Clinical Indication id",
+        on_delete=models.PROTECT,
+    )
+    created_date = models.DateField(
+        verbose_name="created date",
+        auto_now_add=True,
+    )
+    created_time = models.TimeField(
+        verbose_name="created time",
+        auto_now_add=True,
+    )
+
+    note = models.CharField(verbose_name="Note", max_length=255)
+
+    class Meta:
+        db_table = "clinical_indication_test_method_history"
 
     def __str__(self):
         return str(self.id)
@@ -300,6 +336,43 @@ class PanelGene(models.Model):
         return str(self.id)
 
 
+class PanelGeneHistory(models.Model):
+    panel_gene = models.ForeignKey(
+        PanelGene,
+        verbose_name="PanelGene id",
+        on_delete=models.PROTECT,
+    )
+
+    panel = models.ForeignKey(
+        Panel,
+        verbose_name="Panel id",
+        on_delete=models.PROTECT,
+    )
+
+    created_date = models.DateField(
+        verbose_name="created date",
+        auto_now_add=True,
+    )
+    created_time = models.TimeField(
+        verbose_name="created time",
+        auto_now_add=True,
+    )
+
+    gene = models.ForeignKey(
+        Gene,
+        on_delete=models.PROTECT,
+        verbose_name="Gene id",
+    )
+
+    note = models.CharField(verbose_name="Note", max_length=255)
+
+    class Meta:
+        db_table = "panel_gene_history"
+
+    def __str__(self):
+        return str(self.id)
+
+
 class Haploinsufficiency(models.Model):
     """Defines the haploinsufficiency score of the associated phenotype
     in the context of the associated clinical indication"""
@@ -454,6 +527,38 @@ class RegionAnnotation(models.Model):
 
     class Meta:
         db_table = "region_annotation"
+
+    def __str__(self):
+        return str(self.id)
+
+
+# TODO: this table need work
+class PanelGeneTranscript(models.Model):
+    """
+    Defines which transcript is clinical for which gene
+    for which Panel
+    """
+
+    panel = models.ForeignKey(
+        Panel,
+        verbose_name="Panel id",
+        on_delete=models.PROTECT,
+    )
+
+    gene = models.ForeignKey(
+        Gene,
+        verbose_name="Gene id",
+        on_delete=models.PROTECT,
+    )
+
+    transcript = models.ForeignKey(
+        Transcript,
+        verbose_name="Transcript id",
+        on_delete=models.PROTECT,
+    )
+
+    class Meta:
+        db_table = "panel_gene_transcript"
 
     def __str__(self):
         return str(self.id)

@@ -18,8 +18,10 @@ import collections
 import datetime as dt
 from openpyxl import load_workbook
 from openpyxl.styles import NamedStyle, Font, PatternFill, Alignment
+from ._utils import normalize_version
 
 from django.core.management.base import BaseCommand
+from django.db.models import QuerySet
 
 from requests_app.models import (
     Panel,
@@ -47,7 +49,7 @@ class Command(BaseCommand):
         "to populate an Excel request form."
     )
 
-    def _get_panel_records(self, ci_code: str) -> list:
+    def _get_panel_records(self, ci_code: str) -> list[Panel]:
         """Retrieve Panel records from the database where the panel is
         associated with the specified CI code, and where that panel is
         currently in use for the specified clinical indication.
@@ -61,8 +63,10 @@ class Command(BaseCommand):
             panel_records [list of dicts]: each dict is one panel record
         """
 
+        # might fetch inactive panel-CI
+        # TODO:
         associated_panel_ids = ClinicalIndicationPanel.objects.filter(
-            clinical_indication_id__code=ci_code, current=True
+            clinical_indication_id__r_code=ci_code, current=True
         ).values_list("panel_id", flat=True)
 
         panel_records: list[Panel] = []
@@ -72,24 +76,24 @@ class Command(BaseCommand):
 
         return panel_records
 
-    def retrieve_panel_entities(self, panel_records: list):
+    def retrieve_panel_entities(self, panel_records: list[Panel]) -> list[dict]:
         """For each retrieved panel record, retrieve all associated
         gene and region records and combine in a dict. Return a list of
         these dicts.
 
         args:
-            ref_genome [str]: supplied at command line
             panel_records [list of dicts]: list of Panel records
 
         returns:
             panel_dicts [list of dicts]: formatted data for each panel
         """
 
-        panel_data = []
+        panel_data: list[dict] = []
 
         for panel in panel_records:
-            panel_dict = collections.defaultdict(dict)
-            panel_ref_genome = []
+            panel_dict: list[str, dict] = collections.defaultdict(dict)
+            panel_ref_genome: list[str] = []
+            panel_source = panel.panel_source
 
             if panel.grch37:
                 panel_ref_genome.append("GRCh37")
@@ -102,9 +106,9 @@ class Command(BaseCommand):
                 "db_id": panel.id,
                 "source": panel.panel_source,
                 "ext_id": panel.external_id,
-                "ext_version": panel.panel_version,
+                "ext_version": normalize_version(panel.panel_version),
                 "ref_genome": ", ".join(panel_ref_genome),
-                "genes": self._get_gene_records(panel.id),
+                "genes": self._get_gene_records(panel.id, panel_source),
                 "regions": self._get_region_records(panel.id),
             }
 
@@ -112,7 +116,7 @@ class Command(BaseCommand):
 
         return panel_data
 
-    def _get_gene_records(self, id):
+    def _get_gene_records(self, id: int, panel_source: str) -> list[dict]:
         """Retrieve all gene records associated with a panel record.
 
         args:
@@ -124,7 +128,10 @@ class Command(BaseCommand):
 
         gene_data = []
 
-        panel_genes = PanelGene.objects.filter(panel_id=id).values()
+        panel_genes = PanelGene.objects.filter(
+            panel_id=id,
+            justification=panel_source,  # there might be multiple PanelGene imported from previous TD from HGNC
+        ).values()
 
         if not panel_genes:
             return []
@@ -715,7 +722,7 @@ class Command(BaseCommand):
         except ValueError or TypeError:
             raise ValueError("Incorrect date format, should be ddmmyyyy")
 
-        all_cis = set(ClinicalIndication.objects.all().values_list("code", flat=True))
+        all_cis = set(ClinicalIndication.objects.all().values_list("r_code", flat=True))
 
         if ci_code not in all_cis:
             raise ValueError("CI code not found in database")

@@ -68,6 +68,12 @@ class Command(BaseCommand):
             help="Path to JSON file of parsed TD data",
         )
 
+        td.add_argument(
+            "--force",
+            action="store_true",
+            help="force td seed ignoring td version",
+        )
+
         # TODO: deal with this
         # Parser for form command e.g. form <input_file>
         form = subparsers.add_parser("form", help="import request form data")
@@ -161,22 +167,22 @@ class Command(BaseCommand):
             panel_id: str = kwargs.get("panel")
             panel_version: str = kwargs.get("version")  # TODO: version not used yet?
 
-            if not panel_id:
-                raise ValueError("Please specify panel id")
-
-            if not panel_version:
-                raise ValueError("Please specify panel version")
-
             if panel_id == "all":
                 parsed_data = parse_all_pa_panels()
             else:
+                if not panel_id:
+                    raise ValueError("Please specify panel id")
+
+                if not panel_version:
+                    raise ValueError("Please specify panel version")
+
                 # parse data from requested current PanelApp panels
                 parsed_data = parse_specified_pa_panels(panel_id)
                 if not parsed_data:
                     print("Parsing failed - see error messages.")
 
             if not test_mode:
-                print("Importing panels into database...")
+                print(f"Importing {len(parsed_data)} panels into database...")
 
                 # insert panel data into database
                 for panel_dict in parsed_data:
@@ -188,6 +194,7 @@ class Command(BaseCommand):
         # python manage.py seed td <input_json> <Y/N>
         elif command == "td":
             input_directory = kwargs.get("input")
+            force: bool = kwargs.get("force")
 
             if not self._validate_td(input_directory):
                 raise ValueError("Invalid input file")
@@ -196,7 +203,7 @@ class Command(BaseCommand):
                 json_data = json.load(reader)
 
             if not test_mode:
-                insert_data(json_data)
+                insert_data(json_data, force)
 
         # python manage.py seed form <input_file>
         elif command == "form":
