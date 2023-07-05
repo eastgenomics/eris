@@ -104,7 +104,7 @@ def get_panel_clin_indication_link(panel_id, indication_id):
 
 
 @transaction.atomic
-def remove_panel_clin_indication_link(panel_id, indication_id):
+def remove_panel_clin_indication_link(panel_id, indication_id, panel_name, r_code):
     """
     If a panel and clinical indication are linked in the database,
     this sets 'current' to False and logs it in the history.
@@ -125,10 +125,14 @@ def remove_panel_clin_indication_link(panel_id, indication_id):
                 note="Panel/indication link deactivated by user",
                 clinical_indication_panel_id=clinical_indication_panel_id
                 )
-            return results
+            return results, None
 
         else:
-            return None
+            error_msg = "The panel \"{}\" and clinical indication \"{}\" are already  \
+                            deactivated in the database. No change made.".format(panel_name, r_code)
+            return None, error_msg
 
     except ClinicalIndicationPanel.DoesNotExist:
-        return None
+        error_msg = "The panel \"{}\" and clinical indication \"{}\" have never been linked \
+            in the database. No change made.".format(panel_name, r_code)
+        return None, error_msg

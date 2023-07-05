@@ -8,7 +8,8 @@ from requests_app.models import (
     Transcript,
 )
 from ..queries import get_panel_by_id, get_panel_by_name, \
-    get_clin_indication_by_r_code, get_panel_clin_indication_link
+    get_clin_indication_by_r_code, get_panel_clin_indication_link, \
+    remove_panel_clin_indication_link
 
 import os
 from django.core.management.base import BaseCommand
@@ -124,9 +125,16 @@ class Command(BaseCommand):
             indication = r_code[0]
 
 
-        # handle logic for linking panel and clinical indication
-        result = get_panel_clin_indication_link(panel.id, indication.id)
-        if not result:
-            print("The panel {} and clinical indication {} are already linked and marked as \
-                          current in the database. No change made.")
-            exit(1)
+        if add_or_remove == "add":
+            # handle logic for linking panel and clinical indication
+            result = get_panel_clin_indication_link(panel.id, indication.id)
+            if not result:
+                print("The panel \"{}\" and clinical indication \"{}\" are already linked and marked as \
+                            current in the database. No change made.".format(panel_name, r_code))
+                exit(1)
+        else:
+            # handle logic for removing link between panel and clinical indication
+            result, error = remove_panel_clin_indication_link(panel.id, indication.id, panel_name, r_code)
+            if not result:
+                print(error)
+                exit(1)
