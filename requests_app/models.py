@@ -143,8 +143,11 @@ class ClinicalIndicationPanelHistory(models.Model):
         on_delete=models.PROTECT,
         verbose_name="Clinical Indication Panel id",
     )
-
+    
     note = models.CharField(verbose_name="Note", max_length=255)
+
+    # TODO: user may change to a foreign key later
+    user = models.CharField(verbose_name="User", max_length=255)
 
     class Meta:
         db_table = "clinical_indication_panel_history"

@@ -189,7 +189,8 @@ def _make_panels_from_hgncs(
                 clinical_indication_panel_id=ci_panel.id,
                 clinical_indication_id=ci_panel.clinical_indication_id,
                 panel_id=ci_panel.panel_id,
-                note=f"Deactivated by td source {td_source}",
+                note=f"Deactivated by td source",
+                user=str(td_source)
             )
 
     # if previous CI-Panel record exist
@@ -212,7 +213,8 @@ def _make_panels_from_hgncs(
             clinical_indication_panel_id=cpi_instance.id,
             clinical_indication_id=ci.id,
             panel_id=panel_instance.id,
-            note=f"Created by td source {td_source}",
+            note=f"Created by td source",
+            user=str(td_source)
         )
     else:
         # check if there is any change in td version or config source
@@ -226,7 +228,8 @@ def _make_panels_from_hgncs(
                     clinical_indication_panel_id=cpi_instance.id,
                     clinical_indication_id=ci.id,
                     panel_id=panel_instance.id,
-                    note=f"TD version modified by td source {td_source}: {normalize_version(cpi_instance.td_version)} -> {td_version}",
+                    note=f"TD version modified by td source: {normalize_version(cpi_instance.td_version)} -> {td_version}",
+                    user=str(td_source)
                 )
                 cpi_instance.td_version = sortable_version(td_version)
 
@@ -236,7 +239,8 @@ def _make_panels_from_hgncs(
                     clinical_indication_panel_id=cpi_instance.id,
                     clinical_indication_id=ci.id,
                     panel_id=panel_instance.id,
-                    note=f"Config source modified by td source {td_source}: {cpi_instance.config_source} -> {config_source}",
+                    note=f"Config source modified by td source: {cpi_instance.config_source} -> {config_source}",
+                    user=str(td_source)
                 )
                 cpi_instance.config_source = config_source
 
@@ -306,7 +310,8 @@ def insert_data(json_data: dict, force: bool = False) -> None:
                     clinical_indication_panel_id=previous_ci_panel.id,
                     clinical_indication_id=previous_ci_panel.clinical_indication_id,
                     panel_id=previous_ci_panel.panel_id,
-                    note=f"Deactivated by td source {td_source}",
+                    note=f"Deactivated by td source",
+                    user=str(td_source)
                 )
         else:
             # Check for change in test method
@@ -361,7 +366,8 @@ def insert_data(json_data: dict, force: bool = False) -> None:
                             clinical_indication_panel_id=cip_instance.id,
                             clinical_indication_id=ci_instance.id,
                             panel_id=panel_record.id,
-                            note=f"Created by td source {td_source}",
+                            note=f"Created by td source",
+                            user=str(td_source)
                         )
                     else:
                         # if CI-Panel already exist and the link is the same
@@ -375,7 +381,8 @@ def insert_data(json_data: dict, force: bool = False) -> None:
                                     clinical_indication_panel_id=cip_instance.id,
                                     clinical_indication_id=ci_instance.id,
                                     panel_id=panel_record.id,
-                                    note=f"TD version modified by td source {td_source}: {normalize_version(cip_instance.td_version)} -> {td_version}",
+                                    note=f"TD version modified by td source: {normalize_version(cip_instance.td_version)} -> {td_version}",
+                                    user=str(td_source)
                                 )
                                 cip_instance.td_version = sortable_version(td_version)
 
@@ -385,7 +392,8 @@ def insert_data(json_data: dict, force: bool = False) -> None:
                                     clinical_indication_panel_id=cip_instance.id,
                                     clinical_indication_id=ci_instance.id,
                                     panel_id=panel_record.id,
-                                    note=f"Config source modified by td source {td_source}: {cip_instance.config_source} -> {json_data['config_source']}",
+                                    note=f"Config source modified by td source: {cip_instance.config_source} -> {json_data['config_source']}",
+                                    user=str(td_source)
                                 )
                                 cip_instance.config_source = json_data["config_source"]
 
