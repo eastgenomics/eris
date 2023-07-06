@@ -21,8 +21,7 @@ from django.db.models import QuerySet
 from django.db import transaction
 
 
-@transaction.atomic
-def get_panel_by_id(panel_id):
+def get_panel_by_id(panel_id) -> Panel | None:
     """
     Get panel from database
     """
@@ -33,8 +32,7 @@ def get_panel_by_id(panel_id):
         return None
 
 
-@transaction.atomic
-def get_panel_by_name(panel_name):
+def get_panel_by_name(panel_name) -> Panel | None:
     """
     Get panel from database by name
     """
@@ -45,8 +43,7 @@ def get_panel_by_name(panel_name):
         return None
     
 
-@transaction.atomic
-def get_clin_indication_by_r_code(r_code):
+def get_clin_indication_by_r_code(r_code) -> ClinicalIndication | None:
     """
     Get clinical indication from database by its R code
     """
@@ -58,7 +55,8 @@ def get_clin_indication_by_r_code(r_code):
 
 
 @transaction.atomic
-def get_panel_clin_indication_link(panel_id, indication_id, user):
+def get_panel_clin_indication_link(panel_id, indication_id, user) -> \
+    tuple[ClinicalIndicationPanelHistory | None, str | None]:
     """
     Link a clinical indication and panel in the database, set it to 'current', and log history.
     If an entry already exists and is current, no action is taken.
@@ -115,7 +113,8 @@ def get_panel_clin_indication_link(panel_id, indication_id, user):
 
 
 @transaction.atomic
-def remove_panel_clin_indication_link(panel_id, indication_id, panel_name, r_code, user):
+def remove_panel_clin_indication_link(panel_id, indication_id, panel_name, r_code, user) -> \
+    tuple[ClinicalIndicationPanelHistory | None, str | None]:
     """
     If a panel and clinical indication are linked in the database,
     this sets 'current' to False and logs it in the history.
@@ -137,7 +136,7 @@ def remove_panel_clin_indication_link(panel_id, indication_id, panel_name, r_cod
                 clinical_indication_panel_id=clinical_indication_panel_id
                 )
             new.save()
-            return results, None
+            return new, None
 
         else:
             error_msg = "The panel \"{}\" and clinical indication \"{}\" are already".format(panel_name, r_code) +\
