@@ -77,6 +77,9 @@ class Command(BaseCommand):
 
         assert command, "Command error"
 
+        # TODO: add user later, once we've decided on how to do that
+        user = "test_user"
+
         # python manage.py edit panel_id_clin_ind <panel_id> <add_or_remove> <clinical_indication_r_code>
         # python manage.py edit panel_name_clin_ind <panel_name> <add_or_remove> <clinical_indication_r_code>
         add_or_remove: str = kwargs.get("add_or_remove")
@@ -128,7 +131,7 @@ class Command(BaseCommand):
 
         if add_or_remove == "add":
             # handle logic for linking panel and clinical indication
-            result, error = get_panel_clin_indication_link(panel.id, indication.id)
+            result, error = get_panel_clin_indication_link(panel.id, indication.id, user)
             if not result:
                 if not error:
                     print("The panel \"{}\" and clinical indication \"{}\" are already linked " + \
@@ -139,7 +142,7 @@ class Command(BaseCommand):
                     exit(1)
         else:
             # handle logic for removing link between panel and clinical indication
-            result, error = remove_panel_clin_indication_link(panel.id, indication.id, panel_name, r_code)
+            result, error = remove_panel_clin_indication_link(panel.id, indication.id, panel_name, r_code, user)
             if not result:
                 print(error)
                 exit(1)

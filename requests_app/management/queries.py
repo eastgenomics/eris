@@ -58,7 +58,7 @@ def get_clin_indication_by_r_code(r_code):
 
 
 @transaction.atomic
-def get_panel_clin_indication_link(panel_id, indication_id):
+def get_panel_clin_indication_link(panel_id, indication_id, user):
     """
     Link a clinical indication and panel in the database, set it to 'current', and log history.
     If an entry already exists and is current, no action is taken.
@@ -82,29 +82,31 @@ def get_panel_clin_indication_link(panel_id, indication_id):
             results.current = True
             results.save()
 
-            ClinicalIndicationPanelHistory.objects.create(
+            new = ClinicalIndicationPanelHistory.objects.create(
                 user="test_user",
                 note="Existing panel/indication link set to current by user",
                 clinical_indication_panel_id=results.id
             )
-            
+            new.save()
             return results, None
     
     except ClinicalIndicationPanel.DoesNotExist:
-        clinical_indication_panel = ClinicalIndicationPanel.objects.create(
+        new = clinical_indication_panel = ClinicalIndicationPanel.objects.create(
             panel_id=panel_id,
             clinical_indication_id=indication_id,
-            current=True
+            current=True,
+            config_source=user
         )
-        
+        new.save()
+
         # add to history
         clinical_indication_panel_id = clinical_indication_panel.id
-        ClinicalIndicationPanelHistory.objects.create(
-            user="test_user",
+        new = ClinicalIndicationPanelHistory.objects.create(
+            user=user,
             note="Panel/indication link created and set to current by user",
             clinical_indication_panel_id=clinical_indication_panel_id
             )
-        
+        new.save()
         return clinical_indication_panel, None
     
     except ClinicalIndicationPanel.MultipleObjectsReturned:
@@ -113,7 +115,7 @@ def get_panel_clin_indication_link(panel_id, indication_id):
 
 
 @transaction.atomic
-def remove_panel_clin_indication_link(panel_id, indication_id, panel_name, r_code):
+def remove_panel_clin_indication_link(panel_id, indication_id, panel_name, r_code, user):
     """
     If a panel and clinical indication are linked in the database,
     this sets 'current' to False and logs it in the history.
@@ -129,11 +131,12 @@ def remove_panel_clin_indication_link(panel_id, indication_id, panel_name, r_cod
                     
             # add to history
             clinical_indication_panel_id = results.id
-            ClinicalIndicationPanelHistory.objects.create(
-                user="test_user",
+            new = ClinicalIndicationPanelHistory.objects.create(
+                user=user,
                 note="Panel/indication link deactivated by user",
                 clinical_indication_panel_id=clinical_indication_panel_id
                 )
+            new.save()
             return results, None
 
         else:
