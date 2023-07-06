@@ -81,7 +81,7 @@ def get_panel_clin_indication_link(panel_id, indication_id, user) -> \
             results.save()
 
             new = ClinicalIndicationPanelHistory.objects.create(
-                user="test_user",
+                user=user,
                 note="Existing panel/indication link set to current by user",
                 clinical_indication_panel_id=results.id
             )
