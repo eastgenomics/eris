@@ -51,7 +51,7 @@ def get_clin_indication_by_r_code(r_code):
     Get clinical indication from database by its R code
     """
     try:
-        results = ClinicalIndication.filter(r_code__iexact=r_code)
+        results = ClinicalIndication.objects.filter(r_code__iexact=r_code)
         return results.all()
     except ClinicalIndication.DoesNotExist:
         return None
@@ -65,7 +65,7 @@ def get_panel_clin_indication_link(panel_id, indication_id):
     If an entry exists and is NOT current, it gets set to 'current' and the history is logged.
     """
     try:
-        results = ClinicalIndicationPanel.filter(
+        results = ClinicalIndicationPanel.objects.filter(
             panel_id=panel_id,
             clinical_indication_id=indication_id)
         
@@ -110,7 +110,7 @@ def remove_panel_clin_indication_link(panel_id, indication_id, panel_name, r_cod
     this sets 'current' to False and logs it in the history.
     """
     try:
-        results = ClinicalIndicationPanel.filter(
+        results = ClinicalIndicationPanel.objects.filter(
             panel_id=panel_id,
             clinical_indication_id=indication_id)
         

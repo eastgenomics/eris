@@ -187,8 +187,6 @@ def _make_panels_from_hgncs(
 
             ClinicalIndicationPanelHistory.objects.create(
                 clinical_indication_panel_id=ci_panel.id,
-                clinical_indication_id=ci_panel.clinical_indication_id,
-                panel_id=ci_panel.panel_id,
                 note=f"Deactivated by td source",
                 user=str(td_source)
             )
@@ -211,8 +209,6 @@ def _make_panels_from_hgncs(
     if created:
         ClinicalIndicationPanelHistory.objects.create(
             clinical_indication_panel_id=cpi_instance.id,
-            clinical_indication_id=ci.id,
-            panel_id=panel_instance.id,
             note=f"Created by td source",
             user=str(td_source)
         )
@@ -226,8 +222,6 @@ def _make_panels_from_hgncs(
                 # take a note of the change
                 ClinicalIndicationPanelHistory.objects.create(
                     clinical_indication_panel_id=cpi_instance.id,
-                    clinical_indication_id=ci.id,
-                    panel_id=panel_instance.id,
                     note=f"TD version modified by td source: {normalize_version(cpi_instance.td_version)} -> {td_version}",
                     user=str(td_source)
                 )
@@ -237,8 +231,6 @@ def _make_panels_from_hgncs(
                 # take a note of the change
                 ClinicalIndicationPanelHistory.objects.create(
                     clinical_indication_panel_id=cpi_instance.id,
-                    clinical_indication_id=ci.id,
-                    panel_id=panel_instance.id,
                     note=f"Config source modified by td source: {cpi_instance.config_source} -> {config_source}",
                     user=str(td_source)
                 )
@@ -308,8 +300,6 @@ def insert_data(json_data: dict, force: bool = False) -> None:
 
                 ClinicalIndicationPanelHistory.objects.create(
                     clinical_indication_panel_id=previous_ci_panel.id,
-                    clinical_indication_id=previous_ci_panel.clinical_indication_id,
-                    panel_id=previous_ci_panel.panel_id,
                     note=f"Deactivated by td source",
                     user=str(td_source)
                 )
@@ -364,8 +354,6 @@ def insert_data(json_data: dict, force: bool = False) -> None:
                         # if CI-Panel record is created, create a history record
                         ClinicalIndicationPanelHistory.objects.create(
                             clinical_indication_panel_id=cip_instance.id,
-                            clinical_indication_id=ci_instance.id,
-                            panel_id=panel_record.id,
                             note=f"Created by td source",
                             user=str(td_source)
                         )
@@ -379,8 +367,6 @@ def insert_data(json_data: dict, force: bool = False) -> None:
                                 # take a note of the change
                                 ClinicalIndicationPanelHistory.objects.create(
                                     clinical_indication_panel_id=cip_instance.id,
-                                    clinical_indication_id=ci_instance.id,
-                                    panel_id=panel_record.id,
                                     note=f"TD version modified by td source: {normalize_version(cip_instance.td_version)} -> {td_version}",
                                     user=str(td_source)
                                 )
@@ -390,8 +376,6 @@ def insert_data(json_data: dict, force: bool = False) -> None:
                                 # take a note of the change
                                 ClinicalIndicationPanelHistory.objects.create(
                                     clinical_indication_panel_id=cip_instance.id,
-                                    clinical_indication_id=ci_instance.id,
-                                    panel_id=panel_record.id,
                                     note=f"Config source modified by td source: {cip_instance.config_source} -> {json_data['config_source']}",
                                     user=str(td_source)
                                 )

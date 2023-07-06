@@ -77,7 +77,8 @@ class Command(BaseCommand):
 
         assert command, "Command error"
 
-        # python manage.py edit panel_clinical_ind <panel_id> <add_or_remove> <clinical_indication>
+        # python manage.py edit panel_id_clin_ind <panel_id> <add_or_remove> <clinical_indication_r_code>
+        # python manage.py edit panel_name_clin_ind <panel_name> <add_or_remove> <clinical_indication_r_code>
         add_or_remove: str = kwargs.get("add_or_remove")
         r_code: str = kwargs.get("r_code")
 
@@ -114,15 +115,15 @@ class Command(BaseCommand):
 
 
         # validate clinical_indication ('r_code') exists - prompt for it to be added to the database otherwise
-        r_code = get_clin_indication_by_r_code(r_code)
-        if not r_code:
+        r_code_res = get_clin_indication_by_r_code(r_code)
+        if not r_code_res:
             print("The clinical indication code \"{}\" was not found in the database".format(r_code))
             exit(1)
-        if len(r_code) > 1:
+        if len(r_code_res) > 1:
             print("The clinical indication \"{}\" is present twice in the database".format(r_code))
             exit(1)
         else:
-            indication = r_code[0]
+            indication = r_code_res[0]
 
 
         if add_or_remove == "add":
