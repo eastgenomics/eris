@@ -24,9 +24,11 @@ from django.db.models import QuerySet
 from django.db import transaction
 
 
+# TODO: need to deal with gene removal from Panel
+
+
 @transaction.atomic
 def insert_data_into_db(parsed_data: dict) -> None:
-    # TODO: need to deal with if a Panel is retired
     """
     Insert data from parsed JSON into database.
     """
@@ -195,51 +197,69 @@ def insert_data_into_db(parsed_data: dict) -> None:
         )
 
 
+@transaction.atomic
 def insert_form_data(parsed_data: dict) -> None:
-    # TODO: make new Panel record if panel doesn't exist
-    # TODO: if new panel made, link CI-panel
+    panel_id_in_db: int = parsed_data.get("panel_id_in_database").item()
+    panel_name: str = parsed_data.get("panel_name").strip()
 
-    panel_id_in_db = parsed_data.get("panel_id_in_database")
-    ci = parsed_data.get("ci")
-    panel_source = parsed_data.get("panel_source")
+    # check if panel-id is in the database
+    if panel_id_in_db not in Panel.objects.values_list("id", flat=True):
+        raise ValueError(f"Panel id {panel_id_in_db} not found in database. Aborting.")
 
-    try:
-        # check if CI code is in the database
-        ci_instance = ClinicalIndication.objects.get(code=ci)
-    except ClinicalIndication.DoesNotExist:
-        raise ValueError(f"CI code {ci} not found in database")
+    associated_panel: Panel = Panel.objects.get(id=panel_id_in_db)
 
-    try:
-        # check if CI is linked to the panel-id in the database
-        ClinicalIndicationPanel.objects.get(
-            clinical_indication_id=ci_instance.id,
-            panel_id=panel_id_in_db,
-        )
-    except ClinicalIndicationPanel.DoesNotExist:
+    if associated_panel.panel_name != panel_name:
         raise ValueError(
-            f"CI-panel link for {ci} and {panel_id_in_db} not found in database"
+            "Panel name in database does not match panel name in excel. Aborting."
         )
 
-    if panel_id_in_db:
-        try:
-            # check if panel-id is in the database
-            panel_instance = Panel.objects.get(id=panel_id_in_db)
-        except Panel.DoesNotExist:  # create new Panel record?
-            raise ValueError(f"Panel ID {panel_id_in_db} not found in database")
-    else:
-        raise ValueError("Panel ID not found")
+    # check if panel from db have the same name as panel in excel
 
-    existing_genes_in_panel = PanelGene.objects.filter(
+    ci: str = parsed_data.get("ci").strip()
+
+    # check if ci-code is in the database
+    if ci not in ClinicalIndication.objects.values_list("r_code", flat=True):
+        raise ValueError(f"CI code {ci} not found in database. Aborting.")
+
+    panel_source: str = parsed_data.get("panel_source").strip()
+
+    existing_genes_in_panel: list[str] = PanelGene.objects.filter(
         panel_id=panel_id_in_db
     ).values_list("gene_id__hgnc_id", flat=True)
 
+    genes_in_excel: set[str] = [
+        gene["hgnc_id"].strip() for gene in parsed_data["genes"]
+    ]
+
+    if set(existing_genes_in_panel) != set(genes_in_excel):
+        print("there are gene changes in excel")
+
+    # TODO: there can be Panel referenced to by 2 CI
+    # thus just changing the PanelGene interaction is not enough
+    # because this new Panel now reference more genes compared to
+    # another used by another CI
+
+    # if gene changes, create new Panel
+    # new PanelGene interaction
+    # disable previous current CI-Panel
+    # create new CI-Panel
+
+    # if Panel is not from PanelApp (HGNC)
+    # just create new Panel
+
+    # if Panel is from PanelApp
+    # create new Panel (custom=True)
+
+    # editing PanelGene interaction
     for gene in parsed_data["genes"]:
-        if gene["hgnc_id"] in existing_genes_in_panel:
-            continue  # check and update metadata?
+        if gene["hgnc_id"].strip() in existing_genes_in_panel:
+            continue
         else:
             gene_instance, created = Gene.objects.get_or_create(
-                hgnc_id=gene["hgnc_id"],
-                gene_symbol=gene["gene_symbol"],
+                hgnc_id=gene["hgnc_id"].strip(),
+                defaults={
+                    "gene_symbol": gene["gene_symbol"],
+                },
             )
 
             conf, _ = Confidence.objects.get_or_create(
@@ -256,10 +276,7 @@ def insert_form_data(parsed_data: dict) -> None:
             )
 
             if created:
-                print(
-                    f"New Gene record created: {gene_instance.hgnc_id} {gene_instance.gene_symbol}"
-                )
-                PanelGene.objects.create(
+                pg_instance = PanelGene.objects.create(
                     panel_id=panel_id_in_db,
                     gene_id=gene_instance.id,
                     confidence_id=conf.id,
@@ -267,6 +284,12 @@ def insert_form_data(parsed_data: dict) -> None:
                     mop_id=mop.id,
                     penetrance_id=penetrance.id,
                     justification=panel_source,
+                )
+
+                PanelGeneHistory.objects.create(
+                    panel_gene_id=pg_instance.id,
+                    panel_id=panel_id_in_db,
+                    gene_id=gene_instance.id,
                 )
 
     for single_region in parsed_data["regions"]:
@@ -311,7 +334,7 @@ def insert_form_data(parsed_data: dict) -> None:
             start_38=single_region.get("start_38"),
             end_38=single_region.get("end_38"),
             type=single_region.get("type"),
-            panel_id=panel_instance.id,
+            panel_id=panel_id_in_db,
             confidence_id=confidence_instance.id,
             moi_id=moi_instance.id,
             mop_id=mop_instance.id,

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2 class="my-4">Overview</h2>
+    <!-- <div class="pagination">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span>
+
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div> -->
+    <div class="row">
+        <div class="col">
+            <h3>Clinical Indications</h3>
+            <ul class="list-group">
+                {% for ci in page_obj %}
+                <a href="#" class="list-group-item list-group-item-action" aria-current="true">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">{{ ci.r_code }}</h5>
+                        <!-- <small>3 days ago</small> -->
+                    </div>
+                    <p class="mb-1">{{ ci.name }}</p>
+                    <small>{{ ci.test_method }}</small>
+                </a>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col">
+            <h3>Panels</h3>
+            <ul class="list-group">
+                {% for ci in page_obj %}
+                <a href="#" class="list-group-item list-group-item-action" aria-current="true">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">{{ ci.r_code }}</h5>
+                        <!-- <small>3 days ago</small> -->
+                    </div>
+                    <p class="mb-1">{{ ci.name }}</p>
+                    <small>{{ ci.test_method }}</small>
+                </a>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

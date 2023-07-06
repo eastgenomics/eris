@@ -140,7 +140,7 @@ class Command(BaseCommand):
 
         # Currently only support 1 panel per form
         if panel_df.shape[0] != 1:
-            raise ValueError("Panel data in xlsx not in correct format")
+            raise ValueError("Multiple Panel input detected in form. Abandoning.")
 
         info_dict = parser.setup_output_dict(info, panel_df)
         info_dict = parser.parse_genes(info_dict, gene_df)
