@@ -132,20 +132,21 @@ class Command(BaseCommand):
         if add_or_remove == "add":
             # handle logic for linking panel and clinical indication
             result, error = get_panel_clin_indication_link(panel.id, indication.id, user)
-            if not result:
-                if not error:
-                    try:
-                        print("The panel \"{}\" and clinical indication \"{}\" are already linked ".\
-                            format(panel_name, r_code) + \
-                            "and marked as current in the database. No change made.")
-                    except UnboundLocalError:
-                        print("The panel \"{}\" and clinical indication \"{}\" are already linked ".\
-                            format(panel_id, r_code) + \
-                            "and marked as current in the database. No change made.")
-                    exit(1)
-                else:
-                    print(error)
-                    exit(1)
+            if not result and not error:
+                try:
+                    print("The panel \"{}\" and clinical indication \"{}\" are already linked ".\
+                        format(panel_name, r_code) + \
+                        "and marked as current in the database. No change made.")
+                except UnboundLocalError:
+                    print("The panel \"{}\" and clinical indication \"{}\" are already linked ".\
+                        format(panel_id, r_code) + \
+                        "and marked as current in the database. No change made.")
+                exit(1)
+            elif not result and error:
+                print(error)
+                exit(1)
+            else:
+                pass
         else:
             # handle logic for removing link between panel and clinical indication
             result, error = remove_panel_clin_indication_link(panel.id, indication.id, \
