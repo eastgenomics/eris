@@ -140,8 +140,8 @@ def remove_panel_clin_indication_link(panel_id, indication_id, panel_name, r_cod
             return results, None
 
         else:
-            error_msg = "The panel \"{}\" and clinical indication \"{}\" are already  \
-                            deactivated in the database. No change made.".format(panel_name, r_code)
+            error_msg = "The panel \"{}\" and clinical indication \"{}\" are already".format(panel_name, r_code) +\
+                            " deactivated in the database. No change made."
             return None, error_msg
 
     except ClinicalIndicationPanel.DoesNotExist:
