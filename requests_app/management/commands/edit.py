@@ -75,7 +75,9 @@ class Command(BaseCommand):
         test_mode: bool = kwargs.get("debug", False)
         command: str = kwargs.get("command")
 
-        assert command, "Command error"
+        possible_commands = ["panel_id_clin_ind", "panel_name_clin_ind"]
+        assert command in possible_commands, \
+            "Command not available, options are: " + ", ".join(possible_commands)
 
         # TODO: add user later, once we've decided on how to do that
         user = "test_user"
