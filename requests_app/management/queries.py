@@ -88,7 +88,7 @@ def get_panel_clin_indication_link(panel_id, indication_id, user) -> \
             return result, None
     
     except ClinicalIndicationPanel.DoesNotExist:
-        new = clinical_indication_panel = ClinicalIndicationPanel.objects.create(
+        clinical_indication_panel = ClinicalIndicationPanel.objects.create(
             panel_id=panel_id,
             clinical_indication_id=indication_id,
             current=True,
