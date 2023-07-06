@@ -36,10 +36,10 @@ def get_panel_by_name(panel_name) -> Panel | None:
     """
     Get panel from database by name
     """
-    try:
-        results = Panel.objects.filter(panel_name__iexact=panel_name)
+    results = Panel.objects.filter(panel_name__iexact=panel_name)
+    if results:
         return results.all()
-    except Panel.DoesNotExist:
+    else:
         return None
     
 
@@ -68,25 +68,24 @@ def get_panel_clin_indication_link(panel_id, indication_id, user) -> \
     :returns: and error message if something is wrong with the database. Otherwise returns None.
     """
     try:
-        results = ClinicalIndicationPanel.objects.get(
+        result = ClinicalIndicationPanel.objects.get(
             panel_id=panel_id,
             clinical_indication_id=indication_id)
 
-        if results.current:
+        if result.current:
             return None, None
 
         else:
             # make it current and add to history
-            results.current = True
-            results.save()
+            result.current = True
+            result.save()
 
             new = ClinicalIndicationPanelHistory.objects.create(
                 user=user,
                 note="Existing panel/indication link set to current by user",
-                clinical_indication_panel_id=results.id
+                clinical_indication_panel_id=result.id
             )
-            new.save()
-            return results, None
+            return result, None
     
     except ClinicalIndicationPanel.DoesNotExist:
         new = clinical_indication_panel = ClinicalIndicationPanel.objects.create(
@@ -95,7 +94,6 @@ def get_panel_clin_indication_link(panel_id, indication_id, user) -> \
             current=True,
             config_source=user
         )
-        new.save()
 
         # add to history
         clinical_indication_panel_id = clinical_indication_panel.id
@@ -104,7 +102,6 @@ def get_panel_clin_indication_link(panel_id, indication_id, user) -> \
             note="Panel/indication link created and set to current by user",
             clinical_indication_panel_id=clinical_indication_panel_id
             )
-        new.save()
         return clinical_indication_panel, None
     
     except ClinicalIndicationPanel.MultipleObjectsReturned:
@@ -120,22 +117,21 @@ def remove_panel_clin_indication_link(panel_id, indication_id, panel_name, r_cod
     this sets 'current' to False and logs it in the history.
     """
     try:
-        results = ClinicalIndicationPanel.objects.get(
+        result = ClinicalIndicationPanel.objects.get(
             panel_id=panel_id,
             clinical_indication_id=indication_id)
         
-        if results.current:
-            results.current = False
-            results.save()
+        if result.current:
+            result.current = False
+            result.save()
                     
             # add to history
-            clinical_indication_panel_id = results.id
+            clinical_indication_panel_id = result.id
             new = ClinicalIndicationPanelHistory.objects.create(
                 user=user,
                 note="Panel/indication link deactivated by user",
                 clinical_indication_panel_id=clinical_indication_panel_id
                 )
-            new.save()
             return new, None
 
         else:
