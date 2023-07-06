@@ -121,7 +121,7 @@ def remove_panel_clin_indication_link(panel_id, indication_id, panel_name, r_cod
     this sets 'current' to False and logs it in the history.
     """
     try:
-        results = ClinicalIndicationPanel.objects.filter(
+        results = ClinicalIndicationPanel.objects.get(
             panel_id=panel_id,
             clinical_indication_id=indication_id)
         
@@ -148,3 +148,7 @@ def remove_panel_clin_indication_link(panel_id, indication_id, panel_name, r_cod
         error_msg = "The panel \"{}\" and clinical indication \"{}\" have never been linked \
             in the database. No change made.".format(panel_name, r_code)
         return None, error_msg
+    
+    except ClinicalIndicationPanel.MultipleObjectsReturned:
+        error = "This clinical indication and panel are linked multiple times in the linking table. Exiting."
+        return None, error
