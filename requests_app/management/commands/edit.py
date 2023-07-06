@@ -134,8 +134,9 @@ class Command(BaseCommand):
             result, error = get_panel_clin_indication_link(panel.id, indication.id, user)
             if not result:
                 if not error:
-                    print("The panel \"{}\" and clinical indication \"{}\" are already linked " + \
-                          "and marked as current in the database. No change made.".format(panel_name, r_code))
+                    print("The panel \"{}\" and clinical indication \"{}\" are already linked ".\
+                          format(panel_name, r_code) + \
+                          "and marked as current in the database. No change made.")
                     exit(1)
                 else:
                     print(error)
