@@ -128,11 +128,15 @@ class Command(BaseCommand):
 
         if add_or_remove == "add":
             # handle logic for linking panel and clinical indication
-            result = get_panel_clin_indication_link(panel.id, indication.id)
+            result, error = get_panel_clin_indication_link(panel.id, indication.id)
             if not result:
-                print("The panel \"{}\" and clinical indication \"{}\" are already linked and marked as \
-                            current in the database. No change made.".format(panel_name, r_code))
-                exit(1)
+                if not error:
+                    print("The panel \"{}\" and clinical indication \"{}\" are already linked " + \
+                          "and marked as current in the database. No change made.".format(panel_name, r_code))
+                    exit(1)
+                else:
+                    print(error)
+                    exit(1)
         else:
             # handle logic for removing link between panel and clinical indication
             result, error = remove_panel_clin_indication_link(panel.id, indication.id, panel_name, r_code)

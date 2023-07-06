@@ -63,14 +63,19 @@ def get_panel_clin_indication_link(panel_id, indication_id):
     Link a clinical indication and panel in the database, set it to 'current', and log history.
     If an entry already exists and is current, no action is taken.
     If an entry exists and is NOT current, it gets set to 'current' and the history is logged.
+    Will return error message if there's more than one linking entry.
+    :param: panel_id
+    :param: indication_id
+    :returns: the clinical_indication_panel result, but only if a change is made to it. Otherwise, returns None
+    :returns: and error message if something is wrong with the database. Otherwise returns None.
     """
     try:
-        results = ClinicalIndicationPanel.objects.filter(
+        results = ClinicalIndicationPanel.objects.get(
             panel_id=panel_id,
             clinical_indication_id=indication_id)
-        
+
         if results.current:
-            return None
+            return None, None
 
         else:
             # make it current and add to history
@@ -83,7 +88,7 @@ def get_panel_clin_indication_link(panel_id, indication_id):
                 clinical_indication_panel_id=results.id
             )
             
-            return results
+            return results, None
     
     except ClinicalIndicationPanel.DoesNotExist:
         clinical_indication_panel = ClinicalIndicationPanel.objects.create(
@@ -100,7 +105,11 @@ def get_panel_clin_indication_link(panel_id, indication_id):
             clinical_indication_panel_id=clinical_indication_panel_id
             )
         
-        return clinical_indication_panel
+        return clinical_indication_panel, None
+    
+    except ClinicalIndicationPanel.MultipleObjectsReturned:
+        error = "This clinical indication and panel are linked multiple times in the linking table. Exiting."
+        return None, error
 
 
 @transaction.atomic
