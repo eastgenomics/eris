@@ -8,8 +8,8 @@ from requests_app.models import (
     Transcript,
 )
 from ..queries import get_panel_by_id, get_panel_by_name, \
-    get_clin_indication_by_r_code, get_panel_clin_indication_link, \
-    remove_panel_clin_indication_link
+    get_clin_indication_by_r_code, make_panel_clin_indication_link, \
+    remove_panel_clin_indication_link, retrieve_active_clin_indication_by_r_code
 
 import os
 from django.core.management.base import BaseCommand
@@ -99,41 +99,36 @@ class Command(BaseCommand):
             if not panel_id:
                 raise ValueError("Please specify panel ID")
             panel = get_panel_by_id(panel_id)
-            if not panel:
-                print("The panel ID {} was not found in the database".format(panel_id))
-                exit(1)
+            name_for_error_message = panel_id
                 
         elif command == "panel_name_clin_ind":
             panel_name: str = kwargs.get("panel_name")
             if not panel_name:
                 raise ValueError("Please specify panel name")
             panel = get_panel_by_name(panel_name)
-            if not panel:
-                print("The panel name \"{}\" was not found in the database".format(panel_name))
-                exit(1)
-            if len(panel) > 1:
-                print("The panel name \"{}\" is present twice - please try command \"panel_id_clin_ind\" \
-                      with ID".format(panel_name))
-                exit(1)
-            else:
-                panel = panel[0]
+            name_for_error_message = panel_name
 
+        if not panel:
+            print("The panel \"{}\" was not found in the database".format(name_for_error_message))
+            exit(1)
+        if len(panel) > 1:
+            print("The panel \"{}\" is present twice - please try command \"panel_id_clin_ind\" \
+                    with ID".format(name_for_error_message))
+            exit(1)
+        else:
+            panel = panel[0]
 
         # validate clinical_indication ('r_code') exists - prompt for it to be added to the database otherwise
         r_code_res = get_clin_indication_by_r_code(r_code)
-        if not r_code_res:
-            print("The clinical indication code \"{}\" was not found in the database".format(r_code))
+        indication, msg = retrieve_active_clin_indication_by_r_code(r_code, r_code_res)
+        if msg:
+            print(msg)
+        if not r_code:
             exit(1)
-        if len(r_code_res) > 1:
-            print("The clinical indication \"{}\" is present twice in the database".format(r_code))
-            exit(1)
-        else:
-            indication = r_code_res[0]
-
 
         if add_or_remove == "add":
             # handle logic for linking panel and clinical indication
-            result, error = get_panel_clin_indication_link(panel.id, indication.id, user)
+            result, error = make_panel_clin_indication_link(panel.id, indication.id, user)
             if not result and not error:
                 try:
                     print("The panel \"{}\" and clinical indication \"{}\" are already linked ".\
@@ -149,6 +144,7 @@ class Command(BaseCommand):
                 exit(1)
             else:
                 pass
+
         else:
             # handle logic for removing link between panel and clinical indication
             result, error = remove_panel_clin_indication_link(panel.id, indication.id, \
@@ -156,3 +152,4 @@ class Command(BaseCommand):
             if not result:
                 print(error)
                 exit(1)
+

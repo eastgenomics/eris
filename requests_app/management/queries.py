@@ -54,8 +54,19 @@ def get_clin_indication_by_r_code(r_code) -> ClinicalIndication | None:
         return None
 
 
+def get_clin_indication_panel_links_from_clin_ind(clin_ind_id) -> ClinicalIndicationPanel | None:
+    """
+    Get IDs of panels linked to a given clinical indication
+    """
+    results = ClinicalIndicationPanel.objects.filter(clinical_indication=clin_ind_id)
+    if results:
+        return results.all()
+    else:
+        return None
+
+
 @transaction.atomic
-def get_panel_clin_indication_link(panel_id, indication_id, user) -> \
+def make_panel_clin_indication_link(panel_id, indication_id, user) -> \
     tuple[ClinicalIndicationPanelHistory | None, str | None]:
     """
     Link a clinical indication and panel in the database, set it to 'current', and log history.
@@ -147,3 +158,40 @@ def remove_panel_clin_indication_link(panel_id, indication_id, panel_name, r_cod
     except ClinicalIndicationPanel.MultipleObjectsReturned:
         error = "This clinical indication and panel are linked multiple times in the linking table. Exiting."
         return None, error
+
+
+def retrieve_active_clin_indication_by_r_code(r_code, r_code_res) \
+    -> tuple(ClinicalIndication | None, str | None):
+    """
+    Controller function which takes a query in ClinicalIndications for r_code, and handles the case when you 
+    have multiple results, and you only want 1 'current' indication entry.
+    If there's just one result found, it will return the indication regardless of whether it's active or not.
+    Generates info and error messages too.
+    """
+    if not r_code_res:
+        err = "The clinical indication code \"{}\" was not found in the database - please add it".format(r_code)
+        return None, err
+    elif len(r_code_res) == 1:
+        return r_code_res[0], None
+    else:
+        # sometimes there is more than one clinical indication with the same R code 
+        # (usually due to name changes) - use one which is active if 1 is available
+        current_indications = []
+        inactive_indications = []
+        for entry in r_code_res:
+            # find every link to a panel, and get active ones
+            links = get_clin_indication_panel_links_from_clin_ind(entry.id)
+            current_indications = current_indications + [x for x in links if links.current]
+            inactive_indications = inactive_indications + [x for x in links if not links.current]
+        if len(current_indications) == 1:
+            msg = "The clinical indication \"{}\" is present more than once in the database".format(r_code) \
+                + " but only 1 is current - defaulting to this"
+            return current_indications[0], msg
+        elif len(current_indications) > 1:
+            err = "The clinical indication \"{}\" is present more than once in the database".format(r_code) \
+                + " and multiple entries are marked current - exiting"
+            return None, err
+        else:
+            err = "The clinical indication \"{}\" is present more than once in the database".format(r_code) \
+                + " and none of the entries are marked current - exiting"
+            return None, err
