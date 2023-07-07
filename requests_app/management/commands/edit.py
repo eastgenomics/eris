@@ -145,7 +145,7 @@ class Command(BaseCommand):
 
         else:
             # handle logic for removing link between panel and clinical indication
-            result, error = remove_panel_clin_indication_link(panel.id, indication.id, \
+            result, error = remove_panel_clin_indication_link(panel.id, indication.clinical_indication_id, \
                                                               panel.panel_name, r_code, user)
             if not result:
                 print(error)
