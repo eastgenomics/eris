@@ -161,7 +161,7 @@ def remove_panel_clin_indication_link(panel_id, indication_id, panel_name, r_cod
 
 
 def retrieve_active_clin_indication_by_r_code(r_code, r_code_res) \
-    -> tuple(ClinicalIndication | None, str | None):
+    -> tuple[ClinicalIndication | None, str | None]:
     """
     Controller function which takes a query in ClinicalIndications for r_code, and handles the case when you 
     have multiple results, and you only want 1 'current' indication entry.
@@ -181,8 +181,9 @@ def retrieve_active_clin_indication_by_r_code(r_code, r_code_res) \
         for entry in r_code_res:
             # find every link to a panel, and get active ones
             links = get_clin_indication_panel_links_from_clin_ind(entry.id)
-            current_indications = current_indications + [x for x in links if links.current]
-            inactive_indications = inactive_indications + [x for x in links if not links.current]
+            if links:
+                current_indications = current_indications + [x for x in links if x.current]
+                inactive_indications = inactive_indications + [x for x in links if not x.current]
         if len(current_indications) == 1:
             msg = "The clinical indication \"{}\" is present more than once in the database".format(r_code) \
                 + " but only 1 is current - defaulting to this"

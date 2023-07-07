@@ -100,6 +100,9 @@ class Command(BaseCommand):
                 raise ValueError("Please specify panel ID")
             panel = get_panel_by_id(panel_id)
             name_for_error_message = panel_id
+            if not panel:
+                print("The panel \"{}\" was not found in the database".format(name_for_error_message))
+                exit(1)
                 
         elif command == "panel_name_clin_ind":
             panel_name: str = kwargs.get("panel_name")
@@ -107,37 +110,32 @@ class Command(BaseCommand):
                 raise ValueError("Please specify panel name")
             panel = get_panel_by_name(panel_name)
             name_for_error_message = panel_name
+            if not panel:
+                print("The panel \"{}\" was not found in the database".format(name_for_error_message))
+                exit(1)
+            elif len(panel) > 1:
+                print("The panel \"{}\" is present twice - please try command \"panel_id_clin_ind\" \
+                        with ID".format(name_for_error_message))
+                exit(1)
+            else:
+                panel = panel[0]
 
-        if not panel:
-            print("The panel \"{}\" was not found in the database".format(name_for_error_message))
-            exit(1)
-        if len(panel) > 1:
-            print("The panel \"{}\" is present twice - please try command \"panel_id_clin_ind\" \
-                    with ID".format(name_for_error_message))
-            exit(1)
-        else:
-            panel = panel[0]
 
         # validate clinical_indication ('r_code') exists - prompt for it to be added to the database otherwise
         r_code_res = get_clin_indication_by_r_code(r_code)
         indication, msg = retrieve_active_clin_indication_by_r_code(r_code, r_code_res)
         if msg:
             print(msg)
-        if not r_code:
+        if not indication:
             exit(1)
 
         if add_or_remove == "add":
             # handle logic for linking panel and clinical indication
             result, error = make_panel_clin_indication_link(panel.id, indication.id, user)
             if not result and not error:
-                try:
-                    print("The panel \"{}\" and clinical indication \"{}\" are already linked ".\
-                        format(panel_name, r_code) + \
-                        "and marked as current in the database. No change made.")
-                except UnboundLocalError:
-                    print("The panel \"{}\" and clinical indication \"{}\" are already linked ".\
-                        format(panel_id, r_code) + \
-                        "and marked as current in the database. No change made.")
+                print("The panel \"{}\" and clinical indication \"{}\" are already linked ".\
+                    format(name_for_error_message, r_code) + \
+                    "and marked as current in the database. No change made.")
                 exit(1)
             elif not result and error:
                 print(error)
