@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mb-5 pb-5">
+    <br> <!-- Clinical Indication Overview -->
+    <h2>{{ ci.name }}</h2>
+    <h6>r code: {{ ci.r_code }}</h6>
+    <h6>test method: {{ ci.test_method }}</h6>
+    <h6>database id: <span class="text-danger">{{ ci.id }}</span></h6>
+
+    <br> <!-- Panels -->
+    <h3>Panel</h3>
+    <div class="row">
+        {% for panel in panels %}
+        <div class="col-4">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h5 class="text-break">{{ panel.panel_name }}</h5>
+                    <h6 >panelapp id: {{ panel.external_id }}</h6>
+                    <h6 class="text-muted">panel id in database: <span class="text-info">{{ panel.id }}</span></h6>
+
+                    <ul class="list-group">
+                        <li class="list-group-item">panel source: {{ panel.panel_source }}</li>
+                        <li class="list-group-item">imported from test directory: {{ panel.test_directory }}</li>
+                        <li class="list-group-item">is custom panel: {{ panel.custom }}</li>
+                        <li class="list-group-item">created: {{ panel.created_date }} {{ panel.created_time }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <br> <!-- Clinical Indication Panel Link -->
+    <h3>Clinical Indication Panel Link</h3>
+    <div class="row">
+        {% for ci_panel in ci_panels %}
+        <div class="col-4">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h5 class="card-title">database id: {{ ci_panel.id }}</h5>
+
+                    {% if ci_panel.current %}
+                    <h6 class="card-subtitle mb-2"><span class="badge bg-success">active</span></h6>
+                    {% else %}
+                    <h6 class="card-subtitle mb-2"><span class="badge bg-danger">inactive</span></h6>
+                    {% endif %}
+
+                    <p class="card-text">
+                        <ul class="list-group">
+                            <li class="list-group-item">config source: {{ ci_panel.config_source }}</li>
+                            <li class="list-group-item">imported by test directory version: {{ ci_panel.td_version }}</li>
+                            <li class="list-group-item">created: {{ ci_panel.created_date }} {{ ci_panel.created_time }}</li>
+                            <li class="list-group-item">last updated: {{ ci_panel.last_updated }}</li>
+                            <li class="list-group-item">link: <span class="text-danger">{{ ci_panel.clinical_indication_id }}</span> -> <span class="text-info">{{ ci_panel.panel_id }}</span></li>
+                         </ul>
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <br> <!-- Clinical Indication Test Method & Clinical Indication Panel Link Modification History -->
+    <h3>Clinical Indication Panel Modification History</h3>
+    <div class="row">
+        <div class="col-12">
+            <table class="table table-bordered shadow">
+                <thead>
+                  <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Modification</th>
+                    <th scope="col">Ci-Panel id</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for history in ci_history %}
+                    <tr>
+                        <td>{{ history.created_date }} <br> {{ history.created_time }}</td>
+                        <td>{{ history.note }}</td>
+                        <td>{{ history.clinical_indication_panel_id }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <br> <!-- Panel Genes Link -->
+    <h3>Panel Genes</h3>
+    <div class="row">
+        {% for key, values in panel_genes.items %}
+        <div class="col-4">
+            <div class="card shadow">
+                <div class="card-body">
+                    
+                    <h5 class="card-title">panel id: <span class="text-info">{{ key }}</span></h5>
+
+                    <p class="card-text">
+                        <table class="table table-bordered">
+                            <thead>
+                              <tr>
+                                <th scope="col">HGNC id</th>
+                                <th scope="col">Gene Symbol</th>
+                                <th scope="col">Created</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                                {% for gene in values %}
+                                <tr>
+                                    <td>{{ gene.hgnc }}</td>
+                                    <td>{{ gene.symbol }}</td>
+                                    <td>{{ gene.created }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <br> <!-- Panel Genes Link Modification History -->
+    <h3>Transcripts</h3>
+    <div class="row">
+        <div class="col-12">
+            <table class="table table-bordered shadow">
+                <thead>
+                  <tr>
+                    <th scope="col">Gene</th>
+                    <th scope="col">Transcript</th>
+                    <th scope="col">Source</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for transcript in transcripts %}
+                    <tr>
+                        <td>{{ transcript.gene_id__hgnc_id }}</td>
+                        <td>{{ transcript.transcript }}</td>
+                        {% if transcript.source %}
+                        <td><span class="badge text-bg-success">{{ transcript.source }}</span></td>
+                        {% else %}
+                        <td>{{ transcript.source }}</td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

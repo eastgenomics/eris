@@ -12,4 +12,4 @@ def normalize_version(padded_version: str) -> float:
     if not padded_version:
         return 0.0
 
-    return float(".".join(bit.lstrip("0") for bit in padded_version.split(".")))
+    return str(float(".".join(bit.lstrip("0") for bit in padded_version.split("."))))
