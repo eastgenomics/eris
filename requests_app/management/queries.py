@@ -186,13 +186,13 @@ def retrieve_active_clin_indication_by_r_code(r_code, r_code_res) \
                 inactive_indications = inactive_indications + [x for x in links if not x.current]
         if len(current_indications) == 1:
             msg = "The clinical indication \"{}\" is present more than once in the database".format(r_code) \
-                + " but only 1 is current - defaulting to this"
+                + " but only 1 is current - defaulting to the current indication"
             return current_indications[0], msg
         elif len(current_indications) > 1:
             err = "The clinical indication \"{}\" is present more than once in the database".format(r_code) \
-                + " and multiple entries are marked current - exiting"
+                + " and multiple entries are marked current - exiting without making changes"
             return None, err
         else:
             err = "The clinical indication \"{}\" is present more than once in the database".format(r_code) \
-                + " and none of the entries are marked current - exiting"
+                + " and none of the entries are marked current - exiting without making changes"
             return None, err
