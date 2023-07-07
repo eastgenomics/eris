@@ -47,10 +47,10 @@ def get_clin_indication_by_r_code(r_code) -> ClinicalIndication | None:
     """
     Get clinical indication from database by its R code
     """
-    try:
-        results = ClinicalIndication.objects.filter(r_code__iexact=r_code)
+    results = ClinicalIndication.objects.filter(r_code__iexact=r_code)
+    if results:
         return results.all()
-    except ClinicalIndication.DoesNotExist:
+    else:
         return None
 
 
