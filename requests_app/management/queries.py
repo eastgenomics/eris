@@ -181,17 +181,17 @@ def retrieve_active_clin_indication_by_r_code(r_code, r_code_res) \
         for entry in r_code_res:
             # find every link to a panel, and get active ones
             links = get_clin_indication_panel_links_from_clin_ind(entry.id)
-            if len(links) == 0:
-                msg = "The clinical indication \"{}\" is present more than once in the database".format(r_code) \
+            if not links:
+                err = "The clinical indication \"{}\" is present more than once in the database".format(r_code) \
                 + " but neither has a panel link from which to infer current status -" + \
                    " exiting without making changes"
                 return None, err
             else:
                 for x in links:
                     if x.current:
-                        current_indications = current_indications.append(x)
+                        current_indications.append(x)
                     else:
-                        inactive_indications = inactive_indications.append(x)
+                        inactive_indications.append(x)
         if len(current_indications) == 1:
             msg = "The clinical indication \"{}\" is present more than once in the database".format(r_code) \
                 + " but only 1 is current - defaulting to the current indication"
