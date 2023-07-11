@@ -1,11 +1,15 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mb-5 pb-5">
-    <h2 class="my-4">Overview</h2>
+<div class="container mb-5">
     <div class="row">
-        <div class="col-6">
+        <div class="col-lg-6 col-sm-12">
             <h3>Clinical Indications</h3>
+            <div class="row my-1 py-1">
+                <div class="col">
+                    <a class="btn btn-primary" href="{% url 'add_ci_panel' %}" role="button">Add Clinical Indication</a>
+                </div>
+            </div>
             <ul class="list-group shadow">
                 {% for ci in cis %}
                 <a href="{% url 'clinical_indication' ci.id %}" class="list-group-item list-group-item-action text-break">
@@ -15,7 +19,7 @@
             </ul>
 
         </div>
-        <div class="col-6">
+        <div class="col-lg-6 col-sm-12">
             <h3>Panels</h3>
             <ul class="list-group shadow">
                 {% for panel in panels %}

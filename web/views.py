@@ -4,6 +4,8 @@ from itertools import chain
 from django.shortcuts import render
 from django.db.models import QuerySet
 
+from .forms import ClinicalIndicationForm
+
 from requests_app.models import (
     ClinicalIndication,
     Panel,
@@ -114,7 +116,7 @@ def ci(request, ci_id: int):
     all_transcripts: QuerySet[Transcript] = (
         Transcript.objects.filter(gene_id__in=all_gene_ids)
         .values("gene_id__hgnc_id", "transcript", "source")
-        .order_by("gene_id__hgnc_id")
+        .order_by("gene_id__hgnc_id", "source")
     )
 
     return render(
@@ -129,3 +131,27 @@ def ci(request, ci_id: int):
             "transcripts": all_transcripts,
         },
     )
+
+
+def add_ci_panel(request):
+    if request.method == "GET":
+        form = ClinicalIndicationForm()
+        return render(
+            request,
+            "web/add_ci_panel.html",
+        )
+    else:
+        # form submission
+        r_code: str = request.POST.get("r_code")
+        name: str = request.POST.get("name")
+        test_method: str = request.POST.get("test_method")
+
+        print(request.POST)
+
+        form = ClinicalIndicationForm(request.POST)
+
+        print(form.is_valid())
+        print(form.cleaned_data)
+        print(form.errors.as_data())
+
+        return render(request, "web/add_ci_panel.html")

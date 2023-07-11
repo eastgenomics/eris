@@ -4,16 +4,20 @@
 {% block content %}
 <div class="container mb-5 pb-5">
     <br> <!-- Clinical Indication Overview -->
-    <h2>{{ ci.name }}</h2>
-    <h6>r code: {{ ci.r_code }}</h6>
-    <h6>test method: {{ ci.test_method }}</h6>
-    <h6>database id: <span class="text-danger">{{ ci.id }}</span></h6>
+    <div class="row">
+        <div class="col">
+            <h2>{{ ci.name }}</h2>
+            <h4>r code: {{ ci.r_code }}</h4>
+            <h4>test method: {{ ci.test_method }}</h4>
+            <h4>database id: <span class="text-danger">{{ ci.id }}</span></h4>
+        </div>
+    </div>
 
     <br> <!-- Panels -->
     <h3>Panel</h3>
     <div class="row">
         {% for panel in panels %}
-        <div class="col-4">
+        <div class="col-lg-4 col-md-8 col-sm-12">
             <div class="card shadow">
                 <div class="card-body">
                     <h5 class="text-break">{{ panel.panel_name }}</h5>
@@ -34,9 +38,14 @@
 
     <br> <!-- Clinical Indication Panel Link -->
     <h3>Clinical Indication Panel Link</h3>
+    <div class="row my-2">
+        <div class="col">
+            <a href="{% url 'add_ci_panel' %}" class="btn btn-primary btn-sm">Add Clinical Indication</a>
+        </div>
+    </div>
     <div class="row">
         {% for ci_panel in ci_panels %}
-        <div class="col-4">
+        <div class="col-lg-4 col-md-8 col-sm-12">
             <div class="card shadow">
                 <div class="card-body">
                     <h5 class="card-title">database id: {{ ci_panel.id }}</h5>
@@ -56,6 +65,8 @@
                             <li class="list-group-item">link: <span class="text-danger">{{ ci_panel.clinical_indication_id }}</span> -> <span class="text-info">{{ ci_panel.panel_id }}</span></li>
                          </ul>
                     </p>
+
+                    <a href="#" class="btn btn-danger">Deactivate</a>
                 </div>
             </div>
         </div>
@@ -91,7 +102,7 @@
     <h3>Panel Genes</h3>
     <div class="row">
         {% for key, values in panel_genes.items %}
-        <div class="col-4">
+        <div class="col-lg-4 col-md-8 col-sm-12">
             <div class="card shadow">
                 <div class="card-body">
                     
