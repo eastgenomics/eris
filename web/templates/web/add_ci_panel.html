@@ -5,6 +5,28 @@
     <h3>Add Clinical Indication Panel Link</h3>
     <div class="row">
         <div class="col">
+            <div class="alert alert-danger d-flex align-items-center" role="alert">
+                <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Danger:"><use xlink:href="#exclamation-triangle-fill"/></svg>
+                <div>
+                  An example danger alert with an icon
+                </div>
+              </div>
+            {% if errors %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {% for key, values in errors.items %}
+                {% for error in values %}
+                <strong>Beep!</strong> {{ error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                {% endfor %}
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% if success %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <strong>Success!</strong> Clinical Indication has been added into the database with id {{ success }}!
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endif %}
             <form action="{% url 'add_ci_panel' %}" method="post">
                 {% csrf_token %}
                 <div class="mb-3">

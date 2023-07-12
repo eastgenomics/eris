@@ -135,23 +135,35 @@ def ci(request, ci_id: int):
 
 def add_ci_panel(request):
     if request.method == "GET":
-        form = ClinicalIndicationForm()
         return render(
             request,
             "web/add_ci_panel.html",
         )
     else:
         # form submission
-        r_code: str = request.POST.get("r_code")
-        name: str = request.POST.get("name")
-        test_method: str = request.POST.get("test_method")
-
         print(request.POST)
 
-        form = ClinicalIndicationForm(request.POST)
+        form: ClinicalIndicationForm = ClinicalIndicationForm(request.POST)
 
-        print(form.is_valid())
-        print(form.cleaned_data)
-        print(form.errors.as_data())
+        if form.is_valid():
+            r_code: str = request.POST.get("r_code")
+            name: str = request.POST.get("name")
+            test_method: str = request.POST.get("test_method")
 
-        return render(request, "web/add_ci_panel.html")
+            ci_instance: ClinicalIndication = ClinicalIndication.objects.create(
+                r_code=r_code,
+                name=name,
+                test_method=test_method,
+            )
+        else:
+            errors = form.errors
+            print(errors)
+
+        return render(
+            request,
+            "web/add_ci_panel.html",
+            {
+                "errors": form.errors if not form.is_valid() else None,
+                "success": ci_instance.id if form.is_valid() else None,
+            },
+        )

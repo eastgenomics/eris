@@ -6,26 +6,26 @@ class Panel(models.Model):
 
     # this is the PanelApp Panel id itself
     external_id = models.TextField(
-        verbose_name="External Panel ID", max_length=255, null=True
+        verbose_name="external panel id", max_length=255, null=True
     )
 
     panel_name = models.TextField(verbose_name="Panel Name", max_length=255)
 
     panel_source = models.TextField(
-        verbose_name="Panel Source",
+        verbose_name="panel source",
         max_length=255,
     )
 
     panel_version = models.CharField(
-        verbose_name="Panel Version", max_length=255, null=True
+        verbose_name="panel version", max_length=255, null=True
     )
 
-    grch37 = models.BooleanField(verbose_name="GRCh37")
+    grch37 = models.BooleanField(verbose_name="grch37")
 
-    grch38 = models.BooleanField(verbose_name="GRCh38")
+    grch38 = models.BooleanField(verbose_name="grch38")
 
     test_directory = models.BooleanField(
-        verbose_name="created by TD import",
+        verbose_name="created from test directory",
         null=True,
         default=False,
     )
@@ -50,15 +50,15 @@ class Panel(models.Model):
 class ClinicalIndication(models.Model):
     """Defines a single clinical indication"""
 
-    r_code = models.CharField(verbose_name="R code", max_length=255)
+    r_code = models.CharField(verbose_name="r code", max_length=255)
 
     name = models.TextField(
-        verbose_name="CI name",
+        verbose_name="clinical indication name",
         max_length=255,
     )
 
     test_method = models.CharField(
-        verbose_name="Test method",
+        verbose_name="test method",
         max_length=255,
     )
 
@@ -80,12 +80,12 @@ class ClinicalIndicationPanel(models.Model):
     """
 
     config_source = models.TextField(
-        verbose_name="Config source",
+        verbose_name="config source",
         max_length=255,
     )
 
     td_version = models.CharField(
-        verbose_name="TD version",
+        verbose_name="test directory version",
         max_length=255,
     )
 
@@ -97,17 +97,17 @@ class ClinicalIndicationPanel(models.Model):
 
     clinical_indication = models.ForeignKey(
         ClinicalIndication,
-        verbose_name="Clinical Indication id",
+        verbose_name="clinical indication id",
         on_delete=models.PROTECT,
     )
 
     panel = models.ForeignKey(
         Panel,
-        verbose_name="Panel id",
+        verbose_name="panel id",
         on_delete=models.PROTECT,
     )
 
-    current = models.BooleanField(verbose_name="Latest association")
+    current = models.BooleanField(verbose_name="latest association")
 
     class Meta:
         db_table = "clinical_indication_panel"
@@ -119,13 +119,13 @@ class ClinicalIndicationPanel(models.Model):
 class ClinicalIndicationPanelHistory(models.Model):
     clinical_indication = models.ForeignKey(
         ClinicalIndication,
-        verbose_name="Clinical Indication id",
+        verbose_name="clinical indication id",
         on_delete=models.PROTECT,
     )
 
     panel = models.ForeignKey(
         Panel,
-        verbose_name="Panel id",
+        verbose_name="panel id",
         on_delete=models.PROTECT,
     )
 
@@ -141,10 +141,10 @@ class ClinicalIndicationPanelHistory(models.Model):
     clinical_indication_panel = models.ForeignKey(
         ClinicalIndicationPanel,
         on_delete=models.PROTECT,
-        verbose_name="Clinical Indication Panel id",
+        verbose_name="clinical indication panel id",
     )
 
-    note = models.CharField(verbose_name="Note", max_length=255)
+    note = models.CharField(verbose_name="note", max_length=255)
 
     class Meta:
         db_table = "clinical_indication_panel_history"

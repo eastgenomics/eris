@@ -10,10 +10,20 @@ class ClinicalIndicationForm(forms.Form):
 
     def clean_r_code(self):
         r_code: str = self.cleaned_data["r_code"]
+
+        if not r_code.startswith("R"):
+            self.add_error(
+                "r_code",
+                "Clinical Indication must start with uppercase letter R",
+            )
+            return
+
         try:
             ClinicalIndication.objects.get(r_code=r_code)
-            self.add_error("r_code", "Clinical Indication already exists")
-            # raise ValueError("Clinical Indication already exists")
-            pass
+            self.add_error(
+                "r_code",
+                "Clinical Indication already exist in database. Please edit Clinical Indication instead.",
+            )
+            return
         except ClinicalIndication.DoesNotExist:
             return r_code
