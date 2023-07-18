@@ -131,7 +131,7 @@ class Command(BaseCommand):
 
         if add_or_remove == "add":
             # handle logic for linking panel and clinical indication
-            result, error = make_panel_clin_indication_link(panel.id, indication.clinical_indication_id, user)
+            result, error = make_panel_clin_indication_link(panel.id, indication["id"], user)
             if not result and not error:
                 print("The panel \"{}\" and clinical indication \"{}\" are already linked ".\
                     format(name_for_error_message, r_code) + \
@@ -144,9 +144,8 @@ class Command(BaseCommand):
                 pass
 
         else:
-            print(indication)
             # handle logic for removing link between panel and clinical indication
-            result, error = remove_panel_clin_indication_link(panel.id, indication.id, \
+            result, error = remove_panel_clin_indication_link(panel.id, indication["id"], \
                                                               panel.panel_name, r_code, user)
             if not result:
                 print(error)

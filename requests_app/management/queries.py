@@ -167,7 +167,7 @@ def current_and_non_current_panel_links(clinical_indication) \
     Sort these into 'current' and 'not current' lists.
     """
     current_indications = False
-    ind_panel_links = get_clin_indication_panel_links_from_clin_ind(clinical_indication.id)
+    ind_panel_links = get_clin_indication_panel_links_from_clin_ind(clinical_indication["id"])
     if ind_panel_links:
         for x in ind_panel_links:
             if x.current:
@@ -175,7 +175,6 @@ def current_and_non_current_panel_links(clinical_indication) \
     return current_indications
 
 
-# TODO: test
 def retrieve_active_clin_indication_by_r_code(r_code, clinical_indications) \
     -> tuple[ClinicalIndication | None, str | None]:
     """
@@ -194,7 +193,7 @@ def retrieve_active_clin_indication_by_r_code(r_code, clinical_indications) \
         # (usually due to name changes) - assemble information on active and inactive links to 
         # panels
         current_indications = []
-        for ind in clinical_indications:
+        for ind in clinical_indications.values():
             # determine whether there are any active links between indication and panel
             is_current = current_and_non_current_panel_links(ind)
             if is_current:
@@ -205,14 +204,17 @@ def retrieve_active_clin_indication_by_r_code(r_code, clinical_indications) \
             + " but none are current, so can't infer which to use -" + \
                 " exiting without making changes"
             return None, err
+        
+        # deduplicate dict
+        current_indications = [dict(t) for t in {tuple(d.items()) for d in current_indications}]
 
         # retrieve the case where only 1 dictionary in 'results' contains anything in 'current_indications'
-        if len(set(current_indications)) == 1:
+        if len(current_indications) == 1:
             msg = "The clinical indication \"{}\" is present more than once in the database".format(r_code) \
                 + " but only 1 has a current panel link - defaulting to the current indication"
             clin_ind = current_indications[0]
             return clin_ind, msg
-        elif len(set(current_indications)) > 1:
+        elif len(current_indications) > 1:
             err = "The clinical indication \"{}\" is present more than once in the database".format(r_code) \
                 + " and multiple entries are marked current - exiting without making changes"
             return None, err
