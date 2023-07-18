@@ -4,11 +4,9 @@
 <div class="container mb-5">
     <div class="row">
         <div class="col-lg-6 col-sm-12">
-            <h3>Clinical Indications</h3>
-            <div class="row my-1 py-1">
-                <div class="col">
-                    <a class="btn btn-primary" href="{% url 'add_ci_panel' %}" role="button">Add Clinical Indication</a>
-                </div>
+            <div class="d-flex justify-content-between mb-2">
+                <h3>Clinical Indications</h3>
+                <a class="btn btn-primary btn-sm m-1" href="{% url 'ci_add' %}" role="button">Add Clinical Indication</a>
             </div>
             <ul class="list-group shadow">
                 {% for ci in cis %}
@@ -20,14 +18,17 @@
 
         </div>
         <div class="col-lg-6 col-sm-12">
-            <h3>Panels</h3>
+            <div class="d-flex justify-content-between mb-2">
+                <h3>Panels</h3>
+                <a class="btn btn-primary btn-sm m-1" href="{% url 'ci_add' %}" role="button">Add Panel</a>
+            </div>
             <ul class="list-group shadow">
                 {% for panel in panels %}
-                {% if panel.external_id %}
-                <a href="{% url 'panel' panel.id %}" class="list-group-item list-group-item-action text-break">{{ panel.panel_name }} <span class="badge bg-primary">{{ panel.external_id }}</span></a>
-                {% else %}
-                <a href="{% url 'panel' panel.id %}" class="list-group-item list-group-item-action text-break">{{ panel.panel_name }}</a>
-                {% endif %}
+                    {% if panel.external_id %}
+                    <a href="{% url 'panel' panel.id %}" class="list-group-item list-group-item-action text-break">{{ panel.panel_name }} <span class="badge bg-primary">{{ panel.external_id }}</span></a>
+                    {% else %}
+                    <a href="{% url 'panel' panel.id %}" class="list-group-item list-group-item-action text-break">{{ panel.panel_name }}</a>
+                    {% endif %}
                 {% endfor %}
             </ul>
         </div>

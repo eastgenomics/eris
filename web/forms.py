@@ -27,3 +27,12 @@ class ClinicalIndicationForm(forms.Form):
             return
         except ClinicalIndication.DoesNotExist:
             return r_code
+
+
+class PanelForm(forms.Form):
+    external_id = forms.CharField(max_length=30)
+    name = forms.CharField(max_length=250)
+    version = forms.CharField(max_length=10)
+
+    def clean_external_id(self):
+        external_id: str = self.cleaned_data["external_id"]

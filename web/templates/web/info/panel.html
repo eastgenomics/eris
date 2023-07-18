@@ -1,48 +1,60 @@
 {% extends "base.html" %}
-{% load static %}
 
 {% block content %}
 <div class="container mb-5 pb-5">
     <br> <!-- Clinical Indication Overview -->
     <div class="row">
         <div class="col">
-            <h2>{{ ci.name }}</h2>
-            <h4>r code: {{ ci.r_code }}</h4>
-            <h4>test method: {{ ci.test_method }}</h4>
-            <h4>database id: <span class="text-danger">{{ ci.id }}</span></h4>
+            <h1>{{ panel.panel_name }}</h1>
+            <h4>external id: {{ panel.external_id }}</h4>
+            <h4>panel source: {{ panel.panel_source }}</h4>
+            <h4>test directory: {{ panel.test_directory }}</h4>
+            {% if panel.panel_version > 0 %}
+            <h4>panel version: {{ panel.panel_version }}</h4>
+            {% else %}
+            <h4>panel version: None</h4>
+            {% endif %}
+            <h4>custom: {{ panel.custom }}</h4>
+            <h4>created: {{ panel.created_date }} {{ panel.created_time }}</h4>
+            <h5>database id: <span class="text-danger">{{ panel.id }}</span></h5>
         </div>
     </div>
 
-    <br> <!-- Panels -->
-    <h3>Panel</h3>
+    <br> <!-- Panel Genes Link -->
+    <h3>Genes</h3>
+    <p class="text-muted">genes associated with the panel</p>
     <div class="row">
-        {% for panel in panels %}
-        <div class="col-lg-4 col-md-8 col-sm-12">
-            <div class="card shadow">
-                <div class="card-body">
-                    <h5 class="text-break">{{ panel.panel_name }}</h5>
-                    <h6 >panelapp id: {{ panel.external_id }}</h6>
-                    <h6 class="text-muted">panel id in database: <span class="text-info">{{ panel.id }}</span></h6>
-
-                    <ul class="list-group">
-                        <li class="list-group-item">panel source: {{ panel.panel_source }}</li>
-                        <li class="list-group-item">imported from test directory: {{ panel.test_directory }}</li>
-                        <li class="list-group-item">is custom panel: {{ panel.custom }}</li>
-                        <li class="list-group-item">created: {{ panel.created_date }} {{ panel.created_time }}</li>
-                    </ul>
-                </div>
+        {% if pgs %}
+        <div class="col">
+            <table class="table table-bordered shadow">
+                <thead>
+                  <tr>
+                    <th scope="col">HGNC ID</th>
+                    <th scope="col">Gene Symbol</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for pg in pgs %}
+                    <tr>
+                        <td>{{ pg.gene_id__hgnc_id }}</td>
+                        <td>{{ pg.gene_id__gene_symbol }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="col">
+            <div class="alert alert-info" role="alert">
+                Nothing to show here!
             </div>
         </div>
-        {% endfor %}
+        {% endif %}
     </div>
 
     <br> <!-- Clinical Indication Panel Link -->
     <h3>Clinical Indication Panel Link</h3>
-    <div class="row my-2">
-        <div class="col">
-            <a href="{% url 'add_ci_panel' %}" class="btn btn-primary btn-sm">Add Clinical Indication</a>
-        </div>
-    </div>
+    <p class="text-muted">all clinical indication linked to the panel</p>
     <div class="row">
         {% for ci_panel in ci_panels %}
         <div class="col-lg-4 col-md-8 col-sm-12">
@@ -62,7 +74,7 @@
                             <li class="list-group-item">imported by test directory version: {{ ci_panel.td_version }}</li>
                             <li class="list-group-item">created: {{ ci_panel.created_date }} {{ ci_panel.created_time }}</li>
                             <li class="list-group-item">last updated: {{ ci_panel.last_updated }}</li>
-                            <li class="list-group-item">link: <span class="text-danger">{{ ci_panel.clinical_indication_id }}</span> -> <span class="text-info">{{ ci_panel.panel_id }}</span></li>
+                            <li class="list-group-item">link: <span class="text-info">{{ ci_panel.clinical_indication_id }}</span> -> <span class="text-danger">{{ ci_panel.panel_id }}</span></li>
                          </ul>
                     </p>
 
@@ -73,9 +85,40 @@
         {% endfor %}
     </div>
 
+    <br> <!-- Clinical Indications -->
+    <h3>Clinical Indications</h3>
+    <p class="text-muted">clinical indication linked to the panel</p>
+    <div class="row">
+        {% if cis %}
+        {% for ci in cis %}
+        <div class="col-lg-6 col-md-8 col-sm-12">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h5 class="text-break">{{ ci.name }}</h5>
+                    <h6 class="text-muted">database id: <span class="text-info">{{ ci.id }}</span></h6>
+
+                    <ul class="list-group">
+                        <li class="list-group-item">r code: {{ ci.r_code }}</li>
+                        <li class="list-group-item">test method: {{ ci.test_method }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="col">
+            <div class="alert alert-info" role="alert">
+                Nothing to show here!
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
     <br> <!-- Clinical Indication Test Method & Clinical Indication Panel Link Modification History -->
     <h3>Clinical Indication Panel Modification History</h3>
+    <p class="text-muted">previous modiciations on clinical indication-panel </p>
     <div class="row">
+        {% if ci_history %}
         <div class="col-12">
             <table class="table table-bordered shadow">
                 <thead>
@@ -96,47 +139,20 @@
                 </tbody>
             </table>
         </div>
-    </div>
-
-    <br> <!-- Panel Genes Link -->
-    <h3>Panel Genes</h3>
-    <div class="row">
-        {% for key, values in panel_genes.items %}
-        <div class="col-lg-4 col-md-8 col-sm-12">
-            <div class="card shadow">
-                <div class="card-body">
-                    
-                    <h5 class="card-title">panel id: <span class="text-info">{{ key }}</span></h5>
-
-                    <p class="card-text">
-                        <table class="table table-bordered">
-                            <thead>
-                              <tr>
-                                <th scope="col">HGNC id</th>
-                                <th scope="col">Gene Symbol</th>
-                                <th scope="col">Created</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                                {% for gene in values %}
-                                <tr>
-                                    <td>{{ gene.hgnc }}</td>
-                                    <td>{{ gene.symbol }}</td>
-                                    <td>{{ gene.created }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </p>
-                </div>
+        {% else %}
+        <div class="col">
+            <div class="alert alert-info" role="alert">
+                Nothing to show here!
             </div>
         </div>
-        {% endfor %}
+        {% endif %}
     </div>
 
     <br> <!-- Panel Genes Link Modification History -->
     <h3>Transcripts</h3>
+    <p class="text-muted">transcripts attached to each gene</p>
     <div class="row">
+        {% if transcripts %}
         <div class="col-12">
             <table class="table table-bordered shadow">
                 <thead>
@@ -161,6 +177,13 @@
                 </tbody>
             </table>
         </div>
+        {% else %}
+        <div class="col">
+            <div class="alert alert-info" role="alert">
+                Nothing to show here!
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
