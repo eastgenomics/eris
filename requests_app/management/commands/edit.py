@@ -121,7 +121,7 @@ class Command(BaseCommand):
                 panel = panel[0]
 
 
-        # validate clinical_indication ('r_code') exists - prompt for it to be added to the database otherwise
+        # check that clinical_indication ('r_code') exists - prompt for it to be added to the database otherwise
         r_code_res = get_clin_indication_by_r_code(r_code)
         indication, msg = retrieve_active_clin_indication_by_r_code(r_code, r_code_res)
         if msg:

@@ -175,30 +175,32 @@ def retrieve_active_clin_indication_by_r_code(r_code, r_code_res) \
         return r_code_res[0], None
     else:
         # sometimes there is more than one clinical indication with the same R code 
-        # (usually due to name changes) - use one which is active if 1 is available
+        # (usually due to name changes) - assemble information on active and inactive links to 
+        # panels
         current_indications = []
         inactive_indications = []
         for entry in r_code_res:
             # find every link to a panel, and get active ones
             links = get_clin_indication_panel_links_from_clin_ind(entry.id)
-            if not links:
-                err = "The clinical indication \"{}\" is present more than once in the database".format(r_code) \
-                + " but neither has a panel link from which to infer current status -" + \
-                   " exiting without making changes"
-                return None, err
-            else:
+            if links:
                 for x in links:
                     if x.current:
-                        current_indications.append(x)
+                        current_indications.append(entry.id)
                     else:
-                        inactive_indications.append(x)
-        if len(current_indications) == 1:
+                        inactive_indications.append(entry.id)
+                print(links)
+        if len(current_indications) == 0 and len(inactive_indications) == 0:
+            err = "The clinical indication \"{}\" is present more than once in the database".format(r_code) \
+            + " but neither has a panel link from which to infer current status -" + \
+                " exiting without making changes"
+            return None, err
+            
+        # retrieve the case where only 1 dictionary in 'results' contains anything in 'current_indications'
+        if len(set(current_indications)) == 1:
             msg = "The clinical indication \"{}\" is present more than once in the database".format(r_code) \
                 + " but only 1 is current - defaulting to the current indication"
             return current_indications[0], msg
-        elif len(current_indications) > 1:
-            for i in current_indications:
-                print(current_indications)
+        elif len(set(current_indications)) > 1:
             err = "The clinical indication \"{}\" is present more than once in the database".format(r_code) \
                 + " and multiple entries are marked current - exiting without making changes"
             return None, err
