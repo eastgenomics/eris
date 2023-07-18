@@ -94,7 +94,7 @@
         <div class="col-lg-6 col-md-8 col-sm-12">
             <div class="card shadow">
                 <div class="card-body">
-                    <h5 class="text-break">{{ ci.name }}</h5>
+                    <h5 class="text-break"><a href="{% url 'clinical_indication' ci.id %}">{{ ci.name }}</a></h5>
                     <h6 class="text-muted">database id: <span class="text-info">{{ ci.id }}</span></h6>
 
                     <ul class="list-group">

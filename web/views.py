@@ -64,7 +64,7 @@ def panel(request, panel_id: int):
     ] = ClinicalIndicationPanelHistory.objects.filter(
         clinical_indication_panel_id__in=[cp.id for cp in ci_panels]
     ).order_by(
-        "created_date"
+        "-id"
     )
 
     # fetch ci-test-method history

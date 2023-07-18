@@ -21,7 +21,7 @@
         <div class="col-lg-4 col-md-8 col-sm-12">
             <div class="card shadow">
                 <div class="card-body">
-                    <h5 class="text-break">{{ panel.panel_name }}</h5>
+                    <h5 class="text-break"><a href="{% url 'panel' panel.id %}">{{ panel.panel_name }}</a></h5>
                     <h6 class="text-muted">panel id in database: <span class="text-info">{{ panel.id }}</span></h6>
 
                     <ul class="list-group list-group-flush">
