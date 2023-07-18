@@ -160,7 +160,23 @@ def remove_panel_clin_indication_link(panel_id, indication_id, panel_name, r_cod
         return None, error
 
 
-def retrieve_active_clin_indication_by_r_code(r_code, r_code_res) \
+def current_and_non_current_panel_links(clinical_indication) \
+    -> bool:
+    """
+    For a clinical indication, assess whether it has CURRENT links to panels or not.
+    Sort these into 'current' and 'not current' lists.
+    """
+    current_indications = False
+    ind_panel_links = get_clin_indication_panel_links_from_clin_ind(clinical_indication.id)
+    if ind_panel_links:
+        for x in ind_panel_links:
+            if x.current:
+                current_indications = True
+    return current_indications
+
+
+# TODO: test
+def retrieve_active_clin_indication_by_r_code(r_code, clinical_indications) \
     -> tuple[ClinicalIndication | None, str | None]:
     """
     Controller function which takes a query in ClinicalIndications for r_code, and handles the case when you 
@@ -168,38 +184,34 @@ def retrieve_active_clin_indication_by_r_code(r_code, r_code_res) \
     If there's just one result found, it will return the indication regardless of whether it's active or not.
     Generates info and error messages too.
     """
-    if not r_code_res:
+    if not clinical_indications:
         err = "The clinical indication code \"{}\" was not found in the database - please add it".format(r_code)
         return None, err
-    elif len(r_code_res) == 1:
-        return r_code_res[0], None
+    elif len(clinical_indications) == 1:
+        return clinical_indications[0], None
     else:
-        # sometimes there is more than one clinical indication with the same R code 
+        # there is more than one clinical indication with the same R code 
         # (usually due to name changes) - assemble information on active and inactive links to 
         # panels
         current_indications = []
-        inactive_indications = []
-        for entry in r_code_res:
-            # find every link to a panel, and get active ones
-            links = get_clin_indication_panel_links_from_clin_ind(entry.id)
-            if links:
-                for x in links:
-                    if x.current:
-                        current_indications.append(entry.id)
-                    else:
-                        inactive_indications.append(entry.id)
-                print(links)
-        if len(current_indications) == 0 and len(inactive_indications) == 0:
-            err = "The clinical indication \"{}\" is present more than once in the database".format(r_code) \
-            + " but neither has a panel link from which to infer current status -" + \
+        for ind in clinical_indications:
+            # determine whether there are any active links between indication and panel
+            is_current = current_and_non_current_panel_links(ind)
+            if is_current:
+                current_indications.append(ind)
+
+        if not current_indications:
+            err = "The clinical indication \"{}\" is present more than once in the database,".format(r_code) \
+            + " but none are current, so can't infer which to use -" + \
                 " exiting without making changes"
             return None, err
-            
+
         # retrieve the case where only 1 dictionary in 'results' contains anything in 'current_indications'
         if len(set(current_indications)) == 1:
             msg = "The clinical indication \"{}\" is present more than once in the database".format(r_code) \
-                + " but only 1 is current - defaulting to the current indication"
-            return current_indications[0], msg
+                + " but only 1 has a current panel link - defaulting to the current indication"
+            clin_ind = current_indications[0]
+            return clin_ind, msg
         elif len(set(current_indications)) > 1:
             err = "The clinical indication \"{}\" is present more than once in the database".format(r_code) \
                 + " and multiple entries are marked current - exiting without making changes"
