@@ -21,7 +21,7 @@ from django.db.models import QuerySet
 from django.db import transaction
 
 
-def get_panel_by_id(panel_id) -> Panel | None:
+def get_panel_by_id(panel_id: str) -> Panel | None:
     """
     Get panel from database
     """
@@ -32,7 +32,7 @@ def get_panel_by_id(panel_id) -> Panel | None:
         return None
 
 
-def get_panel_by_name(panel_name) -> Panel | None:
+def get_panel_by_name(panel_name: str) -> QuerySet[Panel] | None:
     """
     Get panel from database by name
     """
@@ -43,7 +43,7 @@ def get_panel_by_name(panel_name) -> Panel | None:
         return None
     
 
-def get_clin_indication_by_r_code(r_code) -> ClinicalIndication | None:
+def get_clin_indication_by_r_code(r_code: str) -> QuerySet[ClinicalIndication] | None:
     """
     Get clinical indication from database by its R code
     """
@@ -54,7 +54,7 @@ def get_clin_indication_by_r_code(r_code) -> ClinicalIndication | None:
         return None
 
 
-def get_clin_indication_panel_links_from_clin_ind(clin_ind_id) -> ClinicalIndicationPanel | None:
+def get_clin_indication_panel_links_from_clin_ind(clin_ind_id: str) -> QuerySet[ClinicalIndicationPanel] | None:
     """
     Get IDs of panels linked to a given clinical indication
     """
@@ -66,7 +66,7 @@ def get_clin_indication_panel_links_from_clin_ind(clin_ind_id) -> ClinicalIndica
 
 
 @transaction.atomic
-def make_panel_clin_indication_link(panel_id, indication_id, user) -> \
+def make_panel_clin_indication_link(panel_id: int, indication_id: int, user: str) -> \
     tuple[ClinicalIndicationPanelHistory | None, str | None]:
     """
     Link a clinical indication and panel in the database, set it to 'current', and log history.
@@ -160,7 +160,7 @@ def remove_panel_clin_indication_link(panel_id, indication_id, panel_name, r_cod
         return None, error
 
 
-def current_and_non_current_panel_links(clinical_indication) \
+def current_and_non_current_panel_links(clinical_indication: ClinicalIndication) \
     -> bool:
     """
     For a clinical indication, assess whether it has CURRENT links to panels or not.
@@ -195,6 +195,9 @@ def retrieve_active_clin_indication_by_r_code(r_code, clinical_indications) \
         current_indications = []
         for ind in clinical_indications.values():
             # determine whether there are any active links between indication and panel
+            # print("Testing something")
+            # print(type(ind))
+            # print(type(ind["id"]))
             is_current = current_and_non_current_panel_links(ind)
             if is_current:
                 current_indications.append(ind)
