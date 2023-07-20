@@ -131,6 +131,7 @@ class Command(BaseCommand):
             # handle logic for linking panel and clinical indication
             result, error = make_panel_clin_indication_link(panel.id, indication["id"], user)
             if not result and not error:
+                name_for_error_message = panel_id if command=="panel_id_clin_ind" else panel_name
                 print("The panel \"{}\" and clinical indication \"{}\" are already linked ".\
                     format(name_for_error_message, r_code) + \
                     "and marked as current in the database. No change made.")
