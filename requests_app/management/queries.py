@@ -54,7 +54,8 @@ def get_clin_indication_by_r_code(r_code: str) -> QuerySet[ClinicalIndication] |
         return None
 
 
-def get_clin_indication_panel_links_from_clin_ind(clin_ind_id: str) -> QuerySet[ClinicalIndicationPanel] | None:
+def get_clin_indication_panel_links_from_clin_ind(clin_ind_id: int) -> \
+    QuerySet[ClinicalIndicationPanel] | None:
     """
     Get IDs of panels linked to a given clinical indication
     """
@@ -73,10 +74,6 @@ def make_panel_clin_indication_link(panel_id: int, indication_id: int, user: str
     If an entry already exists and is current, no action is taken.
     If an entry exists and is NOT current, it gets set to 'current' and the history is logged.
     Will return error message if there's more than one linking entry.
-    :param: panel_id
-    :param: indication_id
-    :returns: the clinical_indication_panel result, but only if a change is made to it. Otherwise, returns None
-    :returns: and error message if something is wrong with the database. Otherwise returns None.
     """
     try:
         result = ClinicalIndicationPanel.objects.get(
@@ -121,8 +118,9 @@ def make_panel_clin_indication_link(panel_id: int, indication_id: int, user: str
 
 
 @transaction.atomic
-def remove_panel_clin_indication_link(panel_id, indication_id, panel_name, r_code, user) -> \
-    tuple[ClinicalIndicationPanelHistory | None, str | None]:
+def remove_panel_clin_indication_link(panel_id: int, indication_id: int, panel_name: str, \
+                                      r_code: str, user: str) -> \
+                                        tuple[ClinicalIndicationPanelHistory | None, str | None]:
     """
     If a panel and clinical indication are linked in the database,
     this sets 'current' to False and logs it in the history.
@@ -160,7 +158,7 @@ def remove_panel_clin_indication_link(panel_id, indication_id, panel_name, r_cod
         return None, error
 
 
-def current_and_non_current_panel_links(clinical_indication: ClinicalIndication) \
+def current_and_non_current_panel_links(clinical_indication: dict) \
     -> bool:
     """
     For a clinical indication, assess whether it has CURRENT links to panels or not.
@@ -175,7 +173,7 @@ def current_and_non_current_panel_links(clinical_indication: ClinicalIndication)
     return current_indications
 
 
-def retrieve_active_clin_indication_by_r_code(r_code, clinical_indications) \
+def retrieve_active_clin_indication_by_r_code(r_code: str, clinical_indications: QuerySet[ClinicalIndication]) \
     -> tuple[ClinicalIndication | None, str | None]:
     """
     Controller function which takes a query in ClinicalIndications for r_code, and handles the case when you 
@@ -190,14 +188,10 @@ def retrieve_active_clin_indication_by_r_code(r_code, clinical_indications) \
         return clinical_indications[0], None
     else:
         # there is more than one clinical indication with the same R code 
-        # (usually due to name changes) - assemble information on active and inactive links to 
-        # panels
+        # - assemble information on active and inactive links to panels
         current_indications = []
         for ind in clinical_indications.values():
             # determine whether there are any active links between indication and panel
-            # print("Testing something")
-            # print(type(ind))
-            # print(type(ind["id"]))
             is_current = current_and_non_current_panel_links(ind)
             if is_current:
                 current_indications.append(ind)
