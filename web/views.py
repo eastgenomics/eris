@@ -145,28 +145,40 @@ def clinical_indication(request, ci_id: int):
     panel_genes: QuerySet[dict] = (
         PanelGene.objects.filter(panel_id__in=[p.id for p in panels])
         .order_by("panel_id")
-        .values("id", "panel_id", "gene_id", "gene_id__hgnc_id", "gene_id__gene_symbol")
+        .values(
+            "id",
+            "panel_id",
+            "gene_id",
+            "gene_id__hgnc_id",
+            "gene_id__gene_symbol",
+        )
     )
-
-    all_gene_ids: set[str] = set([pg["gene_id"] for pg in panel_genes])
 
     # prepare panel-gene dict
     panel_genes_dict: dict[str, list] = collections.defaultdict(list)
 
     for pg in panel_genes:
-        pg_history = PanelGeneHistory.objects.get(
-            panel_gene_id=pg["id"],
+        # there can be multiple history associated with a panel-gene id
+        latest_pg_history: PanelGeneHistory = (
+            PanelGeneHistory.objects.filter(
+                panel_gene_id=pg["id"],
+            )
+            .order_by("-id")
+            .first()
         )
+
         panel_genes_dict[pg["panel_id"]].append(
             {
                 "hgnc": pg["gene_id__hgnc_id"],
                 "symbol": pg["gene_id__gene_symbol"],
-                "created": pg_history.created_date,
+                "created": latest_pg_history.created_date,
             }
         )
 
     # ensure django template can read collections.defaultdict as dict
     panel_genes_dict.default_factory = None
+
+    all_gene_ids: set[str] = set([pg["gene_id"] for pg in panel_genes])
 
     all_transcripts: QuerySet[Transcript] = (
         Transcript.objects.filter(gene_id__in=all_gene_ids)
