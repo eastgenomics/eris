@@ -1,53 +1,34 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <h2 class="my-4">Overview</h2>
-    <!-- <div class="pagination">
-        <span class="step-links">
-            {% if page_obj.has_previous %}
-            <a href="?page=1">&laquo; first</a>
-            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-            {% endif %}
-
-            <span class="current">
-                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-            </span>
-
-            {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">next</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
-            {% endif %}
-        </span>
-    </div> -->
+<div class="container mb-5">
     <div class="row">
-        <div class="col">
-            <h3>Clinical Indications</h3>
-            <ul class="list-group">
-                {% for ci in page_obj %}
-                <a href="#" class="list-group-item list-group-item-action" aria-current="true">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1">{{ ci.r_code }}</h5>
-                        <!-- <small>3 days ago</small> -->
-                    </div>
-                    <p class="mb-1">{{ ci.name }}</p>
-                    <small>{{ ci.test_method }}</small>
+        <div class="col-lg-6 col-sm-12">
+            <div class="d-flex justify-content-between mb-2">
+                <h3>Clinical Indications</h3>
+                <a class="btn btn-primary btn-sm m-1" href="{% url 'ci_add' %}" role="button">Add Clinical Indication</a>
+            </div>
+            <ul class="list-group shadow">
+                {% for ci in cis %}
+                <a href="{% url 'clinical_indication' ci.id %}" class="list-group-item list-group-item-action text-break">
+                    <span class="badge bg-primary">{{ci.r_code }}</span> {{ci.name }} <br><span class="badge bg-secondary">{{ci.test_method }}</span>
                 </a>
                 {% endfor %}
             </ul>
+
         </div>
-        <div class="col">
-            <h3>Panels</h3>
-            <ul class="list-group">
-                {% for ci in page_obj %}
-                <a href="#" class="list-group-item list-group-item-action" aria-current="true">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1">{{ ci.r_code }}</h5>
-                        <!-- <small>3 days ago</small> -->
-                    </div>
-                    <p class="mb-1">{{ ci.name }}</p>
-                    <small>{{ ci.test_method }}</small>
-                </a>
+        <div class="col-lg-6 col-sm-12">
+            <div class="d-flex justify-content-between mb-2">
+                <h3>Panels</h3>
+                <a class="btn btn-primary btn-sm m-1" href="{% url 'ci_add' %}" role="button">Add Panel</a>
+            </div>
+            <ul class="list-group shadow">
+                {% for panel in panels %}
+                    {% if panel.external_id %}
+                    <a href="{% url 'panel' panel.id %}" class="list-group-item list-group-item-action text-break">{{ panel.panel_name }} <span class="badge bg-primary">{{ panel.external_id }}</span></a>
+                    {% else %}
+                    <a href="{% url 'panel' panel.id %}" class="list-group-item list-group-item-action text-break">{{ panel.panel_name }}</a>
+                    {% endif %}
                 {% endfor %}
             </ul>
         </div>

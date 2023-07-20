@@ -131,15 +131,31 @@ def insert_data_into_db(parsed_data: dict) -> None:
             moi_id=moi_instance.id,
             mop_id=mop_instance.id,
             penetrance_id=penetrance_instance.id,
-            justification=single_gene["gene_justification"],
+            defaults={
+                "justification": single_gene["gene_justification"],
+            },
         )
 
         if created:
             PanelGeneHistory.objects.create(
                 panel_gene_id=pg_instance.id,
-                panel_id=panel_instance.id,
-                gene_id=gene_instance.id,
+                note="Created by PanelApp seed.",
             )
+        else:
+            # Panel-Gene record already exist
+            # meaning probably there's a new PanelApp import
+            # with a different justification
+
+            if pg_instance.justification != single_gene["gene_justification"]:
+                PanelGeneHistory.objects.create(
+                    panel_gene_id=pg_instance.id,
+                    note=f"Panel-Gene justification changed from {pg_instance.justification} to {single_gene['gene_justification']} by PanelApp seed.",
+                )
+
+                pg_instance.justification = single_gene["gene_justification"]
+                pg_instance.save()
+            else:
+                pass
 
     # for each panel region, populate the region attribute models
     for single_region in parsed_data["regions"]:

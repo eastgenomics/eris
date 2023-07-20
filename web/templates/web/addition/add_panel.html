@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h3>Add Panel</h3>
+    <div class="row">
+        <div class="col">
+          <!-- error message -->
+            {% if errors %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {% for key, values in errors.items %}
+                  {% for error in values %}
+                  <strong>Beep!</strong> {{ error }}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  {% endfor %}
+                {% endfor %}
+            </div>
+            {% endif %}
+            <!-- end error message -->
+            <!-- success message -->
+            {% if success %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <strong>Success!</strong> Clinical Indication has been added into the database with id {{ success }}!
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endif %}
+            <!-- end success message -->
+            <!-- form -->
+            <form action="{% url 'panel_add' %}" method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="externalId" class="form-label">External ID</label>
+                    <input type="text" class="form-control" name="external_id" aria-describedby="externalIdHelp" placeholder="57">
+                    <div id="externalIdHelp" class="form-text">This is the unique PanelApp id for each Panel. If don't know, just leave blank.</div>
+                  </div>
+                <div class="mb-3">
+                  <label for="panelName" class="form-label">Panel Name</label>
+                  <input type="text" class="form-control" name="panel_name" placeholder="Stickler syndrome" required>
+                </div>
+                <div class="mb-3">
+                  <label for="panelVersion" class="form-label">Panel Version</label>
+                  <input type="text" class="form-control" name="panel_version" aria-describedby="panelNameHelp" placeholder="1">
+                  <div id="panelVersionHelp" class="form-text">Only accept number input. e.g. 1 or 2.5</div>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+            <!-- end form -->
+        </div>
+    </div>
+</div>
+{% endblock %}

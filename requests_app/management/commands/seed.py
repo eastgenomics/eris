@@ -168,7 +168,9 @@ class Command(BaseCommand):
             panel_version: str = kwargs.get("version")  # TODO: version not used yet?
 
             if panel_id == "all":
-                parsed_data = parse_all_pa_panels()
+                parsed_data = (
+                    parse_all_pa_panels()
+                )  # TODO: use API PanelApp rather than library
             else:
                 if not panel_id:
                     raise ValueError("Please specify panel id")

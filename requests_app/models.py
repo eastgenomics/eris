@@ -6,39 +6,51 @@ class Panel(models.Model):
 
     # this is the PanelApp Panel id itself
     external_id = models.TextField(
-        verbose_name="External Panel ID", max_length=255, null=True
+        verbose_name="external panel id", max_length=255, null=True
     )
 
+    # metadata
     panel_name = models.TextField(verbose_name="Panel Name", max_length=255)
 
     panel_source = models.TextField(
-        verbose_name="Panel Source",
+        verbose_name="panel source",
         max_length=255,
     )
 
     panel_version = models.CharField(
-        verbose_name="Panel Version", max_length=255, null=True
+        verbose_name="panel version",
+        max_length=255,
+        null=True,
     )
 
-    grch37 = models.BooleanField(verbose_name="GRCh37")
+    # reference genome
+    grch37 = models.BooleanField(verbose_name="grch37")
+    grch38 = models.BooleanField(verbose_name="grch38")
 
-    grch38 = models.BooleanField(verbose_name="GRCh38")
-
+    # whether panel is created from test directory
     test_directory = models.BooleanField(
-        verbose_name="created by TD import",
+        verbose_name="created from test directory",
         null=True,
         default=False,
     )
 
+    # whether panel is customized
     custom = models.BooleanField(
         verbose_name="custom panel",
         null=True,
         default=False,
     )
 
-    created_date = models.DateField(verbose_name="created date", auto_now_add=True)
+    # creation date
+    created_date = models.DateField(
+        verbose_name="created date",
+        auto_now_add=True,
+    )
 
-    created_time = models.TimeField(verbose_name="created time", auto_now_add=True)
+    created_time = models.TimeField(
+        verbose_name="created time",
+        auto_now_add=True,
+    )
 
     class Meta:
         db_table = "panel"
@@ -50,15 +62,15 @@ class Panel(models.Model):
 class ClinicalIndication(models.Model):
     """Defines a single clinical indication"""
 
-    r_code = models.CharField(verbose_name="R code", max_length=255)
+    r_code = models.CharField(verbose_name="r code", max_length=255)
 
     name = models.TextField(
-        verbose_name="CI name",
+        verbose_name="clinical indication name",
         max_length=255,
     )
 
     test_method = models.CharField(
-        verbose_name="Test method",
+        verbose_name="test method",
         max_length=255,
     )
 
@@ -79,35 +91,47 @@ class ClinicalIndicationPanel(models.Model):
     Panel might be made
     """
 
+    # metadata
     config_source = models.TextField(
-        verbose_name="Config source",
+        verbose_name="config source",
         max_length=255,
+        null=True,
     )
 
     td_version = models.CharField(
-        verbose_name="TD version",
+        verbose_name="test directory version",
         max_length=255,
+        null=True,
     )
 
-    created_date = models.DateField(verbose_name="created date", auto_now_add=True)
-    created_time = models.TimeField(verbose_name="created time", auto_now_add=True)
+    # creation date
+    created_date = models.DateField(
+        verbose_name="created date",
+        auto_now_add=True,
+    )
+    created_time = models.TimeField(
+        verbose_name="created time",
+        auto_now_add=True,
+    )
     last_updated = models.DateField(
         verbose_name="last updated", null=True, auto_now=True
     )
 
+    # foreign keys
     clinical_indication = models.ForeignKey(
         ClinicalIndication,
-        verbose_name="Clinical Indication id",
+        verbose_name="clinical indication id",
         on_delete=models.PROTECT,
-    )
+    )  # required
 
     panel = models.ForeignKey(
         Panel,
-        verbose_name="Panel id",
+        verbose_name="panel id",
         on_delete=models.PROTECT,
-    )
+    )  # required
 
-    current = models.BooleanField(verbose_name="Latest association")
+    # active status
+    current = models.BooleanField(verbose_name="latest association")
 
     class Meta:
         db_table = "clinical_indication_panel"
@@ -117,6 +141,14 @@ class ClinicalIndicationPanel(models.Model):
 
 
 class ClinicalIndicationPanelHistory(models.Model):
+    # foreign key
+    clinical_indication_panel = models.ForeignKey(
+        ClinicalIndicationPanel,
+        on_delete=models.PROTECT,
+        verbose_name="clinical indication panel id",
+    )
+
+    # creation date
     created_date = models.DateField(
         verbose_name="created date",
         auto_now_add=True,
@@ -126,16 +158,7 @@ class ClinicalIndicationPanelHistory(models.Model):
         auto_now_add=True,
     )
 
-    clinical_indication_panel = models.ForeignKey(
-        ClinicalIndicationPanel,
-        on_delete=models.PROTECT,
-        verbose_name="Clinical Indication Panel id",
-    )
-    
-    note = models.CharField(verbose_name="Note", max_length=255)
-
-    # TODO: user may change to a foreign key later, linking to a Users table
-    user = models.CharField(verbose_name="User", max_length=255)
+    note = models.CharField(verbose_name="note", max_length=255)
 
     class Meta:
         db_table = "clinical_indication_panel_history"
@@ -334,12 +357,6 @@ class PanelGeneHistory(models.Model):
         on_delete=models.PROTECT,
     )
 
-    panel = models.ForeignKey(
-        Panel,
-        verbose_name="Panel id",
-        on_delete=models.PROTECT,
-    )
-
     created_date = models.DateField(
         verbose_name="created date",
         auto_now_add=True,
@@ -349,13 +366,10 @@ class PanelGeneHistory(models.Model):
         auto_now_add=True,
     )
 
-    gene = models.ForeignKey(
-        Gene,
-        on_delete=models.PROTECT,
-        verbose_name="Gene id",
+    note = models.CharField(
+        verbose_name="Note",
+        max_length=255,
     )
-
-    note = models.CharField(verbose_name="Note", max_length=255)
 
     class Meta:
         db_table = "panel_gene_history"
