@@ -54,6 +54,7 @@ def _retrieve_panel_from_pa_id(ci_code: str, pa_id: str) -> Panel | None:
     # retrieve Panel records directly created from PA panels with that external_id
     # there might be multiple Panel records with the same external_id
     # but different versions / ids thus we order by version
+
     panel_instance: Panel = (
         Panel.objects.filter(external_id=pa_id).order_by("-panel_version").first()
     )
@@ -223,7 +224,8 @@ def _make_panels_from_hgncs(
     if created:
         ClinicalIndicationPanelHistory.objects.create(
             clinical_indication_panel_id=cpi_instance.id,
-            note=f"Created by td source {td_source}",
+            note=f"Created by td source",
+            user=str(td_source)
         )
     else:
         # check if there is any change in td version or config source
@@ -297,7 +299,8 @@ def insert_data(json_data: dict, force: bool = False) -> None:
         )
 
         if created:
-            # TODO: this logic need revisit
+            # TODO: this logic need revisit - currently it makes other panel-indication links not current,
+            # TODO: which may not be desired behaviour as the schema is many-many for panels and indications
             # CI name change. Same R code tho
 
             previous_ci_panels = ClinicalIndicationPanel.objects.filter(
@@ -338,7 +341,7 @@ def insert_data(json_data: dict, force: bool = False) -> None:
                 if pa_id.upper().startswith("HGNC:"):
                     hgnc_list.append(pa_id.strip().upper())
                     continue
-
+                
                 # for PA panel ids, retrieve latest version matching Panel records
                 panel_record: Panel = _retrieve_panel_from_pa_id(
                     indication["code"],
