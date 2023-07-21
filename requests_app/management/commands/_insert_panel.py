@@ -167,6 +167,16 @@ def insert_data_into_db(parsed_data: dict) -> None:
     panel_name: str = parsed_data["panel_name"]
     panel_version: str = parsed_data["panel_version"]
 
+    # Check there isn't an existing custom panel which matches this one, 
+    # in that every gene is identical.
+    # This can happen if a PanelApp panel is updated to add genes which were custom-only before.
+    # If there is an existing custom panel, we want to REPLACE that custom panel with the new PanelApp version
+    # Steps:
+    # Once the Panel record is made, check for custom panels that match
+    # If it's found, need to find anything linked to the custom panel
+    # Need to link all those things to the NEW panel record
+    # Finally, deactivate the old custom panel
+
     # created Panel record
     # if there's a change in panel_name or panel_version
     # we create a new record
