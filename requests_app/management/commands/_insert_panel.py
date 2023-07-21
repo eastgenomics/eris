@@ -27,10 +27,10 @@ from django.db import transaction
 # TODO: need to deal with gene removal from Panel
 
 
-def single_gene_creation_controller(single_gene: dict, panel_instance: Panel) -> None:
+def single_gene_creation_controller(single_gene: dict, panel_instance_id: int) -> None:
     """
     For a single gene in a panel, either update or create it according to 
-    whether it's already in the database, and log its history.
+    whether it's already in the database, and log its history. Link it to the appropriate panel's ID.
     Isn't decorated as an atomic transaction, as we want every gene to be 
     committed as part of the same transaction, rather than each to be done separately.
     """
@@ -62,7 +62,7 @@ def single_gene_creation_controller(single_gene: dict, panel_instance: Panel) ->
 
     # create PanelGene record linking Panel to HGNC
     pg_instance, created = PanelGene.objects.get_or_create(
-        panel_id=panel_instance.id,
+        panel_id=panel_instance_id,
         gene_id=gene_instance.id,
         confidence_id=confidence_instance.id,
         moi_id=moi_instance.id,
@@ -93,6 +93,67 @@ def single_gene_creation_controller(single_gene: dict, panel_instance: Panel) ->
             pg_instance.save()
         else:
             pass
+
+
+def single_region_creation_controller(single_region: dict, panel_instance_id: int) -> None:
+    """
+    For a single region in a panel, either update or create it according to 
+    whether it's already in the database. Link it to the appropriate panel's ID.
+    Isn't decorated as an atomic transaction, as we want every region to be 
+    committed as part of the same transaction, rather than each to be done separately.
+    """
+    confidence_instance, _ = Confidence.objects.get_or_create(
+        confidence_level=single_region["confidence_level"],
+    )
+
+    moi_instance, _ = ModeOfInheritance.objects.get_or_create(
+        mode_of_inheritance=single_region["mode_of_inheritance"],
+    )
+
+    vartype_instance, _ = VariantType.objects.get_or_create(
+        variant_type=single_region["variant_type"],
+    )
+
+    overlap_instance, _ = RequiredOverlap.objects.get_or_create(
+        required_overlap=single_region["required_overlap"],
+    )
+
+    mop_instance, _ = ModeOfPathogenicity.objects.get_or_create(
+        mode_of_pathogenicity=single_region["mode_of_pathogenicity"]
+    )
+
+    penetrance_instance, _ = Penetrance.objects.get_or_create(
+        penetrance=single_region["penetrance"],
+    )
+
+    haplo_instance, _ = Haploinsufficiency.objects.get_or_create(
+        haploinsufficiency=single_region["haploinsufficiency"],
+    )
+
+    triplo_instance, _ = Triplosensitivity.objects.get_or_create(
+        triplosensitivity=single_region["triplosensitivity"],
+    )
+
+    # attach Region record to Panel record
+    Region.objects.get_or_create(
+        name=single_region["name"],
+        chrom=single_region["chrom"],
+        start_37=single_region["start_37"],
+        end_37=single_region["end_37"],
+        start_38=single_region["start_38"],
+        end_38=single_region["end_38"],
+        type=single_region["type"],
+        panel_id=panel_instance_id,
+        confidence_id=confidence_instance.id,
+        moi_id=moi_instance.id,
+        mop_id=mop_instance.id,
+        penetrance_id=penetrance_instance.id,
+        haplo_id=haplo_instance.id,
+        triplo_id=triplo_instance.id,
+        overlap_id=overlap_instance.id,
+        vartype_id=vartype_instance.id,
+        justification=single_region["justification"],
+    )
 
 
 @transaction.atomic
@@ -167,63 +228,12 @@ def insert_data_into_db(parsed_data: dict) -> None:
 
     # attaching each Gene record to Panel record
     for single_gene in parsed_data["genes"]:
-        single_gene_creation_controller(single_gene, panel_instance)
+        single_gene_creation_controller(single_gene, panel_instance.id)
 
 
     # for each panel region, populate the region attribute models
     for single_region in parsed_data["regions"]:
-        confidence_instance, _ = Confidence.objects.get_or_create(
-            confidence_level=single_region["confidence_level"],
-        )
-
-        moi_instance, _ = ModeOfInheritance.objects.get_or_create(
-            mode_of_inheritance=single_region["mode_of_inheritance"],
-        )
-
-        vartype_instance, _ = VariantType.objects.get_or_create(
-            variant_type=single_region["variant_type"],
-        )
-
-        overlap_instance, _ = RequiredOverlap.objects.get_or_create(
-            required_overlap=single_region["required_overlap"],
-        )
-
-        mop_instance, _ = ModeOfPathogenicity.objects.get_or_create(
-            mode_of_pathogenicity=single_region["mode_of_pathogenicity"]
-        )
-
-        penetrance_instance, _ = Penetrance.objects.get_or_create(
-            penetrance=single_region["penetrance"],
-        )
-
-        haplo_instance, _ = Haploinsufficiency.objects.get_or_create(
-            haploinsufficiency=single_region["haploinsufficiency"],
-        )
-
-        triplo_instance, _ = Triplosensitivity.objects.get_or_create(
-            triplosensitivity=single_region["triplosensitivity"],
-        )
-
-        # attach Region record to Panel record
-        Region.objects.get_or_create(
-            name=single_region["name"],
-            chrom=single_region["chrom"],
-            start_37=single_region["start_37"],
-            end_37=single_region["end_37"],
-            start_38=single_region["start_38"],
-            end_38=single_region["end_38"],
-            type=single_region["type"],
-            panel_id=panel_instance.id,
-            confidence_id=confidence_instance.id,
-            moi_id=moi_instance.id,
-            mop_id=mop_instance.id,
-            penetrance_id=penetrance_instance.id,
-            haplo_id=haplo_instance.id,
-            triplo_id=triplo_instance.id,
-            overlap_id=overlap_instance.id,
-            vartype_id=vartype_instance.id,
-            justification=single_region["justification"],
-        )
+        single_region_creation_controller(single_region, panel_instance.id)
 
 
 @transaction.atomic
