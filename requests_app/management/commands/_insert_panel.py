@@ -156,6 +156,41 @@ def single_region_creation_controller(single_region: dict, panel_instance_id: in
     )
 
 
+def search_and_deactivate_identical_custom_panels(new_panelapp_panel: Panel) -> QuerySet[Panel]:
+    """
+    Check there isn't an existing custom panel which is identical to the user-provided, 
+    PanelApp-derived one.
+    This can happen if a PanelApp panel is updated to add genes which were custom-only before.
+    """
+
+
+def disable_previous_panel_CI_links(previous_panel: list[Panel]) -> None:
+    """
+    If a new PanelApp panel is created, this function can be used to disable 
+    links between the older versions and their clinical indications.
+    The older panel is retained for auditing purposes.
+    """
+    previous_ci_panel_instances: QuerySet[
+        ClinicalIndicationPanel
+    ] = ClinicalIndicationPanel.objects.filter(
+        panel_id=previous_panel.id,
+        current=True,  # get those that are active
+    )
+
+    # for each previous CI-Panel instance, disable
+    if previous_ci_panel_instances:
+        for ci_panel_instance in previous_ci_panel_instances:
+            ci_panel_instance.current = False
+            ci_panel_instance.save()
+
+            print(
+                'Disabled previous CI-Panel link {} for Panel "{}"'.format(
+                    ci_panel_instance.id,
+                    previous_panel.panel_name,
+                )
+            )
+
+    
 @transaction.atomic
 def insert_data_into_db(parsed_data: dict) -> None:
     """
@@ -167,9 +202,7 @@ def insert_data_into_db(parsed_data: dict) -> None:
     panel_name: str = parsed_data["panel_name"]
     panel_version: str = parsed_data["panel_version"]
 
-    # Check there isn't an existing custom panel which matches this one, 
-    # in that every gene is identical.
-    # This can happen if a PanelApp panel is updated to add genes which were custom-only before.
+    
     # If there is an existing custom panel, we want to REPLACE that custom panel with the new PanelApp version
     # Steps:
     # Once the Panel record is made, check for custom panels that match
@@ -199,47 +232,34 @@ def insert_data_into_db(parsed_data: dict) -> None:
         # handle previous Panel with similar external_id
         # disable previous CI-Panel link
 
-        # filter by external_id
-        # because Panel name or version might be different
+        # filter by external_id because Panel name or version might be different
         previous_panel_instances: list[Panel] = Panel.objects.filter(
             external_id=panel_external_id,
             panel_version__lt=sortable_version(panel_version),
-        )  # expect multiple
+        )
 
         # We expect PanelApp to always fetch the latest
         # version of the panel thus version control is not needed
 
-        # do not delete previous Panel record!!
-
         # disable CI-Panel link if any
         # a Panel "might" have multiple CI-Panel link
         for previous_panel in previous_panel_instances:
-            previous_ci_panel_instances: QuerySet[
-                ClinicalIndicationPanel
-            ] = ClinicalIndicationPanel.objects.filter(
-                panel_id=previous_panel.id,
-                current=True,  # get those that are active
-            )
+            disable_previous_panel_CI_links(previous_panel)
 
-            # for each previous CI-Panel instance, disable
-            if previous_ci_panel_instances:
-                for ci_panel_instance in previous_ci_panel_instances:
-                    ci_panel_instance.current = False
-                    ci_panel_instance.save()
+            # TODO: disabling old CI-Panel link, but new one need to wait till next TD import?
 
-                    print(
-                        'Disabled previous CI-Panel link {} for Panel "{}"'.format(
-                            ci_panel_instance.id,
-                            previous_panel.panel_name,
-                        )
-                    )
+        # Handle the case where a new
+        identical_custom_panels = search_and_deactivate_identical_custom_panels(panel_instance)
+        if identical_custom_panels:
+            for old_custom_panel in identical_custom_panels:
+                #TODO: can disable_previous_panel_CI_links be used for the below?
+                disable_previous_panel_CI_links(old_custom_panel)
+                #TODO: link the new panel!
 
-            # TODO: disabling old CI-Panel link but new one need to wait till next TD import?
 
     # attaching each Gene record to Panel record
     for single_gene in parsed_data["genes"]:
         single_gene_creation_controller(single_gene, panel_instance.id)
-
 
     # for each panel region, populate the region attribute models
     for single_region in parsed_data["regions"]:
