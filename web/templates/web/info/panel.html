@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container mb-5 pb-5">
     <br> <!-- Clinical Indication Overview -->
-    <div class="row">
+    <div class="row text-wrap text-break">
         <div class="col">
             <h1>{{ panel.panel_name }}</h1>
             <h4>external id: {{ panel.external_id }}</h4>
@@ -22,7 +22,10 @@
 
     <br> <!-- Panel Genes Link -->
     <h3>Genes</h3>
-    <p class="text-muted">genes associated with the panel</p>
+    <div class="d-flex justify-content-between">
+        <p class="text-muted">genes associated with the panel</p>
+        <a href="{% url 'gene_add' panel.id %}"><button type="button" class="btn btn-primary btn-sm m-1">Add Gene</button></a>
+    </div>
     <div class="row">
         {% if pgs %}
         <div class="col">

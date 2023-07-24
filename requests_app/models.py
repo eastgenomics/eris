@@ -158,7 +158,16 @@ class ClinicalIndicationPanelHistory(models.Model):
         auto_now_add=True,
     )
 
-    note = models.CharField(verbose_name="note", max_length=255)
+    note = models.CharField(
+        verbose_name="note",
+        max_length=255,
+    )
+
+    user = models.CharField(
+        verbose_name="user",
+        max_length=255,
+        null=True,
+    )
 
     class Meta:
         db_table = "clinical_indication_panel_history"
@@ -182,7 +191,16 @@ class ClinicalIndicationTestMethodHistory(models.Model):
         auto_now_add=True,
     )
 
-    note = models.CharField(verbose_name="Note", max_length=255)
+    note = models.CharField(
+        verbose_name="Note",
+        max_length=255,
+    )
+
+    user = models.CharField(
+        verbose_name="user",
+        max_length=255,
+        null=True,
+    )
 
     class Meta:
         db_table = "clinical_indication_test_method_history"

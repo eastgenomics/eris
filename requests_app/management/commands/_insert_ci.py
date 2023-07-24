@@ -203,7 +203,8 @@ def _make_panels_from_hgncs(
 
             ClinicalIndicationPanelHistory.objects.create(
                 clinical_indication_panel_id=ci_panel.id,
-                note=f"Deactivated by td source {td_source}",
+                note="Deactivated by td source",
+                user=td_source,
             )
 
     # if previous CI-Panel record exist
@@ -225,7 +226,7 @@ def _make_panels_from_hgncs(
         ClinicalIndicationPanelHistory.objects.create(
             clinical_indication_panel_id=cpi_instance.id,
             note=f"Created by td source",
-            user=str(td_source)
+            user=td_source,
         )
     else:
         # check if there is any change in td version or config source
@@ -237,7 +238,8 @@ def _make_panels_from_hgncs(
                 # take a note of the change
                 ClinicalIndicationPanelHistory.objects.create(
                     clinical_indication_panel_id=cpi_instance.id,
-                    note=f"TD version modified by td source {td_source}: {normalize_version(cpi_instance.td_version)} -> {td_version}",
+                    note=f"TD version modified by td source: {normalize_version(cpi_instance.td_version)} -> {td_version}",
+                    user=td_source,
                 )
                 cpi_instance.td_version = sortable_version(td_version)
 
@@ -245,7 +247,8 @@ def _make_panels_from_hgncs(
                 # take a note of the change
                 ClinicalIndicationPanelHistory.objects.create(
                     clinical_indication_panel_id=cpi_instance.id,
-                    note=f"Config source modified by td source {td_source}: {cpi_instance.config_source} -> {config_source}",
+                    note=f"Config source modified by td source: {cpi_instance.config_source} -> {config_source}",
+                    user=td_source,
                 )
                 cpi_instance.config_source = config_source
 
@@ -314,14 +317,16 @@ def insert_data(json_data: dict, force: bool = False) -> None:
 
                 ClinicalIndicationPanelHistory.objects.create(
                     clinical_indication_panel_id=previous_ci_panel.id,
-                    note=f"Deactivated by td source {td_source}",
+                    note="Deactivated by td source",
+                    user=td_source,
                 )
         else:
             # Check for change in test method
             if ci_instance.test_method != indication["test_method"]:
                 ClinicalIndicationTestMethodHistory.objects.create(
                     clinical_indication_id=ci_instance.id,
-                    note=f"Test method modified by {td_source}: {ci_instance.test_method} -> {indication['test_method']}",
+                    note=f"Test method modified by td source: {ci_instance.test_method} -> {indication['test_method']}",
+                    user=td_source,
                 )
 
                 ci_instance.test_method = indication["test_method"]
@@ -341,7 +346,7 @@ def insert_data(json_data: dict, force: bool = False) -> None:
                 if pa_id.upper().startswith("HGNC:"):
                     hgnc_list.append(pa_id.strip().upper())
                     continue
-                
+
                 # for PA panel ids, retrieve latest version matching Panel records
                 panel_record: Panel = _retrieve_panel_from_pa_id(
                     indication["code"],
@@ -367,7 +372,8 @@ def insert_data(json_data: dict, force: bool = False) -> None:
                         # if CI-Panel record is created, create a history record
                         ClinicalIndicationPanelHistory.objects.create(
                             clinical_indication_panel_id=cip_instance.id,
-                            note=f"Created by td source {td_source}",
+                            note="Created by td source",
+                            user=td_source,
                         )
                     else:
                         # if CI-Panel already exist and the link is the same
@@ -379,7 +385,8 @@ def insert_data(json_data: dict, force: bool = False) -> None:
                                 # take a note of the change
                                 ClinicalIndicationPanelHistory.objects.create(
                                     clinical_indication_panel_id=cip_instance.id,
-                                    note=f"TD version modified by td source {td_source}: {normalize_version(cip_instance.td_version)} -> {td_version}",
+                                    note=f"TD version modified by td source: {normalize_version(cip_instance.td_version)} -> {td_version}",
+                                    user=td_source,
                                 )
                                 cip_instance.td_version = sortable_version(td_version)
 
@@ -387,7 +394,8 @@ def insert_data(json_data: dict, force: bool = False) -> None:
                                 # take a note of the change
                                 ClinicalIndicationPanelHistory.objects.create(
                                     clinical_indication_panel_id=cip_instance.id,
-                                    note=f"Config source modified by td source {td_source}: {cip_instance.config_source} -> {json_data['config_source']}",
+                                    note=f"Config source modified by td source: {cip_instance.config_source} -> {json_data['config_source']}",
+                                    user=td_source,
                                 )
                                 cip_instance.config_source = json_data["config_source"]
 

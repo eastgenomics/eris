@@ -1,6 +1,6 @@
 from django import forms
 
-from requests_app.models import ClinicalIndication
+from requests_app.models import ClinicalIndication, Panel
 
 
 class ClinicalIndicationForm(forms.Form):
@@ -22,7 +22,7 @@ class ClinicalIndicationForm(forms.Form):
             ClinicalIndication.objects.get(r_code=r_code)
             self.add_error(
                 "r_code",
-                "Clinical Indication already exist in database. Please edit Clinical Indication instead.",
+                "R code already exist in database. Please use a different R code!",
             )
             return
         except ClinicalIndication.DoesNotExist:
@@ -36,3 +36,13 @@ class PanelForm(forms.Form):
 
     def clean_external_id(self):
         external_id: str = self.cleaned_data["external_id"]
+
+        try:
+            Panel.objects.get(external_id=external_id)
+            self.add_error(
+                "external_id",
+                "External ID already exist in database! Please modify existing PanelApp entry.",
+            )
+            return
+        except ClinicalIndication.DoesNotExist:
+            return external_id

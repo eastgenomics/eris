@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mb-5 pb-5">
+    <div class="row"> <!-- title -->
+        <div class="col">
+            <h3>Clinical Indication Panel History</h3>
+        </div>
+    </div>
+    <div class="row my-2">
+        <div class="col"> <!-- form -->
+            <form action="{% url 'history' %}" method="post">
+                {% csrf_token %}
+                <div class="form-check form-check-inline">
+                    {% if "modified" in selected %}
+                    <input class="form-check-input" type="checkbox" value="TD version modified" id="flexCheckDefault" name="modified" checked>
+                    {% else %}
+                    <input class="form-check-input" type="checkbox" value="TD version modified" id="flexCheckDefault" name="modified">
+                    {% endif %}
+                    <label class="form-check-label" for="flexCheckDefault">
+                        modified
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    {% if "created" in selected %}
+                    <input class="form-check-input" type="checkbox" value="Created" id="flexCheckDefault" name="created" checked>
+                    {% else %}
+                    <input class="form-check-input" type="checkbox" value="Created" id="flexCheckDefault" name="created">
+                    {% endif %}
+                    <label class="form-check-label" for="flexCheckDefault">
+                        created
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    {% if "deactivated" in selected %}
+                    <input class="form-check-input" type="checkbox" value="Deactivated" id="flexCheckDefault" name="deactivated" checked>
+                    {% else %}
+                    <input class="form-check-input" type="checkbox" value="Deactivated" id="flexCheckDefault" name="deactivated">
+                    {% endif %}
+                    <label class="form-check-label" for="flexCheckDefault">
+                        deactivated
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Submit</button>
+            </form> <!-- end form -->
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col table-responsive">
+            <!-- form -->
+            <table class="table table-bordered table-hover shadow caption-top">
+                <caption>Results: {{ limit }}</caption>
+                <thead>
+                    <tr>
+                    <th scope="col" class="text-nowrap">R Code</th>
+                    <th scope="col">Clinical Indication Name</th>
+                    <th scope="col">Panel Name</th>
+                    <th scope="col" class="text-nowrap">Panel Version</th>
+                    <th scope="col" class="text-nowrap">Created Date</th>
+                    <th scope="col" class="text-nowrap">Created Time</th>
+                    <th scope="col">Note</th>
+                    <th scope="col">User</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for history in cip_histories %}
+                    <tr>
+                        <td>{{ history.clinical_indication_panel_id__clinical_indication_id__r_code }}</td>
+                        <td style="max-width:20em;" class="text-wrap">{{ history.clinical_indication_panel_id__clinical_indication_id__name }}</td>
+                        <td style="max-width:20em;" class="text-break text-wrap">{{ history.clinical_indication_panel_id__panel_id__panel_name }}</td>
+                        {% if history.clinical_indication_panel_id__panel_id__panel_version %}
+                            <td>{{ history.clinical_indication_panel_id__panel_id__panel_version }}</td>
+                        {% else %}
+                            <td>None</td>
+                        {% endif %}
+                        <td>{{ history.created_date }}</td>
+                        <td>{{ history.created_time }}</td>
+                        <td style="max-width:20em;" class="text-wrap">{{ history.note }}</td>
+                        <td style="max-width:20em;" class="text-wrap">{{ history.user }}</td>
+                    </tr>
+                    {% endfor %} 
+                </tbody>
+            </table>    
+            <!-- end form -->                
+        </div>
+    </div>   
+</div>
+{% endblock %}

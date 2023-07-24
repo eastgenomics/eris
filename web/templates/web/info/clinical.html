@@ -75,7 +75,11 @@
                          </ul>
                     </p>
 
-                    <a href="#" class="btn btn-danger">Deactivate</a>
+                    {% if ci_panel.current %}
+                    <a href="#" class="btn btn-danger btn-sm">Deactivate</a>
+                    {% else %}
+                    <a href="#" class="btn btn-success btn-sm">Activate</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -122,7 +126,7 @@
     <div class="row">
         {% if panel_genes %}
         {% for key, values in panel_genes.items %}
-        <div class="col-12">
+        <div class="col-12 mt-3">
             <div class="card shadow">
                 <div class="card-body">
                     
