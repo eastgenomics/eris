@@ -11,3 +11,5 @@ migrations*
 
 .env
 env
+.vscode
+.env
