@@ -24,8 +24,8 @@ class Panel(models.Model):
     )
 
     # reference genome
-    grch37 = models.BooleanField(verbose_name="grch37")
-    grch38 = models.BooleanField(verbose_name="grch38")
+    grch37 = models.BooleanField(verbose_name="grch37", default=True)
+    grch38 = models.BooleanField(verbose_name="grch38", default=True)
 
     # whether panel is created from test directory
     test_directory = models.BooleanField(

@@ -11,7 +11,10 @@
                 {% for key, values in errors.items %}
                     {% for error in values %}
                     <strong>Beep!</strong> {{ error }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    {% if ci %}
+                    <a href="{% url 'clinical_indication' ci.id %}">{{ ci.name }}</a>
+                    {% endif %}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button><br>
                     {% endfor %}
                 {% endfor %}
             </div>

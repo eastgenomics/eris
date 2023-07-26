@@ -20,4 +20,10 @@ urlpatterns = [
     path("panel/<int:panel_id>/gene/add/", views.add_gene, name="gene_add"),
     # history
     path("history/", views.history, name="history"),
+    # deactivate clinical indication panel
+    path(
+        "clinical_indication_panel/<int:cip_id>/deactivate",
+        views.activate_or_deactivate_clinical_indication_panel,
+        name="activate_or_deactivate_clinical_indication_panel",
+    ),
 ]

@@ -6,7 +6,7 @@
         <div class="col-lg-6 col-sm-12">
             <div class="d-flex justify-content-between mb-2">
                 <h3>Clinical Indications</h3>
-                <a class="btn btn-primary btn-sm m-1" href="{% url 'ci_add' %}" role="button">Add Clinical Indication</a>
+                <a class="btn btn-primary btn-sm m-2" href="{% url 'ci_add' %}" role="button">Add Clinical Indication</a>
             </div>
             <ul class="list-group shadow">
                 {% for ci in cis %}
@@ -20,7 +20,7 @@
         <div class="col-lg-6 col-sm-12">
             <div class="d-flex justify-content-between mb-2">
                 <h3>Panels</h3>
-                <a class="btn btn-primary btn-sm m-1" href="{% url 'panel_add' %}" role="button">Add Panel</a>
+                <a class="btn btn-primary btn-sm m-2" href="{% url 'panel_add' %}" role="button">Add Panel</a>
             </div>
             <ul class="list-group shadow">
                 {% for panel in panels %}

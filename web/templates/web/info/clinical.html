@@ -76,9 +76,17 @@
                     </p>
 
                     {% if ci_panel.current %}
-                    <a href="#" class="btn btn-danger btn-sm">Deactivate</a>
+                    <form action="{% url 'activate_or_deactivate_clinical_indication_panel' ci_panel.id %}" method="POST">
+                        {% csrf_token %}
+                        <input class="visually-hidden" type="text" class="form-control" name="action" value="deactivate">
+                        <button type="submit" class="btn btn-danger btn-sm">Deactivate</button>
+                    </form>
                     {% else %}
-                    <a href="#" class="btn btn-success btn-sm">Activate</a>
+                    <form action="{% url 'activate_or_deactivate_clinical_indication_panel' ci_panel.id %}" method="POST">
+                        {% csrf_token %}
+                        <input class="visually-hidden" type="text" class="form-control" name="action" value="activate">
+                        <button type="submit" class="btn btn-success btn-sm">Activate</button>
+                    </form>
                     {% endif %}
                 </div>
             </div>

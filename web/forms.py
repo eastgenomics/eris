@@ -6,7 +6,7 @@ from requests_app.models import ClinicalIndication, Panel
 class ClinicalIndicationForm(forms.Form):
     r_code = forms.CharField(max_length=10)
     name = forms.CharField(max_length=250)
-    test_method = forms.CharField(max_length=100)
+    test_method = forms.CharField(max_length=100, required=False)
 
     def clean_r_code(self):
         r_code: str = self.cleaned_data["r_code"]
@@ -16,33 +16,40 @@ class ClinicalIndicationForm(forms.Form):
                 "r_code",
                 "Clinical Indication must start with uppercase letter R",
             )
-            return
 
         try:
             ClinicalIndication.objects.get(r_code=r_code)
             self.add_error(
                 "r_code",
-                "R code already exist in database. Please use a different R code!",
+                "There is an existing clinical indication with this R code! Please modify existing entry.",
             )
-            return
         except ClinicalIndication.DoesNotExist:
-            return r_code
+            pass
+
+        return r_code
 
 
 class PanelForm(forms.Form):
-    external_id = forms.CharField(max_length=30)
-    name = forms.CharField(max_length=250)
-    version = forms.CharField(max_length=10)
+    external_id = forms.CharField(max_length=30, required=False)
+    panel_name = forms.CharField(max_length=250)
+    panel_version = forms.CharField(max_length=10, required=False)
 
-    def clean_external_id(self):
-        external_id: str = self.cleaned_data["external_id"]
+    def clean_panel_name(self):
+        panel_name: str = self.cleaned_data["panel_name"]
 
-        try:
-            Panel.objects.get(external_id=external_id)
+        # clean input
+        if "," in panel_name:
+            # dealing with HGNC type panel
+            panel_name = ",".join([hgnc.strip() for hgnc in panel_name.split(",")])
+        else:
+            panel_name = panel_name.strip()
+
+        p = Panel.objects.filter(panel_name__iexact=panel_name)
+
+        if p:
             self.add_error(
-                "external_id",
-                "External ID already exist in database! Please modify existing PanelApp entry.",
+                "panel_name",
+                "There is an existing panel with this name! Please modify existing entry.",
             )
-            return
-        except ClinicalIndication.DoesNotExist:
-            return external_id
+
+        return panel_name

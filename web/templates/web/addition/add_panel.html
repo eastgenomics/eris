@@ -11,6 +11,9 @@
                 {% for key, values in errors.items %}
                   {% for error in values %}
                   <strong>Beep!</strong> {{ error }}
+                  {% if panel %}
+                  <a href="{% url 'panel' panel.id %}">{{ panel.panel_name }}</a>
+                  {% endif %}
                   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                   {% endfor %}
                 {% endfor %}
@@ -20,7 +23,7 @@
             <!-- success message -->
             {% if success %}
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <strong>Success!</strong> Clinical Indication has been added into the database with id {{ success }}!
+                <strong>Success!</strong> Panel has been added into the database with id <a href="{% url 'panel' success.id %}">{{ success.id }}</a>!
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
               </div>
             {% endif %}
@@ -30,17 +33,17 @@
                 {% csrf_token %}
                 <div class="mb-3">
                     <label for="externalId" class="form-label">External ID</label>
-                    <input type="text" class="form-control" name="external_id" aria-describedby="externalIdHelp" placeholder="57">
-                    <div id="externalIdHelp" class="form-text">optional. This is the unique PanelApp id for each Panel. If don't know, just leave blank</div>
+                    <input type="text" class="form-control" name="external_id" aria-describedby="externalIdHelp" placeholder="57" value="{{ external_id }}">
+                    <div id="externalIdHelp" class="form-text">optional. This is the unique PanelApp id for each Panel. If not sure, just leave blank</div>
                   </div>
                 <div class="mb-3">
                   <label for="panelName" class="form-label">Panel Name</label>
-                  <input type="text" class="form-control" name="panel_name" placeholder="Stickler syndrome" required>
+                  <input type="text" class="form-control" name="panel_name" placeholder="Stickler syndrome" value="{{ panel_name }}" required>
                   <div id="externalIdHelp" class="form-text">required</div>
                 </div>
                 <div class="mb-3">
                   <label for="panelVersion" class="form-label">Panel Version</label>
-                  <input type="text" class="form-control" name="panel_version" aria-describedby="panelNameHelp" placeholder="1">
+                  <input type="text" class="form-control" name="panel_version" aria-describedby="panelNameHelp" value="{{ panel_version }}" placeholder="1">
                   <div id="panelVersionHelp" class="form-text">optional. Only accept number input. e.g. 1 or 2.5</div>
                 </div>
                 <button type="submit" class="btn btn-primary">Submit</button>
