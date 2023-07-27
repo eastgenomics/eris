@@ -52,6 +52,12 @@ class Panel(models.Model):
         auto_now_add=True,
     )
 
+    pending = models.BooleanField(
+        verbose_name="pending activation",
+        null=True,
+        default=False,
+    )
+
     class Meta:
         db_table = "panel"
 
@@ -72,6 +78,12 @@ class ClinicalIndication(models.Model):
     test_method = models.CharField(
         verbose_name="test method",
         max_length=255,
+    )
+
+    pending = models.BooleanField(
+        verbose_name="pending activation",
+        null=True,
+        default=False,
     )
 
     class Meta:
@@ -132,6 +144,12 @@ class ClinicalIndicationPanel(models.Model):
 
     # active status
     current = models.BooleanField(verbose_name="latest association")
+
+    pending = models.BooleanField(
+        verbose_name="pending activation",
+        null=True,
+        default=False,
+    )
 
     class Meta:
         db_table = "clinical_indication_panel"
@@ -361,6 +379,12 @@ class PanelGene(models.Model):
         max_length=255,
     )
 
+    pending = models.BooleanField(
+        verbose_name="pending activation",
+        null=True,
+        default=False,
+    )
+
     class Meta:
         db_table = "panel_gene"
 
@@ -555,7 +579,7 @@ class RegionAnnotation(models.Model):
         return str(self.id)
 
 
-# TODO: this table need work
+# TODO: this table need work on overwriting logic
 class PanelGeneTranscript(models.Model):
     """
     Defines which transcript is clinical for which gene

@@ -69,7 +69,9 @@ class Command(BaseCommand):
 
         results = []
 
-        if not ClinicalIndicationPanel.objects.filter(current=True).exists():
+        if not ClinicalIndicationPanel.objects.filter(
+            current=True, pending=False
+        ).exists():
             # if there's no CiPanelAssociation date column, high chance Test Directory
             # has not been imported yet.
             raise ValueError(
@@ -78,7 +80,9 @@ class Command(BaseCommand):
                 "python manage.py seed test_dir 220713_RD_TD.json Y"
             )
 
-        for row in ClinicalIndicationPanel.objects.filter(current=True).values(
+        for row in ClinicalIndicationPanel.objects.filter(
+            current=True, pending=False
+        ).values(
             "clinical_indication_id__r_code",
             "clinical_indication_id__name",
             "panel_id",
@@ -88,9 +92,9 @@ class Command(BaseCommand):
             relevant_panels.add(row["panel_id"])
             ci_panels[row["clinical_indication_id__r_code"]].append(row)
 
-        for row in PanelGene.objects.filter(panel_id__in=relevant_panels).values(
-            "gene_id__hgnc_id", "panel_id"
-        ):
+        for row in PanelGene.objects.filter(
+            panel_id__in=relevant_panels, pending=False
+        ).values("gene_id__hgnc_id", "panel_id"):
             panel_genes[row["panel_id"]].append(row["gene_id__hgnc_id"])
 
         for r_code, panel_list in ci_panels.items():
