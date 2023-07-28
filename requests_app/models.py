@@ -288,10 +288,6 @@ class Gene(models.Model):
         verbose_name="Alias Symbols", max_length=255, null=True
     )
 
-    previous_symbols = models.CharField(
-        verbose_name="Previous Symbols", max_length=255, null=True
-    )
-
     class Meta:
         db_table = "gene"
 
@@ -460,7 +456,10 @@ class Region(models.Model):
     """Defines a single region (CNV)"""
 
     name = models.CharField(verbose_name="Region name", max_length=255)
+    verbose_name = models.CharField(verbose_name="Region verbose name", max_length=255)
+
     chrom = models.CharField(verbose_name="Chromosome", max_length=255)
+
     start_37 = models.CharField(
         verbose_name="Region start grch37", max_length=255, null=True
     )
@@ -474,8 +473,6 @@ class Region(models.Model):
         verbose_name="Region end grch38", max_length=255, null=True
     )
     type = models.CharField(verbose_name="Region type", max_length=255)
-
-    panel = models.ForeignKey(Panel, verbose_name="panel id", on_delete=models.PROTECT)
 
     confidence = models.ForeignKey(
         Confidence,
@@ -525,10 +522,35 @@ class Region(models.Model):
         on_delete=models.PROTECT,
     )
 
-    justification = models.TextField(verbose_name="Justification", max_length=255)
-
     class Meta:
         db_table = "region"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class PanelRegion(models.Model):
+    """Class to link Panel and Region"""
+
+    region = models.ForeignKey(
+        Region,
+        verbose_name="Region ID",
+        on_delete=models.PROTECT,
+    )
+
+    panel = models.ForeignKey(
+        Panel,
+        verbose_name="Panel ID",
+        on_delete=models.PROTECT,
+    )
+
+    justification = models.TextField(
+        verbose_name="Justification",
+        max_length=255,
+    )
+
+    class Meta:
+        db_table = "panel_region"
 
     def __str__(self):
         return str(self.id)

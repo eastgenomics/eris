@@ -5,11 +5,11 @@ python manage.py seed --help
 import os
 import json
 
-from ._parse_pa import parse_specified_pa_panels, parse_all_pa_panels
 from ._insert_panel import insert_data_into_db, insert_form_data
 from ._parse_transcript import seed_transcripts
 from ._insert_ci import insert_data
 from ._parse_form import FormParser
+from .panel import get_panel, PanelClass, fetch_all_panels
 
 
 from django.core.management.base import BaseCommand
@@ -168,28 +168,37 @@ class Command(BaseCommand):
             panel_version: str = kwargs.get("version")  # TODO: version not used yet?
 
             if panel_id == "all":
-                parsed_data = (
-                    parse_all_pa_panels()
-                )  # TODO: use API PanelApp rather than library
+                panels: list[PanelClass] = fetch_all_panels()
+
             else:
                 if not panel_id:
                     raise ValueError("Please specify panel id")
 
                 if not panel_version:
-                    raise ValueError("Please specify panel version")
+                    print("Getting latest panel version")
+                else:
+                    print(
+                        f"Getting panel id {panel_id} / panel version {panel_version}"
+                    )
 
                 # parse data from requested current PanelApp panels
-                parsed_data = parse_specified_pa_panels(panel_id)
-                if not parsed_data:
-                    print("Parsing failed - see error messages.")
+                panel = get_panel(panel_id, panel_version)
+
+                if not panel:
+                    print(
+                        f"Fetching panel id: {panel_id} version: {panel_version} failed"
+                    )
+                    raise ValueError("Panel specified does not exist")
+                panel.panel_source = "PanelApp"  # manual addition of source
+
+                panels = [panel]
 
             if not test_mode:
-                print(f"Importing {len(parsed_data)} panels into database...")
+                print(f"Importing {len(panels)} panels into database...")
 
                 # insert panel data into database
-                for panel_dict in parsed_data:
-                    if panel_dict:
-                        insert_data_into_db(panel_dict)
+                for panel in panels:
+                    insert_data_into_db(panel)
 
                 print("Done.")
 
