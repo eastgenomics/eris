@@ -8,7 +8,6 @@ import json
 from ._insert_panel import insert_data_into_db, insert_form_data
 from ._parse_transcript import seed_transcripts
 from ._insert_ci import insert_data
-from ._parse_form import FormParser
 from .panel import get_panel, PanelClass, fetch_all_panels
 
 
@@ -120,35 +119,6 @@ class Command(BaseCommand):
             action="store_true",
             help="write error log for transcript seeding",
         )
-
-    def parse_form_data(self, filepath: str):
-        """Use parse_form.py to import and parse data from a panel
-        request form.
-
-        args:
-            filepath [str]: path to request form file
-
-        returns:
-            parsed_data [dict]: data to insert into db
-        """
-
-        print("Parsing request form...")
-
-        parser = FormParser(filepath=filepath)
-
-        info, panel_df, gene_df, region_df = parser.get_form_data(filepath)
-
-        # Currently only support 1 panel per form
-        if panel_df.shape[0] != 1:
-            raise ValueError("Multiple Panel input detected in form. Abandoning.")
-
-        info_dict = parser.setup_output_dict(info, panel_df)
-        info_dict = parser.parse_genes(info_dict, gene_df)
-        parsed_data = parser.parse_regions(info_dict, region_df)
-
-        print("Form parsing completed.")
-
-        return parsed_data
 
     def handle(self, *args, **kwargs) -> None:
         """Coordinates functions to import and parse data from
