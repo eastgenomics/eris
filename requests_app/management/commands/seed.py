@@ -132,6 +132,9 @@ class Command(BaseCommand):
 
         assert command, "Please specify command: panelapp / td / form / transcript"
 
+        # TODO: fill user variable from somewhere more appropriate, like a database table
+        user = "test_user"
+
         # python manage.py seed panelapp <all/panel_id> <version>
         if command == "panelapp":
             panel_id: str = kwargs.get("panel")
@@ -168,7 +171,7 @@ class Command(BaseCommand):
 
                 # insert panel data into database
                 for panel in panels:
-                    insert_data_into_db(panel)
+                    insert_data_into_db(panel, user)
 
                 print("Done.")
 

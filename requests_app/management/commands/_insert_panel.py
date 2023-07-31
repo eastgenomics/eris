@@ -5,6 +5,7 @@ from requests_app.models import (
     Panel,
     ClinicalIndication,
     ClinicalIndicationPanel,
+    ClinicalIndicationPanelHistory,
     Gene,
     Confidence,
     Penetrance,
@@ -171,7 +172,8 @@ def single_region_creation_controller(single_region: dict(), panel_instance_id: 
     )
 
 
-def flag_ci_panel_instances_controller(panel: Panel) -> None:
+def flag_ci_panel_instances_controller(panel: Panel, user: str) \
+    -> QuerySet[ClinicalIndicationPanel] | None:
     """
     Controller function which flags links between a panel and its clinical indications for manual review, 
     and prints a message about it.
@@ -186,22 +188,54 @@ def flag_ci_panel_instances_controller(panel: Panel) -> None:
         current=True,  # get those that are active
     )
 
-    # for each previous CI-Panel instance, flag for manual review
+    # for each previous CI-Panel instance, flag for manual review, and add to history
     if ci_panel_instances:
         for ci_panel_instance in ci_panel_instances:
-            ci_panel_instance.manual_review = True
+            ci_panel_instance.needs_review = True
             ci_panel_instance.save()
+
+            ClinicalIndicationPanelHistory.objects.create(
+                    clinical_indication_panel=ci_panel_instance.id,
+                    note="Flagged for manual review - new panel version pulled from PanelApp API",
+                    user=user
+                )
 
             print(
                 'Flagged previous CI-Panel link {} for Panel "{}" for manual review '.format(
                     ci_panel_instance.id, panel.panel_name) + '- a new panel version is available'
             )
 
+        return ci_panel_instances
+
+    else:
+        return None
     # TODO: disabling old CI-Panel link but new one need to wait till next TD import?
 
 
+def make_provisional_ci_panel_link(previous_panel_ci_links: QuerySet[ClinicalIndicationPanel], \
+                                   panel_instance: Panel, user: str) -> None:
+    """
+    If a new version is made of a panel, give it the same CI links as the previous, active panel.
+    However, set the 'needs_review' field to True, so that it shows for manual review by a user.
+    Additionally, create a history record.
+    """
+    for prev_link in previous_panel_ci_links:
+        ci_panel_instance, created = ClinicalIndicationPanel.objects.get_or_create(
+            clinical_indication=prev_link.clinical_indication,
+            panel=panel_instance.id,
+            needs_review=True
+        )
+        if created:
+            ClinicalIndicationPanelHistory.objects.create(
+                clinical_indication_panel=ci_panel_instance.id,
+                note="Auto-created CI-panel link based on information available for an earlier panel version \
+                     - needs manual review",
+                user=user
+            )
+
+
 @transaction.atomic
-def insert_data_into_db(panel: PanelClass) -> None:
+def insert_data_into_db(panel: PanelClass, user: str) -> None:
     """
     Insert data from parsed JSON into database.
     """
@@ -227,21 +261,20 @@ def insert_data_into_db(panel: PanelClass) -> None:
     # if created = the new Panel record has a different name or version,
     # regardless of panel_source
     if created:
-        # if an old version of the panel exists, we need to ensure that the new panel version is chosen manually
-        panel_instance.needs_review = True
-
         # handle previous Panel(s) with similar external_id. Panel name and version aren't suited for this.
-        # disable previous CI-Panel links, rather than just deleting them
+        # mark previous CI-Panel links as needing review!
 
         previous_panel_instances: list[Panel] = Panel.objects.filter(
             external_id=panel_external_id,
             panel_version__lt=sortable_version(panel_version),
         )  
 
-        # We expect PanelApp to always fetch the latest
-        # version of the panel, thus version control is not needed
+        # if there are previous CI-Panel links, mark these as needing manual review.
+        # make provisional links between the CI and our new version of the column - these will need review too.
         for previous_panel in previous_panel_instances:
-            flag_ci_panel_instances_controller(previous_panel)
+            previous_panel_ci_links = flag_ci_panel_instances_controller(previous_panel, user)
+            if previous_panel_ci_links:
+                make_provisional_ci_panel_link(previous_panel_ci_links, panel_instance, user)
 
     # attach each Gene record to the new Panel record
     for single_gene in panel.genes:
