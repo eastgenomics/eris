@@ -74,6 +74,12 @@ class ClinicalIndication(models.Model):
         max_length=255,
     )
 
+    needs_review =  models.BooleanField(
+        verbose_name="needs manual review?",
+        null=False,
+        default=False
+    )
+
     class Meta:
         db_table = "clinical_indication"
 
