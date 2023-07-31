@@ -256,7 +256,7 @@ def _make_panels_from_hgncs(
 
 
 @transaction.atomic
-def insert_data(json_data: dict, force: bool = False) -> None:
+def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
     """This function insert TD data into DB
 
     e.g. command
@@ -302,33 +302,40 @@ def insert_data(json_data: dict, force: bool = False) -> None:
         )
 
         if created:
-            # TODO: this logic need revisit - currently it makes other panel-indication links not current,
-            # TODO: which may not be desired behaviour as the schema is many-many for panels and indications
-            # CI name change. Same R code tho
+            # New clinical indication - the old CI-panel entries with the same R code, 
+            # will be set to 'needs_review=True'
+            # TODO: this logic need revisit - the user will need to assign the new indication to the 
+            # panel(s)
 
             previous_ci_panels = ClinicalIndicationPanel.objects.filter(
                 clinical_indication_id__r_code=r_code,
                 current=True,
             )
 
+            # set these old links to needs_review = True - the end user can select whether they should 
+            # still be current or not
             for previous_ci_panel in previous_ci_panels:
-                previous_ci_panel.current = False
+                previous_ci_panel.needs_review = True
                 previous_ci_panel.save()
 
                 ClinicalIndicationPanelHistory.objects.create(
                     clinical_indication_panel_id=previous_ci_panel.id,
-                    note="Deactivated by td source",
+                    note="New clinical indication added from test directory",
                     user=td_source,
                 )
+
+                # TODO: link the new clinical indication, to the panels which the old indication was linked to?
+                # TODO: this will mimic the behaviour when we import from PanelApp
         else:
             # Check for change in test method
             if ci_instance.test_method != indication["test_method"]:
                 ClinicalIndicationTestMethodHistory.objects.create(
                     clinical_indication_id=ci_instance.id,
-                    note=f"Test method modified by td source: {ci_instance.test_method} -> {indication['test_method']}",
+                    note=f"Needs review of 'test method' - modified by td source: {ci_instance.test_method} -> {indication['test_method']}",
                     user=td_source,
                 )
 
+                ci_instance.needs_review = True
                 ci_instance.test_method = indication["test_method"]
 
                 ci_instance.save()
