@@ -29,6 +29,76 @@ from django.db import transaction
 # TODO: need to deal with gene removal from Panel
 
 
+def single_gene_creation_controller(single_gene, gene_data: dict(), hgnc_id: int(), \
+                                    panel_instance: Panel) -> None:
+    """
+    A controller function which makes a single gene, and also its history record.
+    
+    """
+    gene_symbol = gene_data.get("gene_symbol")
+    alias_symbols = gene_data.get("alias", [])
+
+    gene_instance, _ = Gene.objects.update_or_create(
+        hgnc_id=hgnc_id,
+        defaults={
+            "gene_symbol": gene_symbol,
+            "alias_symbols": ",".join(alias_symbols),
+        },
+    )
+
+    confidence_instance, _ = Confidence.objects.get_or_create(
+        confidence_level=3,
+    )
+
+    moi_instance, _ = ModeOfInheritance.objects.get_or_create(
+        mode_of_inheritance=single_gene.get("mode_of_inheritance"),
+    )
+
+    # mop value might be None
+    mop_instance, _ = ModeOfPathogenicity.objects.get_or_create(
+        mode_of_pathogenicity=single_gene.get("mode_of_pathogenicity"),
+    )
+
+    # value for 'penetrance' might be empty
+    penetrance_instance, _ = Penetrance.objects.get_or_create(
+        penetrance=single_gene.get("penetrance"),
+    )
+
+    # create PanelGene record linking Panel to HGNC
+    pg_instance, created = PanelGene.objects.get_or_create(
+        panel_id=panel_instance.id,
+        gene_id=gene_instance.id,
+        confidence_id=confidence_instance.id,
+        moi_id=moi_instance.id,
+        mop_id=mop_instance.id,
+        penetrance_id=penetrance_instance.id,
+        defaults={
+            "justification": "PanelApp",
+        },
+    )
+
+    if created:
+        PanelGeneHistory.objects.create(
+            panel_gene_id=pg_instance.id,
+            note="Created by PanelApp seed.",
+        )
+    else:
+        # Panel-Gene record already exist
+        # meaning probably there's a new PanelApp import
+        # with a different justification
+
+        if pg_instance.justification != "PanelApp":
+            PanelGeneHistory.objects.create(
+                panel_gene_id=pg_instance.id,
+                note=f"Panel-Gene justification changed from {pg_instance.justification} to PanelApp by PanelApp seed.",
+            )
+
+            pg_instance.justification = "PanelApp"
+            pg_instance.save()
+        else:
+            pass
+
+
 @transaction.atomic
 def insert_data_into_db(panel: PanelClass) -> None:
     """
@@ -111,69 +181,9 @@ def insert_data_into_db(panel: PanelClass) -> None:
         # and we only fetch confidence level 3
         if not hgnc_id or float(confidence_level) != 3.0:
             continue
+    
+        single_gene_creation_controller(single_gene, gene_data, hgnc_id, panel_instance)
 
-        gene_symbol = gene_data.get("gene_symbol")
-        alias_symbols = gene_data.get("alias", [])
-
-        gene_instance, _ = Gene.objects.update_or_create(
-            hgnc_id=hgnc_id,
-            defaults={
-                "gene_symbol": gene_symbol,
-                "alias_symbols": ",".join(alias_symbols),
-            },
-        )
-
-        confidence_instance, _ = Confidence.objects.get_or_create(
-            confidence_level=3,
-        )
-
-        moi_instance, _ = ModeOfInheritance.objects.get_or_create(
-            mode_of_inheritance=single_gene.get("mode_of_inheritance"),
-        )
-
-        # mop value might be None
-        mop_instance, _ = ModeOfPathogenicity.objects.get_or_create(
-            mode_of_pathogenicity=single_gene.get("mode_of_pathogenicity"),
-        )
-
-        # value for 'penetrance' might be empty
-        penetrance_instance, _ = Penetrance.objects.get_or_create(
-            penetrance=single_gene.get("penetrance"),
-        )
-
-        # create PanelGene record linking Panel to HGNC
-        pg_instance, created = PanelGene.objects.get_or_create(
-            panel_id=panel_instance.id,
-            gene_id=gene_instance.id,
-            confidence_id=confidence_instance.id,
-            moi_id=moi_instance.id,
-            mop_id=mop_instance.id,
-            penetrance_id=penetrance_instance.id,
-            defaults={
-                "justification": "PanelApp",
-            },
-        )
-
-        if created:
-            PanelGeneHistory.objects.create(
-                panel_gene_id=pg_instance.id,
-                note="Created by PanelApp seed.",
-            )
-        else:
-            # Panel-Gene record already exist
-            # meaning probably there's a new PanelApp import
-            # with a different justification
-
-            if pg_instance.justification != "PanelApp":
-                PanelGeneHistory.objects.create(
-                    panel_gene_id=pg_instance.id,
-                    note=f"Panel-Gene justification changed from {pg_instance.justification} to PanelApp by PanelApp seed.",
-                )
-
-                pg_instance.justification = "PanelApp"
-                pg_instance.save()
-            else:
-                pass
 
     # for each panel region, populate the region attribute models
     for single_region in panel.regions:
