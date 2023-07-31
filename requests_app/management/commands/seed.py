@@ -73,12 +73,6 @@ class Command(BaseCommand):
             help="force td seed ignoring td version",
         )
 
-        # TODO: deal with this
-        # Parser for form command e.g. form <input_file>
-        form = subparsers.add_parser("form", help="import request form data")
-
-        form.add_argument("input", type=str, help="Path to request form file")
-
         # Parser for transcript command e.g. transcript
         transcript = subparsers.add_parser(
             "transcript", help="seed transcripts for genes"
