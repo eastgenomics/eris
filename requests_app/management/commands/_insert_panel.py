@@ -171,30 +171,30 @@ def single_region_creation_controller(single_region: dict(), panel_instance_id: 
     )
 
 
-def disable_previous_panel_instances_controller(previous_panel: Panel) -> None:
+def flag_ci_panel_instances_controller(panel: Panel) -> None:
     """
-    Controller function which disables links between an old panel and its clinical indications, 
+    Controller function which flags links between a panel and its clinical indications for manual review, 
     and prints a message about it.
+    This is useful when a new version of a panel comes out, and the user might want to switch to using that 
+    for a clinical indication instead.
     Note that a Panel might have multiple CI-Panel links!
     """
-    previous_ci_panel_instances: QuerySet[
+    ci_panel_instances: QuerySet[
         ClinicalIndicationPanel
     ] = ClinicalIndicationPanel.objects.filter(
-        panel_id=previous_panel.id,
+        panel_id=panel.id,
         current=True,  # get those that are active
     )
 
-    # for each previous CI-Panel instance, disable
-    if previous_ci_panel_instances:
-        for ci_panel_instance in previous_ci_panel_instances:
-            ci_panel_instance.current = False
+    # for each previous CI-Panel instance, flag for manual review
+    if ci_panel_instances:
+        for ci_panel_instance in ci_panel_instances:
+            ci_panel_instance.manual_review = True
             ci_panel_instance.save()
 
             print(
-                'Disabled previous CI-Panel link {} for Panel "{}"'.format(
-                    ci_panel_instance.id,
-                    previous_panel.panel_name,
-                )
+                'Flagged previous CI-Panel link {} for Panel "{}" for manual review '.format(
+                    ci_panel_instance.id, panel.panel_name) + '- a new panel version is available'
             )
 
     # TODO: disabling old CI-Panel link but new one need to wait till next TD import?
@@ -224,10 +224,12 @@ def insert_data_into_db(panel: PanelClass) -> None:
         },
     )
 
-    # if created meaning new Panel record have
-    # different name or version
+    # if created = the new Panel record has a different name or version,
     # regardless of panel_source
     if created:
+        # if an old version of the panel exists, we need to ensure that the new panel version is chosen manually
+        panel_instance.needs_review = True
+
         # handle previous Panel(s) with similar external_id. Panel name and version aren't suited for this.
         # disable previous CI-Panel links, rather than just deleting them
 
@@ -239,7 +241,7 @@ def insert_data_into_db(panel: PanelClass) -> None:
         # We expect PanelApp to always fetch the latest
         # version of the panel, thus version control is not needed
         for previous_panel in previous_panel_instances:
-            disable_previous_panel_instances_controller(previous_panel)
+            flag_ci_panel_instances_controller(previous_panel)
 
     # attach each Gene record to the new Panel record
     for single_gene in panel.genes:
