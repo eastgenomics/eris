@@ -140,6 +140,12 @@ class ClinicalIndicationPanel(models.Model):
     # active status
     current = models.BooleanField(verbose_name="latest association")
 
+    needs_review = models.BooleanField(
+        verbose_name="needs manual review?",
+        null=False,
+        default=False
+    )
+
     class Meta:
         db_table = "clinical_indication_panel"
 
