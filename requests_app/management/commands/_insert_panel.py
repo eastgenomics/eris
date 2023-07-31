@@ -171,6 +171,35 @@ def single_region_creation_controller(single_region: dict(), panel_instance_id: 
     )
 
 
+def disable_previous_panel_instances_controller(previous_panel: Panel) -> None:
+    """
+    Controller function which disables links between an old panel and its clinical indications, 
+    and prints a message about it.
+    Note that a Panel might have multiple CI-Panel links!
+    """
+    previous_ci_panel_instances: QuerySet[
+        ClinicalIndicationPanel
+    ] = ClinicalIndicationPanel.objects.filter(
+        panel_id=previous_panel.id,
+        current=True,  # get those that are active
+    )
+
+    # for each previous CI-Panel instance, disable
+    if previous_ci_panel_instances:
+        for ci_panel_instance in previous_ci_panel_instances:
+            ci_panel_instance.current = False
+            ci_panel_instance.save()
+
+            print(
+                'Disabled previous CI-Panel link {} for Panel "{}"'.format(
+                    ci_panel_instance.id,
+                    previous_panel.panel_name,
+                )
+            )
+
+    # TODO: disabling old CI-Panel link but new one need to wait till next TD import?
+
+
 @transaction.atomic
 def insert_data_into_db(panel: PanelClass) -> None:
     """
@@ -199,47 +228,20 @@ def insert_data_into_db(panel: PanelClass) -> None:
     # different name or version
     # regardless of panel_source
     if created:
-        # handle previous Panel with similar external_id
-        # disable previous CI-Panel link
+        # handle previous Panel(s) with similar external_id. Panel name and version aren't suited for this.
+        # disable previous CI-Panel links, rather than just deleting them
 
-        # filter by external_id
-        # because Panel name or version might be different
         previous_panel_instances: list[Panel] = Panel.objects.filter(
             external_id=panel_external_id,
             panel_version__lt=sortable_version(panel_version),
-        )  # expect multiple
+        )  
 
         # We expect PanelApp to always fetch the latest
-        # version of the panel thus version control is not needed
-
-        # do not delete previous Panel record!!
-
-        # disable CI-Panel link if any
-        # a Panel "might" have multiple CI-Panel link
+        # version of the panel, thus version control is not needed
         for previous_panel in previous_panel_instances:
-            previous_ci_panel_instances: QuerySet[
-                ClinicalIndicationPanel
-            ] = ClinicalIndicationPanel.objects.filter(
-                panel_id=previous_panel.id,
-                current=True,  # get those that are active
-            )
+            disable_previous_panel_instances_controller(previous_panel)
 
-            # for each previous CI-Panel instance, disable
-            if previous_ci_panel_instances:
-                for ci_panel_instance in previous_ci_panel_instances:
-                    ci_panel_instance.current = False
-                    ci_panel_instance.save()
-
-                    print(
-                        'Disabled previous CI-Panel link {} for Panel "{}"'.format(
-                            ci_panel_instance.id,
-                            previous_panel.panel_name,
-                        )
-                    )
-
-            # TODO: disabling old CI-Panel link but new one need to wait till next TD import?
-
-    # attaching each Gene record to Panel record
+    # attach each Gene record to the new Panel record
     for single_gene in panel.genes:
         gene_data: dict = single_gene.get("gene_data")
 
