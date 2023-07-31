@@ -52,6 +52,13 @@ class Panel(models.Model):
         auto_now_add=True,
     )
 
+    # whether or not the Panel is awaiting manual review, before it can be used locally
+    needs_review = models.BooleanField(
+        verbose_name="needs manual review?",
+        null=False,
+        default=False
+    )
+
     class Meta:
         db_table = "panel"
 
