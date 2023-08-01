@@ -22,15 +22,22 @@ class Command(BaseCommand):
     )
 
     def _validate_td(self, directory: str) -> bool:
+        """Validate that the input file is a json file and is there"""
         if not directory.endswith(".json") or not os.path.isfile(directory):
             return False
 
         return True
 
     def _validate_file_exist(self, file_paths: list[str]) -> bool:
+        """Validate that the input files are there"""
+        missing_files: list[str] = []
+
         for file_path in file_paths:
             if not file_path or not os.path.isfile(file_path):
-                raise Exception(f"File {file_path} does not exist")
+                missing_files.append(file_path)
+
+        if missing_files:
+            raise Exception(f"Files {', '.join(missing_files)} do not exist")
 
         return True
 
