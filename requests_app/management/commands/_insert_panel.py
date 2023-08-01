@@ -149,18 +149,26 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
             name=single_region.get("entity_name"),
             verbose_name=single_region.get("verbose_name"),
             chrom=single_region.get("chromosome"),
-            start_37=single_region.get("grch37_coordinates")[0]
-            if single_region.get("grch37_coordinates")
-            else None,
-            end_37=single_region.get("grch37_coordinates")[1]
-            if single_region.get("grch37_coordinates")
-            else None,
-            start_38=single_region.get("grch38_coordinates")[0]
-            if single_region.get("grch38_coordinates")
-            else None,
-            end_38=single_region.get("grch38_coordinates")[1]
-            if single_region.get("grch38_coordinates")
-            else None,
+            start_37=(
+                single_region.get("grch37_coordinates")[0]
+                if single_region.get("grch37_coordinates")
+                else None
+            ),
+            end_37=(
+                single_region.get("grch37_coordinates")[1]
+                if single_region.get("grch37_coordinates")
+                else None
+            ),
+            start_38=(
+                single_region.get("grch38_coordinates")[0]
+                if single_region.get("grch38_coordinates")
+                else None
+            ),
+            end_38=(
+                single_region.get("grch38_coordinates")[1]
+                if single_region.get("grch38_coordinates")
+                else None
+            ),
             type=single_region.get("entity_type"),
             confidence_id=confidence_instance.id,
             moi_id=moi_instance.id,
