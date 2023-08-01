@@ -8,7 +8,8 @@ from django.db import transaction
 from django.db.models import QuerySet
 
 from ._utils import sortable_version, normalize_version
-from ._insert_panel import flag_ci_panel_instances_controller
+from ._insert_panel import flag_ci_panel_instances_controller, \
+    make_provisional_ci_panel_link
 
 from requests_app.models import (
     Panel,
@@ -307,22 +308,19 @@ def insert_test_directory_data(json_data: dict, user:str, force: bool = False) -
 
         if created:
             # New clinical indication - the old CI-panel entries with the same R code, 
-            # will be set to 'needs_review=True'
-            # TODO: this logic need revisit - the user will need to assign the new indication to the 
-            # panel(s)
+            # will be set to 'needs_review=True'. The new CI will be linked to those panels, 
+            # again with 'needs_review=True' to make it provisional.
 
             previous_ci_panels = ClinicalIndicationPanel.objects.filter(
                 clinical_indication_id__r_code=r_code,
                 current=True,
             )
 
-            # set these old links to needs_review = True - the end user can select whether they should 
-            # still be current or not
             for previous_ci_panel in previous_ci_panels:
-                flag_ci_panel_instances_controller(previous_ci_panel, user)
-
-                # TODO: link the new clinical indication, to the panels which the old indication was linked to?
-                # TODO: this will mimic the behaviour when we import from PanelApp
+                previous_panel_ci_links = \
+                    flag_ci_panel_instances_controller(previous_ci_panel, user)
+                if previous_panel_ci_links:
+                    make_provisional_ci_panel_link(previous_panel_ci_links, ci_instance, user)
 
         else:
             # Check for change in test method
