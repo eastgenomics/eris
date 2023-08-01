@@ -5,7 +5,7 @@ python manage.py seed --help
 import os
 import json
 
-from ._insert_panel import insert_data_into_db, insert_form_data
+from ._insert_panel import insert_data_into_db
 from ._parse_transcript import seed_transcripts
 from ._insert_ci import insert_data
 from .panel import get_panel, PanelClass, fetch_all_panels
@@ -186,18 +186,6 @@ class Command(BaseCommand):
 
             if not test_mode:
                 insert_data(json_data, force)
-
-        # python manage.py seed form <input_file>
-        elif command == "form":
-            # TODO: This functionality is not usable yet
-            # read in data from the form
-
-            form_input = kwargs.get("input")
-
-            parsed_data = self.parse_form_data(form_input)
-
-            if not test_mode:
-                insert_form_data(parsed_data)
 
         # python manage.py seed transcript --hgnc <path> --mane <path> --gff <path> --g2refseq <path> --markname <path> --error
         elif command == "transcript":
