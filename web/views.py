@@ -48,6 +48,9 @@ def index(request):
 def panel(request, panel_id: int):
     """
     Panel info page when viewing single panel
+
+    Args:
+        panel_id (int): panel id
     """
 
     # fetch panel
@@ -124,6 +127,9 @@ def panel(request, panel_id: int):
 def clinical_indication(request, ci_id: int):
     """
     Clinical indication info page
+
+    Args:
+        ci_id (int): clinical indication id
     """
 
     # fetch ci
@@ -326,6 +332,9 @@ def add_panel(request):
 def add_ci_panel(request, ci_id: int):
     """
     Add clinical indication panel page
+
+    Args:
+        ci_id (int): clinical indication id
     """
 
     # find all panel linked to this ci
@@ -503,6 +512,9 @@ def history(request):
 def add_gene(request, panel_id: int):
     """
     Edit Panel gene page
+
+    Args:
+        panel_id (int): panel id
     """
 
     # fetch panel and normalize version
@@ -560,6 +572,9 @@ def clinical_indication_panels(request):
 def activate_or_deactivate_clinical_indication_panel(request, cip_id: int):
     """
     Clinical indication panel add / remove page
+
+    Args:
+        cip_id (int): clinical indication panel id
     """
     if request.method == "POST":
         previous_link = request.META.get("HTTP_REFERER")  # fetch previous link
