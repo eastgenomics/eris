@@ -30,6 +30,13 @@ from django.db import transaction
 
 
 def _insert_gene(panel: PanelClass, panel_instance: Panel) -> None:
+    """
+    Function to insert gene component of Panel into database.
+
+    :param panel: PanelClass object
+    :param panel_instance: Panel object
+    """
+
     # attaching each Gene record to Panel record
     for single_gene in panel.genes:
         gene_data: dict = single_gene.get("gene_data")
@@ -40,7 +47,7 @@ def _insert_gene(panel: PanelClass, panel_instance: Panel) -> None:
         hgnc_id = gene_data.get("hgnc_id")
         confidence_level = single_gene.get("confidence_level")
 
-        # there is only confidence level 1 2 3
+        # there is only confidence level 0 1 2 3
         # and we only fetch confidence level 3
         if not hgnc_id or float(confidence_level) != 3.0:
             continue
@@ -110,6 +117,13 @@ def _insert_gene(panel: PanelClass, panel_instance: Panel) -> None:
 
 
 def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
+    """
+    Function to insert region component of Panel into database.
+
+    :param panel: PanelClass object
+    :param panel_instance: Panel object
+    """
+
     # for each panel region, populate the region attribute models
     for single_region in panel.regions:
         confidence_instance, _ = Confidence.objects.get_or_create(
@@ -190,7 +204,9 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
 @transaction.atomic
 def insert_data_into_db(panel: PanelClass) -> None:
     """
-    Insert data from parsed JSON into database.
+    Insert Panel data into db
+
+    :param panel: PanelClass object
     """
     panel_external_id: str = panel.id
     panel_name: str = panel.name

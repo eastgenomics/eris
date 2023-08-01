@@ -67,7 +67,9 @@ def activate_clinical_indication_panel(
     user: str,
 ) -> None:
     """
-    Fetch ci-panel and make it active. If it doesn't exist, create it.
+    Fetch ci-panel and make it active.
+    If it doesn't exist, create it.
+    If it already active, do nothing.
 
     :param clinical_indication_id: clinical indication database id
     :param panel_id: panel database id

@@ -131,10 +131,10 @@ def _prepare_gff_file(gff_file: str) -> dict[str, list]:
         gff.groupby("hgnc")
         .agg(
             {
-                "transcripts": lambda x: list(set(list(x))),
+                "transcript": lambda x: list(set(list(x))),
             }
         )
-        .to_dict()["transcripts"]
+        .to_dict()["transcript"]
     )
 
 

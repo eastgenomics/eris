@@ -1,12 +1,11 @@
 import requests
 
-# TODO: make this not hard-coded
-API_URL = "https://panelapp.genomicsengland.co.uk/api/v1/panels/"
+from panel_requests.settings import PANELAPP_API_URL
 
 
 class PanelClass:
     """
-    Class for panel with additional function
+    Class for panel data. Greedy ingestion of all attributes from PanelApp API
     """
 
     def __init__(self, **a):
@@ -24,14 +23,20 @@ class PanelClass:
 def _get_all_panel(signed_off: bool = True) -> list[dict]:
     """
     Function to get all signed off panels
+
+    :param signed_off: boolean to get signed off panels
+
+    :return: list of panels (dict)
     """
     all_panels = []
 
     if signed_off:
-        panelapp_url = f"{API_URL}signedoff?format=json"
+        panelapp_url = f"{PANELAPP_API_URL}signedoff?format=json"
     else:
-        panelapp_url = f"{API_URL}?format=json"
+        panelapp_url = f"{PANELAPP_API_URL}?format=json"
 
+    # panelapp return a paginated response
+    # if next is not None, there's more data to fetch
     while panelapp_url:
         response = requests.get(panelapp_url)
 
@@ -39,8 +44,8 @@ def _get_all_panel(signed_off: bool = True) -> list[dict]:
             break
 
         data = response.json()
-        all_panels += data["results"]
-        panelapp_url = data["next"]
+        all_panels += data["results"]  # append to all_panels
+        panelapp_url = data["next"]  # here we keep fetching until next is None
 
     return all_panels
 
@@ -51,11 +56,13 @@ def get_panel(panel_num: int, version: float = None) -> PanelClass:
 
     :param panel_num: panel number
     :param version: panel version
+
+    :return: PanelClass object
     """
     if version:
-        panel_url = f"{API_URL}{panel_num}/?version={version}&format=json"
+        panel_url = f"{PANELAPP_API_URL}{panel_num}/?version={version}&format=json"
     else:
-        panel_url = f"{API_URL}{panel_num}/?format=json"
+        panel_url = f"{PANELAPP_API_URL}{panel_num}/?format=json"
 
     response = requests.get(panel_url)
 
@@ -68,6 +75,8 @@ def get_panel(panel_num: int, version: float = None) -> PanelClass:
 def fetch_all_panels() -> list[PanelClass]:
     """
     Function to get all signed off panels
+
+    :return: list of PanelClass objects
     """
 
     print("Fetching all PanelApp panels...")

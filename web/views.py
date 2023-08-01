@@ -24,7 +24,7 @@ from requests_app.management.commands._utils import normalize_version
 
 def index(request):
     """
-    Main page
+    Main page. Display all clinical indications and panels
     """
 
     # fetch all clinical indications
@@ -48,6 +48,7 @@ def index(request):
 def panel(request, panel_id: int):
     """
     Panel info page when viewing single panel
+    Shows everything about a panel: genes, transcripts, clinical indications, clinical indication-panel links etc
 
     Args:
         panel_id (int): panel id
@@ -127,6 +128,7 @@ def panel(request, panel_id: int):
 def clinical_indication(request, ci_id: int):
     """
     Clinical indication info page
+    Shows everything about a clinical indication: genes, transcripts, panels, clinical indication-panel links etc
 
     Args:
         ci_id (int): clinical indication id
@@ -535,6 +537,8 @@ def add_gene(request, panel_id: int):
 def clinical_indication_panels(request):
     """
     Clinical indication panel page
+
+    Shows all clinical indication panel links
     """
 
     # fetch all ci-panel links

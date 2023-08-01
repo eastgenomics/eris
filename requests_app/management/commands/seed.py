@@ -8,7 +8,7 @@ import json
 from ._insert_panel import insert_data_into_db
 from ._parse_transcript import seed_transcripts
 from ._insert_ci import insert_data
-from .panel import get_panel, PanelClass, fetch_all_panels
+from .panelapp import get_panel, PanelClass, fetch_all_panels
 
 
 from django.core.management.base import BaseCommand
@@ -125,8 +125,6 @@ class Command(BaseCommand):
         """Coordinates functions to import and parse data from
         specified source, then calls inserter to insert cleaned data
         into the database."""
-
-        print(kwargs)
 
         test_mode: bool = kwargs.get("debug", False)
         command: str = kwargs.get("command")
