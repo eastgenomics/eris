@@ -1,5 +1,6 @@
 import requests
 
+# TODO: make this not hard-coded
 API_URL = "https://panelapp.genomicsengland.co.uk/api/v1/panels/"
 
 

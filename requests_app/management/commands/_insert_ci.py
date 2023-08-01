@@ -28,12 +28,15 @@ from requests_app.models import (
 def _get_td_version(filename: str) -> str | None:
     """
     Get TD version from filename.
+    convert "rare-and-inherited-disease-national-genomic-test-directory-v4.xlsx" into "4"
 
     :param: filename [str]: filename of TD json file
 
     returns:
         td_version [str]: TD version e.g. 4
     """
+
+    # grab only filename without the extension
     td_filename, _ = os.path.splitext(filename)
 
     try:
@@ -225,7 +228,7 @@ def _make_panels_from_hgncs(
     if created:
         ClinicalIndicationPanelHistory.objects.create(
             clinical_indication_panel_id=cpi_instance.id,
-            note=f"Created by td source",
+            note="Created by td source",
             user=td_source,
         )
     else:
