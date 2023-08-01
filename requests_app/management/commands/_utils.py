@@ -2,7 +2,7 @@ def sortable_version(version: str) -> str:
     """
     Turn '1.1' -> '00001.00001'
     """
-    return ".".join(bit.zfill(5) for bit in version.split("."))
+    return ".".join(bit.zfill(5) for bit in str(version).split("."))
 
 
 def normalize_version(padded_version: str) -> float:

@@ -17,9 +17,11 @@ from requests_app.models import (
     VariantType,
     Region,
     PanelGeneHistory,
+    PanelRegion,
 )
 
 from ._utils import sortable_version
+from .panel import PanelClass
 from django.db.models import QuerySet
 from django.db import transaction
 
@@ -28,13 +30,13 @@ from django.db import transaction
 
 
 @transaction.atomic
-def insert_data_into_db(parsed_data: dict) -> None:
+def insert_data_into_db(panel: PanelClass) -> None:
     """
     Insert data from parsed JSON into database.
     """
-    panel_external_id: str = parsed_data["external_id"]
-    panel_name: str = parsed_data["panel_name"]
-    panel_version: str = parsed_data["panel_version"]
+    panel_external_id: str = panel.id
+    panel_name: str = panel.name
+    panel_version: str = panel.version
 
     # created Panel record
     # if there's a change in panel_name or panel_version
@@ -44,7 +46,7 @@ def insert_data_into_db(parsed_data: dict) -> None:
         panel_name=panel_name,
         panel_version=sortable_version(panel_version),
         defaults={
-            "panel_source": parsed_data["panel_source"],
+            "panel_source": panel.panel_source,
             "grch37": True,
             "grch38": True,
             "test_directory": False,
@@ -96,31 +98,47 @@ def insert_data_into_db(parsed_data: dict) -> None:
             # TODO: disabling old CI-Panel link but new one need to wait till next TD import?
 
     # attaching each Gene record to Panel record
-    for single_gene in parsed_data["genes"]:
+    for single_gene in panel.genes:
+        gene_data: dict = single_gene.get("gene_data")
+
+        if not gene_data:
+            continue
+
+        hgnc_id = gene_data.get("hgnc_id")
+        confidence_level = single_gene.get("confidence_level")
+
+        # there is only confidence level 1 2 3
+        # and we only fetch confidence level 3
+        if not hgnc_id or float(confidence_level) != 3.0:
+            continue
+
+        gene_symbol = gene_data.get("gene_symbol")
+        alias_symbols = gene_data.get("alias", [])
+
         gene_instance, _ = Gene.objects.update_or_create(
-            hgnc_id=single_gene["hgnc_id"],
+            hgnc_id=hgnc_id,
             defaults={
-                "gene_symbol": single_gene["gene_symbol"],
-                "alias_symbols": single_gene["alias_symbols"],
+                "gene_symbol": gene_symbol,
+                "alias_symbols": ",".join(alias_symbols),
             },
         )
 
         confidence_instance, _ = Confidence.objects.get_or_create(
-            confidence_level=single_gene["confidence_level"],
+            confidence_level=3,
         )
 
         moi_instance, _ = ModeOfInheritance.objects.get_or_create(
-            mode_of_inheritance=single_gene["mode_of_inheritance"],
+            mode_of_inheritance=single_gene.get("mode_of_inheritance"),
         )
 
         # mop value might be None
         mop_instance, _ = ModeOfPathogenicity.objects.get_or_create(
-            mode_of_pathogenicity=single_gene["mode_of_pathogenicity"],
+            mode_of_pathogenicity=single_gene.get("mode_of_pathogenicity"),
         )
 
         # value for 'penetrance' might be empty
         penetrance_instance, _ = Penetrance.objects.get_or_create(
-            penetrance=single_gene["penetrance"],
+            penetrance=single_gene.get("penetrance"),
         )
 
         # create PanelGene record linking Panel to HGNC
@@ -132,7 +150,7 @@ def insert_data_into_db(parsed_data: dict) -> None:
             mop_id=mop_instance.id,
             penetrance_id=penetrance_instance.id,
             defaults={
-                "justification": single_gene["gene_justification"],
+                "justification": "PanelApp",
             },
         )
 
@@ -146,61 +164,69 @@ def insert_data_into_db(parsed_data: dict) -> None:
             # meaning probably there's a new PanelApp import
             # with a different justification
 
-            if pg_instance.justification != single_gene["gene_justification"]:
+            if pg_instance.justification != "PanelApp":
                 PanelGeneHistory.objects.create(
                     panel_gene_id=pg_instance.id,
-                    note=f"Panel-Gene justification changed from {pg_instance.justification} to {single_gene['gene_justification']} by PanelApp seed.",
+                    note=f"Panel-Gene justification changed from {pg_instance.justification} to PanelApp by PanelApp seed.",
                 )
 
-                pg_instance.justification = single_gene["gene_justification"]
+                pg_instance.justification = "PanelApp"
                 pg_instance.save()
             else:
                 pass
 
     # for each panel region, populate the region attribute models
-    for single_region in parsed_data["regions"]:
+    for single_region in panel.regions:
         confidence_instance, _ = Confidence.objects.get_or_create(
-            confidence_level=single_region["confidence_level"],
+            confidence_level=single_region.get("confidence_level"),
         )
 
         moi_instance, _ = ModeOfInheritance.objects.get_or_create(
-            mode_of_inheritance=single_region["mode_of_inheritance"],
+            mode_of_inheritance=single_region.get("mode_of_inheritance"),
         )
 
         vartype_instance, _ = VariantType.objects.get_or_create(
-            variant_type=single_region["variant_type"],
+            variant_type=single_region.get("type_of_variants"),
         )
 
         overlap_instance, _ = RequiredOverlap.objects.get_or_create(
-            required_overlap=single_region["required_overlap"],
+            required_overlap=single_region.get("required_overlap_percentage"),
         )
 
         mop_instance, _ = ModeOfPathogenicity.objects.get_or_create(
-            mode_of_pathogenicity=single_region["mode_of_pathogenicity"]
+            mode_of_pathogenicity=single_region.get("mode_of_pathogenicity")
         )
 
         penetrance_instance, _ = Penetrance.objects.get_or_create(
-            penetrance=single_region["penetrance"],
+            penetrance=single_region.get("penetrance"),
         )
 
         haplo_instance, _ = Haploinsufficiency.objects.get_or_create(
-            haploinsufficiency=single_region["haploinsufficiency"],
+            haploinsufficiency=single_region.get("haploinsufficiency_score"),
         )
 
         triplo_instance, _ = Triplosensitivity.objects.get_or_create(
-            triplosensitivity=single_region["triplosensitivity"],
+            triplosensitivity=single_region.get("triplosensitivity_score"),
         )
 
         # attach Region record to Panel record
-        Region.objects.get_or_create(
-            name=single_region["name"],
-            chrom=single_region["chrom"],
-            start_37=single_region["start_37"],
-            end_37=single_region["end_37"],
-            start_38=single_region["start_38"],
-            end_38=single_region["end_38"],
-            type=single_region["type"],
-            panel_id=panel_instance.id,
+        region_instance, _ = Region.objects.get_or_create(
+            name=single_region.get("entity_name"),
+            verbose_name=single_region.get("verbose_name"),
+            chrom=single_region.get("chromosome"),
+            start_37=single_region.get("grch37_coordinates")[0]
+            if single_region.get("grch37_coordinates")
+            else None,
+            end_37=single_region.get("grch37_coordinates")[1]
+            if single_region.get("grch37_coordinates")
+            else None,
+            start_38=single_region.get("grch38_coordinates")[0]
+            if single_region.get("grch38_coordinates")
+            else None,
+            end_38=single_region.get("grch38_coordinates")[1]
+            if single_region.get("grch38_coordinates")
+            else None,
+            type=single_region.get("entity_type"),
             confidence_id=confidence_instance.id,
             moi_id=moi_instance.id,
             mop_id=mop_instance.id,
@@ -209,7 +235,12 @@ def insert_data_into_db(parsed_data: dict) -> None:
             triplo_id=triplo_instance.id,
             overlap_id=overlap_instance.id,
             vartype_id=vartype_instance.id,
-            justification=single_region["justification"],
+        )
+
+        PanelRegion.objects.get_or_create(
+            panel_id=panel_instance.id,
+            region_id=region_instance.id,
+            defaults={"justification": "PanelApp"},
         )
 
 
