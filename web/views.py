@@ -28,7 +28,10 @@ from requests_app.models import (
 from requests_app.management.commands._utils import normalize_version
 
 
-def _parse_hgnc(file_path) -> set:
+def _parse_hgnc(file_path: str) -> set:
+    """
+    Function to parse hgnc file and return a set of rna hgnc ids
+    """
     rnas = set()
 
     with open(file_path, "r") as f:
