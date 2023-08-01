@@ -18,7 +18,6 @@ from requests_app.models import (
     PanelGene,
     PanelGeneHistory,
     Transcript,
-    PanelGeneTranscript,
 )
 from requests_app.management.commands._utils import normalize_version
 
@@ -27,10 +26,13 @@ def index(request):
     """
     Main page
     """
+
+    # fetch all clinical indications
     all_ci: list[ClinicalIndication] = ClinicalIndication.objects.order_by(
         "r_code"
     ).all()
 
+    # fetch all panels
     all_panels: list[dict] = Panel.objects.order_by("panel_name").all()
 
     return render(
@@ -45,21 +47,21 @@ def index(request):
 
 def panel(request, panel_id: int):
     """
-    Panel info page
+    Panel info page when viewing single panel
     """
 
     # fetch panel
     panel: Panel = Panel.objects.get(id=panel_id)
     panel.panel_version = normalize_version(panel.panel_version)
 
-    # fetch ci-panels
+    # fetch ci-panels (related ci)
     ci_panels: QuerySet[
         ClinicalIndicationPanel
     ] = ClinicalIndicationPanel.objects.filter(
         panel_id=panel.id,
     )
 
-    # converting version to readable format
+    # converting ci-panel version to readable format
     for cip in ci_panels:
         cip.td_version = normalize_version(cip.td_version)
 
@@ -98,6 +100,7 @@ def panel(request, panel_id: int):
         .order_by("gene_id__gene_symbol")
     )
 
+    # fetch all transcripts associated with genes in panel
     all_transcripts: QuerySet[Transcript] = (
         Transcript.objects.filter(gene_id__in=[p["gene_id"] for p in pgs])
         .values("gene_id__hgnc_id", "transcript", "source")
@@ -196,8 +199,10 @@ def clinical_indication(request, ci_id: int):
     # ensure django template can read collections.defaultdict as dict
     panel_genes_dict.default_factory = None
 
+    # fetch all genes associated with panel
     all_gene_ids: set[str] = set([pg["gene_id"] for pg in panel_genes])
 
+    # fetch all transcripts associated with genes in panel
     all_transcripts: QuerySet[Transcript] = (
         Transcript.objects.filter(gene_id__in=all_gene_ids)
         .values("gene_id__hgnc_id", "transcript", "source")
@@ -220,7 +225,7 @@ def clinical_indication(request, ci_id: int):
 
 def add_clinical_indication(request):
     """
-    Add clinical indication
+    Add clinical indication page
     """
     if request.method == "GET":
         return render(
@@ -233,6 +238,7 @@ def add_clinical_indication(request):
         # parse form
         form: ClinicalIndicationForm = ClinicalIndicationForm(request.POST)
 
+        # check if form is valid
         form_valid: bool = form.is_valid()
 
         r_code: str = request.POST.get("r_code").strip()
@@ -241,13 +247,19 @@ def add_clinical_indication(request):
         ci = None
 
         if form_valid:
+            # if form valid, add ci to db
             ci_instance, _ = ClinicalIndication.objects.get_or_create(
                 r_code=r_code,
                 name=name,
                 test_method=test_method,
             )
         else:
-            ci = ClinicalIndication.objects.get(r_code=r_code)
+            # if form invalid, fetch ci from db
+            # return to ask user to modify
+            try:
+                ci = ClinicalIndication.objects.get(r_code=r_code)
+            except ClinicalIndication.DoesNotExist:
+                ci = None
 
         return render(
             request,
@@ -256,7 +268,7 @@ def add_clinical_indication(request):
                 "errors": form.errors if not form_valid else None,
                 "success": ci_instance if form_valid else None,
                 "r_code": r_code,
-                "ci": ci,
+                "ci": ci if ci else None,
                 "name": name,
                 "test_method": test_method,
             },
@@ -265,7 +277,7 @@ def add_clinical_indication(request):
 
 def add_panel(request):
     """
-    Add panel
+    Add panel page
     """
     if request.method == "GET":
         return render(
@@ -279,17 +291,23 @@ def add_panel(request):
         panel_version: str = request.POST.get("panel_version", "")
 
         form: bool = PanelForm(request.POST)
+        # check form valid
         form_valid: bool = form.is_valid()
 
         if form_valid:
+            # if valid, create Panel
             panel: Panel = Panel.objects.create(
                 external_id=request.POST.get("external_id"),
                 panel_name=request.POST.get("panel_name"),
                 panel_version=request.POST.get("panel_version"),
             )
         else:
-            panel = Panel.objects.get(panel_name=panel_name)
-            print(form_valid, form.errors, panel)
+            # if invalid, fetch panel from db
+            try:
+                panel = Panel.objects.get(panel_name=panel_name)
+            except Panel.DoesNotExist:
+                pass
+                # TODO: handle this error
 
         return render(
             request,
@@ -307,9 +325,10 @@ def add_panel(request):
 
 def add_ci_panel(request, ci_id: int):
     """
-    Add clinical indication panel
+    Add clinical indication panel page
     """
 
+    # find all panel linked to this ci
     linked_panels: list[int] = [
         cip.panel_id
         for cip in ClinicalIndicationPanel.objects.filter(
@@ -317,9 +336,12 @@ def add_ci_panel(request, ci_id: int):
         )
     ]
 
+    # fetch the ci
     clinical_indication: ClinicalIndication = ClinicalIndication.objects.get(id=ci_id)
+    # fetch all panels
     panels: QuerySet[Panel] = Panel.objects.all()
 
+    # normalize panel version
     for panel in panels:
         panel.panel_version = normalize_version(panel.panel_version)
 
@@ -334,7 +356,7 @@ def add_ci_panel(request, ci_id: int):
             },
         )
 
-    if request.method == "POST":
+    if request.method == "POST":  # form submission
         panel_id: int = request.POST.get("panel_id")
         action: str = request.POST.get("action")
 
@@ -342,6 +364,7 @@ def add_ci_panel(request, ci_id: int):
 
         if action == "activate":
             with transaction.atomic():
+                # activate ci-panel link
                 cip_instance: ClinicalIndicationPanel = (
                     ClinicalIndicationPanel.objects.update_or_create(
                         clinical_indication_id=ci_id,
@@ -355,7 +378,7 @@ def add_ci_panel(request, ci_id: int):
                     note="Activated by online web",
                 )
         else:
-            # deactivate
+            # deactivate ci-panel link
             with transaction.atomic():
                 cip_instance: ClinicalIndicationPanel = (
                     ClinicalIndicationPanel.objects.get(
@@ -385,6 +408,13 @@ def add_ci_panel(request, ci_id: int):
 def _get_clinical_indication_panel_history(
     limit: int,
 ) -> QuerySet[ClinicalIndicationPanelHistory]:
+    """
+    Function to fetch clinical indication panel history with limit
+
+    Args:
+        limit (int): limit of history to fetch
+    """
+
     return ClinicalIndicationPanelHistory.objects.order_by(
         "-created_date", "-created_time"
     ).values(
@@ -411,6 +441,7 @@ def history(request):
     if request.method == "GET":
         cip_histories = _get_clinical_indication_panel_history(50)
     else:
+        # filter for what checkbox is ticked in the front-end
         actions: list[str] = [
             n
             for n in [
@@ -421,9 +452,11 @@ def history(request):
             if n
         ]
 
+        # if no checkbox ticked, fetch default history limit 50
         if not actions:
             cip_histories = _get_clinical_indication_panel_history(50)
         else:
+            # else do cip-history filter with specific query filter
             query_filters = Q()
 
             for note_prefix in actions:
@@ -445,8 +478,10 @@ def history(request):
                 )
             )
 
+            # just to display in front-end on how many rows are fetched
             limit = len(cip_histories)
 
+    # normalize panel version
     for history in cip_histories:
         history[
             "clinical_indication_panel_id__panel_id__panel_version"
@@ -474,6 +509,8 @@ def add_gene(request, panel_id: int):
     panel: Panel = Panel.objects.get(id=panel_id)
     panel.panel_version = normalize_version(panel.panel_version)
 
+    # TODO: POST request function not done yet
+
     return render(
         request,
         "web/addition/add_gene.html",
@@ -488,6 +525,7 @@ def clinical_indication_panels(request):
     Clinical indication panel page
     """
 
+    # fetch all ci-panel links
     cips: QuerySet[ClinicalIndicationPanel] = ClinicalIndicationPanel.objects.values(
         "td_version",
         "current",
@@ -520,9 +558,15 @@ def clinical_indication_panels(request):
 
 
 def activate_or_deactivate_clinical_indication_panel(request, cip_id: int):
+    """
+    Clinical indication panel add / remove page
+    """
     if request.method == "POST":
         previous_link = request.META.get("HTTP_REFERER")  # fetch previous link
         action = request.POST.get("action")
+
+        # TODO: pending for actioned ci-panel should be pending / displayed in front-end
+        # for manual review
 
         if action == "deactivate":
             with transaction.atomic():
@@ -548,7 +592,7 @@ def activate_or_deactivate_clinical_indication_panel(request, cip_id: int):
                     note="Activated by online web",
                 )
         else:
-            # unknown action
+            # unknown action, ignore!
             pass
 
         return redirect(previous_link)

@@ -225,7 +225,7 @@ def _make_panels_from_hgncs(
     if created:
         ClinicalIndicationPanelHistory.objects.create(
             clinical_indication_panel_id=cpi_instance.id,
-            note=f"Created by td source",
+            note="Created by td source",
             user=td_source,
         )
     else:

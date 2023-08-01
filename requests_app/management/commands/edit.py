@@ -11,9 +11,6 @@ from ._queries import (
     activate_clinical_indication_panel,
     deactivate_clinical_indication_panel,
 )
-from requests_app.models import (
-    ClinicalIndicationPanel,
-)
 from django.core.management.base import BaseCommand
 
 POSSIBLE_COMMANDS = ["pname", "pid"]
@@ -158,7 +155,7 @@ class Command(BaseCommand):
             )
 
         if not clinical_indication:
-            raise ValueError(f"No clinical indication found.")
+            raise ValueError("No clinical indication found.")
 
         if action == "activate":
             activate_clinical_indication_panel(
