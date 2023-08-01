@@ -175,7 +175,7 @@ def single_region_creation_controller(single_region: dict(), panel_instance_id: 
 def flag_ci_panel_instances_controller(panel: Panel, user: str) \
     -> QuerySet[ClinicalIndicationPanel] | None:
     """
-    Controller function which flags links between a panel and its clinical indications for manual review, 
+    Controller function which flags ACTIVE links between a panel and its clinical indications for manual review, 
     and prints a message about it.
     This is useful when a new version of a panel comes out, and the user might want to switch to using that 
     for a clinical indication instead.
@@ -213,23 +213,34 @@ def flag_ci_panel_instances_controller(panel: Panel, user: str) \
 
 
 def make_provisional_ci_panel_link(previous_panel_ci_links: QuerySet[ClinicalIndicationPanel], \
-                                   panel_instance: Panel, user: str) -> None:
+                                   panel_or_ci_instance: Panel | ClinicalIndication, \
+                                    user: str, panel_or_ci: bool) -> None:
     """
-    If a new version is made of a panel, give it the same CI links as the previous, active panel.
+    If a new version is made of a panel or a clinical indication, give it the same CI-panel links \
+        as the previous, active table entry.
     However, set the 'needs_review' field to True, so that it shows for manual review by a user.
     Additionally, create a history record.
     """
+    assert panel_or_ci in ["panel", "ci"]
     for prev_link in previous_panel_ci_links:
-        ci_panel_instance, created = ClinicalIndicationPanel.objects.get_or_create(
-            clinical_indication=prev_link.clinical_indication,
-            panel=panel_instance.id,
-            needs_review=True
-        )
+        if panel_or_ci == "panel":
+            ci_panel_instance, created = ClinicalIndicationPanel.objects.get_or_create(
+                clinical_indication=prev_link.clinical_indication,
+                panel=panel_or_ci_instance.id,
+                needs_review=True
+            )
+        else:
+            ci_panel_instance, created = ClinicalIndicationPanel.objects.get_or_create(
+                clinical_indication=panel_or_ci_instance.id,
+                panel=prev_link.panel,
+                needs_review=True
+            )
         if created:
             ClinicalIndicationPanelHistory.objects.create(
                 clinical_indication_panel=ci_panel_instance.id,
-                note="Auto-created CI-panel link based on information available for an earlier panel version \
-                     - needs manual review",
+                note="Auto-created CI-panel link based on information available " +\
+                    "for an earlier {}".format(panel_or_ci) + 
+                    "version - needs manual review",
                 user=user
             )
 
@@ -333,7 +344,10 @@ def single_region_form_controller(single_region, panel_id_in_db, panel_source):
 @transaction.atomic
 def insert_data_into_db(panel: PanelClass, user: str) -> None:
     """
-    Insert data from parsed JSON into database.
+    Insert data from a parsed JSON of panel records, into the database.
+    Controls creation and flagging of new and old CI-Panel links, 
+    where the Panel version has changed.
+    Controls creation of genes and regions.
     """
     panel_external_id: str = panel.id
     panel_name: str = panel.name
@@ -385,9 +399,7 @@ def insert_data_into_db(panel: PanelClass, user: str) -> None:
         # confidence levels can be 1, 2 or 3. We only fetch confidence level 3
         if not hgnc_id or float(confidence_level) != 3.0:
             continue
-    
         single_gene_creation_controller(single_gene, gene_data, hgnc_id, panel_instance)
-
 
     # for each panel region, populate the region attribute models
     for single_region in panel.regions:
@@ -448,7 +460,7 @@ def insert_form_data(parsed_data: dict) -> None:
     # if Panel is not from PanelApp (HGNC)
     # just create new Panel
 
-    # if Panel is from PanelApp
+    # TODO: if Panel is from PanelApp
     # create new Panel (custom=True)
 
     # editing PanelGene interaction
