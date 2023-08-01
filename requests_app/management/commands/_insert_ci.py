@@ -8,6 +8,7 @@ from django.db import transaction
 from django.db.models import QuerySet
 
 from ._utils import sortable_version, normalize_version
+from ._insert_panel import flag_ci_panel_instances_controller
 
 from requests_app.models import (
     Panel,
@@ -259,7 +260,7 @@ def _make_panels_from_hgncs(
 
 
 @transaction.atomic
-def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
+def insert_test_directory_data(json_data: dict, user:str, force: bool = False) -> None:
     """This function insert TD data into DB
 
     e.g. command
@@ -318,17 +319,11 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
             # set these old links to needs_review = True - the end user can select whether they should 
             # still be current or not
             for previous_ci_panel in previous_ci_panels:
-                previous_ci_panel.needs_review = True
-                previous_ci_panel.save()
-
-                ClinicalIndicationPanelHistory.objects.create(
-                    clinical_indication_panel_id=previous_ci_panel.id,
-                    note="New clinical indication added from test directory",
-                    user=td_source,
-                )
+                flag_ci_panel_instances_controller(previous_ci_panel, user)
 
                 # TODO: link the new clinical indication, to the panels which the old indication was linked to?
                 # TODO: this will mimic the behaviour when we import from PanelApp
+
         else:
             # Check for change in test method
             if ci_instance.test_method != indication["test_method"]:

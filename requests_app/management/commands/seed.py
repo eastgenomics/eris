@@ -7,7 +7,7 @@ import json
 
 from ._insert_panel import insert_data_into_db, insert_form_data
 from ._parse_transcript import seed_transcripts
-from ._insert_ci import insert_data
+from ._insert_ci import insert_test_directory_data
 from .panel import get_panel, PanelClass, fetch_all_panels
 
 
@@ -188,7 +188,7 @@ class Command(BaseCommand):
                 json_data = json.load(reader)
 
             if not test_mode:
-                insert_data(json_data, force)
+                insert_test_directory_data(json_data, user, force)
 
         # python manage.py seed form <input_file>
         elif command == "form":
