@@ -30,14 +30,31 @@ from django.db import transaction
 # TODO: need to deal with gene removal from Panel
 
 
-def single_gene_creation_controller(single_gene, gene_data: dict(), hgnc_id: int(), \
-                                    panel_instance: Panel) -> None:
+def _insert_gene(panel: PanelClass, panel_instance: Panel) -> None:
     """
-    A controller function which makes a single gene, and also its history record.
+    Function to insert gene component of Panel into database.
 
+    :param panel: PanelClass object
+    :param panel_instance: Panel object
     """
-    gene_symbol = gene_data.get("gene_symbol")
-    alias_symbols = gene_data.get("alias", [])
+
+    # attaching each Gene record to Panel record
+    for single_gene in panel.genes:
+        gene_data: dict = single_gene.get("gene_data")
+
+        if not gene_data:
+            continue
+
+        hgnc_id = gene_data.get("hgnc_id")
+        confidence_level = single_gene.get("confidence_level")
+
+        # there is only confidence level 0 1 2 3
+        # and we only fetch confidence level 3
+        if not hgnc_id or float(confidence_level) != 3.0:
+            continue
+
+        gene_symbol = gene_data.get("gene_symbol")
+        alias_symbols = gene_data.get("alias", [])
 
     gene_instance, _ = Gene.objects.update_or_create(
         hgnc_id=hgnc_id,
@@ -100,12 +117,17 @@ def single_gene_creation_controller(single_gene, gene_data: dict(), hgnc_id: int
             pass
 
 
-def single_region_creation_controller(single_region: dict(), panel_instance_id: int) \
-    -> None:
+def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
     """
-    Controls the creation of a single region, attached to a particular panel instance
+    Function to insert region component of Panel into database.
+
+    :param panel: PanelClass object
+    :param panel_instance: Panel object
     """
-    confidence_instance, _ = Confidence.objects.get_or_create(
+
+    # for each panel region, populate the region attribute models
+    for single_region in panel.regions:
+        confidence_instance, _ = Confidence.objects.get_or_create(
             confidence_level=single_region.get("confidence_level"),
         )
 
@@ -142,18 +164,26 @@ def single_region_creation_controller(single_region: dict(), panel_instance_id: 
         name=single_region.get("entity_name"),
         verbose_name=single_region.get("verbose_name"),
         chrom=single_region.get("chromosome"),
-        start_37=single_region.get("grch37_coordinates")[0]
-        if single_region.get("grch37_coordinates")
-        else None,
-        end_37=single_region.get("grch37_coordinates")[1]
-        if single_region.get("grch37_coordinates")
-        else None,
-        start_38=single_region.get("grch38_coordinates")[0]
-        if single_region.get("grch38_coordinates")
-        else None,
-        end_38=single_region.get("grch38_coordinates")[1]
-        if single_region.get("grch38_coordinates")
-        else None,
+        start_37=(
+                single_region.get("grch37_coordinates")[0]
+            if single_region.get("grch37_coordinates")
+            else None
+            ),
+        end_37=(
+                single_region.get("grch37_coordinates")[1]
+            if single_region.get("grch37_coordinates")
+            else None
+            ),
+        start_38=(
+                single_region.get("grch38_coordinates")[0]
+            if single_region.get("grch38_coordinates")
+            else None
+            ),
+        end_38=(
+                single_region.get("grch38_coordinates")[1]
+            if single_region.get("grch38_coordinates")
+            else None
+            ),
         type=single_region.get("entity_type"),
         confidence_id=confidence_instance.id,
         moi_id=moi_instance.id,
@@ -166,7 +196,7 @@ def single_region_creation_controller(single_region: dict(), panel_instance_id: 
     )
 
     PanelRegion.objects.get_or_create(
-        panel_id=panel_instance_id,
+        panel_id=panel_instance.id,
         region_id=region_instance.id,
         defaults={"justification": "PanelApp"},
     )
@@ -472,4 +502,4 @@ def insert_form_data(parsed_data: dict) -> None:
 
     for single_region in parsed_data["regions"]:
         single_region_form_controller(single_region, panel_id_in_db, panel_source)
-
+    _insert_gene(panel, panel_instance)

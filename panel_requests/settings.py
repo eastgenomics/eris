@@ -136,3 +136,11 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+GENEPANEL_HGNC = [
+    hgnc.strip().upper() for hgnc in os.environ.get("GENEPANEL_HGNCS", []).split(",")
+]
+
+PANELAPP_API_URL = os.environ.get(
+    "PANELAPP_API_URL", "https://panelapp.genomicsengland.co.uk/api/v1/panels/"
+)

@@ -54,6 +54,9 @@ def _retrieve_panel_from_pa_id(ci_code: str, pa_id: str) -> Panel | None:
 
     :param: ci_code [str]: clinical indication code
     :param: pa_id [str]: panelapp id
+
+    returns:
+        panel_instance [Panel record]
     """
 
     # retrieve Panel records directly created from PA panels with that external_id
@@ -172,19 +175,13 @@ def _make_panels_from_hgncs(
 
                 pg_instance.justification = unique_td_source
                 pg_instance.save()
-            else:
-                pass
 
-    # if new Panel record created
+    # if new Panel record created, check if there is old CI-Panel record
+    # if so, deactivate it
     if panel_created:
-        # if HGNC panel is of lower version
-        # don't create new CI-Panel record
-
-        # if HGNC panel is of higher version
-        # create new CI-Panel record
-        # deactivate old CI-Panel record
-
         # check if previous CI-Panel record exists
+        # only fetch CI-Panel records where Panel is created from Test Directory
+        # only fetch CI-Panel records which are current
         previous_ci_panels: QuerySet[
             ClinicalIndicationPanel
         ] = ClinicalIndicationPanel.objects.filter(
@@ -212,11 +209,7 @@ def _make_panels_from_hgncs(
                 user=td_source,
             )
 
-    # if previous CI-Panel record exist
-
-    # only chance we end up here is if previous CI-Panel record
-    # exists and is of lower version
-    # link CI to Panel
+    # make new CI-Panel link
     cpi_instance, created = ClinicalIndicationPanel.objects.get_or_create(
         clinical_indication_id=ci.id,
         panel_id=panel_instance.id,
@@ -274,14 +267,17 @@ def insert_test_directory_data(json_data: dict, user:str, force: bool = False) -
 
     print("Inserting test directory data into database...")
 
+    # fetch td source from json file
     td_source: str = json_data.get("td_source")
 
     assert td_source, "Missing td_source in test directory json file"
 
+    # fetch TD version from filename
     td_version: str = _get_td_version(td_source)
 
     assert td_version, f"Cannot parse TD version {td_version}"
 
+    # fetch latest TD version in database
     latest_td_version_in_db: ClinicalIndicationPanel = (
         ClinicalIndicationPanel.objects.order_by("-td_version").first()
     )
@@ -289,6 +285,8 @@ def insert_test_directory_data(json_data: dict, user:str, force: bool = False) -
     if not latest_td_version_in_db or force:
         pass
     else:
+        # if currently imported TD version is lower than latest TD version in db
+        # then abort
         if sortable_version(td_version) <= sortable_version(
             latest_td_version_in_db.td_version
         ):

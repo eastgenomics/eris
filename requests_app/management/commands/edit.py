@@ -90,49 +90,43 @@ class Command(BaseCommand):
 
         action: str = kwargs.get("action")
 
-        if not action:
-            raise ValueError(
-                "Please specify whether you want to add or remove the clinical \
-                            indication for this panel"
-            )
+        assert (
+            action
+        ), "Please specify whether you want to add or remove the clinical indication for this panel"
 
         if command == "pid":
             panel_id: str = kwargs.get("panel_id")
-            if not panel_id:
-                raise ValueError("Please specify panel ID")
+
+            assert panel_id, "Please specify panel ID"
+
             panel = get_panel_by_database_id(panel_id)
 
-            # no panel found with the database id
-            if not panel:
-                raise Exception(f"The panel {panel_id} was not found in the database")
+            assert panel, f"The panel {panel_id} was not found in the database"
 
         if command == "pname":
             panel_name: str = kwargs.get("panel_name")
-            if not panel_name:
-                raise ValueError("Please specify panel name")
+
+            assert panel_name, "Please specify panel name"
 
             panel = get_panel_by_name(panel_name)
-            # no panel found with the database id
-            if not panel:
-                raise Exception(f"The panel {panel_name} was not found in the database")
 
-            # more than one panels identified with the same name
-            elif len(panel) > 1:
-                raise ValueError(
-                    f"More than one {panel_name} identified."
-                    "Use python manage.py edit [--cid/--rcode] <ci> pid <panel-id> <add/remove> instead."
-                )
-            # only one panel found
-            else:
-                panel = panel[0]
+            # no panel found with the database id
+            assert panel, f"The panel {panel_name} was not found in the database"
+
+            # more than one panel with same name found with the database id
+            assert len(panel) < 2, (
+                f"More than one {panel_name} identified."
+                "Use python manage.py edit [--cid/--rcode] <ci> pid <panel-id> <add/remove> instead."
+            )
+
+            panel = panel[0]
 
         clinical_indication_database_id = kwargs.get("cid")
         clinical_indication_r_code = kwargs.get("rcode")
 
-        if clinical_indication_database_id and clinical_indication_r_code:
-            raise ValueError(
-                "Please specify either clinical indication database id or r-code, not both"
-            )
+        assert (
+            clinical_indication_database_id and clinical_indication_r_code
+        ), "Please specify either clinical indication database id or r-code, not both"
 
         if clinical_indication_r_code:
             clinical_indication = get_clinical_indication_by_r_code(
@@ -140,22 +134,19 @@ class Command(BaseCommand):
             )
 
             # foresee r-code might return multiple ci entries
-            if len(clinical_indication) > 1:
-                raise ValueError(
-                    f"More than one clinical indication identified with r-code {clinical_indication_r_code}."
-                    "Use python manage.py edit --cid <clinical indication db id> [pid/pname] <panel> <add/remove> instead."
-                )
+            assert len(clinical_indication) < 2, (
+                f"More than one clinical indication identified with r-code {clinical_indication_r_code}."
+                "Use python manage.py edit --cid <clinical indication db id> [pid/pname] <panel> <add/remove> instead."
+            )
 
-            if len(clinical_indication) == 1:
-                clinical_indication = clinical_indication[0]
+            clinical_indication = clinical_indication[0]
 
         else:
             clinical_indication = get_clinical_indication_by_database_id(
                 clinical_indication_database_id
             )
 
-        if not clinical_indication:
-            raise ValueError("No clinical indication found.")
+        assert clinical_indication, "No clinical indication found."
 
         if action == "activate":
             activate_clinical_indication_panel(

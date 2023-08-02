@@ -14,6 +14,7 @@ import datetime as dt
 
 from django.core.management.base import BaseCommand
 from ._utils import normalize_version
+from panel_requests.settings import GENEPANEL_HGNC
 
 ACCEPTABLE_COMMANDS = ["genepanels", "g2t"]
 
@@ -22,9 +23,23 @@ class Command(BaseCommand):
     help = "generate genepanels"
 
     def _validate_directory(self, path) -> bool:
+        """
+        Validate if directory exists
+
+        :param path: path to directory
+
+        :return: True if directory exists, False otherwise
+        """
         return os.path.exists(path)
 
     def _validate_hgnc(self, file_path: str) -> bool:
+        """
+        Validate if hgnc file is valid
+
+        :param file_path: path to hgnc file
+
+        :return: True if hgnc file is valid, False otherwise
+        """
         if not os.path.isfile(file_path):
             return False
 
@@ -44,11 +59,25 @@ class Command(BaseCommand):
         return True
 
     def _parse_hgnc(self, file_path) -> set:
+        """
+        Parse hgnc file
+
+        Function inspired by https://github.com/eastgenomics/panel_ops/blob/main_without_docker/ops/utils.py#L1251
+
+        :param file_path: path to hgnc file
+
+        :return: set of rnas
+        """
         rnas = set()
 
         with open(file_path, "r") as f:
             for row in csv.DictReader(f, delimiter="\t"):
-                if re.search("rna", row["Locus type"], re.IGNORECASE) or re.search(
+                # get all rnas
+                if re.search(
+                    "rna",
+                    row["Locus type"],
+                    re.IGNORECASE,
+                ) or re.search(
                     "mitochondrially encoded",
                     row["Approved name"],
                     re.IGNORECASE,
@@ -60,6 +89,9 @@ class Command(BaseCommand):
     def _generate_genepanels(self, rnas: set, output_directory: str) -> None:
         """
         Main function to generate genepanel.tsv
+
+        :param rnas: set of rnas
+        :param output_directory: output directory
         """
         print("Creating genepanels file")
 
@@ -75,7 +107,7 @@ class Command(BaseCommand):
             raise ValueError(
                 "Test Directory has yet been imported!"
                 "ClinicalIndicationPanel table is empty"
-                "python manage.py seed test_dir 220713_RD_TD.json Y"
+                "python manage.py seed td <td.json>"
             )
 
         for row in ClinicalIndicationPanel.objects.filter(current=True).values(
@@ -101,13 +133,20 @@ class Command(BaseCommand):
                 ci_name: str = panel_dict["clinical_indication_id__name"]
                 for hgnc in panel_genes[panel_id]:
                     # for each gene associated with that panel
-                    if hgnc in ["HGNC:12029", "HGNC:5541"] or hgnc in rnas:
+                    if hgnc in GENEPANEL_HGNC or hgnc in rnas:
                         continue
+
+                    # process the panel version
+                    panel_version: str = (
+                        normalize_version(panel_dict["panel_id__panel_version"])
+                        if panel_dict["panel_id__panel_version"]
+                        else "1.0"
+                    )
 
                     results.append(
                         [
                             f"{r_code}_{ci_name}",
-                            f"{panel_dict['panel_id__panel_name']}_{normalize_version(panel_dict['panel_id__panel_version']) if panel_dict['panel_id__panel_version'] else '1.0'}",
+                            f"{panel_dict['panel_id__panel_name']}_{panel_version}",
                             hgnc,
                         ]
                     )
@@ -122,6 +161,11 @@ class Command(BaseCommand):
                 f.write(f"{data}\n")
 
     def _generate_g2t(self, output_directory) -> None:
+        """
+        Main function to generate g2t.tsv
+
+        :param output_directory: output directory
+        """
         current_datetime = dt.datetime.today().strftime("%Y%m%d")
 
         with open(
@@ -151,6 +195,10 @@ class Command(BaseCommand):
         parser.add_argument("--output")
 
     def handle(self, *args, **options):
+        """
+        Command line handler for python manage.py generate
+        """
+
         cmd = options.get("command")
 
         # determine if command is valid
