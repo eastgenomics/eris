@@ -77,7 +77,10 @@ def _prepare_mane_file(
     hgnc_symbol_to_hgnc_id: dict[str, str],
 ) -> dict:
     """
-    Prepare mane file
+    Read through MANE file and prepare
+    dict of hgnc id to mane transcript
+
+    Function inspiration from https://github.com/eastgenomics/g2t_ops/blob/main/g2t_ops/transcript_assigner.py#L36
 
     :param mane_file: mane file path
     :param hgnc_symbol_to_hgnc_id: dictionary of hgnc symbol to hgnc id
@@ -106,7 +109,8 @@ def _prepare_mane_file(
 
 def _prepare_gff_file(gff_file: str) -> dict[str, list]:
     """
-    Prepare gff files
+    Read through gff files (from DNANexus)
+    and prepare dict of hgnc id to list of transcripts
 
     :param gff_file: gff file path
 
@@ -129,42 +133,38 @@ def _prepare_gff_file(gff_file: str) -> dict[str, list]:
 
     return (
         gff.groupby("hgnc")
-        .agg(
-            {
-                "transcript": lambda x: list(set(list(x))),
-            }
-        )
+        .agg({"transcript": lambda x: list(set(list(x)))})
         .to_dict()["transcript"]
     )
 
 
 def _prepare_gene2refseq_file(g2refseq_file: str) -> dict:
     """
-    Prepare gene2refseq file
+    Reads through gene2refseq file (from HGMD database)
+    and generates a dict mapping of HGMD ID to list of [refcore, refversion]
 
     :param g2refseq_file: gene2refseq file path
 
     :return: dictionary of hgmd id to list of not "tuple" [refcore, refversion]
     """
-    gene2refseq_hgmd: dict[str, list] = collections.defaultdict(list)
 
-    with open(g2refseq_file, "r") as f:
-        for row in csv.DictReader(f, delimiter=","):
-            if "hgmdID" not in row or "refcore" not in row or "refversion" not in row:
-                raise ValueError(
-                    "Check gene2refseq columns headers. Error with gene2refseq file"
-                )
-            # no idea how to make this into pandas
-            gene2refseq_hgmd[row["hgmdID"].strip()].append(
-                [row["refcore"], row["refversion"]]
-            )
+    # read with dtype str to avoid pandas converting to int64
+    df = pd.read_csv(g2refseq_file, dtype=str)
 
-    return gene2refseq_hgmd
+    # create list of refcore + refversion
+    df["core_plus_version"] = pd.Series(zip(df["refcore"], df["refversion"])).map(list)
+
+    # make sure there's no whitespace in hgmd id
+    df["hgmdId"] = df["hgmdID"].str.strip()
+
+    # return dictionary of hgmd id to list of [refcore, refversion]
+    return df.groupby("hgmdID")["core_plus_version"].apply(list).to_dict()
 
 
 def _prepare_markname_file(markname_file: str) -> dict:
     """
-    Prepare markname file
+    Reads through markname file (from HGMD database)
+    and generates a dict mapping of hgnc id to list of gene id
 
     :param markname_file: markname file path
 
@@ -245,7 +245,7 @@ def seed_transcripts(
                 # HGMD database transcript search
 
                 # hgmd write HGNC ID as XXXXX rather than HGNC:XXXXX
-                shortened_hgnc_id = hgnc_id[5:]
+                shortened_hgnc_id = hgnc_id.replace("HGNC:", "")
 
                 # markname is a table in HGMD database
                 # hgnc id not in markname table / hgmd database, continue

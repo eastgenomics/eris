@@ -137,9 +137,12 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-GENEPANEL_HGNC = [
-    hgnc.strip().upper() for hgnc in os.environ.get("GENEPANEL_HGNCS", []).split(",")
-]
+# HGNC IDs we need to skip due to not having a transcript present in the refseq cache
+HGNC_IDS_TO_OMIT = (
+    [hgnc.strip().upper() for hgnc in os.environ.get("HGNC_IDS_TO_OMIT", []).split(",")]
+    if "," in os.environ.get("HGNC_IDS_TO_OMIT", [])
+    else []
+)
 
 PANELAPP_API_URL = os.environ.get(
     "PANELAPP_API_URL", "https://panelapp.genomicsengland.co.uk/api/v1/panels/"
