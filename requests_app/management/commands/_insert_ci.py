@@ -253,6 +253,26 @@ def _make_panels_from_hgncs(
             cpi_instance.save()
 
 
+def make_provisional_test_method_change(ci_instance: ClinicalIndication, new_test_method: str, \
+                                        user: str) -> None:
+    """
+    When a test method changes for a clinical indication, 
+    set the clinical indication record to 'needs_review'=True,
+    and log this in the history table.
+    """
+    ClinicalIndicationTestMethodHistory.objects.create(
+        clinical_indication_id=ci_instance.id,
+        note=f"Needs review of 'test method' - modified by td source: {ci_instance.test_method} -> \
+            {new_test_method}",
+        user=user,
+    )
+
+    ci_instance.needs_review = True
+    ci_instance.test_method = new_test_method
+
+    ci_instance.save()
+
+
 @transaction.atomic
 def insert_test_directory_data(json_data: dict, user:str, force: bool = False) -> None:
     """This function insert TD data into DB
@@ -269,12 +289,10 @@ def insert_test_directory_data(json_data: dict, user:str, force: bool = False) -
 
     # fetch td source from json file
     td_source: str = json_data.get("td_source")
-
     assert td_source, "Missing td_source in test directory json file"
 
     # fetch TD version from filename
     td_version: str = _get_td_version(td_source)
-
     assert td_version, f"Cannot parse TD version {td_version}"
 
     # fetch latest TD version in database
@@ -323,16 +341,7 @@ def insert_test_directory_data(json_data: dict, user:str, force: bool = False) -
         else:
             # Check for change in test method
             if ci_instance.test_method != indication["test_method"]:
-                ClinicalIndicationTestMethodHistory.objects.create(
-                    clinical_indication_id=ci_instance.id,
-                    note=f"Needs review of 'test method' - modified by td source: {ci_instance.test_method} -> {indication['test_method']}",
-                    user=td_source,
-                )
-
-                ci_instance.needs_review = True
-                ci_instance.test_method = indication["test_method"]
-
-                ci_instance.save()
+                make_provisional_test_method_change(ci_instance, indication["test_method"])
 
         # link each CI record to the appropriate Panel records
         hgnc_list: list[str] = []
