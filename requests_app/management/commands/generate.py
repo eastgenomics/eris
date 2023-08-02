@@ -178,17 +178,32 @@ class Command(BaseCommand):
                     ]
                 )
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser) -> None:
+        """
+        Define parsers for generate command
+        Default function in Django
+        """
+
+        # main parser: genepanels or g2t
         parser.add_argument("command", nargs="?")
+        # optional parser for hgnc dump
+        # mandatory for genepanels generation but not for g2t
+
         parser.add_argument("--hgnc")
+
+        # optional parser for output directory
         parser.add_argument("--output")
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **kwargs):
         """
         Command line handler for python manage.py generate
+        e.g.
+        python manage.py generate genepanels --hgnc <hgnc dump>
+        python manage.py generate g2t --output <output directory>
+
         """
 
-        cmd = options.get("command")
+        cmd = kwargs.get("command")
 
         # determine if command is valid
         if not cmd or cmd not in ACCEPTABLE_COMMANDS:
@@ -198,31 +213,31 @@ class Command(BaseCommand):
             )
 
         # determine if output directory is specified
-        if not options["output"]:
+        if not kwargs["output"]:
             output_directory = os.getcwd()
             print(
                 f"No output directory specified. Using default output directory: {output_directory}"
             )
         else:
-            if not self._validate_directory(options["output"]):
+            if not self._validate_directory(kwargs["output"]):
                 raise ValueError(
-                    f'Output directory specified {options["output"]} is not valid. Please use full path'
+                    f'Output directory specified {kwargs["output"]} is not valid. Please use full path'
                 )
-            output_directory = options["output"]
+            output_directory = kwargs["output"]
 
         # if command is genepanels, then check if hgnc dump is specified
-        if cmd == "genepanels" and not options["hgnc"]:
+        if cmd == "genepanels" and not kwargs["hgnc"]:
             raise ValueError(
                 "No HGNC dump specified e.g. python manage.py generate genepanels --hgnc <path to hgnc dump>"
             )
 
         # validate if HGNC file given is valid
-        if options.get("hgnc") and not self._validate_hgnc(options["hgnc"]):
-            raise ValueError(f'HGNC file: {options["hgnc"]} not valid')
+        if kwargs.get("hgnc") and not self._validate_hgnc(kwargs["hgnc"]):
+            raise ValueError(f'HGNC file: {kwargs["hgnc"]} not valid')
 
         # if command is genepanels, then parse hgnc dump and generate genepanels.tsv
-        if cmd == "genepanels" and options.get("hgnc"):
-            rnas = self._parse_hgnc(options["hgnc"])
+        if cmd == "genepanels" and kwargs.get("hgnc"):
+            rnas = self._parse_hgnc(kwargs["hgnc"])
 
             self._generate_genepanels(rnas, output_directory)
 
