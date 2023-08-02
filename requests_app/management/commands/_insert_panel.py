@@ -22,7 +22,7 @@ from requests_app.models import (
 )
 
 from ._utils import sortable_version
-from .panel import PanelClass
+from .panelapp import PanelClass
 from django.db.models import QuerySet
 from django.db import transaction
 
@@ -416,25 +416,10 @@ def insert_data_into_db(panel: PanelClass, user: str) -> None:
             if previous_panel_ci_links:
                 make_provisional_ci_panel_link(previous_panel_ci_links, panel_instance, user)
 
-    # attach each Gene record to the new Panel record
-    for single_gene in panel.genes:
-        gene_data: dict = single_gene.get("gene_data")
-
-        if not gene_data:
-            continue
-
-        hgnc_id = gene_data.get("hgnc_id")
-        confidence_level = single_gene.get("confidence_level")
-
-        # confidence levels can be 1, 2 or 3. We only fetch confidence level 3
-        if not hgnc_id or float(confidence_level) != 3.0:
-            continue
-        single_gene_creation_controller(single_gene, gene_data, hgnc_id, panel_instance)
-
-    # for each panel region, populate the region attribute models
-    for single_region in panel.regions:
-        single_region_creation_controller(single_region, panel_instance.id)
-
+    # attach each Gene record to the new Panel record,
+    # and populate region attribute models
+    _insert_gene(panel, panel_instance)
+    _insert_regions(panel, panel_instance)
         
 
 @transaction.atomic
