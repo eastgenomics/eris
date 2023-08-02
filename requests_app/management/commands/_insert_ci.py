@@ -336,7 +336,7 @@ def insert_test_directory_data(json_data: dict, user:str, force: bool = False) -
                 previous_panel_ci_links = \
                     flag_ci_panel_instances_controller(previous_ci_panel, user)
                 if previous_panel_ci_links:
-                    make_provisional_ci_panel_link(previous_panel_ci_links, ci_instance, user)
+                    make_provisional_ci_panel_link(previous_panel_ci_links, ci_instance, user, "ci")
 
         else:
             # Check for change in test method

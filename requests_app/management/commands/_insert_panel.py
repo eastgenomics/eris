@@ -244,7 +244,7 @@ def flag_ci_panel_instances_controller(panel: Panel, user: str) \
 
 def make_provisional_ci_panel_link(previous_panel_ci_links: QuerySet[ClinicalIndicationPanel], \
                                    panel_or_ci_instance: Panel | ClinicalIndication, \
-                                    user: str, panel_or_ci: bool) -> None:
+                                    user: str, panel_or_ci: str) -> None:
     """
     If a new version is made of a panel or a clinical indication, give it the same CI-panel links \
         as the previous, active table entry.
@@ -259,7 +259,7 @@ def make_provisional_ci_panel_link(previous_panel_ci_links: QuerySet[ClinicalInd
                 panel=panel_or_ci_instance.id,
                 needs_review=True
             )
-        else:
+        else: # it's a ClinicalIndication object
             ci_panel_instance, created = ClinicalIndicationPanel.objects.get_or_create(
                 clinical_indication=panel_or_ci_instance.id,
                 panel=prev_link.panel,
@@ -317,7 +317,7 @@ def insert_data_into_db(panel: PanelClass, user: str) -> None:
         for previous_panel in previous_panel_instances:
             previous_panel_ci_links = flag_ci_panel_instances_controller(previous_panel, user)
             if previous_panel_ci_links:
-                make_provisional_ci_panel_link(previous_panel_ci_links, panel_instance, user)
+                make_provisional_ci_panel_link(previous_panel_ci_links, panel_instance, user, "panel")
 
     # attach each Gene record to the new Panel record,
     # and populate region attribute models
