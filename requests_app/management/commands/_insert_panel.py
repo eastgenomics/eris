@@ -287,9 +287,8 @@ def insert_data_into_db(panel: PanelClass, user: str) -> None:
     panel_name: str = panel.name
     panel_version: str = panel.version
 
-    # created Panel record
-    # if there's a change in panel_name or panel_version
-    # we create a new record
+    # if there's a change in the panel_name or panel_version,
+    # create a new record
     panel_instance, created = Panel.objects.get_or_create(
         external_id=panel_external_id,
         panel_name=panel_name,
@@ -302,7 +301,7 @@ def insert_data_into_db(panel: PanelClass, user: str) -> None:
         },
     )
 
-    # if created = the new Panel record has a different name or version,
+    # if created, the new Panel record will have a different name or version,
     # regardless of panel_source
     if created:
         # handle previous Panel(s) with similar external_id. Panel name and version aren't suited for this.

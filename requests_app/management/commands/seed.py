@@ -129,7 +129,7 @@ class Command(BaseCommand):
         test_mode: bool = kwargs.get("debug", False)
         command: str = kwargs.get("command")
 
-        assert command, "Please specify command: panelapp / td / form / transcript"
+        assert command, "Please specify command: panelapp / td / transcript"
 
         # TODO: fill user variable from somewhere more appropriate, like a database table
         user = "test_user"
