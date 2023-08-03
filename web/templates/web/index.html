@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mb-5">
+    <div class="row">
+        <div class="col-lg-6 col-sm-12">
+            <div class="d-flex justify-content-between mb-2">
+                <h3>Clinical Indications</h3>
+                <a class="btn btn-primary btn-sm m-2" href="{% url 'ci_add' %}" role="button">Add Clinical Indication</a>
+            </div>
+            <ul class="list-group shadow">
+                {% for ci in cis %}
+                <a href="{% url 'clinical_indication' ci.id %}" class="list-group-item list-group-item-action text-break">
+                    <span class="badge bg-primary">{{ci.r_code }}</span> {{ci.name }} <br><span class="badge bg-secondary">{{ci.test_method }}</span>
+                </a>
+                {% endfor %}
+            </ul>
+
+        </div>
+        <div class="col-lg-6 col-sm-12">
+            <div class="d-flex justify-content-between mb-2">
+                <h3>Panels</h3>
+                <a class="btn btn-primary btn-sm m-2" href="{% url 'panel_add' %}" role="button">Add Panel</a>
+            </div>
+            <ul class="list-group shadow">
+                {% for panel in panels %}
+                    {% if panel.external_id %}
+                    <a href="{% url 'panel' panel.id %}" class="list-group-item list-group-item-action text-break">{{ panel.panel_name }} <span class="badge bg-primary">{{ panel.external_id }}</span></a>
+                    {% else %}
+                    <a href="{% url 'panel' panel.id %}" class="list-group-item list-group-item-action text-break">{{ panel.panel_name }}</a>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

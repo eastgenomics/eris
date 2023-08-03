@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mb-5 pb-5">
+    <h3>Add Clinical Indication Panel Link</h3>
+
+    <br>
+    <div class="row">
+        <div class="col"></div>
+        <!-- clinical indication detail -->
+        <div class="col-4">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h5 class="card-title">{{ ci.name }}</h5>
+                    <h6 class="card-subtitle mb-2 text-body-secondary">database id: {{ ci.id }}</h6>
+                    <p class="card-text">{{ ci.r_code }} <br> {{ ci.test_method }}</p>
+                </div>
+            </div>
+        </div>
+        <!-- end clinical indication detail -->
+        <div class="col"></div>
+    </div>
+
+    <div class="row">
+        <h3>link to...</h3>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <!-- form -->
+            <table class="table table-bordered shadow">
+                <thead>
+                    <tr>
+                    <th scope="col">Panel Name</th>
+                    <th scope="col">Panel Version</th>
+                    <th scope="col">PanelApp ID</th>
+                    <th scope="col">Custom</th>
+                    <th scope="col">Test Directory</th>
+                    <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for panel in panels %}
+                    <tr>
+                        <td>{{ panel.panel_name }}</td>
+                        {% if panel.panel_version %}
+                            <td>{{ panel.panel_version }}</td>
+                        {% else %}
+                            <td>None</td>
+                        {% endif %}
+                        <td>{{ panel.external_id }}</td>
+                        <td>{{ panel.custom }}</td>
+                        <td>{{ panel.test_directory }}</td>
+                        {% if panel.id in linked_panels %}
+                        <td>
+                            <form action="{% url 'ci_panel_add' ci.id %}" method="post">
+                                {% csrf_token %}
+                                <input class="visually-hidden" type="text" class="form-control" name="panel_id" value="{{ panel.id }}">
+                                <input class="visually-hidden" type="text" class="form-control" name="action" value="deactivate">
+                                <button type="submit" class="btn btn-danger btn-sm">Deactivate</button>
+                            </form>
+                        </td>
+                        {% else %}
+                        <td>
+                            <form action="{% url 'ci_panel_add' ci.id %}" method="post">
+                                {% csrf_token %}
+                                <input class="visually-hidden" type="text" class="form-control" name="panel_id" value="{{ panel.id }}">
+                                <input class="visually-hidden" type="text" class="form-control" name="action" value="activate">
+                                <button type="submit" class="btn btn-success btn-sm">Activate</button>
+                            </form>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %} 
+                </tbody>
+            </table>    
+            <!-- end form -->                
+        </div>
+    </div>   
+</div>
+{% endblock %}

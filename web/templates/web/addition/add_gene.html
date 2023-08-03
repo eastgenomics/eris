@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <!-- title -->
+    <div class="row">
+        <div class="col">
+            <h3>Edit Panel Gene</h3>
+            <p class="text-muted">this will create a new custom Panel rather than adding the gene to the Panel</p>
+        </div>
+    </div>
+    <!-- end title -->
+    <!-- panel info -->
+    <div class="row">
+        <div class="col">
+            <div class="h3">Target Panel</div>
+            <div class="card shadow">
+                <div class="card-body">
+                    <h5 class="card-title">{{ panel.panel_name }}</h5>
+                    <h6 class="card-subtitle mb-2 text-body-secondary">database id: {{ panel.id }}</h6>
+                    <p class="card-text">
+                        external id: {{ panel.external_id }} <br>
+                        panel source: {{ panel.panel_source }} <br>
+                        {% if panel.panel_version %}
+                        panel version: {{ panel.panel_version }} <br>
+                        {% else %}
+                        panel version: None <br>
+                        {% endif %}
+                        test directory: {{ panel.test_directory }} <br>
+                        custom: {{ panel.custom }} <br>
+                        created: {{ panel.created_date }} {{ panel.created_time }} <br>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end panel info -->
+
+</div>
+{% endblock %}
