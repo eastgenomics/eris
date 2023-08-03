@@ -28,7 +28,10 @@ from requests_app.models import (
 from requests_app.management.commands._utils import normalize_version
 
 
-def _parse_hgnc(file_path) -> set:
+def _parse_hgnc(file_path: str) -> set:
+    """
+    Function to parse hgnc file and return a set of rna hgnc ids
+    """
     rnas = set()
 
     with open(file_path, "r") as f:
@@ -415,6 +418,7 @@ def add_ci_panel(request, ci_id: int):
             )
         ]
 
+        # fetch any pending ci-panel links
         pending_ci_panels: list[int] = [
             cip.panel_id
             for cip in ClinicalIndicationPanel.objects.filter(
@@ -422,6 +426,7 @@ def add_ci_panel(request, ci_id: int):
             )
         ]
 
+        # get the ci
         clinical_indication: ClinicalIndication = ClinicalIndication.objects.get(
             id=ci_id
         )
@@ -475,7 +480,8 @@ def add_ci_panel(request, ci_id: int):
                 )
         else:
             # TODO: to not instantiate action until approval button is clicked?
-            # deactivate
+
+            # deactivate ci-panel link
             with transaction.atomic():
                 cip_instance, _ = ClinicalIndicationPanel.objects.update_or_create(
                     clinical_indication_id=ci_id,
