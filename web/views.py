@@ -1,5 +1,6 @@
 import re
 import csv
+import pandas as pd
 import collections
 from itertools import chain
 import datetime as dt
@@ -11,6 +12,7 @@ from django.db.models import Q
 from django.shortcuts import redirect
 
 from .forms import ClinicalIndicationForm, PanelForm
+from panel_requests.settings import HGNC_IDS_TO_OMIT
 
 from requests_app.models import (
     ClinicalIndication,
@@ -32,18 +34,14 @@ def _parse_hgnc(file_path: str) -> set:
     """
     Function to parse hgnc file and return a set of rna hgnc ids
     """
-    rnas = set()
+    df: pd.DataFrame = pd.read_csv(file_path, delimiter="\t", dtype=str)
 
-    with open(file_path, "r") as f:
-        for row in csv.DictReader(f, delimiter="\t"):
-            if re.search("rna", row["Locus type"], re.IGNORECASE) or re.search(
-                "mitochondrially encoded",
-                row["Approved name"],
-                re.IGNORECASE,
-            ):
-                rnas.add(row["HGNC ID"])
+    df = df[
+        df["Locus type"].str.contains("rna", case=False)
+        | df["Approved name"].str.contains("mitochondrially encoded", case=False)
+    ]
 
-    return rnas
+    return set(df["HGNC ID"].tolist())
 
 
 def index(request):
@@ -681,9 +679,10 @@ def clinical_indication_panels(request):
     )
 
 
-def activate_or_deactivate_clinical_indication_panel(request, cip_id: int):
+def activate_or_deactivate_clinical_indication_panel(request, cip_id: int) -> None:
     """
-    Clinical indication panel add / remove page
+    Clinical indication panel add / remove action.
+    There is no GET request method for this function.
 
     Args:
         cip_id (int): clinical indication panel id
@@ -727,20 +726,33 @@ def activate_or_deactivate_clinical_indication_panel(request, cip_id: int):
         return redirect(previous_link)
 
 
-def review(request):
+def review(request) -> None:
+    """
+    Review / Pending page where user can view those links that are
+    awaiting approval
+
+    Shows the following pending links:
+    - Panel
+    - Clinical Indication
+    - Clinical Indication Panel
+    - PanelGene
+    - PanelRegion (TODO)
+    - PanelTestMethod (TODO)
+    """
+
     panels: QuerySet[Panel] = Panel.objects.filter(pending=True).all()
     # normalize panel version
     for panel in panels:
         if panel.panel_version:
             panel.panel_version = normalize_version(panel.panel_version)
 
-    cis: QuerySet[ClinicalIndication] = ClinicalIndication.objects.filter(
-        pending=True
-    ).all()
+    clinical_indications: QuerySet[
+        ClinicalIndication
+    ] = ClinicalIndication.objects.filter(pending=True).all()
 
-    cips: QuerySet[ClinicalIndicationPanel] = ClinicalIndicationPanel.objects.filter(
-        pending=True
-    ).values(
+    clinical_indication_panels: QuerySet[
+        ClinicalIndicationPanel
+    ] = ClinicalIndicationPanel.objects.filter(pending=True).values(
         "clinical_indication_id__name",
         "clinical_indication_id__r_code",
         "panel_id__panel_name",
@@ -748,13 +760,13 @@ def review(request):
     )
 
     # normalize panel version
-    for cip in cips:
+    for cip in clinical_indication_panels:
         if cip["panel_id__panel_version"]:
             cip["panel_id__panel_version"] = normalize_version(
                 cip["panel_id__panel_version"]
             )
 
-    pgs: QuerySet[PanelGene] = PanelGene.objects.filter(pending=True).values(
+    panel_genes: QuerySet[PanelGene] = PanelGene.objects.filter(pending=True).values(
         "panel_id__panel_name",
         "panel_id__panel_version",
         "gene_id__hgnc_id",
@@ -766,14 +778,22 @@ def review(request):
         "web/review/pending.html",
         {
             "panels": panels,
-            "cis": cis,
-            "cips": cips,
-            "pgs": pgs,
+            "cis": clinical_indications,
+            "cips": clinical_indication_panels,
+            "pgs": panel_genes,
         },
     )
 
 
-def gene(request, gene_id: int):
+def gene(request, gene_id: int) -> None:
+    """
+    Page to view gene information
+    - shows all the Panel associated with the gene
+
+
+    Args:
+        gene_id (int): gene id
+    """
     gene = Gene.objects.get(id=gene_id)
 
     associated_panels = PanelGene.objects.filter(gene_id=gene_id).values(
@@ -812,7 +832,6 @@ def genepanel(request):
     results = []
 
     # start genepanel logic
-
     if not ClinicalIndicationPanel.objects.filter(current=True, pending=False).exists():
         # if there's no CiPanelAssociation date column, high chance Test Directory
         # has not been imported yet.
@@ -847,7 +866,7 @@ def genepanel(request):
             ci_name: str = panel_dict["clinical_indication_id__name"]
             for hgnc in panel_genes[panel_id]:
                 # for each gene associated with that panel
-                if hgnc in ["HGNC:12029", "HGNC:5541"] or hgnc in rnas:
+                if hgnc in HGNC_IDS_TO_OMIT or hgnc in rnas:
                     continue
 
                 results.append(
@@ -858,13 +877,17 @@ def genepanel(request):
                     ]
                 )
 
-    sorted(results, key=lambda x: [x[0], x[1], x[2]])
+    results = sorted(results, key=lambda x: [x[0], x[1], x[2]])
 
     # end genepanel logic
 
     # processing for display in frontend
     ci_panel_to_gene = collections.defaultdict(list)
-    for gp in results:
-        ci_panel_to_gene[f"{gp[0]}_{gp[1]}"].append(gp[2])
+    # for each gene panel in results
+    for gene_panel in results:
+        # we groupby the panel name and panel version
+        # key: panel name + panel version
+        # value: list of genes
+        ci_panel_to_gene[f"{gene_panel[0]}_{gene_panel[1]}"].append(gene_panel[2])
 
     return render(request, "web/info/genepanel.html", {"genepanels": results})
