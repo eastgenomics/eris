@@ -131,75 +131,75 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
             confidence_level=single_region.get("confidence_level"),
         )
 
-    moi_instance, _ = ModeOfInheritance.objects.get_or_create(
-        mode_of_inheritance=single_region.get("mode_of_inheritance"),
-    )
+        moi_instance, _ = ModeOfInheritance.objects.get_or_create(
+            mode_of_inheritance=single_region.get("mode_of_inheritance"),
+        )
 
-    vartype_instance, _ = VariantType.objects.get_or_create(
-        variant_type=single_region.get("type_of_variants"),
-    )
+        vartype_instance, _ = VariantType.objects.get_or_create(
+            variant_type=single_region.get("type_of_variants"),
+        )
 
-    overlap_instance, _ = RequiredOverlap.objects.get_or_create(
-        required_overlap=single_region.get("required_overlap_percentage"),
-    )
+        overlap_instance, _ = RequiredOverlap.objects.get_or_create(
+            required_overlap=single_region.get("required_overlap_percentage"),
+        )
 
-    mop_instance, _ = ModeOfPathogenicity.objects.get_or_create(
-        mode_of_pathogenicity=single_region.get("mode_of_pathogenicity")
-    )
+        mop_instance, _ = ModeOfPathogenicity.objects.get_or_create(
+            mode_of_pathogenicity=single_region.get("mode_of_pathogenicity")
+        )
 
-    penetrance_instance, _ = Penetrance.objects.get_or_create(
-        penetrance=single_region.get("penetrance"),
-    )
+        penetrance_instance, _ = Penetrance.objects.get_or_create(
+            penetrance=single_region.get("penetrance"),
+        )
 
-    haplo_instance, _ = Haploinsufficiency.objects.get_or_create(
-        haploinsufficiency=single_region.get("haploinsufficiency_score"),
-    )
+        haplo_instance, _ = Haploinsufficiency.objects.get_or_create(
+            haploinsufficiency=single_region.get("haploinsufficiency_score"),
+        )
 
-    triplo_instance, _ = Triplosensitivity.objects.get_or_create(
-        triplosensitivity=single_region.get("triplosensitivity_score"),
-    )
+        triplo_instance, _ = Triplosensitivity.objects.get_or_create(
+            triplosensitivity=single_region.get("triplosensitivity_score"),
+        )
 
-    # attach Region record to Panel record
-    region_instance, _ = Region.objects.get_or_create(
-        name=single_region.get("entity_name"),
-        verbose_name=single_region.get("verbose_name"),
-        chrom=single_region.get("chromosome"),
-        start_37=(
-                single_region.get("grch37_coordinates")[0]
-            if single_region.get("grch37_coordinates")
-            else None
-            ),
-        end_37=(
-                single_region.get("grch37_coordinates")[1]
-            if single_region.get("grch37_coordinates")
-            else None
-            ),
-        start_38=(
-                single_region.get("grch38_coordinates")[0]
-            if single_region.get("grch38_coordinates")
-            else None
-            ),
-        end_38=(
-                single_region.get("grch38_coordinates")[1]
-            if single_region.get("grch38_coordinates")
-            else None
-            ),
-        type=single_region.get("entity_type"),
-        confidence_id=confidence_instance.id,
-        moi_id=moi_instance.id,
-        mop_id=mop_instance.id,
-        penetrance_id=penetrance_instance.id,
-        haplo_id=haplo_instance.id,
-        triplo_id=triplo_instance.id,
-        overlap_id=overlap_instance.id,
-        vartype_id=vartype_instance.id,
-    )
+        # attach Region record to Panel record
+        region_instance, _ = Region.objects.get_or_create(
+            name=single_region.get("entity_name"),
+            verbose_name=single_region.get("verbose_name"),
+            chrom=single_region.get("chromosome"),
+            start_37=(
+                    single_region.get("grch37_coordinates")[0]
+                if single_region.get("grch37_coordinates")
+                else None
+                ),
+            end_37=(
+                    single_region.get("grch37_coordinates")[1]
+                if single_region.get("grch37_coordinates")
+                else None
+                ),
+            start_38=(
+                    single_region.get("grch38_coordinates")[0]
+                if single_region.get("grch38_coordinates")
+                else None
+                ),
+            end_38=(
+                    single_region.get("grch38_coordinates")[1]
+                if single_region.get("grch38_coordinates")
+                else None
+                ),
+            type=single_region.get("entity_type"),
+            confidence_id=confidence_instance.id,
+            moi_id=moi_instance.id,
+            mop_id=mop_instance.id,
+            penetrance_id=penetrance_instance.id,
+            haplo_id=haplo_instance.id,
+            triplo_id=triplo_instance.id,
+            overlap_id=overlap_instance.id,
+            vartype_id=vartype_instance.id,
+        )
 
-    PanelRegion.objects.get_or_create(
-        panel_id=panel_instance.id,
-        region_id=region_instance.id,
-        defaults={"justification": "PanelApp"},
-    )
+        PanelRegion.objects.get_or_create(
+            panel_id=panel_instance.id,
+            region_id=region_instance.id,
+            defaults={"justification": "PanelApp"},
+        )
 
 
 def flag_ci_panel_instances_controller(panel: Panel, user: str) \
