@@ -5,11 +5,10 @@ python manage.py seed --help
 import os
 import json
 
-from ._parse_pa import parse_specified_pa_panels, parse_all_pa_panels
-from ._insert_panel import insert_data_into_db, insert_form_data
+from ._insert_panel import insert_data_into_db
 from ._parse_transcript import seed_transcripts
 from ._insert_ci import insert_data
-from ._parse_form import FormParser
+from .panelapp import get_panel, PanelClass, fetch_all_panels
 
 
 from django.core.management.base import BaseCommand
@@ -23,15 +22,22 @@ class Command(BaseCommand):
     )
 
     def _validate_td(self, directory: str) -> bool:
+        """Validate that the input file is a json file and is there"""
         if not directory.endswith(".json") or not os.path.isfile(directory):
             return False
 
         return True
 
     def _validate_file_exist(self, file_paths: list[str]) -> bool:
+        """Validate that the input files are there"""
+        missing_files: list[str] = []
+
         for file_path in file_paths:
             if not file_path or not os.path.isfile(file_path):
-                raise Exception(f"File {file_path} does not exist")
+                missing_files.append(file_path)
+
+        if missing_files:
+            raise Exception(f"Files {', '.join(missing_files)} do not exist")
 
         return True
 
@@ -74,12 +80,6 @@ class Command(BaseCommand):
             help="force td seed ignoring td version",
         )
 
-        # TODO: deal with this
-        # Parser for form command e.g. form <input_file>
-        form = subparsers.add_parser("form", help="import request form data")
-
-        form.add_argument("input", type=str, help="Path to request form file")
-
         # Parser for transcript command e.g. transcript
         transcript = subparsers.add_parser(
             "transcript", help="seed transcripts for genes"
@@ -121,41 +121,10 @@ class Command(BaseCommand):
             help="write error log for transcript seeding",
         )
 
-    def parse_form_data(self, filepath: str):
-        """Use parse_form.py to import and parse data from a panel
-        request form.
-
-        args:
-            filepath [str]: path to request form file
-
-        returns:
-            parsed_data [dict]: data to insert into db
-        """
-
-        print("Parsing request form...")
-
-        parser = FormParser(filepath=filepath)
-
-        info, panel_df, gene_df, region_df = parser.get_form_data(filepath)
-
-        # Currently only support 1 panel per form
-        if panel_df.shape[0] != 1:
-            raise ValueError("Multiple Panel input detected in form. Abandoning.")
-
-        info_dict = parser.setup_output_dict(info, panel_df)
-        info_dict = parser.parse_genes(info_dict, gene_df)
-        parsed_data = parser.parse_regions(info_dict, region_df)
-
-        print("Form parsing completed.")
-
-        return parsed_data
-
     def handle(self, *args, **kwargs) -> None:
         """Coordinates functions to import and parse data from
         specified source, then calls inserter to insert cleaned data
         into the database."""
-
-        print(kwargs)
 
         test_mode: bool = kwargs.get("debug", False)
         command: str = kwargs.get("command")
@@ -168,28 +137,37 @@ class Command(BaseCommand):
             panel_version: str = kwargs.get("version")  # TODO: version not used yet?
 
             if panel_id == "all":
-                parsed_data = (
-                    parse_all_pa_panels()
-                )  # TODO: use API PanelApp rather than library
+                panels: list[PanelClass] = fetch_all_panels()
+
             else:
                 if not panel_id:
                     raise ValueError("Please specify panel id")
 
                 if not panel_version:
-                    raise ValueError("Please specify panel version")
+                    print("Getting latest panel version")
+                else:
+                    print(
+                        f"Getting panel id {panel_id} / panel version {panel_version}"
+                    )
 
                 # parse data from requested current PanelApp panels
-                parsed_data = parse_specified_pa_panels(panel_id)
-                if not parsed_data:
-                    print("Parsing failed - see error messages.")
+                panel = get_panel(panel_id, panel_version)
+
+                if not panel:
+                    print(
+                        f"Fetching panel id: {panel_id} version: {panel_version} failed"
+                    )
+                    raise ValueError("Panel specified does not exist")
+                panel.panel_source = "PanelApp"  # manual addition of source
+
+                panels = [panel]
 
             if not test_mode:
-                print(f"Importing {len(parsed_data)} panels into database...")
+                print(f"Importing {len(panels)} panels into database...")
 
                 # insert panel data into database
-                for panel_dict in parsed_data:
-                    if panel_dict:
-                        insert_data_into_db(panel_dict)
+                for panel in panels:
+                    insert_data_into_db(panel)
 
                 print("Done.")
 
@@ -206,18 +184,6 @@ class Command(BaseCommand):
 
             if not test_mode:
                 insert_data(json_data, force)
-
-        # python manage.py seed form <input_file>
-        elif command == "form":
-            # TODO: This functionality is not usable yet
-            # read in data from the form
-
-            form_input = kwargs.get("input")
-
-            parsed_data = self.parse_form_data(form_input)
-
-            if not test_mode:
-                insert_form_data(parsed_data)
 
         # python manage.py seed transcript --hgnc <path> --mane <path> --gff <path> --g2refseq <path> --markname <path> --error
         elif command == "transcript":

@@ -29,7 +29,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ["SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("ERIS_DEBUG", False)
 
 ALLOWED_HOSTS = []
 
@@ -136,3 +136,14 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# HGNC IDs we need to skip due to not having a transcript present in the refseq cache
+HGNC_IDS_TO_OMIT = (
+    [hgnc.strip().upper() for hgnc in os.environ.get("HGNC_IDS_TO_OMIT", []).split(",")]
+    if "," in os.environ.get("HGNC_IDS_TO_OMIT", [])
+    else []
+)
+
+PANELAPP_API_URL = os.environ.get(
+    "PANELAPP_API_URL", "https://panelapp.genomicsengland.co.uk/api/v1/panels/"
+)
