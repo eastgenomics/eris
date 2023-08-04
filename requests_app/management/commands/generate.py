@@ -7,9 +7,7 @@ from requests_app.models import (
     Transcript,
 )
 import os
-import re
 import csv
-import pandas as pd
 import collections
 import datetime as dt
 
