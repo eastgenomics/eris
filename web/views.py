@@ -166,8 +166,7 @@ def clinical_indication(request, ci_id: int):
             "pending",
             "config_source",
             "td_version",
-            "created_date",
-            "created_time",
+            "created",
             "last_updated",
             "clinical_indication_id",
             "panel_id",
@@ -235,7 +234,7 @@ def clinical_indication(request, ci_id: int):
                 "gene_id": pg["gene_id"],
                 "hgnc": pg["gene_id__hgnc_id"],
                 "symbol": pg["gene_id__gene_symbol"],
-                "created": latest_pg_history.created_date,
+                "created": latest_pg_history.created,
             }
         )
 
@@ -519,20 +518,15 @@ def _get_clinical_indication_panel_history(
         limit (int): limit of history to fetch
     """
 
-    return ClinicalIndicationPanelHistory.objects.order_by(
-        "-created_date", "-created_time"
-    ).values(
-        "created_date",
-        "created_time",
+    return ClinicalIndicationPanelHistory.objects.order_by("-created").values(
+        "created",
         "note",
         "user",
         "clinical_indication_panel_id__clinical_indication_id__name",
         "clinical_indication_panel_id__clinical_indication_id__r_code",
         "clinical_indication_panel_id__panel_id__panel_name",
         "clinical_indication_panel_id__panel_id__panel_version",
-    )[
-        :limit
-    ]
+    )[:limit]
 
 
 def history(request):
@@ -568,10 +562,9 @@ def history(request):
 
             cip_histories: QuerySet[ClinicalIndicationPanelHistory] = (
                 ClinicalIndicationPanelHistory.objects.filter(query_filters)
-                .order_by("-created_date", "-created_time")
+                .order_by("-created")
                 .values(
-                    "created_date",
-                    "created_time",
+                    "created",
                     "note",
                     "user",  # TODO: need clinical indication id and panel id
                     "clinical_indication_panel_id__clinical_indication_id__name",
@@ -645,8 +638,7 @@ def clinical_indication_panels(request):
         "panel_id__panel_name",
         "panel_id__panel_version",
         "panel_id__external_id",
-        "created_date",
-        "created_time",
+        "created",
         "config_source",
     ).order_by("clinical_indication_id__name")
 
@@ -791,8 +783,7 @@ def gene(request, gene_id: int) -> None:
         "panel_id__panel_source",
         "panel_id__test_directory",
         "panel_id__custom",
-        "panel_id__created_date",
-        "panel_id__created_time",
+        "panel_id__created",
         "panel_id__pending",
     )
 
