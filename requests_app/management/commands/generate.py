@@ -14,7 +14,7 @@ import collections
 import datetime as dt
 
 from django.core.management.base import BaseCommand
-from ._utils import normalize_version
+from .utils import normalize_version, parse_hgnc
 from panel_requests.settings import HGNC_IDS_TO_OMIT
 
 ACCEPTABLE_COMMANDS = ["genepanels", "g2t"]
@@ -54,26 +54,6 @@ class Command(BaseCommand):
             ), "Approved Name column not found in HGNC dump"
 
         return True
-
-    def _parse_hgnc(self, file_path) -> set:
-        """
-        Parse hgnc file
-
-        Function inspired by https://github.com/eastgenomics/panel_ops/blob/main_without_docker/ops/utils.py#L1251
-
-        :param file_path: path to hgnc file
-
-        :return: set of rnas
-        """
-
-        df: pd.DataFrame = pd.read_csv(file_path, delimiter="\t", dtype=str)
-
-        df = df[
-            df["Locus type"].str.contains("rna", case=False)
-            | df["Approved name"].str.contains("mitochondrially encoded", case=False)
-        ]
-
-        return set(df["HGNC ID"].tolist())
 
     def _generate_genepanels(self, rnas: set, output_directory: str) -> None:
         """
@@ -241,7 +221,7 @@ class Command(BaseCommand):
 
         # if command is genepanels, then parse hgnc dump and generate genepanels.tsv
         if cmd == "genepanels" and kwargs.get("hgnc"):
-            rnas = self._parse_hgnc(kwargs["hgnc"])
+            rnas = parse_hgnc(kwargs["hgnc"])
 
             self._generate_genepanels(rnas, output_directory)
 

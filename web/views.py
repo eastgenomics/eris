@@ -12,6 +12,7 @@ from django.db.models import Q
 from django.shortcuts import redirect
 
 from .forms import ClinicalIndicationForm, PanelForm
+from requests_app.management.commands.utils import parse_hgnc
 from panel_requests.settings import HGNC_IDS_TO_OMIT
 
 from requests_app.models import (
@@ -27,21 +28,7 @@ from requests_app.models import (
     Gene,
 )
 
-from requests_app.management.commands._utils import normalize_version
-
-
-def _parse_hgnc(file_path: str) -> set:
-    """
-    Function to parse hgnc file and return a set of rna hgnc ids
-    """
-    df: pd.DataFrame = pd.read_csv(file_path, delimiter="\t", dtype=str)
-
-    df = df[
-        df["Locus type"].str.contains("rna", case=False)
-        | df["Approved name"].str.contains("mitochondrially encoded", case=False)
-    ]
-
-    return set(df["HGNC ID"].tolist())
+from requests_app.management.commands.utils import normalize_version
 
 
 def index(request):
@@ -823,7 +810,7 @@ def gene(request, gene_id: int) -> None:
 
 def genepanel(request):
     # TODO: hard-coded
-    rnas = _parse_hgnc("testing_files/hgnc_dump_20230606_1.txt")
+    rnas = parse_hgnc("testing_files/hgnc_dump_20230606_1.txt")
 
     ci_panels = collections.defaultdict(list)
     panel_genes = collections.defaultdict(list)
