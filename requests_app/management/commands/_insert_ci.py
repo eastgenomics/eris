@@ -8,7 +8,7 @@ from django.db import transaction
 from django.db.models import QuerySet
 
 from ._utils import sortable_version, normalize_version
-from ._insert_panel import flag_ci_panel_instances_controller, \
+from ._insert_panel import flag_active_links_for_ci, \
     make_provisional_ci_panel_link
 
 from requests_app.models import (
@@ -327,14 +327,16 @@ def insert_test_directory_data(json_data: dict, user:str, force: bool = False) -
             # will be set to 'needs_review=True'. The new CI will be linked to those panels, 
             # again with 'needs_review=True' to make it provisional.
 
-            previous_ci_panels = ClinicalIndicationPanel.objects.filter(
-                clinical_indication_id__r_code=r_code,
+            previous_cis = ClinicalIndication.objects.filter(
+                r_code=r_code,
                 current=True,
             )
 
-            for previous_ci_panel in previous_ci_panels:
+            for previous_ci in previous_cis:
                 previous_panel_ci_links = \
-                    flag_ci_panel_instances_controller(previous_ci_panel, user)
+                    flag_active_links_for_ci(previous_ci.pk, 
+                                            previous_ci.name,
+                                            user)
                 if previous_panel_ci_links:
                     make_provisional_ci_panel_link(previous_panel_ci_links, ci_instance, user, "ci")
 

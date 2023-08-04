@@ -9,10 +9,63 @@ from requests_app.models import \
         ClinicalIndicationPanel, ClinicalIndicationPanelHistory
 
 from requests_app.management.commands._insert_panel import \
-    make_provisional_ci_panel_link
+    make_provisional_ci_panel_link, flag_active_links_for_panel
 
 
 conn = mock.MagicMock()
+
+class TestFlagActiveLinksForPanel(TestCase):
+
+    def setUp(self) -> None:
+        """
+        Start condition: We need a panel, at least one clinical indication, and a CURRENT link between them.
+        Then we can test whether they correctly have flags applied.
+        """
+        panel = Panel.objects.create(
+            external_id="one_test_panel_id", \
+            panel_name="one_test_panel_name", \
+            panel_source="source", \
+            panel_version="5"
+        )
+
+        clin_ind = ClinicalIndication.objects.create(
+            r_code="r_test_cond",
+            name="test_condition",
+            test_method="WGS"
+        )
+
+        clin_ind_panel = ClinicalIndicationPanel.objects.create(
+            config_source="unit_test",
+            td_version="test_version",
+            clinical_indication=clin_ind,
+            panel=panel,
+            current=True
+        )
+
+
+    def test_flag_ci_panel_instances_controller(self):
+        """
+        Create a new version of a panel which already has a link to a CI
+        Check that the CI"""
+        new_panel, created = Panel.objects.get_or_create(
+            external_id="one_test_panel_id",
+            panel_name="one_test_panel_name",
+            panel_source="source",
+            panel_version="6",
+            defaults={
+                "panel_source": "test_source",
+                "grch37": True,
+                "grch38": True,
+                "test_directory": False,
+            }
+        )
+
+        ci_panel_instances = flag_active_links_for_panel(new_panel.pk, 
+                                                         new_panel.panel_name,
+                                                         "test_user")
+
+        assert len(ci_panel_instances) == 2
+
 
 class test_make_provisional_ci_panel_link_with_panel(TestCase):
    
@@ -75,6 +128,7 @@ class test_make_provisional_ci_panel_link_with_panel(TestCase):
             MockModel(
                 config_source="unit_test",
                 td_version="test_version",
+                current=True,
                 panel=MockModel(
                     external_id="one_test_panel_id", 
                     panel_name="one_test_panel_name", 
@@ -105,40 +159,46 @@ class test_make_provisional_ci_panel_link_with_panel(TestCase):
         assert fetched_ci_panel[0].td_version == "even more nonsense"
 
 
-    #def test_with_panel(self):
+    def test_with_panel(self):
         """
         Test that when you try to add a new version of a panel, 
         which already has a link to a clinical indication,
         a new CI-Panel link is made, logged, and both the new and old
         link are flagged as needing manual review
         """      
-        #previous_panel_ci_links = ClinicalIndicationPanel.objects.filter(current=True)
+        previous_panel_ci_links = ClinicalIndicationPanel.objects.filter(current=True)
 
         # Note the panel is the same as in the db, but version is different
         # TODO: it doesn't think the below is a panel - either when I use 'create' or when I mock it
 
-        # new_panel, created = Panel.objects.get_or_create(
-        #     external_id="one_test_panel_id",
-        #     panel_name="one_test_panel_name",
-        #     panel_source="source",
-        #     panel_version="6",
-        #     defaults={
-        #         "panel_source": "test_source",
-        #         "grch37": True,
-        #         "grch38": True,
-        #         "test_directory": False,
-        #     }
-        # )
+        new_panel, created = Panel.objects.get_or_create(
+            external_id="one_test_panel_id",
+            panel_name="one_test_panel_name",
+            panel_source="source",
+            panel_version="6",
+            defaults={
+                "panel_source": "test_source",
+                "grch37": True,
+                "grch38": True,
+                "test_directory": False,
+            }
+        )
 
-        #user = "test_user"
-        #panel_or_ci = "panel"
+        fetched_panel = Panel.objects.filter(external_id="one_test_panel_id")
+        assert len(fetched_panel) == 2
 
+        user = "test_user"
+        panel_or_ci = "panel"
 
 
         # # run make_provisional_ci_panel_link on the contents of the isolated database
-        # make_provisional_ci_panel_link(previous_panel_ci_links, new_panel,
-        #                                     user, panel_or_ci)
-        
+        # test = make_provisional_ci_panel_link(previous_panel_ci_links, new_panel,
+        #                                user, panel_or_ci)
+        # assert test == "1"
+        # TODO: inside the above, I get the error:
+        # ValueError: Cannot assign "4": "ClinicalIndicationPanel.panel" must be a "Panel" instance.
+
+
         # # # get what's in the database now
         # results_ci_link = ClinicalIndicationPanel.objects.all()
 
