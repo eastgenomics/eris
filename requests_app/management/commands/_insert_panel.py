@@ -241,10 +241,10 @@ def flag_active_links_for_ci(ci_id: int, ci_name: str, user: str) \
         return None
 
 
-def flag_active_links_for_panel(panel_id: int, panel_name: str, user: str) \
+def flag_active_links_for_panel(panel_ext_id: int, user: str) \
     -> QuerySet[ClinicalIndicationPanel] | None:
     """
-    Controller function which takes a panel ID, and flags ACTIVE links between the panel 
+    Controller function which takes a panel's external ID, and flags ACTIVE links between the panel 
     and its clinical indications for manual review.
     This is useful when a new version of a panel comes out, and the user might want to switch to using that 
     for a clinical indication instead.
@@ -253,7 +253,7 @@ def flag_active_links_for_panel(panel_id: int, panel_name: str, user: str) \
     ci_panel_instances: QuerySet[
         ClinicalIndicationPanel
     ] = ClinicalIndicationPanel.objects.filter(
-        panel_id=panel_id,
+        panel__external_id=panel_ext_id,
         current=True,  # get those that are active
     )
 
@@ -264,14 +264,14 @@ def flag_active_links_for_panel(panel_id: int, panel_name: str, user: str) \
             ci_panel_instance.save()
 
             ClinicalIndicationPanelHistory.objects.create(
-                    clinical_indication_panel=ci_panel_instance.id,
+                    clinical_indication_panel=ci_panel_instance,
                     note="Flagged for manual review - new panel version pulled from PanelApp API",
                     user=user
                 )
 
             print(
                 'Flagged previous CI-Panel link {} for Panel "{}" for manual review '.format(
-                    ci_panel_instance.id, panel_name) + '- a new panel version is available'
+                    ci_panel_instance.id, panel_ext_id) + '- a new panel version is available'
             )
 
         return ci_panel_instances
@@ -355,7 +355,7 @@ def insert_data_into_db(panel: PanelClass, user: str) -> None:
         # then make provisional links between the CI and our new version of the column - these will need review too.
         for previous_panel in previous_panel_instances:
             previous_panel_ci_links = flag_active_links_for_panel(\
-                previous_panel.pk, previous_panel.panel_name, user)
+                previous_panel.external_id, user)
             if previous_panel_ci_links:
                 make_provisional_ci_panel_link(previous_panel_ci_links, panel_instance, user, "panel")
 
