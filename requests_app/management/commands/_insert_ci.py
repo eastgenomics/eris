@@ -398,7 +398,7 @@ def insert_test_directory_data(json_data: dict, user:str, force: bool = False) -
                     _flag_active_links_for_ci(previous_ci.r_code, user)
                 if previous_panel_ci_links:
                     _provisionally_link_new_ci_version_to_panel(previous_panel_ci_links, \
-                                                                ci_instance, user, "ci")
+                                                                ci_instance, user)
 
         else:
             # Check for change in test method
