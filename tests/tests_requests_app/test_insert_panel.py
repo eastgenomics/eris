@@ -85,6 +85,66 @@ class TestFlagActiveLinksForPanel(TestCase):
         assert history_first.clinical_indication_panel == ci_panel_first
 
 
+class TestFlagActiveLinksOnlyInactivesAvailable(TestCase):
+
+    def setUp(self) -> None:
+        """
+        Start condition: We need a panel, at least one clinical indication, 
+        and a NON-CURRENT link between them.
+        We want to check that the non-current link is ignored by the function.
+        """
+        panel = Panel.objects.create(
+            external_id="one_test_panel_id", \
+            panel_name="one_test_panel_name", \
+            panel_source="source", \
+            panel_version="5"
+        )
+
+        clin_ind = ClinicalIndication.objects.create(
+            r_code="r_test_cond",
+            name="test_condition",
+            test_method="WGS"
+        )
+
+        clin_ind_panel = ClinicalIndicationPanel.objects.create(
+            config_source="unit_test",
+            td_version="test_version",
+            clinical_indication=clin_ind,
+            panel=panel,
+            current=False
+        )
+
+
+    def test_non_current_links_are_skipped(self):
+        """
+        Create a new version of a panel. A panel with the same external ID is
+        already linked to a CI in the database - but it isn't current.
+        Check that the CI-panel link in the database is unaltered.
+        There should be no history generated.
+        """
+        new_panel, created = Panel.objects.get_or_create(
+            external_id="one_test_panel_id",
+            panel_name="one_test_panel_name",
+            panel_source="source",
+            panel_version="6"
+        )
+
+        # Set up a search of previous panel instances
+        previous_panel_instances: list[Panel] = Panel.objects.filter(
+            external_id="one_test_panel_id").exclude(pk=new_panel.id)
+
+        assert len(previous_panel_instances) == 1
+        prev_panel = previous_panel_instances[0]
+
+        ci_panel_instances = _flag_current_links_for_panel(prev_panel, "test_user")
+
+        # Expect None, because there are no current links for the panel
+        assert ci_panel_instances == None
+
+        # Expect nothing in the ClinicalIndicationPanelHistory either
+        assert len(ClinicalIndicationPanelHistory.objects.all()) == 0
+
+
 class TestMakeProvisionalCiPanelLinkWithPanel(TestCase):
    
     def setUp(self) -> None:
