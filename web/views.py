@@ -13,6 +13,7 @@ from django.shortcuts import redirect
 
 from .forms import ClinicalIndicationForm, PanelForm
 from requests_app.management.commands.utils import parse_hgnc
+from .utils.utils import Genepanel
 from panel_requests.settings import HGNC_IDS_TO_OMIT
 
 from requests_app.models import (
@@ -787,8 +788,6 @@ def gene(request, gene_id: int) -> None:
         "panel_id__pending",
     )
 
-    print(associated_panels)
-
     return render(
         request,
         "web/info/gene.html",
@@ -800,16 +799,18 @@ def gene(request, gene_id: int) -> None:
 
 
 def genepanel(request):
-    # TODO: hard-coded
+    """
+    Genepanel page where user view R code, clinical indication name
+    its associated panels and genes.
+    """
+
+    # TODO: hard-coded, will become an upload file in the future
     rnas = parse_hgnc("testing_files/hgnc_dump_20230606_1.txt")
 
     ci_panels = collections.defaultdict(list)
     panel_genes = collections.defaultdict(list)
     relevant_panels = set()
 
-    results = []
-
-    # start genepanel logic
     if not ClinicalIndicationPanel.objects.filter(current=True, pending=False).exists():
         # if there's no CiPanelAssociation date column, high chance Test Directory
         # has not been imported yet.
@@ -819,6 +820,7 @@ def genepanel(request):
             "python manage.py seed test_dir 220713_RD_TD.json Y"
         )  # TODO: soft fail
 
+    # fetch all relevant clinical indication and panels
     for row in ClinicalIndicationPanel.objects.filter(
         current=True, pending=False
     ).values(
@@ -831,41 +833,38 @@ def genepanel(request):
         relevant_panels.add(row["panel_id"])
         ci_panels[row["clinical_indication_id__r_code"]].append(row)
 
+    # fetch all relevant genes for the relevant panels
     for row in PanelGene.objects.filter(
         panel_id__in=relevant_panels, pending=False
-    ).values("gene_id__hgnc_id", "panel_id"):
-        panel_genes[row["panel_id"]].append(row["gene_id__hgnc_id"])
+    ).values("gene_id__hgnc_id", "gene_id", "panel_id"):
+        panel_genes[row["panel_id"]].append((row["gene_id__hgnc_id"], row["gene_id"]))
 
+    list_of_genepanel: list[Genepanel] = []
+    ci_panel_to_genes = collections.defaultdict(list)
+
+    # for each r code panel combo, we make a list of genes associated with it
     for r_code, panel_list in ci_panels.items():
         # for each clinical indication
         for panel_dict in panel_list:
             # for each panel associated with that clinical indication
             panel_id: str = panel_dict["panel_id"]
             ci_name: str = panel_dict["clinical_indication_id__name"]
-            for hgnc in panel_genes[panel_id]:
+            for hgnc, gene_id in panel_genes[panel_id]:
                 # for each gene associated with that panel
                 if hgnc in HGNC_IDS_TO_OMIT or hgnc in rnas:
                     continue
 
-                results.append(
-                    [
-                        f"{r_code}_{ci_name}",
-                        f"{panel_dict['panel_id__panel_name']}_{normalize_version(panel_dict['panel_id__panel_version']) if panel_dict['panel_id__panel_version'] else '1.0'}",
-                        hgnc,
-                    ]
-                )
+                unique_key = f"{r_code} | {ci_name} |  {panel_dict['panel_id__panel_name']} | {normalize_version(panel_dict['panel_id__panel_version']) if panel_dict['panel_id__panel_version'] else '1.0'}"
 
-    results = sorted(results, key=lambda x: [x[0], x[1], x[2]])
+                ci_panel_to_genes[unique_key].append((hgnc, gene_id))
 
-    # end genepanel logic
+    # make GenePanel class for ease of rendering in front end
+    for key, hgncs in ci_panel_to_genes.items():
+        r_code, ci_name, panel_name, panel_version = [
+            val.strip() for val in key.split("|")
+        ]
+        list_of_genepanel.append(
+            Genepanel(r_code, ci_name, panel_name, panel_version, hgncs)
+        )
 
-    # processing for display in frontend
-    ci_panel_to_gene = collections.defaultdict(list)
-    # for each gene panel in results
-    for gene_panel in results:
-        # we groupby the panel name and panel version
-        # key: panel name + panel version
-        # value: list of genes
-        ci_panel_to_gene[f"{gene_panel[0]}_{gene_panel[1]}"].append(gene_panel[2])
-
-    return render(request, "web/info/genepanel.html", {"genepanels": results})
+    return render(request, "web/info/genepanel.html", {"genepanels": list_of_genepanel})
