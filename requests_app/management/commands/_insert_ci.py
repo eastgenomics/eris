@@ -25,7 +25,7 @@ from requests_app.models import (
 )
 
 
-def _flag_active_links_for_ci(r_code: str, user: str) \
+def _flag_active_links_for_ci(prev_ci: str, user: str) \
     -> QuerySet[ClinicalIndicationPanel] | None:
     """
     Controller function which takes a clinical indication r code, and flags ACTIVE links between the CI 
@@ -37,7 +37,7 @@ def _flag_active_links_for_ci(r_code: str, user: str) \
     ci_panel_instances: QuerySet[
         ClinicalIndicationPanel
     ] = ClinicalIndicationPanel.objects.filter(
-        clinical_indication__r_code=r_code,
+        clinical_indication=prev_ci,
         current=True,  # get those that are active
     )
 
@@ -387,15 +387,12 @@ def insert_test_directory_data(json_data: dict, user:str, force: bool = False) -
             # New clinical indication - the old CI-panel entries with the same R code, 
             # will be set to 'needs_review=True'. The new CI will be linked to those panels, 
             # again with 'needs_review=True' to make it provisional.
-
-            previous_cis = ClinicalIndication.objects.filter(
-                r_code=r_code,
-                current=True,
-            )
+            previous_cis = list[ClinicalIndication] = ClinicalIndication.objects.filter(
+                r_code=r_code, current=True).exclude(pk=ci_instance.id)
 
             for previous_ci in previous_cis:
                 previous_panel_ci_links = \
-                    _flag_active_links_for_ci(previous_ci.r_code, user)
+                    _flag_active_links_for_ci(previous_ci, user)
                 if previous_panel_ci_links:
                     _provisionally_link_new_ci_version_to_panel(previous_panel_ci_links, \
                                                                 ci_instance, user)

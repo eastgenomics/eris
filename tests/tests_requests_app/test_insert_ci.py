@@ -47,17 +47,23 @@ class TestFlagActiveLinksForClinicalIndication(TestCase):
         Check that the CI-panel link in the database is changed to 'needs review' and has history logged
         """
 
+        r_code = "r_test_cond"
+
         # Make a clinical indication which has the same R code as the existing one 
         # Check they are both in the test database
         new_ci, created = ClinicalIndication.objects.get_or_create(
-            r_code="r_test_cond",
+            r_code=r_code,
             name="renamed_condition",
             test_method="panel"
         )
-        assert len(ClinicalIndication.objects.filter(r_code="r_test_cond")) == 2
+
+        previous_cis = ClinicalIndication.objects.filter(
+                r_code=r_code).exclude(pk=new_ci.id)
+        assert len(previous_cis) == 1
+        prev_ci = previous_cis[0]
 
         # Run the function under test
-        ci_panel_instances = _flag_active_links_for_ci(new_ci.r_code, "test_user")
+        ci_panel_instances = _flag_active_links_for_ci(prev_ci, "test_user")
 
         # We expect a QuerySet of 1 ClinicalIndicationPanel result, because this function only flags 
         # existing CI-Panel links, and the new CI hasn't had one made yet

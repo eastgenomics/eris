@@ -304,7 +304,8 @@ def insert_data_into_db(panel: PanelClass, user: str) -> None:
         #TODO: Jason please double-check the logic on the below, as I changed a line
         # and I'm not sure why it originally was written the way it was
         previous_panel_instances: list[Panel] = Panel.objects.filter(
-            external_id=panel_external_id).exclude(panel_version=panel_version)
+            external_id=panel_external_id, current=True).\
+                exclude(pk=panel_instance.id)
 
         # if there are previous Panels with the same external ID, mark these as needing manual review.
         # then make provisional links between the CI and our new version of the column - these will need review too.

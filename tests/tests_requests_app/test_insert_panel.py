@@ -59,7 +59,7 @@ class TestFlagActiveLinksForPanel(TestCase):
 
         # Set up a search of previous panel instances
         previous_panel_instances: list[Panel] = Panel.objects.filter(
-            external_id="one_test_panel_id").exclude(panel_version="6")
+            external_id="one_test_panel_id").exclude(pk=new_panel.id)
 
         assert len(previous_panel_instances) == 1
         prev_panel = previous_panel_instances[0]
