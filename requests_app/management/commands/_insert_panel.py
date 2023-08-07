@@ -23,7 +23,7 @@ from requests_app.models import (
 
 from ._utils import sortable_version
 from .panelapp import PanelClass
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Q 
 from django.db import transaction
 
 
@@ -202,10 +202,10 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
         )
 
 
-def _flag_active_links_for_panel(panel_ext_id: int, user: str) \
+def _flag_active_links_for_panel(prev_panel: Panel, user: str) \
     -> QuerySet[ClinicalIndicationPanel] | None:
     """
-    Controller function which takes a panel's external ID, and flags ACTIVE links between the panel 
+    Controller function which takes a panel instance, and flags ACTIVE links between the panel 
     and its clinical indications for manual review.
     This is useful when a new version of a panel comes out, and the user might want to switch to using that 
     for a clinical indication instead.
@@ -214,8 +214,8 @@ def _flag_active_links_for_panel(panel_ext_id: int, user: str) \
     ci_panel_instances: QuerySet[
         ClinicalIndicationPanel
     ] = ClinicalIndicationPanel.objects.filter(
-        panel__external_id=panel_ext_id,
-        current=True,  # get those that are active
+        panel=prev_panel,
+        current=True,  # get panel links that are active
     )
 
     # for each previous CI-Panel instance, flag for manual review, and add to history
@@ -232,7 +232,7 @@ def _flag_active_links_for_panel(panel_ext_id: int, user: str) \
 
             print(
                 'Flagged previous CI-Panel link {} for Panel "{}" for manual review '.format(
-                    ci_panel_instance.id, panel_ext_id) + '- a new panel version is available'
+                    ci_panel_instance.id, prev_panel.external_id) + '- a new panel version is available'
             )
 
         return ci_panel_instances
@@ -301,16 +301,16 @@ def insert_data_into_db(panel: PanelClass, user: str) -> None:
         # handle previous Panel(s) with similar external_id. Panel name and version aren't suited for this.
         # mark previous CI-Panel links as needing review!
 
+        #TODO: Jason please double-check the logic on the below, as I changed a line
+        # and I'm not sure why it originally was written the way it was
         previous_panel_instances: list[Panel] = Panel.objects.filter(
-            external_id=panel_external_id,
-            panel_version__lt=sortable_version(panel_version),
-        )  
+            external_id=panel_external_id).exclude(panel_version=panel_version)
 
         # if there are previous Panels with the same external ID, mark these as needing manual review.
         # then make provisional links between the CI and our new version of the column - these will need review too.
         for previous_panel in previous_panel_instances:
             previous_panel_ci_links = _flag_active_links_for_panel(\
-                previous_panel.external_id, user)
+                previous_panel, user)
             if previous_panel_ci_links:
                 _provisionally_link_new_panel_version_to_ci(previous_panel_ci_links, \
                                                             panel_instance, user)

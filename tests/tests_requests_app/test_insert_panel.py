@@ -10,6 +10,7 @@ from requests_app.models import \
 
 from requests_app.management.commands._insert_panel import \
     _provisionally_link_new_panel_version_to_ci, _flag_active_links_for_panel
+from requests_app.management.commands._utils import sortable_version
 
 
 conn = mock.MagicMock()
@@ -39,7 +40,7 @@ class TestFlagActiveLinksForPanel(TestCase):
             td_version="test_version",
             clinical_indication=clin_ind,
             panel=panel,
-            current=True
+            current=True,
         )
 
 
@@ -53,17 +54,17 @@ class TestFlagActiveLinksForPanel(TestCase):
             external_id="one_test_panel_id",
             panel_name="one_test_panel_name",
             panel_source="source",
-            panel_version="6",
-            defaults={
-                "panel_source": "test_source",
-                "grch37": True,
-                "grch38": True,
-                "test_directory": False,
-            }
+            panel_version="6"
         )
 
-        ci_panel_instances = _flag_active_links_for_panel(new_panel.external_id, 
-                                                         "test_user")
+        # Set up a search of previous panel instances
+        previous_panel_instances: list[Panel] = Panel.objects.filter(
+            external_id="one_test_panel_id").exclude(panel_version="6")
+
+        assert len(previous_panel_instances) == 1
+        prev_panel = previous_panel_instances[0]
+
+        ci_panel_instances = _flag_active_links_for_panel(prev_panel, "test_user")
 
         # Expect a QuerySet of 1 ClinicalIndicationPanel result, because this function only flags 
         # existing CI-Panel links, and the new panel hasn't had one made yet
