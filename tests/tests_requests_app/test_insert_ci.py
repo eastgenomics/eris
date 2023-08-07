@@ -9,7 +9,7 @@ from requests_app.models import \
         ClinicalIndicationPanel, ClinicalIndicationPanelHistory
 
 from requests_app.management.commands._insert_ci import \
-    make_provisional_ci_panel_link, _flag_active_links_for_ci
+    _provisionally_link_new_ci_version_to_panel, _flag_active_links_for_ci
 
 class TestFlagActiveLinksForClinicalIndication(TestCase):
 

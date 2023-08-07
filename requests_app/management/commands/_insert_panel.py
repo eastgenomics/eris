@@ -242,37 +242,31 @@ def _flag_active_links_for_panel(panel_ext_id: int, user: str) \
     # TODO: disabling old CI-Panel link but new one need to wait till next TD import?
 
 
-def make_provisional_ci_panel_link(previous_panel_ci_links: QuerySet[ClinicalIndicationPanel], \
-                                   panel_or_ci_instance: Panel | ClinicalIndication, \
-                                    user: str, panel_or_ci: str) -> None:
+def _provisionally_link_new_panel_version_to_ci(previous_panel_ci_links: QuerySet[ClinicalIndicationPanel], \
+                                   new_panel: Panel, \
+                                    user: str) -> None:
     """
-    If a new version is made of a panel or a clinical indication, give it the same CI-panel links \
+    If a new version is made of a panel, give it the same CI-panel links \
         as the previous, active table entry.
     However, set the 'needs_review' field to True, so that it shows for manual review by a user.
     Additionally, create a history record.
     """
-    assert panel_or_ci in ["panel", "ci"]
     for prev_link in previous_panel_ci_links:
-        if panel_or_ci == "panel":
-            ci_panel_instance, created = ClinicalIndicationPanel.objects.get_or_create(
-                clinical_indication=prev_link.clinical_indication,
-                panel=panel_or_ci_instance.id,
-                needs_review=True
-            )
-        else: # it's a ClinicalIndication object
-            ci_panel_instance, created = ClinicalIndicationPanel.objects.get_or_create(
-                clinical_indication=panel_or_ci_instance.id,
-                panel=prev_link.panel,
-                needs_review=True
-            )
+        ci_panel_instance, created = ClinicalIndicationPanel.objects.get_or_create(
+            clinical_indication=prev_link.clinical_indication,
+            panel=new_panel,
+            needs_review=True,
+            current=True
+        )
+
         if created:
             ClinicalIndicationPanelHistory.objects.create(
-                clinical_indication_panel=ci_panel_instance.id,
+                clinical_indication_panel=ci_panel_instance,
                 note="Auto-created CI-panel link based on information available " +\
-                    "for an earlier {}".format(panel_or_ci) + 
-                    "version - needs manual review",
+                    "for an earlier panel version - needs manual review",
                 user=user
             )
+
 
 
 @transaction.atomic
@@ -318,7 +312,8 @@ def insert_data_into_db(panel: PanelClass, user: str) -> None:
             previous_panel_ci_links = _flag_active_links_for_panel(\
                 previous_panel.external_id, user)
             if previous_panel_ci_links:
-                make_provisional_ci_panel_link(previous_panel_ci_links, panel_instance, user, "panel")
+                _provisionally_link_new_panel_version_to_ci(previous_panel_ci_links, \
+                                                            panel_instance, user, "panel")
 
     # attach each Gene record to the new Panel record,
     # and populate region attribute models

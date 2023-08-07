@@ -8,7 +8,6 @@ from django.db import transaction
 from django.db.models import QuerySet
 
 from ._utils import sortable_version, normalize_version
-from ._insert_panel import make_provisional_ci_panel_link
 
 from requests_app.models import (
     Panel,
@@ -62,6 +61,31 @@ def _flag_active_links_for_ci(r_code: str, user: str) \
 
     else:
         return None
+
+
+def _provisionally_link_new_ci_version_to_panel(previous_panel_ci_links: QuerySet[ClinicalIndicationPanel], \
+                                   new_ci: ClinicalIndication, \
+                                    user: str) -> None:
+    """
+    If a new version is made of a clinical indication, give it the same CI-panel links \
+        as the previous, active table entry.
+    However, set the 'needs_review' field to True, so that it shows for manual review by a user.
+    Additionally, create a history record.
+    """
+    for prev_link in previous_panel_ci_links:
+        ci_panel_instance, created = ClinicalIndicationPanel.objects.get_or_create(
+            clinical_indication=prev_link.clinical_indication,
+            panel=new_ci.id,
+            needs_review=True
+        )
+
+        if created:
+            ClinicalIndicationPanelHistory.objects.create(
+                clinical_indication_panel=ci_panel_instance,
+                note="Auto-created CI-panel link based on information available " +\
+                    "for an earlier CI version - needs manual review",
+                user=user
+            )
 
 
 def _get_td_version(filename: str) -> str | None:
@@ -373,7 +397,8 @@ def insert_test_directory_data(json_data: dict, user:str, force: bool = False) -
                 previous_panel_ci_links = \
                     _flag_active_links_for_ci(previous_ci.r_code, user)
                 if previous_panel_ci_links:
-                    make_provisional_ci_panel_link(previous_panel_ci_links, ci_instance, user, "ci")
+                    _provisionally_link_new_ci_version_to_panel(previous_panel_ci_links, \
+                                                                ci_instance, user, "ci")
 
         else:
             # Check for change in test method
