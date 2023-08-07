@@ -84,7 +84,7 @@ class TestFlagActiveLinksForPanel(TestCase):
         assert history_first.clinical_indication_panel == ci_panel_first
 
 
-class test_make_provisional_ci_panel_link_with_panel(TestCase):
+class TestMakeProvisionalCiPanelLinkWithPanel(TestCase):
    
     def setUp(self) -> None:
         """

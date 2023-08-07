@@ -74,10 +74,10 @@ def _provisionally_link_new_ci_version_to_panel(previous_panel_ci_links: QuerySe
     """
     for prev_link in previous_panel_ci_links:
         ci_panel_instance, created = ClinicalIndicationPanel.objects.get_or_create(
-            clinical_indication=prev_link.clinical_indication,
-            panel=new_ci.id,
-            needs_review=True
-        )
+            clinical_indication=new_ci,
+            panel=prev_link.panel,
+            current=True,
+            needs_review=True        )
 
         if created:
             ClinicalIndicationPanelHistory.objects.create(

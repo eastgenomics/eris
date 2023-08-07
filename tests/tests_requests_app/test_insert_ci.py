@@ -77,3 +77,75 @@ class TestFlagActiveLinksForClinicalIndication(TestCase):
         assert history_first.note == "Flagged for manual review - new clinical indication provided"
         assert history_first.clinical_indication_panel == ci_panel_first
 
+
+class TestMakeProvisionalCiPanelLinkWithCi(TestCase):
+   
+    def setUp(self) -> None:
+        """
+        Start condition: We need a panel, a clinical indication, and a link between them.
+        Then we can test whether the function correctly 
+        makes changes and forms history.
+        """
+        panel = Panel.objects.create(
+            external_id="one_test_panel_id", \
+            panel_name="one_test_panel_name", \
+            panel_source="source", \
+            panel_version="5"
+        )
+
+        clin_ind = ClinicalIndication.objects.create(
+            r_code="r_test_cond",
+            name="test_condition",
+            test_method="WGS"
+        )
+
+        clin_ind_panel = ClinicalIndicationPanel.objects.create(
+            config_source="unit_test",
+            td_version="test_version",
+            clinical_indication=clin_ind,
+            panel=panel,
+            current=True,
+            needs_review=False
+        )
+
+
+    def test_makes_new_link(self):
+        """
+        Test that when you try to add a new version of a panel, 
+        which already has a link to a clinical indication,
+        a new CI-Panel link is made, logged, and both the new and old
+        link are flagged as needing manual review
+        """      
+        previous_panel_ci_links = ClinicalIndicationPanel.objects.filter(current=True)
+
+        new_ci =  ClinicalIndication.objects.create(
+            r_code="r_test_cond",
+            name="brand_new_name",
+            test_method="panel"
+        )
+
+        _provisionally_link_new_ci_version_to_panel(previous_panel_ci_links, new_ci, 
+                                                    "I'm a unit test")
+        
+        # There should now be a CI-panel link for this panel, using the previous data
+        # it will be 'current' and it will need review
+        new_ci_link = ClinicalIndicationPanel.objects.filter(clinical_indication__name="brand_new_name")
+        assert len(new_ci_link) == 1
+        assert type(new_ci_link) == QuerySet
+        first_entry = new_ci_link[0]
+        assert first_entry.needs_review == True
+        assert first_entry.current == True
+
+        # Check we have 2 active links in total - as the old one is still present
+        links = ClinicalIndicationPanel.objects.filter(current=True)
+        assert len(links) == 2
+        
+        # Check for a single history record for ClinicalIndicationPanel, with correct ID and message
+        history = ClinicalIndicationPanelHistory.objects.all()
+        assert len(history) == 1
+        history_first = history.all()[:1].get()
+        assert history_first.user == "I'm a unit test"
+        assert history_first.note == "Auto-created CI-panel link based on information available " +\
+                    "for an earlier CI version - needs manual review"
+        assert history_first.clinical_indication_panel == first_entry
+
