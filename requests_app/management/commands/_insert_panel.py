@@ -243,8 +243,8 @@ def _flag_active_links_for_panel(panel_ext_id: int, user: str) \
 
 
 def _provisionally_link_new_panel_version_to_ci(previous_panel_ci_links: QuerySet[ClinicalIndicationPanel], \
-                                   new_panel: Panel, \
-                                    user: str) -> None:
+                                                new_panel: Panel, \
+                                                    user: str) -> None:
     """
     If a new version is made of a panel, give it the same CI-panel links \
         as the previous, active table entry.
@@ -313,7 +313,7 @@ def insert_data_into_db(panel: PanelClass, user: str) -> None:
                 previous_panel.external_id, user)
             if previous_panel_ci_links:
                 _provisionally_link_new_panel_version_to_ci(previous_panel_ci_links, \
-                                                            panel_instance, user, "panel")
+                                                            panel_instance, user)
 
     # attach each Gene record to the new Panel record,
     # and populate region attribute models
