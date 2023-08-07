@@ -202,10 +202,10 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
         )
 
 
-def flag_active_links_for_ci(ci_id: int, ci_name: str, user: str) \
+def flag_active_links_for_ci(r_code: str, user: str) \
     -> QuerySet[ClinicalIndicationPanel] | None:
     """
-    Controller function which takes a clinical indication ID, and flags ACTIVE links between the CI 
+    Controller function which takes a clinical indication r code, and flags ACTIVE links between the CI 
     and its panels for manual review.
     This is useful when a new CI is added, e.g. from test directory, and the user might want to switch to 
     using that for a panel instead.
@@ -214,7 +214,7 @@ def flag_active_links_for_ci(ci_id: int, ci_name: str, user: str) \
     ci_panel_instances: QuerySet[
         ClinicalIndicationPanel
     ] = ClinicalIndicationPanel.objects.filter(
-        clinical_indication=ci_id,
+        clinical_indication__r_code=r_code,
         current=True,  # get those that are active
     )
 
@@ -225,14 +225,13 @@ def flag_active_links_for_ci(ci_id: int, ci_name: str, user: str) \
             ci_panel_instance.save()
 
             ClinicalIndicationPanelHistory.objects.create(
-                    clinical_indication_panel=ci_panel_instance.id,
-                    note="Flagged for manual review - new panel version pulled from PanelApp API",
+                    clinical_indication_panel=ci_panel_instance,
+                    note="Flagged for manual review - new clinical indication provided",
                     user=user
                 )
 
             print(
-                'Flagged previous CI-Panel link {} for Panel "{}" for manual review '.format(
-                    ci_panel_instance.id, ci_name) + '- a new panel version is available'
+                'Flagged for manual review - a new clinical indication is available'
             )
 
         return ci_panel_instances
