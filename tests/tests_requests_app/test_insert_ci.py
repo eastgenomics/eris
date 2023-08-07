@@ -12,7 +12,7 @@ from requests_app.management.commands._insert_ci import \
     _provisionally_link_new_ci_version_to_panel, _flag_current_links_for_ci
 
 
-class TestFlagActiveLinksForClinicalIndication(TestCase):
+class TestFlagCurrentLinksForClinicalIndication(TestCase):
 
     def setUp(self) -> None:
         """
@@ -41,7 +41,7 @@ class TestFlagActiveLinksForClinicalIndication(TestCase):
         )
 
 
-    def test_flag_active_links_for_ci(self):
+    def test_flag_current_links_for_ci(self):
         """
         Create a new version of a clinical indication. A CI with the same r code is
         already linked to a panel in the database.
@@ -143,7 +143,7 @@ class TestMakeProvisionalCiPanelLinkWithCi(TestCase):
         assert first_entry.needs_review == True
         assert first_entry.current == True
 
-        # Check we have 2 active links in total - as the old one is still present
+        # Check we have 2 current links in total - as the old one is still present
         links = ClinicalIndicationPanel.objects.filter(current=True)
         assert len(links) == 2
         

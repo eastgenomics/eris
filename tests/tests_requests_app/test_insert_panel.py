@@ -44,7 +44,7 @@ class TestFlagActiveLinksForPanel(TestCase):
         )
 
 
-    def test_flag_active_links_for_panel(self):
+    def test_flag_current_links_for_panel(self):
         """
         Create a new version of a panel. A panel with the same external ID is
         already linked to a CI in the database.
@@ -135,7 +135,7 @@ class TestMakeProvisionalCiPanelLinkWithPanel(TestCase):
         _provisionally_link_new_panel_version_to_ci(previous_panel_ci_links, new_panel, 
                                                     "I'm a unit test")
         
-        # There should now be an ACTIVE CI-panel link for this panel, using the previous data
+        # There should now be an CURRENT CI-panel link for this panel, using the previous data
         # It will have a version of 6, it will be 'current' and it will need review
         new_panel_link = ClinicalIndicationPanel.objects.filter(panel__panel_version=6)
         assert len(new_panel_link) == 1
@@ -143,7 +143,7 @@ class TestMakeProvisionalCiPanelLinkWithPanel(TestCase):
         first_entry = new_panel_link[0]
         assert first_entry.needs_review == True
 
-        # Check we have 2 active links in total - as the old one is still present
+        # Check we have 2 current links in total - as the old one is still present
         links = ClinicalIndicationPanel.objects.filter(current=True)
         assert len(links) == 2
 
