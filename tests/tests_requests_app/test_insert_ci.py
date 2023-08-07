@@ -11,6 +11,7 @@ from requests_app.models import \
 from requests_app.management.commands._insert_ci import \
     _provisionally_link_new_ci_version_to_panel, _flag_active_links_for_ci
 
+
 class TestFlagActiveLinksForClinicalIndication(TestCase):
 
     def setUp(self) -> None:
