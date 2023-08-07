@@ -25,7 +25,7 @@ from requests_app.models import (
 )
 
 
-def _flag_active_links_for_ci(prev_ci: str, user: str) \
+def _flag_current_links_for_ci(prev_ci: str, user: str) \
     -> QuerySet[ClinicalIndicationPanel] | None:
     """
     Controller function which takes a clinical indication r code, and flags ACTIVE links between the CI 
@@ -392,7 +392,7 @@ def insert_test_directory_data(json_data: dict, user:str, force: bool = False) -
 
             for previous_ci in previous_cis:
                 previous_panel_ci_links = \
-                    _flag_active_links_for_ci(previous_ci, user)
+                    _flag_current_links_for_ci(previous_ci, user)
                 if previous_panel_ci_links:
                     _provisionally_link_new_ci_version_to_panel(previous_panel_ci_links, \
                                                                 ci_instance, user)

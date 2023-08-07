@@ -202,7 +202,7 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
         )
 
 
-def _flag_active_links_for_panel(prev_panel: Panel, user: str) \
+def _flag_current_links_for_panel(prev_panel: Panel, user: str) \
     -> QuerySet[ClinicalIndicationPanel] | None:
     """
     Controller function which takes a panel instance, and flags ACTIVE links between the panel 
@@ -310,7 +310,7 @@ def insert_data_into_db(panel: PanelClass, user: str) -> None:
         # if there are previous Panels with the same external ID, mark these as needing manual review.
         # then make provisional links between the CI and our new version of the column - these will need review too.
         for previous_panel in previous_panel_instances:
-            previous_panel_ci_links = _flag_active_links_for_panel(\
+            previous_panel_ci_links = _flag_current_links_for_panel(\
                 previous_panel, user)
             if previous_panel_ci_links:
                 _provisionally_link_new_panel_version_to_ci(previous_panel_ci_links, \

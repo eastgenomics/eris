@@ -9,7 +9,7 @@ from requests_app.models import \
         ClinicalIndicationPanel, ClinicalIndicationPanelHistory
 
 from requests_app.management.commands._insert_ci import \
-    _provisionally_link_new_ci_version_to_panel, _flag_active_links_for_ci
+    _provisionally_link_new_ci_version_to_panel, _flag_current_links_for_ci
 
 
 class TestFlagActiveLinksForClinicalIndication(TestCase):
@@ -64,7 +64,7 @@ class TestFlagActiveLinksForClinicalIndication(TestCase):
         prev_ci = previous_cis[0]
 
         # Run the function under test
-        ci_panel_instances = _flag_active_links_for_ci(prev_ci, "test_user")
+        ci_panel_instances = _flag_current_links_for_ci(prev_ci, "test_user")
 
         # We expect a QuerySet of 1 ClinicalIndicationPanel result, because this function only flags 
         # existing CI-Panel links, and the new CI hasn't had one made yet

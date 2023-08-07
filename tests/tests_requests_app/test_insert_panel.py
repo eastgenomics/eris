@@ -9,7 +9,7 @@ from requests_app.models import \
         ClinicalIndicationPanel, ClinicalIndicationPanelHistory
 
 from requests_app.management.commands._insert_panel import \
-    _provisionally_link_new_panel_version_to_ci, _flag_active_links_for_panel
+    _provisionally_link_new_panel_version_to_ci, _flag_current_links_for_panel
 from requests_app.management.commands._utils import sortable_version
 
 
@@ -64,7 +64,7 @@ class TestFlagActiveLinksForPanel(TestCase):
         assert len(previous_panel_instances) == 1
         prev_panel = previous_panel_instances[0]
 
-        ci_panel_instances = _flag_active_links_for_panel(prev_panel, "test_user")
+        ci_panel_instances = _flag_current_links_for_panel(prev_panel, "test_user")
 
         # Expect a QuerySet of 1 ClinicalIndicationPanel result, because this function only flags 
         # existing CI-Panel links, and the new panel hasn't had one made yet
