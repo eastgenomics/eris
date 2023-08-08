@@ -74,9 +74,16 @@ class Command(BaseCommand):
             # if there's no CiPanelAssociation date column, high chance Test Directory
             # has not been imported yet.
             raise ValueError(
-                "Test Directory has yet been imported!"
+                "Test Directory has not yet been imported!"
                 "ClinicalIndicationPanel table is empty"
                 "python manage.py seed td <td.json>"
+            )
+
+        # block generation of genepanel.tsv if ANY data is needs_review=True
+        if ClinicalIndicationPanel.objects.filter(pending=True).exists():
+            raise ValueError(
+                "Some ClinicalIndicationPanel table values require manual review."
+                "Please resolve these through the review platform and try again."
             )
 
         for row in ClinicalIndicationPanel.objects.filter(
