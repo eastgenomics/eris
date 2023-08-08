@@ -5,7 +5,6 @@
 import os
 
 from django.db import transaction
-from django.db.models import QuerySet
 
 from .utils import sortable_version, normalize_version
 
@@ -23,6 +22,77 @@ from requests_app.models import (
     ClinicalIndicationTestMethodHistory,
     PanelGeneHistory,
 )
+
+
+def _backward_deactivate(indications: list[dict], user: str) -> None:
+    r_codes = set([indication["code"] for indication in indications])
+
+    for clinical_indication in ClinicalIndication.objects.all():
+        if clinical_indication.r_code not in r_codes:
+            for cip in ClinicalIndicationPanel.objects.filter(
+                clinical_indication_id=clinical_indication.id
+            ):
+                cip.pending = True
+                cip.save()
+
+                ClinicalIndicationPanelHistory.objects.create(
+                    clinical_indication_panel_id=cip.id,
+                    note="Flagged for manual review - clinical indication not found in latest TD",
+                    user=user,
+                )
+
+
+@transaction.atomic
+def flag_clinical_indication_panel_for_review(
+    clinical_indication_panel: ClinicalIndicationPanel, user: str
+) -> None:
+    """
+    Controller function which takes a clinical indication r code, and flags ACTIVE links between the CI
+    and its panels for manual review.
+    This is useful when a new CI is added, e.g. from test directory, and the user might want to switch to
+    using that for a panel instead.
+    Note that a ClinicalIndication might have multiple CI-Panel links!
+    """
+
+    clinical_indication_panel.pending = True
+    clinical_indication_panel.save()
+
+    ClinicalIndicationPanelHistory.objects.create(
+        clinical_indication_panel_id=clinical_indication_panel.id,
+        note="Flagged for manual review - new clinical indication provided",
+        user=user,
+    )
+
+
+def provisionally_link_clinical_indication_to_panel(
+    panel_id: int,
+    clinical_indication_id: int,
+    user: str,
+) -> ClinicalIndicationPanel:
+    """
+    If a new version is made of a clinical indication, give it the same CI-panel links \
+        as the previous, active table entry.
+    However, set the 'needs_review' field to True, so that it shows for manual review by a user.
+    Additionally, create a history record.
+    """
+    ci_panel_instance, created = ClinicalIndicationPanel.objects.get_or_create(
+        clinical_indication_id=clinical_indication_id,
+        panel_id=panel_id,
+        defaults={
+            "current": True,
+            "pending": True,
+        },
+    )
+
+    if created:
+        ClinicalIndicationPanelHistory.objects.create(
+            clinical_indication_panel_id=ci_panel_instance.id,
+            note="Auto-created CI-panel link based on information available "
+            + "for an earlier CI version - needs manual review",
+            user=user,
+        )
+
+    return ci_panel_instance
 
 
 def _get_td_version(filename: str) -> str | None:
@@ -114,8 +184,6 @@ def _make_panels_from_hgncs(
     td_source: str = json_data["td_source"]
     td_version: str = _get_td_version(td_source)
 
-    # TODO: what if TD version is lower
-
     config_source: str = json_data["config_source"]
     td_date: str = json_data["date"]
 
@@ -174,45 +242,39 @@ def _make_panels_from_hgncs(
                 pg_instance.justification = unique_td_source
                 pg_instance.save()
 
-    # if new Panel record created, check if there is old CI-Panel record
-    # if so, deactivate it
-    if panel_created:
-        # check if previous CI-Panel record exists
-        # only fetch CI-Panel records where Panel is created from Test Directory
-        # only fetch CI-Panel records which are current
-        previous_ci_panels: QuerySet[
-            ClinicalIndicationPanel
-        ] = ClinicalIndicationPanel.objects.filter(
+    if panel_created:  # new panel created
+        previous_ci_panels = ClinicalIndicationPanel.objects.filter(
             clinical_indication_id=ci.id,
             panel_id__test_directory=True,
             current=True,
         ).order_by(
             "-td_version"
-        )
-        # TODO: there is still some logic error here
-        # deactivate all previous CI-Panel records
-        # where Panel is created from Test Directory
-        # ignore those from PanelApp
-        for ci_panel in previous_ci_panels:
-            # existing CI-Panel td version is higher than current imported td version
-            if sortable_version(ci_panel.td_version) > sortable_version(td_version):
-                return
+        )  # find all previous associated ci-panel
 
-            ci_panel.current = False
-            ci_panel.save()
+        if previous_ci_panels:  # in the case where there are old ci-panel
+            for ci_panel in previous_ci_panels:
+                flag_clinical_indication_panel_for_review(ci_panel)  # flag for review
 
-            ClinicalIndicationPanelHistory.objects.create(
-                clinical_indication_panel_id=ci_panel.id,
-                note="Deactivated by td source",
-                user=td_source,
-            )
+                # linking old ci with new panel with pending = True
+                new_clinical_indication_panel = (
+                    provisionally_link_clinical_indication_to_panel(
+                        panel_instance.id, ci.id, td_source
+                    )
+                )
 
-    # make new CI-Panel link
+                # check if there is any change in td version or config source
+                # update as appropriate
+                new_clinical_indication_panel.td_version = sortable_version(td_version)
+                new_clinical_indication_panel.config_source = config_source
+
+                new_clinical_indication_panel.save()
+
+    # a panel or ci might be newly imported (first seed), thus have no previous ci-panel link
     cpi_instance, created = ClinicalIndicationPanel.objects.get_or_create(
         clinical_indication_id=ci.id,
         panel_id=panel_instance.id,
-        current=True,
         defaults={
+            "current": True,
             "td_version": sortable_version(td_version),
             "config_source": config_source,
         },
@@ -225,12 +287,9 @@ def _make_panels_from_hgncs(
             user=td_source,
         )
     else:
-        # check if there is any change in td version or config source
-        # update as appropriate
+        # panel already exist
         with transaction.atomic():
-            if sortable_version(td_version) >= sortable_version(
-                cpi_instance.td_version
-            ):
+            if sortable_version(td_version) != cpi_instance.td_version:
                 # take a note of the change
                 ClinicalIndicationPanelHistory.objects.create(
                     clinical_indication_panel_id=cpi_instance.id,
@@ -238,7 +297,6 @@ def _make_panels_from_hgncs(
                     user=td_source,
                 )
                 cpi_instance.td_version = sortable_version(td_version)
-
             if cpi_instance.config_source != json_data["config_source"]:
                 # take a note of the change
                 ClinicalIndicationPanelHistory.objects.create(
@@ -247,12 +305,46 @@ def _make_panels_from_hgncs(
                     user=td_source,
                 )
                 cpi_instance.config_source = config_source
-
             cpi_instance.save()
 
 
+def _make_provisional_test_method_change(
+    ci_instance: ClinicalIndication,
+    new_test_method: str,
+    user: str,
+) -> None:
+    """
+    When a test method changes for a clinical indication,
+    set the clinical indication record to `pending` = True,
+    and log this in the history table.
+
+    args:
+        ci_instance [ClinicalIndication record]: the CI record to link to
+        new_test_method [str]: new test method
+        user [str]: # TODO: will need some thought on this
+
+    return: None
+    """
+
+    with transaction.atomic():
+        ci_instance.pending = True
+        ci_instance.test_method = new_test_method
+
+        ci_instance.save()
+
+        ClinicalIndicationTestMethodHistory.objects.create(
+            clinical_indication_id=ci_instance.id,
+            note=f"Needs review of 'test method' - modified by td source: {ci_instance.test_method} -> \
+                {new_test_method}",  # TODO: standard note class needed
+            user=user,
+        )
+
+
 @transaction.atomic
-def insert_data(json_data: dict, force: bool = False) -> None:
+def insert_test_directory_data(
+    json_data: dict,
+    force: bool = False,
+) -> None:
     """This function insert TD data into DB
 
     e.g. command
@@ -267,17 +359,17 @@ def insert_data(json_data: dict, force: bool = False) -> None:
 
     # fetch td source from json file
     td_source: str = json_data.get("td_source")
-
     assert td_source, "Missing td_source in test directory json file"
 
     # fetch TD version from filename
     td_version: str = _get_td_version(td_source)
-
     assert td_version, f"Cannot parse TD version {td_version}"
 
     # fetch latest TD version in database
     latest_td_version_in_db: ClinicalIndicationPanel = (
-        ClinicalIndicationPanel.objects.order_by("-td_version").first()
+        ClinicalIndicationPanel.objects.filter(td_version__isnull=False)
+        .order_by("-td_version")
+        .first()
     )
 
     if not latest_td_version_in_db or force:
@@ -291,7 +383,9 @@ def insert_data(json_data: dict, force: bool = False) -> None:
             print(f"TD version {td_version} already in database. Abdandoning import.")
             return
 
-    for indication in json_data["indications"]:
+    all_indication: list[dict] = json_data["indications"]
+
+    for indication in all_indication:
         r_code: str = indication["code"].strip()
 
         ci_instance, created = ClinicalIndication.objects.get_or_create(
@@ -303,36 +397,35 @@ def insert_data(json_data: dict, force: bool = False) -> None:
         )
 
         if created:
-            # TODO: this logic need revisit - currently it makes other panel-indication links not current,
-            # TODO: which may not be desired behaviour as the schema is many-many for panels and indications
-            # CI name change. Same R code tho
-
-            previous_ci_panels = ClinicalIndicationPanel.objects.filter(
+            # New clinical indication - the old CI-panel entries with the same R code,
+            # will be set to 'pending = True'. The new CI will be linked to those panels,
+            # again with 'pending = True' to make it "provisional".
+            for clinical_indication_panel in ClinicalIndicationPanel.objects.filter(
                 clinical_indication_id__r_code=r_code,
                 current=True,
-            )
+            ):
+                # flag previous ci-panel link for review because a new ci is created
+                flag_clinical_indication_panel_for_review(clinical_indication_panel)
 
-            for previous_ci_panel in previous_ci_panels:
-                previous_ci_panel.current = False
-                previous_ci_panel.save()
-
-                ClinicalIndicationPanelHistory.objects.create(
-                    clinical_indication_panel_id=previous_ci_panel.id,
-                    note="Deactivated by td source",
-                    user=td_source,
+                # linking new ci with old panel with pending = True
+                # this might be duplicated down the line when panel is created
+                # but if old panel and new panel are the same, we expect that there
+                # will still be one ci-panel link instead of two being created
+                previous_panel_id = clinical_indication_panel.panel_id
+                provisionally_link_clinical_indication_to_panel(
+                    previous_panel_id,
+                    ci_instance.id,
+                    td_source,
                 )
+
         else:
             # Check for change in test method
             if ci_instance.test_method != indication["test_method"]:
-                ClinicalIndicationTestMethodHistory.objects.create(
-                    clinical_indication_id=ci_instance.id,
-                    note=f"Test method modified by td source: {ci_instance.test_method} -> {indication['test_method']}",
-                    user=td_source,
+                _make_provisional_test_method_change(
+                    ci_instance,
+                    indication["test_method"],
+                    td_source,
                 )
-
-                ci_instance.test_method = indication["test_method"]
-
-                ci_instance.save()
 
         # link each CI record to the appropriate Panel records
         hgnc_list: list[str] = []
@@ -359,11 +452,11 @@ def insert_data(json_data: dict, force: bool = False) -> None:
                     (
                         cip_instance,
                         created,
-                    ) = ClinicalIndicationPanel.objects.get_or_create(
+                    ) = ClinicalIndicationPanel.objects.update_or_create(
                         clinical_indication_id=ci_instance.id,
                         panel_id=panel_record.id,
-                        current=True,
                         defaults={
+                            "current": True,
                             "td_version": sortable_version(td_version),
                             "config_source": json_data["config_source"],
                         },
@@ -413,7 +506,6 @@ def insert_data(json_data: dict, force: bool = False) -> None:
         if hgnc_list:
             _make_panels_from_hgncs(json_data, ci_instance, hgnc_list)
 
-        # deal with deactivating CI-Panel records which are no longer in TD
-        # TODO: above
+    _backward_deactivate(all_indication)
 
     print("Data insertion completed.")

@@ -7,7 +7,7 @@ import json
 
 from ._insert_panel import insert_data_into_db
 from ._parse_transcript import seed_transcripts
-from ._insert_ci import insert_data
+from ._insert_ci import insert_test_directory_data
 from .panelapp import get_panel, PanelClass, fetch_all_panels
 
 
@@ -129,7 +129,10 @@ class Command(BaseCommand):
         test_mode: bool = kwargs.get("debug", False)
         command: str = kwargs.get("command")
 
-        assert command, "Please specify command: panelapp / td / form / transcript"
+        assert command, "Please specify command: panelapp / td / transcript"
+
+        # TODO: fill user variable from somewhere more appropriate, like a database table
+        user = "cmd line"
 
         # python manage.py seed panelapp <all/panel_id> <version>
         if command == "panelapp":
@@ -167,7 +170,7 @@ class Command(BaseCommand):
 
                 # insert panel data into database
                 for panel in panels:
-                    insert_data_into_db(panel)
+                    insert_data_into_db(panel, user)
 
                 print("Done.")
 
@@ -183,7 +186,7 @@ class Command(BaseCommand):
                 json_data = json.load(reader)
 
             if not test_mode:
-                insert_data(json_data, force)
+                insert_test_directory_data(json_data, force)
 
         # python manage.py seed transcript --hgnc <path> --mane <path> --gff <path> --g2refseq <path> --markname <path> --error
         elif command == "transcript":
