@@ -172,6 +172,14 @@ class Command(BaseCommand):
         """
         current_datetime = dt.datetime.today().strftime("%Y%m%d")
 
+        # block generation of genepanel.tsv if ANY ClinicalIndicationPanel data is 
+        # awaiting review (pending=True)
+        if ClinicalIndicationPanel.objects.filter(pending=True).exists():
+            raise ValueError(
+                "Some ClinicalIndicationPanel table values require manual review."
+                "Please resolve these through the review platform and try again."
+            )
+
         with open(
             f"{output_directory}/{current_datetime}_g2t.tsv", "w", newline=""
         ) as f:
