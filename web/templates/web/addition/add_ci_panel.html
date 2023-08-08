@@ -11,7 +11,7 @@
         <div class="col-4">
             <div class="card shadow">
                 <div class="card-body">
-                    <h5 class="card-title">{{ ci.name }}</h5>
+                    <h5 class="card-title"><a href="{% url 'clinical_indication' ci.id %}">{{ ci.name }}</a></h5>
                     <h6 class="card-subtitle mb-2 text-body-secondary">database id: {{ ci.id }}</h6>
                     <p class="card-text">{{ ci.r_code }} <br> {{ ci.test_method }}</p>
                 </div>
@@ -49,15 +49,27 @@
                             <td>None</td>
                         {% endif %}
                         <td>{{ panel.external_id }}</td>
-                        <td>{{ panel.custom }}</td>
-                        <td>{{ panel.test_directory }}</td>
+                        {% if panel.custom %}
+                            <td><span class="badge text-bg-success">{{ panel.custom }}</span></td>
+                        {% else %}
+                            <td><span class="badge text-bg-danger">{{ panel.custom }}</span></td>
+                        {% endif %}
+                        {% if panel.test_directory %}
+                            <td><span class="badge text-bg-success">{{ panel.test_directory }}</span></td>
+                        {% else %}
+                            <td><span class="badge text-bg-danger">{{ panel.test_directory }}</span></td>
+                        {% endif %}
                         {% if panel.id in linked_panels %}
                         <td>
                             <form action="{% url 'ci_panel_add' ci.id %}" method="post">
                                 {% csrf_token %}
                                 <input class="visually-hidden" type="text" class="form-control" name="panel_id" value="{{ panel.id }}">
                                 <input class="visually-hidden" type="text" class="form-control" name="action" value="deactivate">
+                                {% if panel.id in pending_panels %}
+                                <button type="button" class="btn btn-secondary btn-sm" disabled>Pending</button>
+                                {% else %}
                                 <button type="submit" class="btn btn-danger btn-sm">Deactivate</button>
+                                {% endif %}
                             </form>
                         </td>
                         {% else %}
@@ -66,7 +78,11 @@
                                 {% csrf_token %}
                                 <input class="visually-hidden" type="text" class="form-control" name="panel_id" value="{{ panel.id }}">
                                 <input class="visually-hidden" type="text" class="form-control" name="action" value="activate">
+                                {% if panel.id in pending_panels %}
+                                <button type="button" class="btn btn-secondary btn-sm" disabled>Pending</button>
+                                {% else %}
                                 <button type="submit" class="btn btn-success btn-sm">Activate</button>
+                                {% endif %}
                             </form>
                         </td>
                         {% endif %}

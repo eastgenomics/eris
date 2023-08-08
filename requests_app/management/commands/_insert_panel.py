@@ -20,7 +20,7 @@ from requests_app.models import (
     PanelRegion,
 )
 
-from ._utils import sortable_version
+from .utils import sortable_version
 from .panelapp import PanelClass
 from django.db.models import QuerySet
 from django.db import transaction

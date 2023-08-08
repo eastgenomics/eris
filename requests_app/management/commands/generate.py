@@ -7,14 +7,12 @@ from requests_app.models import (
     Transcript,
 )
 import os
-import re
 import csv
-import pandas as pd
 import collections
 import datetime as dt
 
 from django.core.management.base import BaseCommand
-from ._utils import normalize_version
+from .utils import normalize_version, parse_hgnc
 from panel_requests.settings import HGNC_IDS_TO_OMIT
 
 ACCEPTABLE_COMMANDS = ["genepanels", "g2t"]
@@ -55,26 +53,6 @@ class Command(BaseCommand):
 
         return True
 
-    def _parse_hgnc(self, file_path) -> set:
-        """
-        Parse hgnc file
-
-        Function inspired by https://github.com/eastgenomics/panel_ops/blob/main_without_docker/ops/utils.py#L1251
-
-        :param file_path: path to hgnc file
-
-        :return: set of rnas
-        """
-
-        df: pd.DataFrame = pd.read_csv(file_path, delimiter="\t", dtype=str)
-
-        df = df[
-            df["Locus type"].str.contains("rna", case=False)
-            | df["Approved name"].str.contains("mitochondrially encoded", case=False)
-        ]
-
-        return set(df["HGNC ID"].tolist())
-
     def _generate_genepanels(self, rnas: set, output_directory: str) -> None:
         """
         Main function to generate genepanel.tsv
@@ -90,7 +68,9 @@ class Command(BaseCommand):
 
         results = []
 
-        if not ClinicalIndicationPanel.objects.filter(current=True).exists():
+        if not ClinicalIndicationPanel.objects.filter(
+            current=True, pending=False
+        ).exists():
             # if there's no CiPanelAssociation date column, high chance Test Directory
             # has not been imported yet.
             raise ValueError(
@@ -99,7 +79,9 @@ class Command(BaseCommand):
                 "python manage.py seed td <td.json>"
             )
 
-        for row in ClinicalIndicationPanel.objects.filter(current=True).values(
+        for row in ClinicalIndicationPanel.objects.filter(
+            current=True, pending=False
+        ).values(
             "clinical_indication_id__r_code",
             "clinical_indication_id__name",
             "panel_id",
@@ -109,9 +91,9 @@ class Command(BaseCommand):
             relevant_panels.add(row["panel_id"])
             ci_panels[row["clinical_indication_id__r_code"]].append(row)
 
-        for row in PanelGene.objects.filter(panel_id__in=relevant_panels).values(
-            "gene_id__hgnc_id", "panel_id"
-        ):
+        for row in PanelGene.objects.filter(
+            panel_id__in=relevant_panels, pending=False
+        ).values("gene_id__hgnc_id", "panel_id"):
             panel_genes[row["panel_id"]].append(row["gene_id__hgnc_id"])
 
         for r_code, panel_list in ci_panels.items():
@@ -237,7 +219,7 @@ class Command(BaseCommand):
 
         # if command is genepanels, then parse hgnc dump and generate genepanels.tsv
         if cmd == "genepanels" and kwargs.get("hgnc"):
-            rnas = self._parse_hgnc(kwargs["hgnc"])
+            rnas = parse_hgnc(kwargs["hgnc"])
 
             self._generate_genepanels(rnas, output_directory)
 
