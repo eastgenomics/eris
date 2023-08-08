@@ -35,7 +35,11 @@
                     <td>{{ cip.config_source }}</td>
                     <td>{{ cip.created_date }} {{ created_time }}</td>
                     {% if cip.current %}
-                    <td><span class="badge text-bg-success">Active</span></td>
+                      {% if cip.pending %}
+                      <td><span class="badge text-bg-warning">Pending</span></td>
+                      {% else %}
+                      <td><span class="badge text-bg-success">Active</span></td>
+                      {% endif %}
                     {% else %}
                     <td><span class="badge text-bg-danger">Inactive</span></td>
                     {% endif %}
