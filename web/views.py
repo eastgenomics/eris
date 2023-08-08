@@ -632,6 +632,7 @@ def clinical_indication_panels(request):
     cips: QuerySet[ClinicalIndicationPanel] = ClinicalIndicationPanel.objects.values(
         "td_version",
         "current",
+        "pending",
         "clinical_indication_id",
         "clinical_indication_id__name",
         "clinical_indication_id__r_code",
@@ -730,13 +731,15 @@ def review(request) -> None:
         ClinicalIndication
     ] = ClinicalIndication.objects.filter(pending=True).all()
 
-    clinical_indication_panels: QuerySet[
-        ClinicalIndicationPanel
-    ] = ClinicalIndicationPanel.objects.filter(pending=True).values(
-        "clinical_indication_id__name",
-        "clinical_indication_id__r_code",
-        "panel_id__panel_name",
-        "panel_id__panel_version",
+    clinical_indication_panels: QuerySet[ClinicalIndicationPanel] = (
+        ClinicalIndicationPanel.objects.filter(pending=True)
+        .values(
+            "clinical_indication_id__name",
+            "clinical_indication_id__r_code",
+            "panel_id__panel_name",
+            "panel_id__panel_version",
+        )
+        .order_by("clinical_indication_id__r_code")
     )
 
     # normalize panel version
@@ -745,6 +748,8 @@ def review(request) -> None:
             cip["panel_id__panel_version"] = normalize_version(
                 cip["panel_id__panel_version"]
             )
+        else:
+            cip["panel_id__panel_version"] = 1.0
 
     panel_genes: QuerySet[PanelGene] = PanelGene.objects.filter(pending=True).values(
         "panel_id__panel_name",

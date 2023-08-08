@@ -5,6 +5,7 @@ from requests_app.models import (
     Panel,
     ClinicalIndication,
     ClinicalIndicationPanel,
+    ClinicalIndicationPanelHistory,
     Gene,
     Confidence,
     Penetrance,
@@ -21,12 +22,29 @@ from requests_app.models import (
 )
 
 from .utils import sortable_version
+from ._insert_ci import (
+    flag_clinical_indication_panel_for_review,
+    provisionally_link_clinical_indication_to_panel,
+)
 from .panelapp import PanelClass
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Q
 from django.db import transaction
 
 
-# TODO: need to deal with gene removal from Panel
+def _backward_deactivate_panel_gene(panel: PanelClass, panel_instance: Panel) -> None:
+    hgnc_ids: list[str] = [
+        gene.get("gene_data").get("hgnc_id")
+        for gene in panel.genes
+        if gene.get("gene_data")
+    ]
+
+    for panel_gene in PanelGene.objects.filter(panel_id=panel_instance.id).values(
+        "id", "gene_id__hgnc_id"
+    ):
+        if panel_gene["gene_id__hgnc_id"] not in hgnc_ids:
+            pg = PanelGene.objects.get(id=panel_gene["id"])
+            pg.pending = True
+            pg.save()
 
 
 def _insert_gene(panel: PanelClass, panel_instance: Panel) -> None:
@@ -64,7 +82,7 @@ def _insert_gene(panel: PanelClass, panel_instance: Panel) -> None:
         )
 
         confidence_instance, _ = Confidence.objects.get_or_create(
-            confidence_level=3,
+            confidence_level=3,  # we only seed level 3 confidence
         )
 
         moi_instance, _ = ModeOfInheritance.objects.get_or_create(
@@ -202,19 +220,19 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
 
 
 @transaction.atomic
-def insert_data_into_db(panel: PanelClass) -> None:
+def insert_data_into_db(panel: PanelClass, user: str) -> None:
     """
-    Insert Panel data into db
-
-    :param panel: PanelClass object
+    Insert data from a parsed JSON of panel records, into the database.
+    Controls creation and flagging of new and old CI-Panel links,
+    where the Panel version has changed.
+    Controls creation of genes and regions.
     """
     panel_external_id: str = panel.id
     panel_name: str = panel.name
     panel_version: str = panel.version
 
-    # created Panel record
-    # if there's a change in panel_name or panel_version
-    # we create a new record
+    # if there's a change in the panel_name or panel_version,
+    # create a new record
     panel_instance, created = Panel.objects.get_or_create(
         external_id=panel_external_id,
         panel_name=panel_name,
@@ -227,49 +245,29 @@ def insert_data_into_db(panel: PanelClass) -> None:
         },
     )
 
-    # if created meaning new Panel record have
-    # different name or version
+    # if created, the new Panel record will have a different name or version,
     # regardless of panel_source
     if created:
-        # handle previous Panel with similar external_id
-        # disable previous CI-Panel link
+        # handle previous Panel(s) with similar external_id. Panel name and version aren't suited for this.
+        # mark previous CI-Panel links as needing review!
 
-        # filter by external_id
-        # because Panel name or version might be different
-        previous_panel_instances: list[Panel] = Panel.objects.filter(
-            external_id=panel_external_id,
-            panel_version__lt=sortable_version(panel_version),
-        )  # expect multiple
-
-        # We expect PanelApp to always fetch the latest
-        # version of the panel thus version control is not needed
-
-        # do not delete previous Panel record!!
-
-        # disable CI-Panel link if any
-        # a Panel "might" have multiple CI-Panel link
-        for previous_panel in previous_panel_instances:
-            previous_ci_panel_instances: QuerySet[
-                ClinicalIndicationPanel
-            ] = ClinicalIndicationPanel.objects.filter(
-                panel_id=previous_panel.id,
-                current=True,  # get those that are active
+        for clinical_indication_panel in ClinicalIndicationPanel.objects.filter(
+            panel_id__external_id=panel_external_id
+        ):
+            flag_clinical_indication_panel_for_review(
+                clinical_indication_panel, "PanelApp"
             )
 
-            # for each previous CI-Panel instance, disable
-            if previous_ci_panel_instances:
-                for ci_panel_instance in previous_ci_panel_instances:
-                    ci_panel_instance.current = False
-                    ci_panel_instance.save()
+            clinical_indication_id = clinical_indication_panel.clinical_indication_id
 
-                    print(
-                        'Disabled previous CI-Panel link {} for Panel "{}"'.format(
-                            ci_panel_instance.id,
-                            previous_panel.panel_name,
-                        )
-                    )
+            provisionally_link_clinical_indication_to_panel(
+                panel_instance.id, clinical_indication_id, "PanelApp"
+            )
 
-            # TODO: disabling old CI-Panel link but new one need to wait till next TD import?
-
+    # attach each Gene record to the new Panel record,
+    # and populate region attribute models
     _insert_gene(panel, panel_instance)
     _insert_regions(panel, panel_instance)
+
+    # backward checking if PanelGene interaction is still valid
+    _backward_deactivate_panel_gene(panel, panel_instance)

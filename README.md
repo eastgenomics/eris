@@ -155,3 +155,12 @@ This command required 5 files:
 python manage.py seed transcript --hgnc <hgnc path> --mane <mane.csv path> --gff <gff.tsv path> --g2refseq <g2refseq.csv path> --markname <markname.csv path>
 python manage.py seed transcript --hgnc <path to hgnc.txt> --mane <path to mane.csv> --gff <path to parsed gff.tsv> --g2refseq <path to g2refseq.csv from HGMD database> --markname <path to markname.csv from HGMD database>
 ```
+
+
+# Running unit tests
+
+Unit tests are stored in the 'tests' directory, and can be run through 'manage.py':
+```
+python manage.py test tests
+```
+Database-dependent tests use Django's unit testing library (based on unittest) to make, populate and tear down a temporary database based on models.py. Note that the test database will be named by prepending 'test_' to the value of the NAMEs in DATABASES.
