@@ -86,6 +86,10 @@ def _provisionally_link_new_ci_version_to_panel(previous_panel_ci_links: QuerySe
                     "for an earlier CI version - needs manual review",
                 user=user
             )
+        
+        #TODO: what to do if the link already existed? Is this a possible behaviour?
+        #TODO: do we want to search for a 'current=False' version first, and possibly
+        # TODO: switch it to True?
 
 
 def _get_td_version(filename: str) -> str | None:
