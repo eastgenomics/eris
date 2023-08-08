@@ -7,7 +7,7 @@ import os
 from django.db import transaction
 from django.db.models import QuerySet
 
-from ._utils import sortable_version, normalize_version
+from .utils import sortable_version, normalize_version
 
 from requests_app.models import (
     Panel,

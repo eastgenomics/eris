@@ -2,6 +2,15 @@
 
 {% block content %}
 <div class="container mb-5 pb-5">
+    {% if pending_approval %}
+    <div class="row">
+        <div class="col">
+            <div class="alert alert-warning" role="alert">
+                This panel is pending approval
+              </div>
+        </div>
+    </div>
+    {% endif %}
     <br> <!-- Clinical Indication Overview -->
     <div class="row text-wrap text-break">
         <div class="col">
@@ -24,7 +33,9 @@
     <h3>Genes</h3>
     <div class="d-flex justify-content-between">
         <p class="text-muted">genes associated with the panel</p>
+        {% if not pending_approval %}
         <a href="{% url 'gene_add' panel.id %}"><button type="button" class="btn btn-primary btn-sm m-1">Edit Gene</button></a>
+        {% endif %}
     </div>
     <div class="row">
         {% if pgs %}
@@ -39,7 +50,7 @@
                 <tbody>
                     {% for pg in pgs %}
                     <tr>
-                        <td>{{ pg.gene_id__hgnc_id }}</td>
+                        <td><a href="{% url 'gene' pg.gene_id %}">{{ pg.gene_id__hgnc_id }}</a></td>
                         <td>{{ pg.gene_id__gene_symbol }}</td>
                     </tr>
                     {% endfor %}
@@ -81,7 +92,7 @@
                          </ul>
                     </p>
 
-                    <a href="#" class="btn btn-danger">Deactivate</a>
+                    <a href="#" class="btn btn-danger btn-sm">Deactivate</a>
                 </div>
             </div>
         </div>

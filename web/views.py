@@ -1,5 +1,9 @@
+import re
+import csv
+import pandas as pd
 import collections
 from itertools import chain
+import datetime as dt
 
 from django.shortcuts import render
 from django.db.models import QuerySet
@@ -8,6 +12,9 @@ from django.db.models import Q
 from django.shortcuts import redirect
 
 from .forms import ClinicalIndicationForm, PanelForm
+from requests_app.management.commands.utils import parse_hgnc
+from .utils.utils import Genepanel
+from panel_requests.settings import HGNC_IDS_TO_OMIT
 
 from requests_app.models import (
     ClinicalIndication,
@@ -18,8 +25,11 @@ from requests_app.models import (
     PanelGene,
     PanelGeneHistory,
     Transcript,
+    PanelGeneTranscript,
+    Gene,
 )
-from requests_app.management.commands._utils import normalize_version
+
+from requests_app.management.commands.utils import normalize_version
 
 
 def index(request):
@@ -121,6 +131,7 @@ def panel(request, panel_id: int):
             "ci_history": agg_history,
             "pgs": pgs,
             "transcripts": all_transcripts,
+            "pending_approval": True if panel.pending else False,
         },
     )
 
@@ -139,25 +150,47 @@ def clinical_indication(request, ci_id: int):
 
     # fetch ci-panels
     # might have multiple panels but only one active
-    ci_panels: QuerySet[
+    approved_ci_panels: QuerySet[
         ClinicalIndicationPanel
-    ] = ClinicalIndicationPanel.objects.filter(clinical_indication_id=ci_id)
+    ] = ClinicalIndicationPanel.objects.filter(
+        clinical_indication_id=ci_id, pending=False
+    )
+
+    # fetch approved/unapproved ci-panels
+    all_ci_panels: QuerySet[ClinicalIndicationPanel] = (
+        ClinicalIndicationPanel.objects.filter(
+            clinical_indication_id=ci_id,
+        )
+        .values(
+            "id",
+            "current",
+            "pending",
+            "config_source",
+            "td_version",
+            "created",
+            "last_updated",
+            "clinical_indication_id",
+            "panel_id",
+            "panel_id__panel_name",
+        )
+        .order_by("pending")
+    )
 
     # converting version to readable format
-    for cip in ci_panels:
+    for cip in approved_ci_panels:
         cip.td_version = normalize_version(cip.td_version)
 
     # fetch panels
     # there might be multiple panels due to multiple ci-panel links
     panels: QuerySet[Panel] = Panel.objects.filter(
-        id__in=[cp.panel_id for cp in ci_panels]
+        id__in=[cp.panel_id for cp in approved_ci_panels]
     )
 
     # fetch ci-panels history
     ci_panels_history: QuerySet[
         ClinicalIndicationPanelHistory
     ] = ClinicalIndicationPanelHistory.objects.filter(
-        clinical_indication_panel_id__in=[cp.id for cp in ci_panels]
+        clinical_indication_panel_id__in=[cp.id for cp in approved_ci_panels]
     ).order_by(
         "-id"
     )
@@ -198,9 +231,11 @@ def clinical_indication(request, ci_id: int):
 
         panel_genes_dict[pg["panel_id"]].append(
             {
+                "id": pg["id"],
+                "gene_id": pg["gene_id"],
                 "hgnc": pg["gene_id__hgnc_id"],
                 "symbol": pg["gene_id__gene_symbol"],
-                "created": latest_pg_history.created_date,
+                "created": latest_pg_history.created,
             }
         )
 
@@ -222,11 +257,12 @@ def clinical_indication(request, ci_id: int):
         "web/info/clinical.html",
         {
             "ci": ci,
-            "ci_panels": ci_panels,
+            "ci_panels": all_ci_panels,
             "panels": panels,
             "ci_history": agg_history,
             "panel_genes": panel_genes_dict,
             "transcripts": all_transcripts,
+            "pending_approval": ci.pending,
         },
     )
 
@@ -260,6 +296,7 @@ def add_clinical_indication(request):
                 r_code=r_code,
                 name=name,
                 test_method=test_method,
+                pending=True,
             )
         else:
             # if form invalid, fetch ci from db
@@ -308,6 +345,7 @@ def add_panel(request):
                 external_id=request.POST.get("external_id"),
                 panel_name=request.POST.get("panel_name"),
                 panel_version=request.POST.get("panel_version"),
+                pending=True,
             )
         else:
             # if invalid, fetch panel from db
@@ -357,6 +395,34 @@ def add_ci_panel(request, ci_id: int):
         panel.panel_version = normalize_version(panel.panel_version)
 
     if request.method == "GET":
+        # active ci-panel links
+        linked_panels: list[int] = [
+            cip.panel_id
+            for cip in ClinicalIndicationPanel.objects.filter(
+                clinical_indication_id=ci_id, current=True
+            )
+        ]
+
+        # fetch any pending ci-panel links
+        pending_ci_panels: list[int] = [
+            cip.panel_id
+            for cip in ClinicalIndicationPanel.objects.filter(
+                clinical_indication_id=ci_id, pending=True
+            )
+        ]
+
+        # get the ci
+        clinical_indication: ClinicalIndication = ClinicalIndication.objects.get(
+            id=ci_id
+        )
+
+        # only fetch active panels
+        panels: QuerySet[Panel] = Panel.objects.filter(pending=False).all()
+
+        # normalize panel version
+        for panel in panels:
+            panel.panel_version = normalize_version(panel.panel_version)
+
         return render(
             request,
             "web/addition/add_ci_panel.html",
@@ -364,6 +430,7 @@ def add_ci_panel(request, ci_id: int):
                 "ci": clinical_indication,
                 "panels": panels,
                 "linked_panels": linked_panels,
+                "pending_panels": pending_ci_panels,
             },
         )
 
@@ -375,36 +442,62 @@ def add_ci_panel(request, ci_id: int):
 
         if action == "activate":
             with transaction.atomic():
-                # activate ci-panel link
-                cip_instance: ClinicalIndicationPanel = (
-                    ClinicalIndicationPanel.objects.update_or_create(
-                        clinical_indication_id=ci_id,
-                        panel_id=panel_id,
-                        current=True,
-                    )
+                (
+                    cip_instance,
+                    _,
+                ) = ClinicalIndicationPanel.objects.update_or_create(
+                    clinical_indication_id=ci_id,
+                    panel_id=panel_id,
+                    defaults={
+                        "current": False,
+                        "pending": True,
+                    },
                 )
+
+                ci_name: str = ClinicalIndication.objects.get(
+                    id=cip_instance.clinical_indication_id
+                ).name
+                panel_name: str = Panel.objects.get(id=cip_instance.panel_id).panel_name
 
                 ClinicalIndicationPanelHistory.objects.filter(
                     clinical_indication_panel_id=cip_instance.id,
-                    note="Activated by online web",
+                    note=f"Activated by online web (pending) {ci_name} > {panel_name}",
                 )
         else:
+            # TODO: to not instantiate action until approval button is clicked?
+
             # deactivate ci-panel link
             with transaction.atomic():
-                cip_instance: ClinicalIndicationPanel = (
-                    ClinicalIndicationPanel.objects.get(
-                        clinical_indication_id=ci_id,
-                        panel_id=panel_id,
-                    )
+                cip_instance, _ = ClinicalIndicationPanel.objects.update_or_create(
+                    clinical_indication_id=ci_id,
+                    panel_id=panel_id,
+                    defaults={
+                        "pending": True,
+                        "current": False,
+                    },
                 )
 
-                cip_instance.current = False
-                cip_instance.save()
+                ci_name: str = ClinicalIndication.objects.get(
+                    id=cip_instance.clinical_indication_id
+                ).name
+                panel_name: str = Panel.objects.get(id=cip_instance.panel_id).panel_name
 
                 ClinicalIndicationPanelHistory.objects.create(
                     clinical_indication_panel_id=cip_instance.id,
-                    note="Deactivated by online web",
+                    note=f"Deactivated by online web (pending) {ci_name} > {panel_name}",
                 )
+
+        linked_panels: list[int] = [
+            cip.panel_id
+            for cip in ClinicalIndicationPanel.objects.filter(
+                clinical_indication_id=ci_id, current=True
+            )
+        ]
+
+        clinical_indication: ClinicalIndication = ClinicalIndication.objects.get(
+            id=ci_id
+        )
+        panels: QuerySet[Panel] = Panel.objects.filter(pending=False).all()
 
         return redirect(
             previous_link,
@@ -426,20 +519,15 @@ def _get_clinical_indication_panel_history(
         limit (int): limit of history to fetch
     """
 
-    return ClinicalIndicationPanelHistory.objects.order_by(
-        "-created_date", "-created_time"
-    ).values(
-        "created_date",
-        "created_time",
+    return ClinicalIndicationPanelHistory.objects.order_by("-created").values(
+        "created",
         "note",
         "user",
         "clinical_indication_panel_id__clinical_indication_id__name",
         "clinical_indication_panel_id__clinical_indication_id__r_code",
         "clinical_indication_panel_id__panel_id__panel_name",
         "clinical_indication_panel_id__panel_id__panel_version",
-    )[
-        :limit
-    ]
+    )[:limit]
 
 
 def history(request):
@@ -475,10 +563,9 @@ def history(request):
 
             cip_histories: QuerySet[ClinicalIndicationPanelHistory] = (
                 ClinicalIndicationPanelHistory.objects.filter(query_filters)
-                .order_by("-created_date", "-created_time")
+                .order_by("-created")
                 .values(
-                    "created_date",
-                    "created_time",
+                    "created",
                     "note",
                     "user",  # TODO: need clinical indication id and panel id
                     "clinical_indication_panel_id__clinical_indication_id__name",
@@ -552,8 +639,7 @@ def clinical_indication_panels(request):
         "panel_id__panel_name",
         "panel_id__panel_version",
         "panel_id__external_id",
-        "created_date",
-        "created_time",
+        "created",
         "config_source",
     ).order_by("clinical_indication_id__name")
 
@@ -573,9 +659,10 @@ def clinical_indication_panels(request):
     )
 
 
-def activate_or_deactivate_clinical_indication_panel(request, cip_id: int):
+def activate_or_deactivate_clinical_indication_panel(request, cip_id: int) -> None:
     """
-    Clinical indication panel add / remove page
+    Clinical indication panel add / remove action.
+    There is no GET request method for this function.
 
     Args:
         cip_id (int): clinical indication panel id
@@ -591,6 +678,7 @@ def activate_or_deactivate_clinical_indication_panel(request, cip_id: int):
             with transaction.atomic():
                 ci = ClinicalIndicationPanel.objects.get(id=cip_id)
                 ci.current = False
+                ci.pending = True
                 ci.save()
 
                 ClinicalIndicationPanelHistory.objects.create(
@@ -603,6 +691,7 @@ def activate_or_deactivate_clinical_indication_panel(request, cip_id: int):
             with transaction.atomic():
                 ci = ClinicalIndicationPanel.objects.get(id=cip_id)
                 ci.current = True
+                ci.pending = True
                 ci.save()
 
                 ClinicalIndicationPanelHistory.objects.create(
@@ -615,3 +704,167 @@ def activate_or_deactivate_clinical_indication_panel(request, cip_id: int):
             pass
 
         return redirect(previous_link)
+
+
+def review(request) -> None:
+    """
+    Review / Pending page where user can view those links that are
+    awaiting approval
+
+    Shows the following pending links:
+    - Panel
+    - Clinical Indication
+    - Clinical Indication Panel
+    - PanelGene
+    - PanelRegion (TODO)
+    - PanelTestMethod (TODO)
+    """
+
+    panels: QuerySet[Panel] = Panel.objects.filter(pending=True).all()
+    # normalize panel version
+    for panel in panels:
+        if panel.panel_version:
+            panel.panel_version = normalize_version(panel.panel_version)
+
+    clinical_indications: QuerySet[
+        ClinicalIndication
+    ] = ClinicalIndication.objects.filter(pending=True).all()
+
+    clinical_indication_panels: QuerySet[
+        ClinicalIndicationPanel
+    ] = ClinicalIndicationPanel.objects.filter(pending=True).values(
+        "clinical_indication_id__name",
+        "clinical_indication_id__r_code",
+        "panel_id__panel_name",
+        "panel_id__panel_version",
+    )
+
+    # normalize panel version
+    for cip in clinical_indication_panels:
+        if cip["panel_id__panel_version"]:
+            cip["panel_id__panel_version"] = normalize_version(
+                cip["panel_id__panel_version"]
+            )
+
+    panel_genes: QuerySet[PanelGene] = PanelGene.objects.filter(pending=True).values(
+        "panel_id__panel_name",
+        "panel_id__panel_version",
+        "gene_id__hgnc_id",
+        "gene_id__gene_symbol",
+    )
+
+    return render(
+        request,
+        "web/review/pending.html",
+        {
+            "panels": panels,
+            "cis": clinical_indications,
+            "cips": clinical_indication_panels,
+            "pgs": panel_genes,
+        },
+    )
+
+
+def gene(request, gene_id: int) -> None:
+    """
+    Page to view gene information
+    - shows all the Panel associated with the gene
+
+
+    Args:
+        gene_id (int): gene id
+    """
+    gene = Gene.objects.get(id=gene_id)
+
+    associated_panels = PanelGene.objects.filter(gene_id=gene_id).values(
+        "panel_id__panel_name",
+        "panel_id__panel_version",
+        "panel_id",
+        "panel_id__external_id",
+        "panel_id__panel_source",
+        "panel_id__test_directory",
+        "panel_id__custom",
+        "panel_id__created",
+        "panel_id__pending",
+    )
+
+    return render(
+        request,
+        "web/info/gene.html",
+        {
+            "gene": gene,
+            "panels": associated_panels,
+        },
+    )
+
+
+def genepanel(request):
+    """
+    Genepanel page where user view R code, clinical indication name
+    its associated panels and genes.
+    """
+
+    # TODO: hard-coded, will become an upload file in the future
+    rnas = parse_hgnc("testing_files/hgnc_dump_20230606_1.txt")
+
+    ci_panels = collections.defaultdict(list)
+    panel_genes = collections.defaultdict(list)
+    relevant_panels = set()
+
+    if not ClinicalIndicationPanel.objects.filter(current=True, pending=False).exists():
+        # if there's no CiPanelAssociation date column, high chance Test Directory
+        # has not been imported yet.
+        raise ValueError(
+            "Test Directory has yet been imported!"
+            "ClinicalIndicationPanel table is empty"
+            "python manage.py seed test_dir 220713_RD_TD.json Y"
+        )  # TODO: soft fail
+
+    # fetch all relevant clinical indication and panels
+    for row in ClinicalIndicationPanel.objects.filter(
+        current=True, pending=False
+    ).values(
+        "clinical_indication_id__r_code",
+        "clinical_indication_id__name",
+        "panel_id",
+        "panel_id__panel_name",
+        "panel_id__panel_version",
+    ):
+        relevant_panels.add(row["panel_id"])
+        ci_panels[row["clinical_indication_id__r_code"]].append(row)
+
+    # fetch all relevant genes for the relevant panels
+    for row in PanelGene.objects.filter(
+        panel_id__in=relevant_panels, pending=False
+    ).values("gene_id__hgnc_id", "gene_id", "panel_id"):
+        panel_genes[row["panel_id"]].append((row["gene_id__hgnc_id"], row["gene_id"]))
+
+    list_of_genepanel: list[Genepanel] = []
+    ci_panel_to_genes = collections.defaultdict(list)
+
+    # for each r code panel combo, we make a list of genes associated with it
+    for r_code, panel_list in ci_panels.items():
+        # for each clinical indication
+        for panel_dict in panel_list:
+            # for each panel associated with that clinical indication
+            panel_id: str = panel_dict["panel_id"]
+            ci_name: str = panel_dict["clinical_indication_id__name"]
+            for hgnc, gene_id in panel_genes[panel_id]:
+                # for each gene associated with that panel
+                if hgnc in HGNC_IDS_TO_OMIT or hgnc in rnas:
+                    continue
+
+                unique_key = f"{r_code} | {ci_name} |  {panel_dict['panel_id__panel_name']} | {normalize_version(panel_dict['panel_id__panel_version']) if panel_dict['panel_id__panel_version'] else '1.0'}"
+
+                ci_panel_to_genes[unique_key].append((hgnc, gene_id))
+
+    # make GenePanel class for ease of rendering in front end
+    for key, hgncs in ci_panel_to_genes.items():
+        r_code, ci_name, panel_name, panel_version = [
+            val.strip() for val in key.split("|")
+        ]
+        list_of_genepanel.append(
+            Genepanel(r_code, ci_name, panel_name, panel_version, hgncs)
+        )
+
+    return render(request, "web/info/genepanel.html", {"genepanels": list_of_genepanel})

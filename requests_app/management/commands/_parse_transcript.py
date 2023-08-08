@@ -1,4 +1,3 @@
-import csv
 import collections
 import datetime as dt
 import pandas as pd

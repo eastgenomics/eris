@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <!-- Title -->
+    <div class="row">
+        <div class="col">
+            <div class="h3">Review</div>
+        </div>
+    </div>
+    <!-- Panel Review -->
+    <div class="row">
+        <div class="col">
+            <h5>Panels</h5>
+            {% if panels %}
+            <table class="table table-bordered shadow">
+                <thead>
+                  <tr>
+                    <th scope="col">Panel Name</th>
+                    <th scope="col">Panel Version</th>
+                    <th scope="col">External ID</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for panel in panels %}
+                    <tr>
+                        <td>{{ panel.panel_name }}</td>
+                        <td>{{ panel.panel_version }}</td>
+                        <td>{{ panel.external_id }}</td>
+                        <td>
+                            <button type="button" class="btn btn-success btn-sm">Approve</button>
+                            <button type="button" class="btn btn-danger btn-sm">Remove</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="alert alert-primary" role="alert">
+                Nothing pending
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <!-- Panel Review End -->
+    <!-- Clinical Indication Review -->
+    <div class="row">
+        <div class="col">
+            <h5>Clinical Indication</h5>
+            {% if cis %}
+            <table class="table table-bordered shadow">
+                <thead>
+                  <tr>
+                    <th scope="col">Clinical Indication Name</th>
+                    <th scope="col">R Code</th>
+                    <th scope="col">Test Method</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for ci in cis %}
+                    <tr>
+                        <td>{{ ci.name }}</td>
+                        <td>{{ ci.r_code }}</td>
+                        <td>{{ ci.test_method }}</td>
+                        <td>
+                            <button type="button" class="btn btn-success btn-sm">Approve</button>
+                            <button type="button" class="btn btn-danger btn-sm">Remove</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="alert alert-primary" role="alert">
+                Nothing pending
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <!-- Clinical Indication Review End -->
+    <!-- Clinical Indication Panel Review -->
+    <div class="row">
+        <div class="col">
+            <h5>Clinical Indication Panel</h5>
+            {% if cips %}
+            <table class="table table-bordered shadow">
+                <thead>
+                  <tr>
+                    <th scope="col">Clinical Indication</th>
+                    <th scope="col">Panel</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for cip in cips %}
+                    <tr>
+                        <td>{{ cip.clinical_indication_id__r_code }} {{ cip.clinical_indication_id__name }}</td>
+                        <td>{{ cip.panel_id__panel_name }} v{{ cip.panel_id__panel_version }}</td>
+                        <td>
+                            <button type="button" class="btn btn-success btn-sm">Approve</button>
+                            <button type="button" class="btn btn-danger btn-sm">Remove</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="alert alert-primary" role="alert">
+                Nothing pending
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <!-- Clinical Indication Panel Review End -->
+    <!-- Panel Gene Review -->
+    <div class="row">
+        <div class="col">
+            <h5>Panel Gene</h5>
+            {% if pgs %}
+            <table class="table table-bordered shadow">
+                <thead>
+                  <tr>
+                    <th scope="col">Panel</th>
+                    <th scope="col">Gene</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for pg in pgs %}
+                    <tr>
+                        <td>{{ pg.panel_id__panel_name }} {{ pg.panel_id__panel_version }}</td>
+                        <td>{{ pg.gene_id__hgnc_id }} v{{ pg.gene_id__gene_symbol }}</td>
+                        <td>
+                            <button type="button" class="btn btn-success btn-sm">Approve</button>
+                            <button type="button" class="btn btn-danger btn-sm">Remove</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="alert alert-primary" role="alert">
+                Nothing pending
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
