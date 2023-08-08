@@ -13,6 +13,8 @@ urlpatterns = [
         views.clinical_indication_panels,
         name="clinical_indication_panels",
     ),
+    path("gene/<int:gene_id>/", views.gene, name="gene"),
+    path("genepanel/", views.genepanel, name="genepanel"),
     # addition
     path("ci/add/", views.add_clinical_indication, name="ci_add"),
     path("panel/add", views.add_panel, name="panel_add"),
@@ -26,4 +28,6 @@ urlpatterns = [
         views.activate_or_deactivate_clinical_indication_panel,
         name="activate_or_deactivate_clinical_indication_panel",
     ),
+    # review
+    path("review/", views.review, name="review"),
 ]

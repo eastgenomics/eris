@@ -47,6 +47,12 @@ class Panel(models.Model):
         auto_now_add=True,
     )
 
+    pending = models.BooleanField(
+        verbose_name="pending activation",
+        null=True,
+        default=False,
+    )
+
     class Meta:
         db_table = "panel"
 
@@ -69,10 +75,10 @@ class ClinicalIndication(models.Model):
         max_length=255,
     )
 
-    needs_review =  models.BooleanField(
-        verbose_name="needs manual review?",
-        null=False,
-        default=False
+    pending = models.BooleanField(
+        verbose_name="pending activation",
+        null=True,
+        default=False,
     )
 
     class Meta:
@@ -133,10 +139,10 @@ class ClinicalIndicationPanel(models.Model):
     # active status
     current = models.BooleanField(verbose_name="latest association")
 
-    needs_review = models.BooleanField(
-        verbose_name="needs manual review?",
-        null=False,
-        default=False
+    pending = models.BooleanField(
+        verbose_name="pending activation",
+        null=True,
+        default=False,
     )
 
     class Meta:
@@ -353,6 +359,12 @@ class PanelGene(models.Model):
     justification = models.TextField(
         verbose_name="Justification",
         max_length=255,
+    )
+
+    pending = models.BooleanField(
+        verbose_name="pending activation",
+        null=True,
+        default=False,
     )
 
     class Meta:

@@ -2,6 +2,15 @@
 
 {% block content %}
 <div class="container mb-5 pb-5">
+    {% if pending_approval %}
+    <div class="row">
+        <div class="col">
+            <div class="alert alert-warning shadow" role="alert">
+                This clinical indication is pending approval
+              </div>
+        </div>
+    </div>
+    {% endif %}
     <br> <!-- Clinical Indication Overview -->
     <div class="row">
         <div class="col">
@@ -27,8 +36,16 @@
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">panelapp id: {{ panel.external_id }}</li>
                         <li class="list-group-item">panel source: {{ panel.panel_source }}</li>
-                        <li class="list-group-item">imported from test directory: {{ panel.test_directory }}</li>
-                        <li class="list-group-item">custom panel: {{ panel.custom }}</li>
+                        {% if panel.test_directory %}
+                        <li class="list-group-item">imported from test directory: <span class="badge text-bg-success">{{ panel.test_directory }}</span></li>
+                        {% else %}
+                        <li class="list-group-item">imported from test directory: <span class="badge text-bg-danger">{{ panel.test_directory }}</span></li>
+                        {% endif %}
+                        {% if panel.custom %}
+                        <li class="list-group-item">custom panel: <span class="badge text-bg-success">{{ panel.custom }}</span></li>
+                        {% else %}
+                        <li class="list-group-item">custom panel: <span class="badge text-bg-danger">{{ panel.custom }}</span></li>
+                        {% endif %}
                         <li class="list-group-item">created: {{ panel.created_date }} {{ panel.created_time }}</li>
                     </ul>
                 </div>
@@ -49,12 +66,16 @@
     <p class="fs-6 text-muted">all clinical indication-panel links</p>
     <div class="row my-3">
         <div class="col">
-            <a href="{% url 'ci_panel_add' ci.id %}" class="btn btn-primary btn-sm">Add Clinical Indication-Panel Link</a>
+            {% if pending_approval %}
+            <button type="button" class="btn btn-secondary btn-sm" disabled>Pending Approval</button>
+            {% else %}
+            <a href="{% url 'ci_panel_add' ci.id %}" class="btn btn-primary btn-sm">Edit Clinical Indication-Panel Link</a>
+            {% endif %}
         </div>
     </div>
     <div class="row">
         {% for ci_panel in ci_panels %}
-        <div class="col-lg-4 col-md-8 col-sm-12">
+        <div class="col-lg-4 col-md-8 col-sm-12 my-2">
             <div class="card shadow">
                 <div class="card-body">
                     <h5 class="card-title">database id: {{ ci_panel.id }}</h5>
@@ -71,7 +92,7 @@
                             <li class="list-group-item">imported by test directory version: {{ ci_panel.td_version }}</li>
                             <li class="list-group-item">created: {{ ci_panel.created_date }} {{ ci_panel.created_time }}</li>
                             <li class="list-group-item">last updated: {{ ci_panel.last_updated }}</li>
-                            <li class="list-group-item">link: <span class="text-danger">{{ ci_panel.clinical_indication_id }}</span> -> <span class="text-info">{{ ci_panel.panel_id }}</span></li>
+                            <li class="list-group-item">target: <a href="{% url 'panel' ci_panel.panel_id %}"><span class="text-info">{{ ci_panel.panel_id__panel_name }}</span></a></li>
                          </ul>
                     </p>
 
@@ -79,13 +100,21 @@
                     <form action="{% url 'activate_or_deactivate_clinical_indication_panel' ci_panel.id %}" method="POST">
                         {% csrf_token %}
                         <input class="visually-hidden" type="text" class="form-control" name="action" value="deactivate">
+                        {% if ci_panel.pending %}
+                        <button type="button" class="btn btn-secondary btn-sm" disabled>Pending Approval</button>
+                        {% else %}
                         <button type="submit" class="btn btn-danger btn-sm">Deactivate</button>
+                        {% endif %}
                     </form>
                     {% else %}
                     <form action="{% url 'activate_or_deactivate_clinical_indication_panel' ci_panel.id %}" method="POST">
                         {% csrf_token %}
                         <input class="visually-hidden" type="text" class="form-control" name="action" value="activate">
+                        {% if ci_panel.pending %}
+                        <button type="button" class="btn btn-secondary btn-sm" disabled>Pending Approval</button>
+                        {% else %}
                         <button type="submit" class="btn btn-success btn-sm">Activate</button>
+                        {% endif %}
                     </form>
                     {% endif %}
                 </div>
@@ -141,7 +170,7 @@
                     <h5 class="card-title">panel id: <span class="text-info">{{ key }}</span></h5>
 
                     <p class="card-text">
-                        <table class="table table-bordered">
+                        <table class="table table-bordered table-hover">
                             <thead>
                               <tr>
                                 <th scope="col">HGNC id</th>
@@ -152,7 +181,7 @@
                             <tbody>
                                 {% for gene in values %}
                                 <tr>
-                                    <td>{{ gene.hgnc }}</td>
+                                    <td><a href="{% url 'gene' gene.id %}">{{ gene.hgnc }}</a></td>
                                     <td>{{ gene.symbol }}</td>
                                     <td>{{ gene.created }}</td>
                                 </tr>

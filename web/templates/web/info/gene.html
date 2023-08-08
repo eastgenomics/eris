@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mb-5">
+    <div class="row">
+        <div class="col">
+            <h1>{{ gene.hgnc_id }}</h1>
+            <h4>{{ gene.gene_symbol }}</h4>
+            <h4>Previous Symbols: {{ gene.previous_symbols }}</h4>
+            <h4>Alias Symbols: {{ gene.alias_symbols }}</h4>
+            <h5>database id: {{ gene.id }}</h5>
+        </div>
+    </div>
+    <br>
+    <h3>Associated Panels</h3>
+    <div class="row">
+        {% for panel in panels %}
+        <div class="col-lg-4 col-md-8 col-sm-12 my-2">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h5 class="text-break"><a href="{% url 'panel' panel.panel_id %}">{{ panel.panel_id__panel_name }}</a></h5>
+                    <h6 class="text-muted">panel id in database: <span class="text-info">{{ panel.panel_id }}</span></h6>
+
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">panelapp id: {{ panel.panel_id__external_id }}</li>
+                        <li class="list-group-item">panel source: {{ panel.panel_id__panel_source }}</li>
+                        {% if panel.panel_id__test_directory %}
+                        <li class="list-group-item">imported from test directory: <span class="badge text-bg-success">{{ panel.panel_id__test_directory }}</span></li>
+                        {% else %}
+                        <li class="list-group-item">imported from test directory: <span class="badge text-bg-danger">{{ panel.panel_id__test_directory }}</span></li>
+                        {% endif %}
+                        {% if panel.panel_id__custom %}
+                        <li class="list-group-item">custom panel: <span class="badge text-bg-success">{{ panel.panel_id__custom }}</span></li>
+                        {% else %}
+                        <li class="list-group-item">custom panel: <span class="badge text-bg-danger">{{ panel.panel_id__custom }}</span></li>
+                        {% endif %}
+                        <li class="list-group-item">created: {{ panel.panel_id__created_date }} {{ panel.panel_id__created_time }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
