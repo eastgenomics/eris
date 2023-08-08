@@ -18,7 +18,7 @@
                     <th class="col text-nowrap">TD Version</th>
                     <th class="col text-nowrap">Config Source</th>
                     <th class="col text-nowrap">Created</th>
-                    <th scope="col text-nowrap">Active</th>
+                    <th scope="col">Active</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -33,7 +33,7 @@
                     <td>{{ cip.panel_id__external_id }}</td>
                     <td>{{ cip.td_version }}</td>
                     <td>{{ cip.config_source }}</td>
-                    <td>{{ cip.created_date }} {{ created_time }}</td>
+                    <td>{{ cip.created.date }}</td>
                     {% if cip.current %}
                       {% if cip.pending %}
                       <td><span class="badge text-bg-warning">Pending</span></td>
