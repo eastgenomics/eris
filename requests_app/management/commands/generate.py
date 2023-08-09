@@ -272,3 +272,5 @@ class Command(BaseCommand):
         # if command is g2t, then generate g2t.tsv
         if cmd == "g2t":
             self._generate_g2t(output_directory)
+
+            print(f"g2t file created at {output_directory}")
