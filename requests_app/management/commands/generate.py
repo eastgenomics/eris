@@ -171,6 +171,9 @@ class Command(BaseCommand):
 
         :param output_directory: output directory
         """
+
+        print("Creating g2t file")
+        
         current_datetime = dt.datetime.today().strftime("%Y%m%d")
 
         # block generation of genepanel.tsv if ANY ClinicalIndicationPanel data is 
