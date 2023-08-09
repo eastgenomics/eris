@@ -47,7 +47,7 @@ def flag_clinical_indication_panel_for_review(
     clinical_indication_panel: ClinicalIndicationPanel, user: str
 ) -> None:
     """
-    Controller function which takes a clinical indication r code, and flags ACTIVE links between the CI
+    Controller function which takes a clinical indication, and flags ACTIVE links between the CI
     and its panels for manual review.
     This is useful when a new CI is added, e.g. from test directory, and the user might want to switch to
     using that for a panel instead.
@@ -253,7 +253,8 @@ def _make_panels_from_hgncs(
 
         if previous_ci_panels:  # in the case where there are old ci-panel
             for ci_panel in previous_ci_panels:
-                flag_clinical_indication_panel_for_review(ci_panel)  # flag for review
+                #TODO: change user to something more sensible?
+                flag_clinical_indication_panel_for_review(ci_panel, "_make_panels_from_hgnc")  # flag for review
 
                 # linking old ci with new panel with pending = True
                 new_clinical_indication_panel = (
@@ -343,7 +344,8 @@ def _make_provisional_test_method_change(
 @transaction.atomic
 def insert_test_directory_data(
     json_data: dict,
-    force: bool = False,
+    user: str,
+    force: bool = False
 ) -> None:
     """This function insert TD data into DB
 
@@ -506,6 +508,6 @@ def insert_test_directory_data(
         if hgnc_list:
             _make_panels_from_hgncs(json_data, ci_instance, hgnc_list)
 
-    _backward_deactivate(all_indication)
+    _backward_deactivate(all_indication, user)
 
     print("Data insertion completed.")
