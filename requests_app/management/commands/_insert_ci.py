@@ -44,14 +44,13 @@ def _backward_deactivate(indications: list[dict], user: str) -> None:
 
 @transaction.atomic
 def flag_clinical_indication_panel_for_review(
-    clinical_indication_panel: ClinicalIndicationPanel, user: str
-) -> None:
+        clinical_indication_panel: ClinicalIndicationPanel, 
+        user: str
+    ) -> None:
     """
-    Controller function which takes a clinical indication/panel link, and flags ACTIVE links between the CI
-    and its panels for manual review.
+    Controller function which takes a clinical indication/panel link, and flags them for manual review.
     This is useful when a new CI is added, e.g. from test directory, and the user might want to switch to
     using that for a panel instead.
-    Note that a ClinicalIndication might have multiple CI-Panel links!
     """
 
     clinical_indication_panel.pending = True
@@ -59,7 +58,7 @@ def flag_clinical_indication_panel_for_review(
 
     ClinicalIndicationPanelHistory.objects.create(
         clinical_indication_panel_id=clinical_indication_panel.id,
-        note="Flagged for manual review - new clinical indication provided",
+        note="Flagged for manual review - new clinical indication or panel provided",
         user=user,
     )
 
