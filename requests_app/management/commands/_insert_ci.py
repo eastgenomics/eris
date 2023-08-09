@@ -69,10 +69,11 @@ def provisionally_link_clinical_indication_to_panel(
     user: str,
 ) -> ClinicalIndicationPanel:
     """
-    If a new version is made of a clinical indication, give it the same CI-panel links \
-        as the previous, active table entry.
-    However, set the 'needs_review' field to True, so that it shows for manual review by a user.
+    Link a CI and panel, but set the 'pending' field to True, 
+    so that it shows for manual review by a user.
     Additionally, create a history record.
+    Intended for use when you are making 'best guesses' for links based on 
+    previous CI-Panel links.
     """
     ci_panel_instance, created = ClinicalIndicationPanel.objects.get_or_create(
         clinical_indication_id=clinical_indication_id,
@@ -87,7 +88,7 @@ def provisionally_link_clinical_indication_to_panel(
         ClinicalIndicationPanelHistory.objects.create(
             clinical_indication_panel_id=ci_panel_instance.id,
             note="Auto-created CI-panel link based on information available "
-            + "for an earlier CI version - needs manual review",
+            + "for an earlier CI or panel version - needs manual review",
             user=user,
         )
 
