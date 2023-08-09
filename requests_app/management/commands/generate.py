@@ -55,7 +55,7 @@ class Command(BaseCommand):
         return True
 
 
-    def _get_relevant_ci_panels() -> \
+    def _get_relevant_ci_panels(self) -> \
         (collections.defaultdict(list), collections.defaultdict(list)):
         """
         Retrieve relevant panel genes and CI-panels from the database
