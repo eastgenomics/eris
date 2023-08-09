@@ -47,7 +47,7 @@ def flag_clinical_indication_panel_for_review(
     clinical_indication_panel: ClinicalIndicationPanel, user: str
 ) -> None:
     """
-    Controller function which takes a clinical indication, and flags ACTIVE links between the CI
+    Controller function which takes a clinical indication/panel link, and flags ACTIVE links between the CI
     and its panels for manual review.
     This is useful when a new CI is added, e.g. from test directory, and the user might want to switch to
     using that for a panel instead.
@@ -407,7 +407,8 @@ def insert_test_directory_data(
                 current=True,
             ):
                 # flag previous ci-panel link for review because a new ci is created
-                flag_clinical_indication_panel_for_review(clinical_indication_panel)
+                flag_clinical_indication_panel_for_review(clinical_indication_panel,
+                                                          user)
 
                 # linking new ci with old panel with pending = True
                 # this might be duplicated down the line when panel is created
