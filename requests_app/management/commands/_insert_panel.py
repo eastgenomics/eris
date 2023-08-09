@@ -22,12 +22,12 @@ from requests_app.models import (
 )
 
 from .utils import sortable_version
+from .history import History
 from ._insert_ci import (
     flag_clinical_indication_panel_for_review,
     provisionally_link_clinical_indication_to_panel,
 )
 from .panelapp import PanelClass
-from django.db.models import QuerySet, Q
 from django.db import transaction
 
 
@@ -115,7 +115,8 @@ def _insert_gene(panel: PanelClass, panel_instance: Panel) -> None:
         if created:
             PanelGeneHistory.objects.create(
                 panel_gene_id=pg_instance.id,
-                note="Created by PanelApp seed.",
+                note=History.panel_gene_created(),
+                user="PanelApp",
             )
         else:
             # Panel-Gene record already exist
@@ -125,7 +126,12 @@ def _insert_gene(panel: PanelClass, panel_instance: Panel) -> None:
             if pg_instance.justification != "PanelApp":
                 PanelGeneHistory.objects.create(
                     panel_gene_id=pg_instance.id,
-                    note=f"Panel-Gene justification changed from {pg_instance.justification} to PanelApp by PanelApp seed.",
+                    note=History.panel_gene_metadata_changed(
+                        "justification",
+                        pg_instance.justification,
+                        "PanelApp",
+                    ),
+                    user="PanelApp",
                 )
 
                 pg_instance.justification = "PanelApp"
@@ -217,6 +223,7 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
             region_id=region_instance.id,
             defaults={"justification": "PanelApp"},
         )
+        # TODO: backward deactivation for PanelRegion
 
 
 @transaction.atomic

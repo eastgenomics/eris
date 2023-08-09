@@ -391,6 +391,12 @@ class PanelGeneHistory(models.Model):
         max_length=255,
     )
 
+    user = models.CharField(
+        verbose_name="user",
+        max_length=255,
+        null=True,
+    )
+
     class Meta:
         db_table = "panel_gene_history"
 

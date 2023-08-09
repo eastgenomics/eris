@@ -7,6 +7,7 @@ import os
 from django.db import transaction
 
 from .utils import sortable_version, normalize_version
+from .history import History
 
 from requests_app.models import (
     Panel,
@@ -37,7 +38,9 @@ def _backward_deactivate(indications: list[dict], user: str) -> None:
 
                 ClinicalIndicationPanelHistory.objects.create(
                     clinical_indication_panel_id=cip.id,
-                    note="Flagged for manual review - clinical indication not found in latest TD",
+                    note=History.flag_clinical_indication_panel(
+                        "clinical indication not found in latest TD"
+                    ),
                     user=user,
                 )
 
@@ -59,7 +62,7 @@ def flag_clinical_indication_panel_for_review(
 
     ClinicalIndicationPanelHistory.objects.create(
         clinical_indication_panel_id=clinical_indication_panel.id,
-        note="Flagged for manual review - new clinical indication provided",
+        note=History.flag_clinical_indication_panel("new clinical indication provided"),
         user=user,
     )
 
@@ -87,8 +90,7 @@ def provisionally_link_clinical_indication_to_panel(
     if created:
         ClinicalIndicationPanelHistory.objects.create(
             clinical_indication_panel_id=ci_panel_instance.id,
-            note="Auto-created CI-panel link based on information available "
-            + "for an earlier CI version - needs manual review",
+            note=History.auto_created_clinical_indication_panel(),
             user=user,
         )
 
@@ -227,7 +229,8 @@ def _make_panels_from_hgncs(
         if created:
             PanelGeneHistory.objects.create(
                 panel_gene_id=pg_instance.id,
-                note=f"PanelGene record created from {unique_td_source}",
+                note=History.panel_gene_created(),
+                user=unique_td_source,
             )
         else:
             # Panel-Gene record already exists
@@ -236,7 +239,12 @@ def _make_panels_from_hgncs(
             if pg_instance.justification != unique_td_source:
                 PanelGeneHistory.objects.create(
                     panel_gene_id=pg_instance.id,
-                    note=f"Panel-Gene justification changed from {pg_instance.justification} to {unique_td_source} by TD seed.",
+                    note=History.panel_gene_metadata_changed(
+                        "justification",
+                        pg_instance.justification,
+                        unique_td_source,
+                    ),
+                    user=unique_td_source,
                 )
 
                 pg_instance.justification = unique_td_source
@@ -253,7 +261,9 @@ def _make_panels_from_hgncs(
 
         if previous_ci_panels:  # in the case where there are old ci-panel
             for ci_panel in previous_ci_panels:
-                flag_clinical_indication_panel_for_review(ci_panel)  # flag for review
+                flag_clinical_indication_panel_for_review(
+                    ci_panel, td_source
+                )  # flag for review
 
                 # linking old ci with new panel with pending = True
                 new_clinical_indication_panel = (
@@ -283,7 +293,7 @@ def _make_panels_from_hgncs(
     if created:
         ClinicalIndicationPanelHistory.objects.create(
             clinical_indication_panel_id=cpi_instance.id,
-            note="Created by td source",
+            note=History.clinical_indication_panel_created(),
             user=td_source,
         )
     else:
@@ -293,7 +303,11 @@ def _make_panels_from_hgncs(
                 # take a note of the change
                 ClinicalIndicationPanelHistory.objects.create(
                     clinical_indication_panel_id=cpi_instance.id,
-                    note=f"TD version modified by td source: {normalize_version(cpi_instance.td_version)} -> {td_version}",
+                    note=History.clinical_indication_panel_metadata_changed(
+                        "td_version",
+                        normalize_version(cpi_instance.td_version),
+                        td_version,
+                    ),
                     user=td_source,
                 )
                 cpi_instance.td_version = sortable_version(td_version)
@@ -301,7 +315,11 @@ def _make_panels_from_hgncs(
                 # take a note of the change
                 ClinicalIndicationPanelHistory.objects.create(
                     clinical_indication_panel_id=cpi_instance.id,
-                    note=f"Config source modified by td source: {cpi_instance.config_source} -> {config_source}",
+                    note=History.clinical_indication_panel_metadata_changed(
+                        "config_source",
+                        cpi_instance.config_source,
+                        config_source,
+                    ),
                     user=td_source,
                 )
                 cpi_instance.config_source = config_source
@@ -334,8 +352,11 @@ def _make_provisional_test_method_change(
 
         ClinicalIndicationTestMethodHistory.objects.create(
             clinical_indication_id=ci_instance.id,
-            note=f"Needs review of 'test method' - modified by td source: {ci_instance.test_method} -> \
-                {new_test_method}",  # TODO: standard note class needed
+            note=History.clinical_indication_metadata_changed(
+                "test_method",
+                ci_instance.test_method,
+                new_test_method,
+            ),
             user=user,
         )
 
@@ -405,7 +426,9 @@ def insert_test_directory_data(
                 current=True,
             ):
                 # flag previous ci-panel link for review because a new ci is created
-                flag_clinical_indication_panel_for_review(clinical_indication_panel)
+                flag_clinical_indication_panel_for_review(
+                    clinical_indication_panel, td_source
+                )
 
                 # linking new ci with old panel with pending = True
                 # this might be duplicated down the line when panel is created
@@ -466,7 +489,7 @@ def insert_test_directory_data(
                         # if CI-Panel record is created, create a history record
                         ClinicalIndicationPanelHistory.objects.create(
                             clinical_indication_panel_id=cip_instance.id,
-                            note="Created by td source",
+                            note=History.clinical_indication_panel_created(),
                             user=td_source,
                         )
                     else:
@@ -479,7 +502,11 @@ def insert_test_directory_data(
                                 # take a note of the change
                                 ClinicalIndicationPanelHistory.objects.create(
                                     clinical_indication_panel_id=cip_instance.id,
-                                    note=f"TD version modified by td source: {normalize_version(cip_instance.td_version)} -> {td_version}",
+                                    note=History.clinical_indication_panel_metadata_changed(
+                                        "td_version",
+                                        normalize_version(cip_instance.td_version),
+                                        td_version,
+                                    ),
                                     user=td_source,
                                 )
                                 cip_instance.td_version = sortable_version(td_version)
@@ -488,7 +515,11 @@ def insert_test_directory_data(
                                 # take a note of the change
                                 ClinicalIndicationPanelHistory.objects.create(
                                     clinical_indication_panel_id=cip_instance.id,
-                                    note=f"Config source modified by td source: {cip_instance.config_source} -> {json_data['config_source']}",
+                                    note=History.clinical_indication_panel_metadata_changed(
+                                        "config_source",
+                                        cip_instance.config_source,
+                                        json_data["config_source"],
+                                    ),
                                     user=td_source,
                                 )
                                 cip_instance.config_source = json_data["config_source"]
@@ -506,6 +537,6 @@ def insert_test_directory_data(
         if hgnc_list:
             _make_panels_from_hgncs(json_data, ci_instance, hgnc_list)
 
-    _backward_deactivate(all_indication)
+    _backward_deactivate(all_indication, td_source)
 
     print("Data insertion completed.")
