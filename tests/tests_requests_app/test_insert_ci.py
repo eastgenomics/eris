@@ -11,7 +11,7 @@ from requests_app.models import \
 from requests_app.management.commands._insert_ci import \
     flag_clinical_indication_panel_for_review, provisionally_link_clinical_indication_to_panel
 
-
+from requests_app.management.commands.history import History
 class TestFlagCurrentLinksForClinicalIndication(TestCase):
 
     def setUp(self) -> None:
@@ -62,8 +62,8 @@ class TestFlagCurrentLinksForClinicalIndication(TestCase):
 
         # check that a history entry exists for the change
         history = ClinicalIndicationPanelHistory.objects.get(id=post_change_ci_panel.pk)
-        assert history.note == "Flagged for manual review - new clinical indication or panel provided"
         assert history.user == "test_user"
+        assert history.note == "Flagged for manual review - new clinical indication provided"
 
 
 class TestMakeProvisionalCiPanelLinkWithCi(TestCase):
@@ -118,7 +118,6 @@ class TestMakeProvisionalCiPanelLinkWithCi(TestCase):
         assert len(history) == 1
         history_first = history.all()[:1].get()
         assert history_first.user == "I'm a unit test"
-        assert history_first.note == "Auto-created CI-panel link based on information available " +\
-                    "for an earlier CI or panel version - needs manual review"
+        assert history_first.note == History.auto_created_clinical_indication_panel()
         assert history_first.clinical_indication_panel == first_entry
 

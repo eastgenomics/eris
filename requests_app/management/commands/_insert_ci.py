@@ -61,7 +61,6 @@ def flag_clinical_indication_panel_for_review(
 
     ClinicalIndicationPanelHistory.objects.create(
         clinical_indication_panel_id=clinical_indication_panel.id,
-        note="Flagged for manual review - new clinical indication or panel provided",
         note=History.flag_clinical_indication_panel("new clinical indication provided"),
         user=user,
     )
