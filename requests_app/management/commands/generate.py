@@ -31,6 +31,7 @@ class Command(BaseCommand):
         """
         return os.path.exists(path)
 
+
     def _validate_hgnc(self, file_path: str) -> bool:
         """
         Validate if hgnc file is valid
@@ -201,6 +202,7 @@ class Command(BaseCommand):
                     ]
                 )
 
+
     def add_arguments(self, parser) -> None:
         """
         Define parsers for generate command
@@ -216,6 +218,7 @@ class Command(BaseCommand):
 
         # optional parser for output directory
         parser.add_argument("--output")
+
 
     def handle(self, *args, **kwargs):
         """
