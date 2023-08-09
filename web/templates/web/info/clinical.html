@@ -2,11 +2,11 @@
 
 {% block content %}
 <div class="container mb-5 pb-5">
-    {% if pending_approval %}
+    {% if ci_pending_approval %}
     <div class="row">
         <div class="col">
             <div class="alert alert-warning shadow" role="alert">
-                This clinical indication is pending approval
+                Pending Approval
               </div>
         </div>
     </div>
@@ -27,7 +27,7 @@
     <div class="row">
         {% if panels %}
         {% for panel in panels %}
-        <div class="col-lg-4 col-md-8 col-sm-12">
+        <div class="col-lg-4 col-md-8 col-sm-12 mt-2">
             <div class="card shadow">
                 <div class="card-body">
                     <h5 class="text-break"><a href="{% url 'panel' panel.id %}">{{ panel.panel_name }}</a></h5>
@@ -46,7 +46,7 @@
                         {% else %}
                         <li class="list-group-item">custom panel: <span class="badge text-bg-danger">{{ panel.custom }}</span></li>
                         {% endif %}
-                        <li class="list-group-item">created: {{ panel.created_date }} {{ panel.created_time }}</li>
+                        <li class="list-group-item">created: {{ panel.created }}</li>
                     </ul>
                 </div>
             </div>
@@ -66,10 +66,8 @@
     <p class="fs-6 text-muted">all clinical indication-panel links</p>
     <div class="row my-3">
         <div class="col">
-            {% if pending_approval %}
-            <button type="button" class="btn btn-secondary btn-sm" disabled>Pending Approval</button>
-            {% else %}
-            <a href="{% url 'ci_panel_add' ci.id %}" class="btn btn-primary btn-sm">Edit Clinical Indication-Panel Link</a>
+            {% if not ci_pending_approval %}
+                <a href="{% url 'ci_panel_add' ci.id %}" class="btn btn-primary btn-sm">Edit Clinical Indication-Panel Link</a>
             {% endif %}
         </div>
     </div>
@@ -90,7 +88,7 @@
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item">config source: {{ ci_panel.config_source }}</li>
                             <li class="list-group-item">imported by test directory version: {{ ci_panel.td_version }}</li>
-                            <li class="list-group-item">created: {{ ci_panel.created_date }} {{ ci_panel.created_time }}</li>
+                            <li class="list-group-item">created: {{ ci_panel.created }}</li>
                             <li class="list-group-item">last updated: {{ ci_panel.last_updated }}</li>
                             <li class="list-group-item">target: <a href="{% url 'panel' ci_panel.panel_id %}"><span class="text-info">{{ ci_panel.panel_id__panel_name }}</span></a></li>
                          </ul>
@@ -140,7 +138,7 @@
                 <tbody>
                     {% for history in ci_history %}
                     <tr>
-                        <td>{{ history.created_date }} <br> {{ history.created_time }}</td>
+                        <td>{{ history.created }}</td>
                         <td>{{ history.note }}</td>
                         <td>{{ history.clinical_indication_panel_id }}</td>
                     </tr>

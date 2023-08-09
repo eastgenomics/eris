@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
+<div class="container mb-5">
     <!-- Title -->
     <div class="row">
         <div class="col">
@@ -90,17 +90,23 @@
                   <tr>
                     <th scope="col">Clinical Indication</th>
                     <th scope="col">Panel</th>
-                    <th scope="col">Action</th>
+                    <th scope="col">Pending</th>
+                    <th class="col">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                 {% for cip in cips %}
                     <tr>
-                        <td>{{ cip.clinical_indication_id__r_code }} {{ cip.clinical_indication_id__name }}</td>
-                        <td>{{ cip.panel_id__panel_name }} v{{ cip.panel_id__panel_version }}</td>
+                        <td><span class="badge text-bg-primary">{{ cip.clinical_indication_id__r_code }}</span>&nbsp;&nbsp;<a href="{% url 'clinical_indication' cip.clinical_indication_id %}">{{ cip.clinical_indication_id__name }}</a></td>
+                        <td><a href="{% url 'panel' cip.panel_id %}">{{ cip.panel_id__panel_name }}</a> <span class="badge text-bg-info">v{{ cip.panel_id__panel_version }}</span></td>
+                        {% if cip.current %}
+                        <td><span class="badge text-bg-success">Activation</span></td>
+                        {% else %}
+                        <td><span class="badge text-bg-danger">Deactivation</span></td>
+                        {% endif %}
                         <td>
-                            <button type="button" class="btn btn-success btn-sm">Approve</button>
-                            <button type="button" class="btn btn-danger btn-sm">Remove</button>
+                            <button type="button" class="btn btn-success btn-sm p-1">Approve</button>
+                            <button type="button" class="btn btn-danger btn-sm p-1 mt-2">Remove</button>
                         </td>
                     </tr>
                 {% endfor %}

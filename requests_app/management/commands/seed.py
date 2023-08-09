@@ -199,6 +199,10 @@ class Command(BaseCommand):
             5. markname table from HGMD database
             """
 
+            # TODO: split transcripts into build 37 and build 38
+
+            print("Seeding transcripts")
+
             hgnc_file = kwargs.get("hgnc")
             mane_file = kwargs.get("mane")
             gff_file = kwargs.get("gff")
@@ -225,3 +229,5 @@ class Command(BaseCommand):
                 markname_file,
                 error_log,
             )
+
+            print("Seed transcripts completed.")
