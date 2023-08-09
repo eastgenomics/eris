@@ -149,7 +149,7 @@ class Command(BaseCommand):
         # block generation of genepanel.tsv if ANY data is awaiting review (pending=True)
         if ClinicalIndicationPanel.objects.filter(pending=True).exists():
             raise ValueError(
-                "Some ClinicalIndicationPanel table values require manual review."
+                "Some ClinicalIndicationPanel table values require manual review. "
                 "Please resolve these through the review platform and try again."
             )
 
@@ -180,7 +180,7 @@ class Command(BaseCommand):
         # awaiting review (pending=True)
         if ClinicalIndicationPanel.objects.filter(pending=True).exists():
             raise ValueError(
-                "Some ClinicalIndicationPanel table values require manual review."
+                "Some ClinicalIndicationPanel table values require manual review. "
                 "Please resolve these through the review platform and try again."
             )
 
