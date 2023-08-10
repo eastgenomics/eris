@@ -10,6 +10,7 @@ import os
 import csv
 import collections
 import datetime as dt
+from typing import Tuple
 
 from django.core.management.base import BaseCommand
 from .utils import normalize_version, parse_hgnc
@@ -56,16 +57,16 @@ class Command(BaseCommand):
 
 
     def _get_relevant_ci_panels(self) -> \
-        (collections.defaultdict(list), collections.defaultdict(list)):
+        Tuple[dict[str, list], list]:
         """
-        Retrieve relevant panel genes and CI-panels from the database
+        Retrieve relevant panels and CI-panels from the database
         These will be output in the final file.
+        Returns CI panels and a list of relevant panels.
         """
         relevant_panels = set()
 
         ci_panels = collections.defaultdict(list)
-        panel_genes = collections.defaultdict(list)
-
+        
         for row in ClinicalIndicationPanel.objects.filter(
             current=True, pending=False
             ).values(
@@ -78,6 +79,17 @@ class Command(BaseCommand):
                 relevant_panels.add(row["panel_id"])
                 ci_panels[row["clinical_indication_id__r_code"]].append(row)
 
+        return ci_panels, relevant_panels
+
+
+    def _get_relevant_panel_genes(self, relevant_panels) -> \
+        dict[int, str]:
+        """
+        Using a list of relevant panels, 
+        retrieve the genes from those panels from the PanelGene database.
+        """
+        panel_genes = collections.defaultdict(list)
+
         for row in PanelGene.objects.filter(
             panel_id__in=relevant_panels, pending=False
             ).values(
@@ -86,11 +98,11 @@ class Command(BaseCommand):
             ):
                 panel_genes[row["panel_id"]].append(row["gene_id__hgnc_id"])
 
-        return ci_panels, panel_genes
+        return panel_genes
 
 
-    def _format_output_data_genepanels(self, ci_panels: collections.defaultdict(list), \
-                                       panel_genes: collections.defaultdict(list), \
+    def _format_output_data_genepanels(self, ci_panels: dict[str, list], \
+                                       panel_genes: dict[int, str], \
                                         rnas: set) -> list:
         """
         Format a list of results ready for writing out to file.
@@ -153,7 +165,8 @@ class Command(BaseCommand):
                 "Please resolve these through the review platform and try again."
             )
 
-        ci_panels, panel_genes = self._get_relevant_ci_panels()
+        ci_panels, relevant_panels = self._get_relevant_ci_panels()
+        panel_genes = self._get_relevant_panel_genes(relevant_panels)
 
         results = self._format_output_data_genepanels(ci_panels, panel_genes, rnas)
 
@@ -175,14 +188,6 @@ class Command(BaseCommand):
         print("Creating g2t file")
         
         current_datetime = dt.datetime.today().strftime("%Y%m%d")
-
-        # block generation of genepanel.tsv if ANY ClinicalIndicationPanel data is 
-        # awaiting review (pending=True)
-        if ClinicalIndicationPanel.objects.filter(pending=True).exists():
-            raise ValueError(
-                "Some ClinicalIndicationPanel table values require manual review. "
-                "Please resolve these through the review platform and try again."
-            )
 
         with open(
             f"{output_directory}/{current_datetime}_g2t.tsv", "w", newline=""
