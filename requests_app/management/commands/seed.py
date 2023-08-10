@@ -186,7 +186,7 @@ class Command(BaseCommand):
                 json_data = json.load(reader)
 
             if not test_mode:
-                insert_test_directory_data(json_data, user, force)
+                insert_test_directory_data(json_data, force)
 
         # python manage.py seed transcript --hgnc <path> --mane <path> --gff <path> --g2refseq <path> --markname <path> --error
         elif command == "transcript":
