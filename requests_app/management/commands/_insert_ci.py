@@ -364,7 +364,6 @@ def _make_provisional_test_method_change(
 @transaction.atomic
 def insert_test_directory_data(
     json_data: dict,
-    user: str,
     force: bool = False
 ) -> None:
     """This function insert TD data into DB
