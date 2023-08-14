@@ -151,7 +151,7 @@
     <div class="d-flex justify-content-between">
         <p class="text-muted">genes associated with the panel</p>
         {% if not panel_pending_approval %}
-        <a href="{% url 'gene_add' panel.id %}"><button type="button" class="btn btn-primary btn-sm m-1">Edit Gene</button></a>
+        <a href="{% url 'gene_edit' panel.id %}"><button type="button" class="btn btn-primary btn-sm m-1">Edit Gene</button></a>
         {% endif %}
     </div>
     <div class="row">
