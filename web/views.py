@@ -1,5 +1,7 @@
 import re
 import csv
+import secrets
+import string
 import pandas as pd
 import collections
 from itertools import chain
@@ -28,6 +30,10 @@ from requests_app.models import (
     Transcript,
     PanelGeneTranscript,
     Gene,
+    Confidence,
+    ModeOfInheritance,
+    ModeOfPathogenicity,
+    Penetrance,
 )
 
 from requests_app.management.commands.utils import normalize_version
@@ -527,7 +533,8 @@ def history(request):
             for n in [
                 request.POST.get("deactivated"),
                 request.POST.get("created"),
-                request.POST.get("modified"),
+                request.POST.get("changed"),
+                request.POST.get("manual review"),
             ]
             if n
         ]
@@ -540,7 +547,7 @@ def history(request):
             query_filters = Q()
 
             for note_prefix in actions:
-                query_filters |= Q(note__startswith=note_prefix)
+                query_filters |= Q(note__icontains=note_prefix)
 
             cip_histories: QuerySet[ClinicalIndicationPanelHistory] = (
                 ClinicalIndicationPanelHistory.objects.filter(query_filters)
@@ -579,7 +586,13 @@ def history(request):
     )
 
 
-def add_gene(request, panel_id: int):
+def _generate_random_characters(length: int) -> str:
+    return "".join(
+        secrets.choice(string.ascii_uppercase + string.digits) for i in range(length)
+    )
+
+
+def edit_gene(request, panel_id: int):
     """
     Edit Panel gene page
 
@@ -591,13 +604,148 @@ def add_gene(request, panel_id: int):
     panel: Panel = Panel.objects.get(id=panel_id)
     panel.panel_version = normalize_version(panel.panel_version)
 
-    # TODO: POST request function not done yet
+    current_linked_genes = (
+        PanelGene.objects.filter(panel_id=panel_id)
+        .values(
+            "gene_id__gene_symbol",
+            "gene_id",
+            "gene_id__hgnc_id",
+        )
+        .order_by("gene_id__hgnc_id")
+    )
+
+    all_genes = (
+        Gene.objects.all()
+        .exclude(id__in=[gene["gene_id"] for gene in current_linked_genes])
+        .order_by("hgnc_id")
+    )
+
+    if request.method == "POST":
+        selected_gene_ids: list[int] = request.POST.getlist("genes")
+
+        if selected_gene_ids:
+            with transaction.atomic():
+                new_panel = Panel.objects.create(
+                    panel_name=f"Custom Panel {_generate_random_characters(5)} based on {panel.panel_name} v{normalize_version(panel.panel_version) if panel.panel_version else 1.0}",
+                    panel_source="web",
+                    custom=True,
+                    pending=True,
+                )
+
+                for gene_id in selected_gene_ids:
+                    confidence_instance, _ = Confidence.objects.get_or_create(
+                        confidence_level=None,  # we only seed level 3 confidence
+                    )
+
+                    moi_instance, _ = ModeOfInheritance.objects.get_or_create(
+                        mode_of_inheritance=None,
+                    )
+
+                    # mop value might be None
+                    mop_instance, _ = ModeOfPathogenicity.objects.get_or_create(
+                        mode_of_pathogenicity=None
+                    )
+
+                    # value for 'penetrance' might be empty
+                    penetrance_instance, _ = Penetrance.objects.get_or_create(
+                        penetrance=None,
+                    )
+                    panel_gene_instance = PanelGene.objects.create(
+                        panel_id=new_panel.id,
+                        gene_id=gene_id,
+                        confidence_id=confidence_instance.id,
+                        moi_id=moi_instance.id,
+                        mop_id=mop_instance.id,
+                        penetrance_id=penetrance_instance.id,
+                        justification="online",
+                    )
+
+                    PanelGeneHistory.objects.create(
+                        panel_gene_id=panel_gene_instance.id,
+                        note=History.panel_gene_created(),
+                        user="Online",
+                    )
+
+            # fetch ci-panels (related ci)
+            ci_panels: QuerySet[
+                ClinicalIndicationPanel
+            ] = ClinicalIndicationPanel.objects.filter(
+                panel_id=new_panel.id,
+            )
+
+            # converting ci-panel version to readable format
+            for cip in ci_panels:
+                cip.td_version = normalize_version(cip.td_version)
+
+            # fetch associated cis
+            cis: QuerySet[ClinicalIndication] = ClinicalIndication.objects.filter(
+                id__in=[cp.clinical_indication_id for cp in ci_panels],
+            )
+
+            # fetch ci-panels history
+            ci_panels_history: QuerySet[
+                ClinicalIndicationPanelHistory
+            ] = ClinicalIndicationPanelHistory.objects.filter(
+                clinical_indication_panel_id__in=[cp.id for cp in ci_panels]
+            ).order_by(
+                "-id"
+            )
+
+            # fetch ci-test-method history
+            ci_test_method_history: QuerySet[
+                ClinicalIndicationTestMethodHistory
+            ] = ClinicalIndicationTestMethodHistory.objects.filter(
+                clinical_indication_id__in=[c.id for c in cis],
+            )
+
+            # combine ci-panels history and ci-test-method history
+            agg_history = list(chain(ci_test_method_history, ci_panels_history))
+
+            # fetch genes associated with panel
+            pgs: QuerySet[dict] = (
+                PanelGene.objects.filter(panel_id=new_panel.id)
+                .values(
+                    "gene_id",
+                    "gene_id__hgnc_id",
+                    "gene_id__gene_symbol",
+                )
+                .order_by("gene_id__gene_symbol")
+            )
+
+            # fetch all transcripts associated with genes in panel
+            all_transcripts: QuerySet[Transcript] = (
+                Transcript.objects.filter(gene_id__in=[p["gene_id"] for p in pgs])
+                .values("gene_id__hgnc_id", "transcript", "source")
+                .order_by("gene_id__hgnc_id", "source")
+            )
+
+            return render(
+                request,
+                "web/info/panel.html",
+                {
+                    "panel": new_panel,
+                    "ci_panels": ci_panels,
+                    "cis": cis,
+                    "ci_history": agg_history,
+                    "pgs": pgs,
+                    "transcripts": all_transcripts,
+                    "panel_pending_approval": new_panel.pending,
+                    "ci_panel_pending_approval": any([cp.pending for cp in ci_panels]),
+                },
+            )
+        else:
+            # no genes selected, redirect back
+            previous_url = request.META.get("HTTP_REFERER")
+
+            return redirect(previous_url)
 
     return render(
         request,
-        "web/addition/add_gene.html",
+        "web/edit/edit_panel_gene.html",
         {
             "panel": panel,
+            "linked_genes": current_linked_genes,
+            "all_genes": all_genes,
         },
     )
 

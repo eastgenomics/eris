@@ -132,6 +132,7 @@
                   <tr>
                     <th scope="col">Date</th>
                     <th scope="col">Modification</th>
+                    <th class="col">User</th>
                     <th scope="col">Ci-Panel id</th>
                   </tr>
                 </thead>
@@ -140,6 +141,7 @@
                     <tr>
                         <td>{{ history.created }}</td>
                         <td>{{ history.note }}</td>
+                        <td>{{ history.user|truncatechars:30 }}{{ history.user|slice:'::-1'|truncatechars:30|slice:'::-1' }}</td>
                         <td>{{ history.clinical_indication_panel_id }}</td>
                     </tr>
                     {% endfor %}

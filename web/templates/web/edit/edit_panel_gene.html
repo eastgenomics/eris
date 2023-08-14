@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <!-- title -->
+    <div class="row">
+        <div class="col">
+            <h3>Edit Panel Gene</h3>
+            <p class="text-muted">this will create a new custom Panel rather than adding the gene to the Panel</p>
+        </div>
+    </div>
+    <!-- end title -->
+    
+    <!-- panel info -->
+    <div class="row mt-2">
+        <div class="col">
+            <div class="h3">Reference Panel</div>
+            <div class="card shadow">
+                <div class="card-body">
+                    <h5 class="card-title">{{ panel.panel_name }}</h5>
+                    <h6 class="card-subtitle mb-2 text-body-secondary">database id: {{ panel.id }}</h6>
+                    <p class="card-text">
+                        external id: {{ panel.external_id }} <br>
+                        panel source: {{ panel.panel_source }} <br>
+                        {% if panel.panel_version %}
+                        panel version: {{ panel.panel_version }} <br>
+                        {% else %}
+                        panel version: None <br>
+                        {% endif %}
+                        test directory: {{ panel.test_directory }} <br>
+                        custom: {{ panel.custom }} <br>
+                        created: {{ panel.created }}<br>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="h3">New Panel Detail</div>
+            <div class="card shadow">
+                <div class="card-body">
+                    <h5 class="card-title">Custom Panel [ABCDE] based on {{ panel.panel_name }}</h5>
+                    <h6 class="card-subtitle mb-2 text-body-secondary">database id: TBD</h6>
+                    <p class="card-text">
+                        external id: None <br>
+                        panel source: web <br>
+                        panel version: None <br>
+                        test directory: None <br>
+                        custom: True <br>
+                        created: TBD <br>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end panel info -->
+
+    <form action="{% url 'gene_edit' panel.id  %}" method="POST">
+        {% csrf_token %}
+        <!-- current linked gene -->
+        <div class="row mt-2">
+            <div class="col">
+                <h3>Current Genes</h3>
+                <button type="submit" class="btn btn-primary btn-sm p-1 my-2">Submit</button>
+                <table class="table table-bordered shadow">
+                    <thead>
+                        <tr>
+                        <th scope="col">HGNC ID</th>
+                        <th scope="col">Gene Symbol</th>
+                        <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for gene in linked_genes %}
+                        <tr>
+                            <td>{{ gene.gene_id__hgnc_id }}</td>
+                            <td>{{ gene.gene_id__gene_symbol }}</td>
+                            <td>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="{{ gene.gene_id }}" name="genes" checked>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %} 
+                    </tbody>
+                </table>   
+            </div>
+        </div>
+        <!-- current linked gene end -->
+    
+        <!-- other genes -->
+        <div class="row mt-2">
+            <div class="col">
+                <h3>Genes</h3>
+                <table class="table table-bordered shadow">
+                    <thead>
+                        <tr>
+                        <th scope="col">HGNC ID</th>
+                        <th scope="col">Gene Symbol</th>
+                        <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for gene in all_genes %}
+                        <tr>
+                            <td>{{ gene.hgnc_id }}</td>
+                            <td>{{ gene.gene_symbol }}</td>
+                            <td>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="{{ gene.id }}" name="genes">
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %} 
+                    </tbody>
+                </table>   
+            </div>
+        </div>
+        <!-- other linked genes end -->
+    </form>
+</div>
+{% endblock %}
