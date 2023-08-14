@@ -10,6 +10,7 @@ import os
 import csv
 import collections
 import datetime as dt
+from typing import Tuple
 
 from django.core.management.base import BaseCommand
 from .utils import normalize_version, parse_hgnc
@@ -30,6 +31,7 @@ class Command(BaseCommand):
         :return: True if directory exists, False otherwise
         """
         return os.path.exists(path)
+
 
     def _validate_hgnc(self, file_path: str) -> bool:
         """
@@ -53,49 +55,60 @@ class Command(BaseCommand):
 
         return True
 
-    def _generate_genepanels(self, rnas: set, output_directory: str) -> None:
-        """
-        Main function to generate genepanel.tsv
 
-        :param rnas: set of rnas
-        :param output_directory: output directory
+    def _get_relevant_ci_panels(self) -> \
+        Tuple[dict[str, list], list]:
         """
-        print("Creating genepanels file")
-
-        ci_panels = collections.defaultdict(list)
-        panel_genes = collections.defaultdict(list)
+        Retrieve relevant panels and CI-panels from the database
+        These will be output in the final file.
+        Returns CI panels and a list of relevant panels.
+        """
         relevant_panels = set()
 
-        results = []
-
-        if not ClinicalIndicationPanel.objects.filter(
-            current=True, pending=False
-        ).exists():
-            # if there's no CiPanelAssociation date column, high chance Test Directory
-            # has not been imported yet.
-            raise ValueError(
-                "Test Directory has yet been imported!"
-                "ClinicalIndicationPanel table is empty"
-                "python manage.py seed td <td.json>"
-            )
-
+        ci_panels = collections.defaultdict(list)
+        
         for row in ClinicalIndicationPanel.objects.filter(
             current=True, pending=False
-        ).values(
-            "clinical_indication_id__r_code",
-            "clinical_indication_id__name",
-            "panel_id",
-            "panel_id__panel_name",
-            "panel_id__panel_version",
-        ):
-            relevant_panels.add(row["panel_id"])
-            ci_panels[row["clinical_indication_id__r_code"]].append(row)
+            ).values(
+                "clinical_indication_id__r_code",
+                "clinical_indication_id__name",
+                "panel_id",
+                "panel_id__panel_name",
+                "panel_id__panel_version",
+            ):
+                relevant_panels.add(row["panel_id"])
+                ci_panels[row["clinical_indication_id__r_code"]].append(row)
+
+        return ci_panels, relevant_panels
+
+
+    def _get_relevant_panel_genes(self, relevant_panels) -> \
+        dict[int, str]:
+        """
+        Using a list of relevant panels, 
+        retrieve the genes from those panels from the PanelGene database.
+        """
+        panel_genes = collections.defaultdict(list)
 
         for row in PanelGene.objects.filter(
             panel_id__in=relevant_panels, pending=False
-        ).values("gene_id__hgnc_id", "panel_id"):
-            panel_genes[row["panel_id"]].append(row["gene_id__hgnc_id"])
+            ).values(
+                "gene_id__hgnc_id", 
+                "panel_id"
+            ):
+                panel_genes[row["panel_id"]].append(row["gene_id__hgnc_id"])
 
+        return panel_genes
+
+
+    def _format_output_data_genepanels(self, ci_panels: dict[str, list], \
+                                       panel_genes: dict[int, str], \
+                                        rnas: set) -> list:
+        """
+        Format a list of results ready for writing out to file.
+        Sort the results before returning them.
+        """
+        results = []
         for r_code, panel_list in ci_panels.items():
             # for each clinical indication
             for panel_dict in panel_list:
@@ -113,7 +126,6 @@ class Command(BaseCommand):
                         if panel_dict["panel_id__panel_version"]
                         else "1.0"
                     )
-
                     results.append(
                         [
                             f"{r_code}_{ci_name}",
@@ -121,8 +133,42 @@ class Command(BaseCommand):
                             hgnc,
                         ]
                     )
-
         sorted(results, key=lambda x: [x[0], x[1], x[2]])
+        return results
+
+
+    def _generate_genepanels(self, rnas: set, output_directory: str) -> None:
+        """
+        Main function to generate genepanel.tsv
+        Runs sanity checks, then calls a formatter if these pass
+        Outputs formatted data
+        :param rnas: set of rnas
+        :param output_directory: output directory
+        """
+        print("Creating genepanels file")
+
+        if not ClinicalIndicationPanel.objects.filter(
+            current=True, pending=False
+        ).exists():
+            # if there's no CiPanelAssociation date column, high chance Test Directory
+            # has not been imported yet.
+            raise ValueError(
+                "Test Directory has not yet been imported!"
+                "ClinicalIndicationPanel table is empty"
+                "python manage.py seed td <td.json>"
+            )
+
+        # block generation of genepanel.tsv if ANY data is awaiting review (pending=True)
+        if ClinicalIndicationPanel.objects.filter(pending=True).exists():
+            raise ValueError(
+                "Some ClinicalIndicationPanel table values require manual review. "
+                "Please resolve these through the review platform and try again."
+            )
+
+        ci_panels, relevant_panels = self._get_relevant_ci_panels()
+        panel_genes = self._get_relevant_panel_genes(relevant_panels)
+
+        results = self._format_output_data_genepanels(ci_panels, panel_genes, rnas)
 
         current_datetime = dt.datetime.today().strftime("%Y%m%d")
 
@@ -131,12 +177,16 @@ class Command(BaseCommand):
                 data = "\t".join(row)
                 f.write(f"{data}\n")
 
+
     def _generate_g2t(self, output_directory) -> None:
         """
         Main function to generate g2t.tsv
 
         :param output_directory: output directory
         """
+
+        print("Creating g2t file")
+        
         current_datetime = dt.datetime.today().strftime("%Y%m%d")
 
         with open(
@@ -160,6 +210,7 @@ class Command(BaseCommand):
                     ]
                 )
 
+
     def add_arguments(self, parser) -> None:
         """
         Define parsers for generate command
@@ -175,6 +226,7 @@ class Command(BaseCommand):
 
         # optional parser for output directory
         parser.add_argument("--output")
+
 
     def handle(self, *args, **kwargs):
         """
@@ -228,3 +280,5 @@ class Command(BaseCommand):
         # if command is g2t, then generate g2t.tsv
         if cmd == "g2t":
             self._generate_g2t(output_directory)
+
+            print(f"g2t file created at {output_directory}")

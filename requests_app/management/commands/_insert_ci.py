@@ -47,14 +47,13 @@ def _backward_deactivate(indications: list[dict], user: str) -> None:
 
 @transaction.atomic
 def flag_clinical_indication_panel_for_review(
-    clinical_indication_panel: ClinicalIndicationPanel, user: str
-) -> None:
+        clinical_indication_panel: ClinicalIndicationPanel, 
+        user: str
+    ) -> None:
     """
-    Controller function which takes a clinical indication r code, and flags ACTIVE links between the CI
-    and its panels for manual review.
+    Controller function which takes a clinical indication/panel link, and flags them for manual review.
     This is useful when a new CI is added, e.g. from test directory, and the user might want to switch to
     using that for a panel instead.
-    Note that a ClinicalIndication might have multiple CI-Panel links!
     """
 
     clinical_indication_panel.pending = True
@@ -73,10 +72,11 @@ def provisionally_link_clinical_indication_to_panel(
     user: str,
 ) -> ClinicalIndicationPanel:
     """
-    If a new version is made of a clinical indication, give it the same CI-panel links \
-        as the previous, active table entry.
-    However, set the 'needs_review' field to True, so that it shows for manual review by a user.
+    Link a CI and panel, but set the 'pending' field to True, 
+    so that it shows for manual review by a user.
     Additionally, create a history record.
+    Intended for use when you are making 'best guesses' for links based on 
+    previous CI-Panel links.
     """
     ci_panel_instance, created = ClinicalIndicationPanel.objects.get_or_create(
         clinical_indication_id=clinical_indication_id,
@@ -364,7 +364,7 @@ def _make_provisional_test_method_change(
 @transaction.atomic
 def insert_test_directory_data(
     json_data: dict,
-    force: bool = False,
+    force: bool = False
 ) -> None:
     """This function insert TD data into DB
 
