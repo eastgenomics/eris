@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="container mb-5 pb-5">
-    {% if pending_approval %}
+    {% if panel_pending_approval %}
     <div class="row">
         <div class="col">
             <div class="alert alert-warning" role="alert">
@@ -11,7 +11,7 @@
         </div>
     </div>
     {% endif %}
-    <br> <!-- Clinical Indication Overview -->
+    <br> <!-- Panel Overview -->
     <div class="row text-wrap text-break">
         <div class="col">
             <h1>{{ panel.panel_name }}</h1>
@@ -24,46 +24,9 @@
             <h4>panel version: None</h4>
             {% endif %}
             <h4>custom: {{ panel.custom }}</h4>
-            <h4>created: {{ panel.created_date }} {{ panel.created_time }}</h4>
+            <h4>created: {{ panel.created }}</h4>
             <h5>database id: <span class="text-danger">{{ panel.id }}</span></h5>
         </div>
-    </div>
-
-    <br> <!-- Panel Genes Link -->
-    <h3>Genes</h3>
-    <div class="d-flex justify-content-between">
-        <p class="text-muted">genes associated with the panel</p>
-        {% if not pending_approval %}
-        <a href="{% url 'gene_add' panel.id %}"><button type="button" class="btn btn-primary btn-sm m-1">Edit Gene</button></a>
-        {% endif %}
-    </div>
-    <div class="row">
-        {% if pgs %}
-        <div class="col">
-            <table class="table table-bordered shadow">
-                <thead>
-                  <tr>
-                    <th scope="col">HGNC ID</th>
-                    <th scope="col">Gene Symbol</th>
-                  </tr>
-                </thead>
-                <tbody>
-                    {% for pg in pgs %}
-                    <tr>
-                        <td><a href="{% url 'gene' pg.gene_id %}">{{ pg.gene_id__hgnc_id }}</a></td>
-                        <td>{{ pg.gene_id__gene_symbol }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="col">
-            <div class="alert alert-info" role="alert">
-                Nothing to show here!
-            </div>
-        </div>
-        {% endif %}
     </div>
 
     <br> <!-- Clinical Indication Panel Link -->
@@ -86,13 +49,32 @@
                         <ul class="list-group">
                             <li class="list-group-item">config source: {{ ci_panel.config_source }}</li>
                             <li class="list-group-item">imported by test directory version: {{ ci_panel.td_version }}</li>
-                            <li class="list-group-item">created: {{ ci_panel.created_date }} {{ ci_panel.created_time }}</li>
+                            <li class="list-group-item">created: {{ ci_panel.created }}</li>
                             <li class="list-group-item">last updated: {{ ci_panel.last_updated }}</li>
-                            <li class="list-group-item">link: <span class="text-info">{{ ci_panel.clinical_indication_id }}</span> -> <span class="text-danger">{{ ci_panel.panel_id }}</span></li>
+                            <li class="list-group-item">link: <span class="text-danger">{{ ci_panel.panel_id }}</span> -> <span class="text-info">{{ ci_panel.clinical_indication_id }}</span></li>
                          </ul>
                     </p>
-
-                    <a href="#" class="btn btn-danger btn-sm">Deactivate</a>
+                    {% if ci_panel.current %}
+                    <form action="{% url 'activate_or_deactivate_clinical_indication_panel' ci_panel.id %}" method="POST">
+                        {% csrf_token %}
+                        <input class="visually-hidden" type="text" class="form-control" name="action" value="deactivate">
+                        {% if ci_panel.pending %}
+                        <button type="button" class="btn btn-secondary btn-sm" disabled>Pending Approval</button>
+                        {% else %}
+                        <button type="submit" class="btn btn-danger btn-sm">Deactivate</button>
+                        {% endif %}
+                    </form>
+                    {% else %}
+                    <form action="{% url 'activate_or_deactivate_clinical_indication_panel' ci_panel.id %}" method="POST">
+                        {% csrf_token %}
+                        <input class="visually-hidden" type="text" class="form-control" name="action" value="activate">
+                        {% if ci_panel.pending %}
+                        <button type="button" class="btn btn-secondary btn-sm" disabled>Pending Approval</button>
+                        {% else %}
+                        <button type="submit" class="btn btn-success btn-sm">Activate</button>
+                        {% endif %}
+                    </form>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -145,9 +127,46 @@
                 <tbody>
                     {% for history in ci_history %}
                     <tr>
-                        <td>{{ history.created_date }} <br> {{ history.created_time }}</td>
+                        <td>{{ history.created }}</td>
                         <td>{{ history.note }}</td>
                         <td>{{ history.clinical_indication_panel_id }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="col">
+            <div class="alert alert-info" role="alert">
+                Nothing to show here!
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <br> <!-- Panel Genes Link -->
+    <h3>Genes</h3>
+    <div class="d-flex justify-content-between">
+        <p class="text-muted">genes associated with the panel</p>
+        {% if not panel_pending_approval %}
+        <a href="{% url 'gene_add' panel.id %}"><button type="button" class="btn btn-primary btn-sm m-1">Edit Gene</button></a>
+        {% endif %}
+    </div>
+    <div class="row">
+        {% if pgs %}
+        <div class="col">
+            <table class="table table-bordered shadow">
+                <thead>
+                  <tr>
+                    <th scope="col">HGNC ID</th>
+                    <th scope="col">Gene Symbol</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for pg in pgs %}
+                    <tr>
+                        <td><a href="{% url 'gene' pg.gene_id %}">{{ pg.gene_id__hgnc_id }}</a></td>
+                        <td>{{ pg.gene_id__gene_symbol }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

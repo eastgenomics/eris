@@ -38,8 +38,7 @@ class PanelForm(forms.Form):
         panel_name: str = self.cleaned_data["panel_name"]
 
         # clean input
-        # TODO: some panels have comma in them
-        if "," in panel_name:
+        if "HGNC" in panel_name and "," in panel_name:
             # dealing with HGNC type panel
             panel_name = ",".join([hgnc.strip() for hgnc in panel_name.split(",")])
         else:

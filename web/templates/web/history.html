@@ -56,8 +56,7 @@
                     <th scope="col">Clinical Indication Name</th>
                     <th scope="col">Panel Name</th>
                     <th scope="col" class="text-nowrap">Panel Version</th>
-                    <th scope="col" class="text-nowrap">Created Date</th>
-                    <th scope="col" class="text-nowrap">Created Time</th>
+                    <th scope="col" class="text-nowrap">Created</th>
                     <th scope="col">Note</th>
                     <th scope="col">User</th>
                     </tr>
@@ -77,8 +76,7 @@
                         {% else %}
                             <td>None</td>
                         {% endif %}
-                        <td>{{ history.created_date }}</td>
-                        <td>{{ history.created_time }}</td>
+                        <td>{{ history.created }}</td>
                         <td style="max-width:20em;" class="text-wrap">{{ history.note }}</td>
                         <td style="max-width:20em;" class="text-wrap">{{ history.user }}</td>
                     </tr>
