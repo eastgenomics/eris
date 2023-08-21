@@ -514,6 +514,8 @@ def _get_clinical_indication_panel_history(
         "clinical_indication_panel_id__clinical_indication_id__r_code",
         "clinical_indication_panel_id__panel_id__panel_name",
         "clinical_indication_panel_id__panel_id__panel_version",
+        "clinical_indication_panel_id__clinical_indication_id",
+        "clinical_indication_panel_id__panel_id",
     )[:limit]
 
 
@@ -555,12 +557,13 @@ def history(request):
                 .values(
                     "created",
                     "note",
-                    "user",  # TODO: need clinical indication id and panel id
+                    "user",
                     "clinical_indication_panel_id__clinical_indication_id__name",
                     "clinical_indication_panel_id__clinical_indication_id__r_code",
                     "clinical_indication_panel_id__panel_id__panel_name",
                     "clinical_indication_panel_id__panel_id__panel_version",
-                    "clinical_indication_panel_id__clinical_indication_id__id",
+                    "clinical_indication_panel_id__clinical_indication_id",
+                    "clinical_indication_panel_id__panel_id",
                 )
             )
 
@@ -574,6 +577,8 @@ def history(request):
         ] = normalize_version(
             history["clinical_indication_panel_id__panel_id__panel_version"]
         )
+
+    print(cip_histories[0])
 
     return render(
         request,

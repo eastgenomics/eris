@@ -310,6 +310,13 @@ class Transcript(models.Model):
 
     gene = models.ForeignKey(Gene, verbose_name="Gene id", on_delete=models.PROTECT)
 
+    reference_genome = models.CharField(
+        verbose_name="Reference Genome",
+        max_length=255,
+        null=True,
+        default=None,
+    )
+
     class Meta:
         db_table = "transcript"
 

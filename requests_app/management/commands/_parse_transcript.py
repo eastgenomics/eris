@@ -182,6 +182,7 @@ def seed_transcripts(
     gff_filepath: str,
     g2refseq_filepath: str,
     markname_filepath: str,
+    reference_genome: str,  # add reference genome metadata on transcript model
     write_error_log: bool,
 ) -> None:
     """
@@ -308,7 +309,10 @@ def seed_transcripts(
 
         transcript, source = transcript_source
         Transcript.objects.get_or_create(
-            transcript=transcript, source=source, gene_id=hgnc.id
+            transcript=transcript,
+            source=source,
+            gene_id=hgnc.id,
+            reference_genome=reference_genome,
         )
 
     for hgnc_id, transcripts in gene_non_clinical_transcripts.items():
@@ -316,7 +320,10 @@ def seed_transcripts(
 
         for tx in transcripts:
             Transcript.objects.get_or_create(
-                transcript=tx, source=None, gene_id=hgnc.id
+                transcript=tx,
+                source=None,
+                gene_id=hgnc.id,
+                reference_genome=reference_genome,
             )
 
     # write error log for those interested to see
