@@ -76,10 +76,10 @@
                     <tr>
                         <td>{{ history.clinical_indication_panel_id__clinical_indication_id__r_code }}</td>
                         <td style="max-width:20em;" class="text-wrap">
-                            <a href="#">{{ history.clinical_indication_panel_id__clinical_indication_id__name }}</a>
+                            <a href="{% url 'clinical_indication' history.clinical_indication_panel_id__clinical_indication_id %}">{{ history.clinical_indication_panel_id__clinical_indication_id__name }}</a>
                         </td>
                         <td style="max-width:20em;" class="text-break text-wrap">
-                            <a href="#">{{ history.clinical_indication_panel_id__panel_id__panel_name }}</a>
+                            <a href="{% url 'panel' history.clinical_indication_panel_id__panel_id %}">{{ history.clinical_indication_panel_id__panel_id__panel_name }}</a>
                         </td>
                         {% if history.clinical_indication_panel_id__panel_id__panel_version %}
                             <td>{{ history.clinical_indication_panel_id__panel_id__panel_version }}</td>

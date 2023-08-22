@@ -47,9 +47,8 @@ def _backward_deactivate(indications: list[dict], user: str) -> None:
 
 @transaction.atomic
 def flag_clinical_indication_panel_for_review(
-        clinical_indication_panel: ClinicalIndicationPanel, 
-        user: str
-    ) -> None:
+    clinical_indication_panel: ClinicalIndicationPanel, user: str
+) -> None:
     """
     Controller function which takes a clinical indication/panel link, and flags them for manual review.
     This is useful when a new CI is added, e.g. from test directory, and the user might want to switch to
@@ -72,10 +71,10 @@ def provisionally_link_clinical_indication_to_panel(
     user: str,
 ) -> ClinicalIndicationPanel:
     """
-    Link a CI and panel, but set the 'pending' field to True, 
+    Link a CI and panel, but set the 'pending' field to True,
     so that it shows for manual review by a user.
     Additionally, create a history record.
-    Intended for use when you are making 'best guesses' for links based on 
+    Intended for use when you are making 'best guesses' for links based on
     previous CI-Panel links.
     """
     ci_panel_instance, created = ClinicalIndicationPanel.objects.get_or_create(
@@ -345,11 +344,7 @@ def _make_provisional_test_method_change(
     """
 
     with transaction.atomic():
-        ci_instance.pending = True
-        ci_instance.test_method = new_test_method
-
-        ci_instance.save()
-
+        # record the change in history table first before making the change
         ClinicalIndicationTestMethodHistory.objects.create(
             clinical_indication_id=ci_instance.id,
             note=History.clinical_indication_metadata_changed(
@@ -360,12 +355,14 @@ def _make_provisional_test_method_change(
             user=user,
         )
 
+        ci_instance.pending = True
+        ci_instance.test_method = new_test_method
+
+        ci_instance.save()
+
 
 @transaction.atomic
-def insert_test_directory_data(
-    json_data: dict,
-    force: bool = False
-) -> None:
+def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
     """This function insert TD data into DB
 
     e.g. command
@@ -435,11 +432,20 @@ def insert_test_directory_data(
                 # but if old panel and new panel are the same, we expect that there
                 # will still be one ci-panel link instead of two being created
                 previous_panel_id = clinical_indication_panel.panel_id
-                provisionally_link_clinical_indication_to_panel(
-                    previous_panel_id,
-                    ci_instance.id,
-                    td_source,
+
+                new_clinical_indication_panel = (
+                    provisionally_link_clinical_indication_to_panel(
+                        previous_panel_id,
+                        ci_instance.id,
+                        td_source,
+                    )
                 )
+
+                # fill in new clinical indication - panel link metadata
+                new_clinical_indication_panel.td_version = sortable_version(td_version)
+                new_clinical_indication_panel.config_source = json_data["config_source"]
+
+                new_clinical_indication_panel.save()
 
         else:
             # Check for change in test method
@@ -475,7 +481,7 @@ def insert_test_directory_data(
                     (
                         cip_instance,
                         created,
-                    ) = ClinicalIndicationPanel.objects.update_or_create(
+                    ) = ClinicalIndicationPanel.objects.get_or_create(
                         clinical_indication_id=ci_instance.id,
                         panel_id=panel_record.id,
                         defaults={

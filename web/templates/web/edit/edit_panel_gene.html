@@ -6,7 +6,7 @@
     <div class="row">
         <div class="col">
             <h3>Edit Panel Gene</h3>
-            <p class="text-muted">this will create a new custom Panel rather than adding the gene to the Panel</p>
+            <p class="text-muted">This will create a new custom Panel based on this Panel rather than adding the gene to the existing Panel. This will not link existing old Panel's clinical indication to new custom Panel.</p>
         </div>
     </div>
     <!-- end title -->
@@ -27,8 +27,16 @@
                         {% else %}
                         panel version: None <br>
                         {% endif %}
-                        test directory: {{ panel.test_directory }} <br>
-                        custom: {{ panel.custom }} <br>
+                        {% if panel.test_directory %}
+                        test directory: <span class="badge text-bg-success">{{ panel.test_directory }}</span><br>
+                        {% else %}
+                        test directory: <span class="badge text-bg-danger">{{ panel.test_directory }}</span><br>
+                        {% endif %}
+                        {% if panel.custom %}
+                        custom: <span class="badge text-bg-success">{{ panel.custom }}</span><br>
+                        {% else %}
+                        custom: <span class="badge text-bg-danger">{{ panel.custom }}</span><br>
+                        {% endif %}
                         created: {{ panel.created }}<br>
                     </p>
                 </div>
@@ -45,7 +53,7 @@
                         panel source: web <br>
                         panel version: None <br>
                         test directory: None <br>
-                        custom: True <br>
+                        custom: <span class="badge text-bg-success">{{ panel.custom }}</span><br>
                         created: TBD <br>
                     </p>
                 </div>
@@ -90,7 +98,7 @@
         <!-- other genes -->
         <div class="row mt-2">
             <div class="col">
-                <h3>Genes</h3>
+                <h3>Other Genes</h3>
                 <table class="table table-bordered shadow">
                     <thead>
                         <tr>

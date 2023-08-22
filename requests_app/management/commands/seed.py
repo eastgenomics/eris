@@ -121,6 +121,12 @@ class Command(BaseCommand):
             help="write error log for transcript seeding",
         )
 
+        transcript.add_argument(
+            "refgenome",
+            type=str,
+            help="Reference Genome",
+        )
+
     def handle(self, *args, **kwargs) -> None:
         """Coordinates functions to import and parse data from
         specified source, then calls inserter to insert cleaned data
@@ -199,7 +205,8 @@ class Command(BaseCommand):
             5. markname table from HGMD database
             """
 
-            # TODO: split transcripts into build 37 and build 38
+            # fetch input reference genome - case sensitive
+            ref_genome = kwargs.get("refgenome")
 
             print("Seeding transcripts")
 
@@ -227,6 +234,7 @@ class Command(BaseCommand):
                 gff_file,
                 g2refseq_file,
                 markname_file,
+                ref_genome,
                 error_log,
             )
 
