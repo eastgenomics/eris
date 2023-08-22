@@ -577,9 +577,7 @@ def history(request):
         ] = normalize_version(
             history["clinical_indication_panel_id__panel_id__panel_version"]
         )
-
-    print(cip_histories[0])
-
+        
     return render(
         request,
         "web/history.html",
