@@ -348,6 +348,8 @@ def add_panel(request):
                 panel_name=request.POST.get("panel_name"),
                 panel_version=request.POST.get("panel_version"),
                 pending=True,
+                custom=True,
+                panel_source="online",
             )
         else:
             # if invalid, fetch panel from db
@@ -419,7 +421,9 @@ def add_ci_panel(request, ci_id: int):
         )
 
         # only fetch active panels
-        panels: QuerySet[Panel] = Panel.objects.filter(pending=False).all()
+        panels: QuerySet[Panel] = (
+            Panel.objects.filter(pending=False).all().order_by("panel_name")
+        )
 
         # normalize panel version
         for panel in panels:
@@ -577,7 +581,7 @@ def history(request):
         ] = normalize_version(
             history["clinical_indication_panel_id__panel_id__panel_version"]
         )
-        
+
     return render(
         request,
         "web/history.html",
@@ -776,12 +780,26 @@ def clinical_indication_panels(request):
         "config_source",
     ).order_by("clinical_indication_id__name")
 
+    unique_r_codes: set[str] = set()
+
     # normalize panel and test directory version
     for cip in cips:
         cip["td_version"] = normalize_version(cip["td_version"])
         cip["panel_id__panel_version"] = normalize_version(
             cip["panel_id__panel_version"]
         )
+
+        r_code = cip["clinical_indication_id__r_code"]
+        current = cip["current"]
+
+        # clinical indication - panel is active but another active
+        # same clinical indication - panel link also exists
+        if current:
+            if r_code in unique_r_codes:  # duplicate
+                cip["duplicate"] = True
+            else:
+                # keep a record of all unique clinical indication - panel link
+                unique_r_codes.add(r_code)
 
     return render(
         request,
@@ -804,9 +822,6 @@ def activate_or_deactivate_clinical_indication_panel(request, cip_id: int) -> No
         previous_link = request.META.get("HTTP_REFERER")  # fetch previous link
         action = request.POST.get("action")
 
-        # TODO: pending for actioned ci-panel should be pending / displayed in front-end
-        # for manual review
-
         if action == "deactivate":
             with transaction.atomic():
                 ci = ClinicalIndicationPanel.objects.get(id=cip_id)
@@ -816,8 +831,11 @@ def activate_or_deactivate_clinical_indication_panel(request, cip_id: int) -> No
 
                 ClinicalIndicationPanelHistory.objects.create(
                     clinical_indication_panel_id=ci.id,
-                    user="web",
-                    note="Deactivated by online web",
+                    user="online",
+                    note=History.clinical_indication_panel_deactivated(
+                        ci.clinical_indication,
+                        ci.panel,
+                    ),
                 )
 
         elif action == "activate":
@@ -829,8 +847,11 @@ def activate_or_deactivate_clinical_indication_panel(request, cip_id: int) -> No
 
                 ClinicalIndicationPanelHistory.objects.create(
                     clinical_indication_panel_id=ci.id,
-                    user="web",
-                    note="Activated by online web",
+                    user="online",
+                    note=History.clinical_indication_panel_activated(
+                        ci.clinical_indication,
+                        ci.panel,
+                    ),
                 )
         else:
             # unknown action, ignore!
@@ -853,15 +874,123 @@ def review(request) -> None:
     - PanelTestMethod (TODO)
     """
 
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        if action == "approve_ci":
+            # this action is purely removing `pending` label
+            clinical_indication_id = request.POST.get("ci_id")
+
+            clinical_indication = ClinicalIndication.objects.get(
+                id=clinical_indication_id
+            )
+            clinical_indication.pending = False
+            clinical_indication.save()
+
+        elif action == "remove_ci":
+            # this action is purely removing `pending` label
+            clinical_indication_id = request.POST.get("ci_id")
+
+            Panel.objects.filter(id=clinical_indication_id).delete()
+
+        elif action == "approve_panel":
+            panel_id = request.POST.get("panel_id")
+
+            panel = Panel.objects.get(id=panel_id)
+            panel.pending = False
+            panel.save()
+
+        elif action == "remove_panel":
+            panel_id = request.POST.get("panel_id")
+
+            Panel.objects.filter(id=panel_id).delete()
+
+        elif action == "approve_cip":
+            # `current` is already set to desired outcome
+            # this action is purely removing the `pending` label
+            clinical_indication_panel_id = request.POST.get("cip_id")
+
+            with transaction.atomic():
+                clinical_indication_panel = ClinicalIndicationPanel.objects.get(
+                    id=clinical_indication_panel_id
+                )
+
+                clinical_indication_panel.pending = False
+                clinical_indication_panel.save()
+
+                ClinicalIndicationPanelHistory.objects.create(
+                    clinical_indication_panel_id=clinical_indication_panel_id,
+                    note=History.clinical_indication_panel_activated(
+                        clinical_indication_panel.clinical_indication,
+                        clinical_indication_panel.panel,
+                        True,
+                    )
+                    if clinical_indication_panel.current
+                    else History.clinical_indication_panel_deactivated(
+                        clinical_indication_panel.clinical_indication,
+                        clinical_indication_panel.panel,
+                        True,
+                    ),
+                    user="online",
+                )
+        elif action == "revert_cip":
+            clinical_indication_panel_id = request.POST.get("cip_id")
+
+            with transaction.atomic():
+                clinical_indication_panel = ClinicalIndicationPanel.objects.get(
+                    id=clinical_indication_panel_id
+                )
+
+                clinical_indication_panel.pending = False
+                clinical_indication_panel.current = (
+                    not clinical_indication_panel.current
+                )  # get the opposite of what it currently is
+                clinical_indication_panel.save()
+
+                ClinicalIndicationPanelHistory.objects.create(
+                    clinical_indication_panel_id=clinical_indication_panel_id,
+                    note=History.clinical_indication_panel_activated(
+                        clinical_indication_panel.clinical_indication,
+                        clinical_indication_panel.panel,
+                        True,
+                    )
+                    if clinical_indication_panel.current
+                    else History.clinical_indication_panel_deactivated(
+                        clinical_indication_panel.clinical_indication,
+                        clinical_indication_panel.panel,
+                        True,
+                    ),
+                    user="online",
+                )
+
     panels: QuerySet[Panel] = Panel.objects.filter(pending=True).all()
+
     # normalize panel version
     for panel in panels:
         if panel.panel_version:
             panel.panel_version = normalize_version(panel.panel_version)
 
+    # TODO: fetch reason for pending panel
+
     clinical_indications: QuerySet[
         ClinicalIndication
     ] = ClinicalIndication.objects.filter(pending=True).all()
+
+    # clinical indication test method history
+    if clinical_indications:
+        for indication in clinical_indications:
+            indication_history = (
+                ClinicalIndicationTestMethodHistory.objects.filter(
+                    clinical_indication_id=indication.id
+                )
+                .order_by("-id")
+                .first()
+            )
+
+            if indication_history:
+                indication.reason = indication_history
+            else:
+                indication.reason = "New"
 
     clinical_indication_panels: QuerySet[ClinicalIndicationPanel] = (
         ClinicalIndicationPanel.objects.filter(pending=True)
@@ -873,6 +1002,7 @@ def review(request) -> None:
             "panel_id__panel_name",
             "panel_id__panel_version",
             "current",
+            "id",
         )
         .order_by("clinical_indication_id__r_code")
     )

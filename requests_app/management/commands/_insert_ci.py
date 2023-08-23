@@ -53,9 +53,15 @@ def flag_clinical_indication_panel_for_review(
     Controller function which takes a clinical indication/panel link, and flags them for manual review.
     This is useful when a new CI is added, e.g. from test directory, and the user might want to switch to
     using that for a panel instead.
+
+    This function is normally called when there is a new ci-panel link when seeding thus
+    the old ci-panel link will be flagged to be deactivated / ignored
+    while the new one will be created with pending `True`
     """
 
     clinical_indication_panel.pending = True
+    clinical_indication_panel.current = False
+    # this function mainly deal with old ci-panel link so changing `current` here to False make sense
     clinical_indication_panel.save()
 
     ClinicalIndicationPanelHistory.objects.create(

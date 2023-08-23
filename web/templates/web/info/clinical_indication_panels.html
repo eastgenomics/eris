@@ -24,7 +24,7 @@
                 <tbody>
                     {% for cip in cips %}
                   <tr>
-                    <td><a href="{% url 'clinical_indication' cip.clinical_indication_id %}">{{ cip.clinical_indication_id__name }}</a> <br><span class="badge text-bg-info">{{ cip.clinical_indication_id__r_code }}</span></td>
+                    <td><a href="{% url 'clinical_indication' cip.clinical_indication_id %}">{{ cip.clinical_indication_id__name }}</a> <br><span class="badge text-bg-info">{{ cip.clinical_indication_id__r_code }}</span> {% if cip.duplicate %}<span class="badge text-bg-warning">need review</span> {% endif %}</td>
                     {% if cip.panel_id__panel_version %}
                     <td><a href="{% url 'panel' cip.panel_id %}">{{ cip.panel_id__panel_name }}</a> <br> <span class="badge text-bg-info">{{ cip.panel_id__panel_version }}</span></td>
                     {% else %}
@@ -34,14 +34,14 @@
                     <td>{{ cip.td_version }}</td>
                     <td>{{ cip.config_source }}</td>
                     <td>{{ cip.created.date }}</td>
-                    {% if cip.current %}
-                      {% if cip.pending %}
+                    {% if cip.pending %}
                       <td><span class="badge text-bg-warning">Pending</span></td>
-                      {% else %}
-                      <td><span class="badge text-bg-success">Active</span></td>
-                      {% endif %}
                     {% else %}
-                    <td><span class="badge text-bg-danger">Inactive</span></td>
+                      {% if cip.current %}
+                        <td><span class="badge text-bg-success">Active</span></td>
+                      {% else %}
+                        <td><span class="badge text-bg-danger">Inactive</span></td>
+                      {% endif %}
                     {% endif %}
                   </tr>
                     {% endfor %}
