@@ -141,7 +141,11 @@
                     <tr>
                         <td>{{ history.created }}</td>
                         <td>{{ history.note }}</td>
+                        {% if history.user|length > 35 %}
                         <td>{{ history.user|truncatechars:30 }}{{ history.user|slice:'::-1'|truncatechars:30|slice:'::-1' }}</td>
+                        {% else %}
+                        <td>{{ history.user }}</td>
+                        {% endif %}
                         <td>{{ history.clinical_indication_panel_id }}</td>
                     </tr>
                     {% endfor %}

@@ -39,8 +39,16 @@ class History:
     ) -> str:
         return f"ClinicalIndication metadata {field} changed from {old_value} to {new_value}"
 
-    def clinical_indication_panel_activated(ci_id: str, panel_id: str) -> str:
-        return f"ClinicalIndicationPanel linking clinical indication {ci_id} to panel {panel_id} activated online"
+    def clinical_indication_panel_activated(
+        ci_id: str,
+        panel_id: str,
+        review: bool = False,
+    ) -> str:
+        return f"ClinicalIndicationPanel linking clinical indication {ci_id} to panel {panel_id} activated online {'by review' if review else ''}"
 
-    def clinical_indication_panel_deactivated(ci_id: str, panel_id: str) -> str:
-        return f"ClinicalIndicationPanel linking clinical indication {ci_id} to panel {panel_id} deactivated online"
+    def clinical_indication_panel_deactivated(
+        ci_id: str,
+        panel_id: str,
+        review: bool = False,
+    ) -> str:
+        return f"ClinicalIndicationPanel linking clinical indication {ci_id} to panel {panel_id} deactivated online {'by review' if review else ''}"
