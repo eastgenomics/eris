@@ -883,7 +883,7 @@ def review(request) -> None:
         action = request.POST.get("action")
 
         if action == "approve_ci":
-            # this action is purely removing `pending` label
+            # this will be called when approving new clinical indication
             clinical_indication_id = request.POST.get("ci_id")
 
             clinical_indication = ClinicalIndication.objects.get(
@@ -897,7 +897,7 @@ def review(request) -> None:
             approve_bool = True
 
         elif action == "remove_ci":
-            # this action is purely removing `pending` label
+            # this will be called when removing new clinical indication request
             clinical_indication_id = request.POST.get("ci_id")
 
             ClinicalIndication.objects.filter(id=clinical_indication_id).delete()
@@ -906,6 +906,7 @@ def review(request) -> None:
             approve_bool = False
 
         elif action == "approve_panel":
+            # this will be called when approving new panel
             panel_id = request.POST.get("panel_id")
 
             panel = Panel.objects.get(id=panel_id)
@@ -916,6 +917,7 @@ def review(request) -> None:
             approve_bool = True
 
         elif action == "remove_panel":
+            # this will be called when removing new panel request
             panel_id = request.POST.get("panel_id")
 
             Panel.objects.filter(id=panel_id).delete()
@@ -926,6 +928,9 @@ def review(request) -> None:
         elif action == "approve_cip":
             # `current` is already set to desired outcome
             # this action is purely removing the `pending` label
+
+            # this action is called when approving either new ci-panel link
+            # or approving a change to existing ci-panel link
             clinical_indication_panel_id = request.POST.get("cip_id")
 
             with transaction.atomic():
@@ -936,6 +941,7 @@ def review(request) -> None:
                 clinical_indication_panel.pending = False
                 clinical_indication_panel.save()
 
+                # record in history table
                 ClinicalIndicationPanelHistory.objects.create(
                     clinical_indication_panel_id=clinical_indication_panel_id,
                     note=History.clinical_indication_panel_activated(
@@ -952,6 +958,7 @@ def review(request) -> None:
                     user="online",
                 )
 
+            # lazy load relevant field for display in front-end notification
             action_cip = ClinicalIndicationPanel.objects.filter(
                 id=clinical_indication_panel_id
             ).values(
@@ -965,10 +972,16 @@ def review(request) -> None:
                 0
             ]
 
-            action_cip['panel_id__panel_version'] = normalize_version(action_cip['panel_id__panel_version'])
+            action_cip["panel_id__panel_version"] = normalize_version(
+                action_cip["panel_id__panel_version"]
+            )
             approve_bool = True
 
         elif action == "revert_cip":
+            # this is called when reverting a change to existing ci-panel link
+            # e.g. scenario when user submit to deactivate an existing ci-panel link
+            # this will revert the change and set the ci-panel link to active / inactive
+            # based on the current changed state
             clinical_indication_panel_id = request.POST.get("cip_id")
 
             with transaction.atomic():
@@ -977,7 +990,9 @@ def review(request) -> None:
                 )
 
                 clinical_indication_panel.pending = False
-                clinical_indication_panel.current = not clinical_indication_panel.current  # get the opposite of what it currently is
+                clinical_indication_panel.current = (
+                    not clinical_indication_panel.current
+                )  # get the opposite of what it currently is
                 clinical_indication_panel.save()
 
                 ClinicalIndicationPanelHistory.objects.create(
@@ -1009,7 +1024,9 @@ def review(request) -> None:
                 0
             ]
 
-            action_cip['panel_id__panel_version'] = normalize_version(action_cip['panel_id__panel_version'])
+            action_cip["panel_id__panel_version"] = normalize_version(
+                action_cip["panel_id__panel_version"]
+            )
             approve_bool = False
 
     panels: QuerySet[Panel] = Panel.objects.filter(pending=True).all()
