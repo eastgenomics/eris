@@ -874,6 +874,11 @@ def review(request) -> None:
     - PanelTestMethod (TODO)
     """
 
+    action_cip = None
+    action_panel = None
+    action_ci = None
+    approve_bool = None
+
     if request.method == "POST":
         action = request.POST.get("action")
 
@@ -884,14 +889,21 @@ def review(request) -> None:
             clinical_indication = ClinicalIndication.objects.get(
                 id=clinical_indication_id
             )
+
             clinical_indication.pending = False
             clinical_indication.save()
+
+            action_ci = clinical_indication
+            approve_bool = True
 
         elif action == "remove_ci":
             # this action is purely removing `pending` label
             clinical_indication_id = request.POST.get("ci_id")
 
-            Panel.objects.filter(id=clinical_indication_id).delete()
+            ClinicalIndication.objects.filter(id=clinical_indication_id).delete()
+
+            action_ci = True
+            approve_bool = False
 
         elif action == "approve_panel":
             panel_id = request.POST.get("panel_id")
@@ -900,10 +912,16 @@ def review(request) -> None:
             panel.pending = False
             panel.save()
 
+            action_panel = panel
+            approve_bool = True
+
         elif action == "remove_panel":
             panel_id = request.POST.get("panel_id")
 
             Panel.objects.filter(id=panel_id).delete()
+
+            action_panel = True
+            approve_bool = False
 
         elif action == "approve_cip":
             # `current` is already set to desired outcome
@@ -933,6 +951,23 @@ def review(request) -> None:
                     ),
                     user="online",
                 )
+
+            action_cip = ClinicalIndicationPanel.objects.filter(
+                id=clinical_indication_panel_id
+            ).values(
+                "clinical_indication_id__r_code",
+                "clinical_indication_id__name",
+                "panel_id__panel_name",
+                "panel_id__panel_version",
+                "clinical_indication_id",
+                "panel_id",
+            )[
+                0
+            ]
+
+            action_cip['panel_id__panel_version'] = normalize_version(action_cip['panel_id__panel_version'])
+            approve_bool = True
+
         elif action == "revert_cip":
             clinical_indication_panel_id = request.POST.get("cip_id")
 
@@ -942,9 +977,7 @@ def review(request) -> None:
                 )
 
                 clinical_indication_panel.pending = False
-                clinical_indication_panel.current = (
-                    not clinical_indication_panel.current
-                )  # get the opposite of what it currently is
+                clinical_indication_panel.current = not clinical_indication_panel.current  # get the opposite of what it currently is
                 clinical_indication_panel.save()
 
                 ClinicalIndicationPanelHistory.objects.create(
@@ -963,14 +996,28 @@ def review(request) -> None:
                     user="online",
                 )
 
+            action_cip = ClinicalIndicationPanel.objects.filter(
+                id=clinical_indication_panel_id
+            ).values(
+                "clinical_indication_id__r_code",
+                "clinical_indication_id__name",
+                "panel_id__panel_name",
+                "panel_id__panel_version",
+                "clinical_indication_id",
+                "panel_id",
+            )[
+                0
+            ]
+
+            action_cip['panel_id__panel_version'] = normalize_version(action_cip['panel_id__panel_version'])
+            approve_bool = False
+
     panels: QuerySet[Panel] = Panel.objects.filter(pending=True).all()
 
     # normalize panel version
     for panel in panels:
         if panel.panel_version:
             panel.panel_version = normalize_version(panel.panel_version)
-
-    # TODO: fetch reason for pending panel
 
     clinical_indications: QuerySet[
         ClinicalIndication
@@ -1031,6 +1078,10 @@ def review(request) -> None:
             "cis": clinical_indications,
             "cips": clinical_indication_panels,
             "pgs": panel_genes,
+            "action_cip": action_cip,
+            "action_ci": action_ci,
+            "action_panel": action_panel,
+            "approve_bool": approve_bool,
         },
     )
 
