@@ -199,7 +199,11 @@ def clinical_indication(request, ci_id: int):
     # fetch ci-test-method history
     ci_test_method_history: QuerySet[
         ClinicalIndicationTestMethodHistory
-    ] = ClinicalIndicationTestMethodHistory.objects.filter(clinical_indication_id=ci_id)
+    ] = ClinicalIndicationTestMethodHistory.objects.filter(
+        clinical_indication_id=ci_id
+    ).order_by(
+        "-id"
+    )
 
     # combine ci-panels history and ci-test-method history
     agg_history = list(chain(ci_test_method_history, ci_panels_history))
@@ -327,15 +331,27 @@ def add_panel(request):
     Add panel page
     """
     if request.method == "GET":
-        return render(
-            request,
-            "web/addition/add_panel.html",
+        gene_collections = collections.defaultdict(list)
+
+        for gene in Gene.objects.all().order_by("hgnc_id"):
+            initial_hgnc = gene.hgnc_id.lstrip("HGNC:")
+
+            gene_collections[initial_hgnc[0]].append(gene)
+
+        gene_collections.default_factory = (
+            None  # allows defaultdict to display in frontend
         )
-    else:
+
+        return render(
+            request, "web/addition/add_panel.html", {"genes": gene_collections}
+        )
+    else:  # POST
         # form submission
         external_id: str = request.POST.get("external_id", "")
         panel_name: str = request.POST.get("panel_name", "")
         panel_version: str = request.POST.get("panel_version", "")
+
+        genes = request.POST.getlist("genes")
 
         form: bool = PanelForm(request.POST)
         # check form valid
@@ -351,6 +367,33 @@ def add_panel(request):
                 custom=True,
                 panel_source="online",
             )
+
+            conf, _ = Confidence.objects.get_or_create(confidence_level=None)
+            moi, _ = ModeOfInheritance.objects.get_or_create(mode_of_inheritance=None)
+            mop, _ = ModeOfPathogenicity.objects.get_or_create(
+                mode_of_pathogenicity=None
+            )
+            penetrance, _ = Penetrance.objects.get_or_create(penetrance=None)
+
+            for gene_id in genes:
+                pg_instance, pg_created = PanelGene.objects.get_or_create(
+                    panel_id=panel.id,
+                    gene_id=gene_id,
+                    defaults={
+                        "confidence_id": conf.id,
+                        "moi_id": moi.id,
+                        "mop_id": mop.id,
+                        "penetrance_id": penetrance.id,
+                        "justification": "online",
+                    },
+                )
+
+                if pg_created:
+                    PanelGeneHistory.objects.create(
+                        panel_gene_id=pg_instance.id,
+                        note=History.panel_gene_created(),
+                        user="online",
+                    )
         else:
             # if invalid, fetch panel from db
             try:
@@ -899,11 +942,48 @@ def review(request) -> None:
         elif action == "remove_ci":
             # this will be called when removing new clinical indication request
             clinical_indication_id = request.POST.get("ci_id")
+            test_method = request.POST.get("test_method") == "true"
 
-            ClinicalIndication.objects.filter(id=clinical_indication_id).delete()
+            if test_method:
+                # called when reverting test method change
 
-            action_ci = True
-            approve_bool = False
+                indication_history = (
+                    ClinicalIndicationTestMethodHistory.objects.filter(
+                        clinical_indication_id=clinical_indication_id,
+                    )
+                    .order_by("-id")
+                    .first()
+                )
+
+                # extract test method from "ClinicalIndication metadata test_method changed from Single gene sequencing >=10 amplicons to Small panel"
+                previous_test_method = (
+                    indication_history.note.split("to")[0].split("from")[-1].strip()
+                )
+
+                with transaction.atomic():
+                    clinical_indication = ClinicalIndication.objects.get(
+                        id=clinical_indication_id,
+                    )
+
+                    ClinicalIndicationTestMethodHistory.objects.create(
+                        clinical_indication_id=clinical_indication_id,
+                        user="online",
+                        note=History.clinical_indication_metadata_changed(
+                            "test_method",
+                            clinical_indication.test_method,
+                            previous_test_method,
+                        ),
+                    )
+
+                    clinical_indication.pending = False
+                    clinical_indication.test_method = previous_test_method
+                    clinical_indication.save()
+            else:
+                # remove clinical indication action
+                ClinicalIndication.objects.filter(id=clinical_indication_id).delete()
+
+                action_ci = True
+                approve_bool = False
 
         elif action == "approve_panel":
             # this will be called when approving new panel
@@ -1051,6 +1131,8 @@ def review(request) -> None:
                 .first()
             )
 
+            # determine if test method is changed
+            # or it's a new clinical indication creation
             if indication_history:
                 indication.reason = indication_history
             else:
@@ -1080,13 +1162,6 @@ def review(request) -> None:
         else:
             cip["panel_id__panel_version"] = 1.0
 
-    panel_genes: QuerySet[PanelGene] = PanelGene.objects.filter(pending=True).values(
-        "panel_id__panel_name",
-        "panel_id__panel_version",
-        "gene_id__hgnc_id",
-        "gene_id__gene_symbol",
-    )
-
     return render(
         request,
         "web/review/pending.html",
@@ -1094,7 +1169,6 @@ def review(request) -> None:
             "panels": panels,
             "cis": clinical_indications,
             "cips": clinical_indication_panels,
-            "pgs": panel_genes,
             "action_cip": action_cip,
             "action_ci": action_ci,
             "action_panel": action_panel,

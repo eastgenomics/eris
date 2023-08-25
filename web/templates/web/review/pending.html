@@ -2,6 +2,7 @@
 
 {% block content %}
 <div class="container mb-5">
+    <!-- Success notification -->
     {% if action_cip or action_ci or action_panel %}
         {% if action_cip %}
             {% if approve_bool %}
@@ -35,6 +36,7 @@
             {% endif %}
         {% endif %}
     {% endif %}
+    <!-- End notification -->
     <!-- Title -->
     <div class="row">
         <div class="col">
@@ -126,6 +128,11 @@
                                 <form action="{% url 'review' %}" method="POST">
                                     {% csrf_token %}
                                     <input type="text" class="form-control visually-hidden" name="ci_id" value="{{ ci.id }}">
+                                    {% if ci.reason == 'New' %}
+                                    <input type="text" class="form-control visually-hidden" name="test_method" value="false">
+                                    {% else %}
+                                    <input type="text" class="form-control visually-hidden" name="test_method" value="true">
+                                    {% endif %}
                                     <input type="text" class="form-control visually-hidden" name="action" value="remove_ci">
                                     <button type="submit" class="btn btn-danger btn-sm">Remove</button>
                                 </form>   
@@ -197,38 +204,5 @@
         </div>
     </div>
     <!-- Clinical Indication Panel Review End -->
-    <!-- Panel Gene Review -->
-    <div class="row">
-        <div class="col">
-            <h5>Panel Gene</h5>
-            {% if pgs %}
-            <table class="table table-bordered shadow">
-                <thead>
-                  <tr>
-                    <th scope="col">Panel</th>
-                    <th scope="col">Gene</th>
-                    <th scope="col">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                {% for pg in pgs %}
-                    <tr>
-                        <td>{{ pg.panel_id__panel_name }} {{ pg.panel_id__panel_version }}</td>
-                        <td>{{ pg.gene_id__hgnc_id }} v{{ pg.gene_id__gene_symbol }}</td>
-                        <td>
-                            <button type="button" class="btn btn-success btn-sm">Approve</button>
-                            <button type="button" class="btn btn-danger btn-sm">Remove</button>
-                        </td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <div class="alert alert-primary" role="alert">
-                Nothing pending
-            </div>
-            {% endif %}
-        </div>
-    </div>
 </div>
 {% endblock %}

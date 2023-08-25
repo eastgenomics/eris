@@ -330,48 +330,42 @@ class PanelGene(models.Model):
     panel = models.ForeignKey(
         Panel,
         verbose_name="Panel ID",
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
     )
 
     gene = models.ForeignKey(
         Gene,
         verbose_name="Gene ID",
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
     )
 
     confidence = models.ForeignKey(
         Confidence,
         verbose_name="Confidence ID",
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
     )
 
     moi = models.ForeignKey(
         ModeOfInheritance,
         verbose_name="Mode of inheritance ID",
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
     )
 
     mop = models.ForeignKey(
         ModeOfPathogenicity,
         verbose_name="Mode of pathogenicity ID",
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
     )
 
     penetrance = models.ForeignKey(
         Penetrance,
         verbose_name="Penetrance ID",
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
     )
 
     justification = models.TextField(
         verbose_name="Justification",
         max_length=255,
-    )
-
-    pending = models.BooleanField(
-        verbose_name="pending activation",
-        null=True,
-        default=False,
     )
 
     class Meta:
@@ -385,7 +379,7 @@ class PanelGeneHistory(models.Model):
     panel_gene = models.ForeignKey(
         PanelGene,
         verbose_name="PanelGene id",
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
     )
 
     created = models.DateTimeField(
