@@ -122,7 +122,7 @@ class Command(BaseCommand):
         )
 
         transcript.add_argument(
-            "refgenome",
+            "--refgenome",
             type=str,
             help="Reference Genome",
         )
@@ -194,7 +194,7 @@ class Command(BaseCommand):
             if not test_mode:
                 insert_test_directory_data(json_data, force)
 
-        # python manage.py seed transcript --hgnc <path> --mane <path> --gff <path> --g2refseq <path> --markname <path> --error
+        # python manage.py seed transcript --hgnc <path> --mane <path> --gff <path> --g2refseq <path> --markname <path> --refgenome <ref_genome_version> --error
         elif command == "transcript":
             """
             This seeding requires the following files:
@@ -203,6 +203,9 @@ class Command(BaseCommand):
             3. parsed gff file on DNAnexus (project-Fkb6Gkj433GVVvj73J7x8KbV:file-GF611Z8433Gk7gZ47gypK7ZZ)
             4. gene2refseq table from HGMD database
             5. markname table from HGMD database
+
+            And a string argument:
+            6. reference genome - e.g. 37/38
             """
 
             # fetch input reference genome - case sensitive
