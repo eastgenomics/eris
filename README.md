@@ -35,7 +35,7 @@ python manage.py seed td <input_json>
 ```
 - Example usage:
 ```
-python manage.py seed td 220713_RD_TD.json
+python manage.py seed td testing_files/230616_RD_TD_v5.json
 ```
 - This command retrieves data from a JSON file, inserts it into the appropriate database models, and link the clinical indication to the appropriate Panel record as specified
 - The JSON file can be created from the original test directory MS Excel file using https://github.com/eastgenomics/test_directory_parser, and take the following format:
