@@ -23,7 +23,7 @@ python manage.py migrate requests_app
 ### 1. Insert data from PanelApp
 The generic command for this is:
 ```
-python manage.py seed panels all
+python manage.py seed panelapp all
 ```
 - This command retrieves all current panels from the PanelApp API, parses the data, and inserts it into the appropriate database models.
 - It can be executed as-is and has no variable arguments.
