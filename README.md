@@ -58,9 +58,24 @@ python manage.py seed td testing_files/230616_RD_TD_v5.json
     },
 ```
 
-The two arguments for this command are:
+The argument for this command is:
 - The name of the JSON file (which should be located within the same folder as the manage.py script)
-- Y/N to specify whether this is the current version of the test directory
+
+
+### 3. Insert transcript data
+The generic command for this is:
+```
+python manage.py seed transcript --hgnc <path> --mane <path> --gff <path> --g2refseq <path> --markname <path> --refgenome <ref_genome_version> --error
+```
+- Example usage:
+```
+python manage.py seed transcript --mane testing_files/mane_grch37.csv \
+--hgnc testing_files/hgnc_dump_20230613.txt \
+--gff testing_files/GCF_000001405.25_GRCh37.p13_genomic.exon_5bp_v2.0.0.tsv \
+--g2refseq testing_files/gene2refseq_202306131409.csv \
+--markname testing_files/markname_202306131409.csv \
+--refgenome 37
+```
 
 ## Create a request form
 The generic command for this is:
