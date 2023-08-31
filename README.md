@@ -131,21 +131,7 @@ The command takes 1 argument (fp) which is the path to the completed request for
 
 Executing the command reads in and parses a request form, creates a new panel instance from the request, links the relevant clinical indication to the new panel, and updates the link to the previous panel so that it is no longer current.
 
-## Running unit tests
-Unit tests are defined in requests_app/tests.py, and can be run from within the top-level panel_requests directory.
 
-- Example usages:
-```sh
-# Basic execution
-pytest
-
-# Output is quiet or verbose
-pytest -q
-pytest -v
-
-# Output includes line coverage
-pytest --cov=panel_requests panel_requests/requests_app/tests.py
-```
 ## Generate genepanel
 ```
 Make a HGNC dump txt file here: https://www.genenames.org/download/custom/
