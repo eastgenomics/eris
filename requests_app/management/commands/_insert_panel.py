@@ -65,9 +65,20 @@ def _insert_gene(panel: PanelClass, panel_instance: Panel) -> None:
         hgnc_id = gene_data.get("hgnc_id")
         confidence_level = single_gene.get("confidence_level")
 
+        if not hgnc_id:
+            print("For panel " + str(panel.name) + ", skipping gene without HGNC ID: " + \
+                  str(gene_data["gene_name"]))
+            continue
+
         # there is only confidence level 0 1 2 3
         # and we only fetch confidence level 3
-        if not hgnc_id or float(confidence_level) != 3.0:
+        try:
+            if float(confidence_level) != 3.0:
+                continue
+        except TypeError:
+            # the confidence_level is None or some other type that can't be converted to float
+            print("For panel " + str(panel.name) + ", skipping gene without confidence information: " + \
+                  str(gene_data["gene_name"]))
             continue
 
         gene_symbol = gene_data.get("gene_symbol")
@@ -271,7 +282,8 @@ def insert_data_into_db(panel: PanelClass, user: str) -> None:
                 panel_instance.id, clinical_indication_id, "PanelApp"
             )
 
-    # attach each Gene record to the new Panel record,
+    # attach each Gene record to the Panel record, 
+    # whether it was created just now or was already in the database,
     # and populate region attribute models
     _insert_gene(panel, panel_instance)
     _insert_regions(panel, panel_instance)
