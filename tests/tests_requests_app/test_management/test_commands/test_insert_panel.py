@@ -5,7 +5,8 @@ import datetime
 from django_mock_queries.query import MockSet, MockModel
 
 from requests_app.models import \
-    Panel, Gene, PanelGene, PanelGeneHistory, Confidence
+    Panel, Gene, PanelGene, PanelGeneHistory, Confidence, ModeOfInheritance, \
+    Penetrance, ModeOfPathogenicity
 
 from requests_app.management.commands._insert_panel import \
     _insert_gene
@@ -81,8 +82,110 @@ class TestInsertGene_NewGene(TestCase):
         assert new_history.user == "PanelApp"
 
 
+class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
+    """
+    Tests for _insert_gene
+    Situation where a new panel version panel has been added, e.g. by PanelApp import,
+    and it is linked to genes that already have a link to the old version of the panel
+    (so the justification is the same)
+    """
+    def setUp(self) -> None:
+        """
+        Start condition: Make a Panel, and linked genes, which we will alter as part of testing
+        _insert_gene
+        """
+        self.first_panel = Panel.objects.create(
+            external_id="1141", \
+            panel_name="Acute rhabdomyolosis", \
+            panel_source="PanelApp", \
+            panel_version="1.15"
+        )
+
+        self.first_gene = Gene.objects.create(
+            hgnc_id="21497",
+            gene_symbol="ACAD9",
+            alias_symbols="NPD002,MGC14452"
+        )
+
+        self.confidence = Confidence.objects.create(
+            confidence_level=3
+        )
+
+        self.moi = ModeOfInheritance.objects.create(
+            mode_of_inheritance="test"
+        )
+
+        self.mop = ModeOfPathogenicity.objects.create(
+            mode_of_pathogenicity="test"
+        )
+
+        self.penetrance = Penetrance.objects.create(
+            penetrance="test"
+        )
+
+        self.first_link = PanelGene.objects.create(
+            panel=self.first_panel,
+            gene=self.first_gene,
+            confidence_id=self.confidence.id,
+            moi_id=self.moi.id,
+            mop_id=self.mop.id,
+            penetrance_id=self.penetrance.id,
+            justification="PanelApp"
+        )
 
 
+    def test_new_panel_and_genes_linked(self):
+        """
+        Test that panel and genes are created,
+        then linked, and their history logged
+        """
+        # make one of the test inputs for the function
+        test_panel = PanelClass(id="1141", 
+                                name="Acute rhabdomyolyosis", 
+                                version="1.15", 
+                                panel_source="PanelApp",
+                                genes=[{"gene_data": 
+                                        {"hgnc_id": 21497, 
+                                         "gene_name": "acyl-CoA dehydrogenase family member 9",
+                                         "gene_symbol": "ACAD9", 
+                                         "alias": ["NPD002", "MGC14452"]},
+                                         "confidence_level": 3,
+                                         "mode_of_inheritance": "test",
+                                         "mode_of_pathogenicity": "test",
+                                         "penetrance": "test"}
+                                        ],
+                                regions=[]
+                                )
+
+        # run the function under test
+        _insert_gene(test_panel, self.first_panel)
+
+        # check that the gene is in the database 
+        # and that it is unchanged from when we first added it
+        new_genes = Gene.objects.all()
+        assert len(new_genes) == 1
+        new_gene = new_genes[0]
+        assert new_gene.id == self.first_gene.id
+        assert new_gene.hgnc_id == "21497"
+        assert new_gene.gene_symbol == "ACAD9"
+        assert new_gene.alias_symbols == "NPD002,MGC14452"
+
+        # check that we still have just 1 PanelGene link, which should be the one
+        # we made ourselves in set-up 
+        panel_genes = PanelGene.objects.all()
+        assert len(panel_genes) == 1
+        assert panel_genes[0].id == self.first_link.id
+
+        # there shouldn't be a 
+        new_panelgene = panel_genes[0]
+        confidence = Confidence.objects.filter(confidence_level=3)
+        assert len(confidence) == 1
+        assert new_panelgene.confidence_id == confidence[0].id
+
+        # there should not have been a history record made,
+        # because there was not a change to the gene-panel link in this upload
+        panel_gene_history = PanelGeneHistory.objects.all()
+        assert len(panel_gene_history) == 0
 
 
 
