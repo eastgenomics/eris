@@ -85,8 +85,10 @@ def fetch_all_panels() -> list[PanelClass]:
 
     for panel in _get_all_panel():
         panel_id = panel["id"]
+        panel_version = panel.get("version")
 
-        panel_data = get_panel(panel_id)
+        # fetching specific signed-off version
+        panel_data = get_panel(panel_id, panel_version)
 
         if panel_data:
             panel_data.panel_source = "PanelApp"
