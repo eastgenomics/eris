@@ -1,23 +1,18 @@
 from django import forms
 
-from requests_app.models import ClinicalIndication, Panel
+from requests_app.models import ClinicalIndication, Panel, Gene
 
 
 class ClinicalIndicationForm(forms.Form):
-    r_code = forms.CharField(max_length=10)
-    name = forms.CharField(max_length=250)
+    r_code = forms.CharField(max_length=10, required=True)
+    name = forms.CharField(max_length=250, required=True)
     test_method = forms.CharField(max_length=100, required=False)
 
     def clean_r_code(self):
         r_code: str = self.cleaned_data["r_code"]
 
-        if not r_code.startswith("R"):
-            self.add_error(
-                "r_code",
-                "Clinical Indication must start with uppercase letter R",
-            )
-
-        try:
+        # custom-made clinical indication doesn't necessarily need to start with R
+        try:  # query if there is an existing clinical indication with this r_code
             ClinicalIndication.objects.get(r_code=r_code)
             self.add_error(
                 "r_code",
@@ -31,7 +26,7 @@ class ClinicalIndicationForm(forms.Form):
 
 class PanelForm(forms.Form):
     external_id = forms.CharField(max_length=30, required=False)
-    panel_name = forms.CharField(max_length=250)
+    panel_name = forms.CharField(max_length=250, required=True)
     panel_version = forms.CharField(max_length=10, required=False)
 
     def clean_panel_name(self):
@@ -53,3 +48,24 @@ class PanelForm(forms.Form):
             )
 
         return panel_name
+
+
+class GeneForm(forms.Form):
+    hgnc_id = forms.CharField(max_length=30, required=True)
+    gene_symbol = forms.CharField(max_length=30, required=False)
+
+    def clean_hgnc_id(self):
+        hgnc_id: str = self.cleaned_data["hgnc_id"].upper()
+
+        if not hgnc_id.startswith("HGNC:"):
+            self.add_error("hgnc_id", "HGNC ID must start with HGNC:")
+
+        try:
+            Gene.objects.get(hgnc_id=hgnc_id)
+
+            self.add_error("hgnc_id", "Gene with this HGNC ID already exists!")
+        except:
+            # no gene with this hgnc_id exists, that's good
+            pass
+
+        return hgnc_id

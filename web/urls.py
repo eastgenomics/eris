@@ -15,6 +15,7 @@ urlpatterns = [
     ),
     path("gene/<int:gene_id>/", views.gene, name="gene"),
     path("genepanel/", views.genepanel, name="genepanel"),
+    path("genes/", views.genes, name="genes"),
     # addition
     path("ci/add/", views.add_clinical_indication, name="ci_add"),
     path("panel/add", views.add_panel, name="panel_add"),

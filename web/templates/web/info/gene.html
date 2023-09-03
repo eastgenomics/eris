@@ -6,8 +6,7 @@
         <div class="col">
             <h1>{{ gene.hgnc_id }}</h1>
             <h4>{{ gene.gene_symbol }}</h4>
-            <h4>Previous Symbols: {{ gene.previous_symbols }}</h4>
-            <h4>Alias Symbols: {{ gene.alias_symbols }}</h4>
+            <h4>alias symbols: {{ gene.alias_symbols }}</h4>
             <h5>database id: {{ gene.id }}</h5>
         </div>
     </div>
@@ -40,6 +39,34 @@
             </div>
         </div>
         {% endfor %}
+    </div>
+    <br>
+    <h3>Transcripts</h3>
+    <div class="row">
+        <div class="col">
+            <table class="table table-bordered shadow">
+                <thead>
+                  <tr>
+                    <th scope="col">Transcript</th>
+                    <th scope="col">Source</th>
+                    <th scope="col">Reference Genome</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for transcript in transcripts %}
+                    <tr>
+                        <td>{{ transcript.transcript }}</td>
+                        {% if transcript.source %}
+                        <td><span class="badge text-bg-info">{{ transcript.source }}</span></td>
+                        {% else %}
+                        <td>{{ transcript.source }}</td>
+                        {% endif %}
+                        <td>{{ transcript.reference_genome }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {% endblock %}
