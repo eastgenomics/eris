@@ -10,7 +10,6 @@ import os
 import csv
 import collections
 import datetime as dt
-from typing import Tuple
 
 from django.core.management.base import BaseCommand
 from .utils import normalize_version, parse_hgnc
@@ -31,7 +30,6 @@ class Command(BaseCommand):
         :return: True if directory exists, False otherwise
         """
         return os.path.exists(path)
-
 
     def _validate_hgnc(self, file_path: str) -> bool:
         """
@@ -55,9 +53,7 @@ class Command(BaseCommand):
 
         return True
 
-
-    def _get_relevant_ci_panels(self) -> \
-        Tuple[dict[str, list], list]:
+    def _get_relevant_ci_panels(self) -> tuple[dict[str, list], list]:
         """
         Retrieve relevant panels and CI-panels from the database
         These will be output in the final file.
@@ -66,44 +62,38 @@ class Command(BaseCommand):
         relevant_panels = set()
 
         ci_panels = collections.defaultdict(list)
-        
+
         for row in ClinicalIndicationPanel.objects.filter(
             current=True, pending=False
-            ).values(
-                "clinical_indication_id__r_code",
-                "clinical_indication_id__name",
-                "panel_id",
-                "panel_id__panel_name",
-                "panel_id__panel_version",
-            ):
-                relevant_panels.add(row["panel_id"])
-                ci_panels[row["clinical_indication_id__r_code"]].append(row)
+        ).values(
+            "clinical_indication_id__r_code",
+            "clinical_indication_id__name",
+            "panel_id",
+            "panel_id__panel_name",
+            "panel_id__panel_version",
+        ):
+            relevant_panels.add(row["panel_id"])
+            ci_panels[row["clinical_indication_id__r_code"]].append(row)
 
         return ci_panels, relevant_panels
 
-
-    def _get_relevant_panel_genes(self, relevant_panels) -> \
-        dict[int, str]:
+    def _get_relevant_panel_genes(self, relevant_panels: list[int]) -> dict[int, str]:
         """
-        Using a list of relevant panels, 
+        Using a list of relevant panels,
         retrieve the genes from those panels from the PanelGene database.
         """
         panel_genes = collections.defaultdict(list)
 
-        for row in PanelGene.objects.filter(
-            panel_id__in=relevant_panels, pending=False
-            ).values(
-                "gene_id__hgnc_id", 
-                "panel_id"
-            ):
-                panel_genes[row["panel_id"]].append(row["gene_id__hgnc_id"])
+        for row in PanelGene.objects.filter(panel_id__in=relevant_panels).values(
+            "gene_id__hgnc_id", "panel_id"
+        ):
+            panel_genes[row["panel_id"]].append(row["gene_id__hgnc_id"])
 
         return panel_genes
 
-
-    def _format_output_data_genepanels(self, ci_panels: dict[str, list], \
-                                       panel_genes: dict[int, str], \
-                                        rnas: set) -> list:
+    def _format_output_data_genepanels(
+        self, ci_panels: dict[str, list], panel_genes: dict[int, str], rnas: set
+    ) -> list[tuple[str, str, str]]:
         """
         Format a list of results ready for writing out to file.
         Sort the results before returning them.
@@ -133,9 +123,8 @@ class Command(BaseCommand):
                             hgnc,
                         ]
                     )
-        sorted(results, key=lambda x: [x[0], x[1], x[2]])
+        results = sorted(results, key=lambda x: [x[0], x[1], x[2]])
         return results
-
 
     def _generate_genepanels(self, rnas: set, output_directory: str) -> None:
         """
@@ -177,7 +166,6 @@ class Command(BaseCommand):
                 data = "\t".join(row)
                 f.write(f"{data}\n")
 
-
     def _generate_g2t(self, output_directory) -> None:
         """
         Main function to generate g2t.tsv
@@ -186,7 +174,7 @@ class Command(BaseCommand):
         """
 
         print("Creating g2t file")
-        
+
         current_datetime = dt.datetime.today().strftime("%Y%m%d")
 
         with open(
@@ -210,7 +198,6 @@ class Command(BaseCommand):
                     ]
                 )
 
-
     def add_arguments(self, parser) -> None:
         """
         Define parsers for generate command
@@ -226,7 +213,6 @@ class Command(BaseCommand):
 
         # optional parser for output directory
         parser.add_argument("--output")
-
 
     def handle(self, *args, **kwargs):
         """

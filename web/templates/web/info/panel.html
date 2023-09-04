@@ -18,7 +18,7 @@
             <h4>external id: {{ panel.external_id }}</h4>
             <h4>panel source: {{ panel.panel_source }}</h4>
             <h4>test directory: {{ panel.test_directory }}</h4>
-            {% if panel.panel_version > 0 %}
+            {% if panel.panel_version %}
             <h4>panel version: {{ panel.panel_version }}</h4>
             {% else %}
             <h4>panel version: None</h4>

@@ -73,7 +73,9 @@ def panel(request, panel_id: int):
 
     # fetch panel
     panel: Panel = Panel.objects.get(id=panel_id)
-    panel.panel_version = normalize_version(panel.panel_version)
+    panel.panel_version = (
+        normalize_version(panel.panel_version) if panel.panel_version else None
+    )
 
     # fetch ci-panels (related ci)
     ci_panels: QuerySet[

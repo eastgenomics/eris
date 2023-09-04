@@ -143,7 +143,7 @@ class Command(BaseCommand):
         # python manage.py seed panelapp <all/panel_id> <version>
         if command == "panelapp":
             panel_id: str = kwargs.get("panel")
-            panel_version: str = kwargs.get("version")  # TODO: version not used yet?
+            panel_version: str = kwargs.get("version")
 
             if panel_id == "all":
                 panels: list[PanelClass] = fetch_all_panels()
