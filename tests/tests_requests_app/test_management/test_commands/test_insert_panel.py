@@ -18,8 +18,8 @@ from requests_app.management.commands.panelapp import PanelClass
 class TestInsertGene_NewGene(TestCase):
     """
     Tests for _insert_gene
-    Situation where a new panel has already been made, 
-    and it is linked to genes that aren't already in the database
+    Situations where a new panel has already been made, 
+    and it gets linked to genes that aren't already in the database
     """
     def setUp(self) -> None:
         """
@@ -34,7 +34,7 @@ class TestInsertGene_NewGene(TestCase):
         )
 
 
-    def test_new_panel_and_genes_linked(self):
+    def test_new_panel_linked_to_acceptable_gene(self):
         """
         Test that panel and genes are created,
         then linked, and their history logged
@@ -80,6 +80,107 @@ class TestInsertGene_NewGene(TestCase):
         new_history = panel_gene_history[0]
         assert new_history.note == History.panel_gene_created()
         assert new_history.user == "PanelApp"
+
+
+    def test_reject_low_confidence_gene(self):
+        """
+        Test that panel and genes are rejected if the confidence is too low
+        """
+        # make one of the test inputs for the function
+        test_panel = PanelClass(id="1141", 
+                                name="Acute rhabdomyolyosis", 
+                                version="1.15", 
+                                panel_source="PanelApp",
+                                genes=[{"gene_data": 
+                                        {"hgnc_id": 21497, 
+                                         "gene_name": "acyl-CoA dehydrogenase family member 9",
+                                         "gene_symbol": "ACAD9", 
+                                         "alias": ["NPD002", "MGC14452"]},
+                                         "confidence_level": 2},
+                                         {"gene_data":
+                                         {"hgnc_id": 89, 
+                                         "gene_name": "medium-chain acyl-CoA dehydrogenase",
+                                         "gene_symbol": "ACADM", 
+                                         "alias": ["MCAD", "MCADH", "ACAD1"]},
+                                         "confidence_level": 3}
+                                        ],
+                                regions=[]
+                                )
+
+        # run the function under test
+        _insert_gene(test_panel, self.first_panel)
+
+        # check there is a panel entry - this was in the DB already
+        new_panels = Panel.objects.all()
+        assert len(new_panels) == 1
+
+        # check that the confidence < 3 gene was NOT added to the database
+        # only the gene with hgnc_id 89 should be in there
+        new_genes = Gene.objects.all()
+        assert len(new_genes) == 1
+        assert new_genes[0].hgnc_id == "89"
+
+        # check 1 panel-gene entry, which will be for the gene with HGNC 89 
+        new_panel_genes = PanelGene.objects.all()
+        assert len(new_panel_genes) == 1
+        assert new_panel_genes[0].panel == new_panels[0]
+        assert new_panel_genes[0].gene == new_genes[0]
+
+        # check 1 history entry
+        new_history = PanelGeneHistory.objects.all()
+        assert len(new_history) == 1
+        assert new_history[0].panel_gene == new_panel_genes[0]
+
+
+    def test_rejects_no_hgnc_id_gene(self):
+        """
+        Test that panel and genes are rejected if the gene doesn't have a HGNC ID
+        """
+        # make one of the test inputs for the function
+        test_panel = PanelClass(id="1141", 
+                                name="Acute rhabdomyolyosis", 
+                                version="1.15", 
+                                panel_source="PanelApp",
+                                genes=[{"gene_data": 
+                                        {"hgnc_id": None, 
+                                         "gene_name": "acyl-CoA dehydrogenase family member 9",
+                                         "gene_symbol": "ACAD9", 
+                                         "alias": ["NPD002", "MGC14452"]},
+                                         "confidence_level": 3},
+                                         {"gene_data": 
+                                         {"hgnc_id": 89,
+                                         "gene_name": "medium-chain acyl-CoA dehydrogenase",
+                                         "gene_symbol": "ACADM", 
+                                         "alias": ["MCAD", "MCADH", "ACAD1"]},
+                                         "confidence_level": 3}
+                                        ],
+                                regions=[]
+                                )
+
+        # run the function under test
+        _insert_gene(test_panel, self.first_panel)
+
+        # check there is a panel entry - this was in the DB already
+        new_panels = Panel.objects.all()
+        assert len(new_panels) == 1
+
+        # check that the no-HGNC ID gene was NOT added to the database
+        # only the gene with hgnc_id 89 should be in there
+        new_genes = Gene.objects.all()
+        assert len(new_genes) == 1
+        assert new_genes[0].hgnc_id == "89"
+
+        
+        # check 1 panel-gene entry, which will be for the gene with HGNC 89 
+        new_panel_genes = PanelGene.objects.all()
+        assert len(new_panel_genes) == 1
+        assert new_panel_genes[0].panel == new_panels[0]
+        assert new_panel_genes[0].gene == new_genes[0]
+
+        # check 1 history entry
+        new_history = PanelGeneHistory.objects.all()
+        assert len(new_history) == 1
+        assert new_history[0].panel_gene == new_panel_genes[0]
 
 
 class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
@@ -176,7 +277,7 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
         assert len(panel_genes) == 1
         assert panel_genes[0].id == self.first_link.id
 
-        # there shouldn't be a 
+        # the gene will be in the database, but it will be the old record
         new_panelgene = panel_genes[0]
         confidence = Confidence.objects.filter(confidence_level=3)
         assert len(confidence) == 1
@@ -189,8 +290,8 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
 
 
 
+    
 
-### Check confidence-catching, and HGNC ID catching
 
 ### Possible conditions:
 # Gene can be NOT IN THE DB ALREADY, or OLD
