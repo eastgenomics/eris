@@ -107,8 +107,4 @@ Unit tests are stored in the 'tests' directory, and can be run through 'manage.p
 ```
 python manage.py test tests
 ```
-To run with line coverage:
-```
-pytest --cov=panel_requests panel_requests/requests_app/tests.py
-```
 Database-dependent tests use Django's unit testing library (based on unittest) to make, populate and tear down a temporary database based on models.py. Note that the test database will be named by prepending 'test_' to the value of the NAMEs in DATABASES.

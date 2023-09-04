@@ -186,14 +186,12 @@ class TestInsertGene_NewGene(TestCase):
 class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
     """
     Tests for _insert_gene
-    Situation where a new panel version panel has been added, e.g. by PanelApp import,
-    and it is linked to genes that already have a link to the old version of the panel
-    (so the justification is the same)
+    Situation where a panel has already been previously added, e.g. by PanelApp import,
+    so that is is already present with the correct gene links
     """
     def setUp(self) -> None:
         """
-        Start condition: Make a Panel, and linked genes, which we will alter as part of testing
-        _insert_gene
+        Start condition: Make a Panel, and linked genes
         """
         self.first_panel = Panel.objects.create(
             external_id="1141", \
@@ -289,29 +287,116 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
         assert len(panel_gene_history) == 0
 
 
+class TestInsertGene_PreexistingGene_MultiplePanelVersions(TestCase):
+    """
+    Tests for _insert_gene
+    Situation where a new version panel has been added, e.g. by PanelApp import,
+    and it is linked to genes that already have a link to the old version of the panel
+    (so the justification is the same)
+    """
+    def setUp(self) -> None:
+        """
+        Start condition: Make two versions of a Panel, the old one already has a linked gene
+        The new version won't be linked until _insert_gene runs
+        """
+        self.first_panel = Panel.objects.create(
+            external_id="1141", \
+            panel_name="Acute rhabdomyolosis", \
+            panel_source="PanelApp", \
+            panel_version="1.15"
+        )
 
-    
+        self.second_panel = Panel.objects.create(
+            external_id="1141", \
+            panel_name="Acute rhabdomyolosis", \
+            panel_source="PanelApp", \
+            panel_version="1.16" # note different version
+        )
+
+        self.first_gene = Gene.objects.create(
+            hgnc_id="21497",
+            gene_symbol="ACAD9",
+            alias_symbols="NPD002,MGC14452"
+        )
+
+        self.confidence = Confidence.objects.create(
+            confidence_level=3
+        )
+
+        self.moi = ModeOfInheritance.objects.create(
+            mode_of_inheritance="test"
+        )
+
+        self.mop = ModeOfPathogenicity.objects.create(
+            mode_of_pathogenicity="test"
+        )
+
+        self.penetrance = Penetrance.objects.create(
+            penetrance="test"
+        )
+
+        self.first_link = PanelGene.objects.create(
+            panel=self.first_panel,
+            gene=self.first_gene,
+            confidence_id=self.confidence.id,
+            moi_id=self.moi.id,
+            mop_id=self.mop.id,
+            penetrance_id=self.penetrance.id,
+            justification="PanelApp"
+        )
 
 
-### Possible conditions:
-# Gene can be NOT IN THE DB ALREADY, or OLD
-# Gene can be ALREADY LINKED TO THE PANEL or NOT
+    def test_that_gene_in_db_linked_to_new_panel_version(self):
+        """
+        Test that when the PanelApp API call has a NEW VERSION of a panel,
+        and the old and new versions are both in the database, 
+         the gene is successfully linked to the new panel
+        """
+        # make one of the test inputs for the function        
+        test_panel = PanelClass(id="1141", 
+                                name="Acute rhabdomyolyosis", 
+                                version="1.16", #note version change 
+                                panel_source="PanelApp",
+                                genes=[{"gene_data": 
+                                        {"hgnc_id": 21497, 
+                                         "gene_name": "acyl-CoA dehydrogenase family member 9",
+                                         "gene_symbol": "ACAD9", 
+                                         "alias": ["NPD002", "MGC14452"]},
+                                         "confidence_level": 3,
+                                         "mode_of_inheritance": "test",
+                                         "mode_of_pathogenicity": "test",
+                                         "penetrance": "test"}
+                                        ],
+                                regions=[]
+                                )
+
+        # run the function under test
+        _insert_gene(test_panel, self.second_panel)
+
+        # check that the gene is in the database 
+        # and that it is unchanged from when we first added it
+        all_genes = Gene.objects.all()
+        assert len(all_genes) == 1
+        new_gene = all_genes[0]
+        assert new_gene.id == self.first_gene.id
+        assert new_gene.hgnc_id == "21497"
+        assert new_gene.gene_symbol == "ACAD9"
+        assert new_gene.alias_symbols == "NPD002,MGC14452"
+
+        # check that we now have 2 PanelGene links, one which we made ourselves in set-up,
+        # one which is made now as a panel version increases
+        panel_genes = PanelGene.objects.all()
+        assert len(panel_genes) == 2
+        assert panel_genes[0].id == self.first_link.id
+        assert panel_genes[1].panel == self.second_panel
 
 
-## Cases and expectations:
-## New panel, gene which isn't in Gene table yet
-    # Gene added to Gene table, and linked to PanelGene. PanelGeneHistory is updated.
-## New panel, gene which IS in Gene table (from some other panel?)
-## New panel, gene with CI level 2
-
-## Old panel, gene which isn't in Gene table yet
-## Old panel, gene which IS in Gene table
-## Old panel, gene with CI level 2
-
-
-# New panel, new confident gene, not linked yet
-# New panel, old confident gene, not linked yet
+        # History record should link the old gene to the new panel version
+        panel_gene_history = PanelGeneHistory.objects.all()
+        assert len(panel_gene_history) == 1
+        assert panel_gene_history[0].panel_gene == panel_genes[1]
 
 
 # Impossible combinations:
-# Old gene with NON-LEVEL-3 confidence
+# Old gene version in database with NON-LEVEL-3 confidence
+# Old gene version in database without a HGNC number
