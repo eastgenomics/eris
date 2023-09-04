@@ -235,10 +235,10 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
         )
 
 
-    def test_new_panel_and_genes_linked(self):
+    def test_that_unchanged_gene_is_ignored(self):
         """
-        Test that panel and genes are created,
-        then linked, and their history logged
+        Test that for a panel-gene combination that is already in the database, 
+        and not updated in the PanelApp API call, we don't change them
         """
         # make one of the test inputs for the function
         test_panel = PanelClass(id="1141", 
