@@ -81,6 +81,7 @@ Arguments:
 *g2refseq and markname are both exported table from HGMD database as csv format
 *hgnc dump can be obtained from https://www.genenames.org/download/custom/
 
+# Generating outputs
 ## Generate genepanel
 ```
 Make a HGNC dump txt file here: https://www.genenames.org/download/custom/
@@ -99,7 +100,6 @@ python manage.py generate genepanels --hgnc testing_files/hgnc_dump_23052023.txt
 ```
 python manage.py generate g2t --output <output pathway>
 ```
-
 
 # Running unit tests
 
