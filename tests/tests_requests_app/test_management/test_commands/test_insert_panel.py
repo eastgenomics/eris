@@ -6,13 +6,20 @@ from django_mock_queries.query import MockSet, MockModel
 
 from requests_app.models import \
     Panel, Gene, PanelGene, PanelGeneHistory, Confidence, ModeOfInheritance, \
-    Penetrance, ModeOfPathogenicity
+    Penetrance, ModeOfPathogenicity, Region, PanelRegion
 
 from requests_app.management.commands._insert_panel import \
-    _insert_gene
+    _insert_gene, _insert_regions
 
 from requests_app.management.commands.history import History
 from requests_app.management.commands.panelapp import PanelClass
+
+
+## _insert_genes
+
+# Impossible combinations:
+# Old gene version in database with NON-LEVEL-3 confidence
+# Old gene version in database without a HGNC number
 
 
 class TestInsertGene_NewGene(TestCase):
@@ -397,6 +404,91 @@ class TestInsertGene_PreexistingGene_MultiplePanelVersions(TestCase):
         assert panel_gene_history[0].panel_gene == panel_genes[1]
 
 
-# Impossible combinations:
-# Old gene version in database with NON-LEVEL-3 confidence
-# Old gene version in database without a HGNC number
+
+## _insert_regions
+class TestInsertRegions_NewRegion(TestCase):
+    def setUp(self) -> None:
+        """
+        Scenario: a new panel has been made in the database
+        No regions have been linked to it yet, at this point in the code
+        """
+        self.first_panel = Panel.objects.create(
+            external_id="162", \
+            panel_name="Severe microcephaly", \
+            panel_source="PanelApp", \
+            panel_version="4.31"
+        )
+
+
+    def test_new_panel_linked_to_acceptable_region(self):
+        # make one of the test inputs for the function        
+        test_panel = PanelClass(
+            id="162", 
+            name="Severe microcephaly", 
+            version="4.31",
+            panel_source="PanelApp",
+            genes=[],
+            regions=
+            [
+                {"gene_data": None,
+                "entity_type": "region",
+                "entity_name": "ISCA-37390-Loss",
+                "verbose_name": "5p15 terminal (Cri du chat syndrome) region Loss",
+                "confidence_level": "3",
+                "penetrance": None,
+                "mode_of_pathogenicity": None,
+                "haploinsufficiency_score": "3",
+                "triplosensitivity_score": "",
+                "required_overlap_percentage": 60,
+                "type_of_variants": "cnv_loss",
+                "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown",
+                "chromosome": "5",
+                "grch37_coordinates": None,
+                "grch38_coordinates": [
+                    37695,
+                    11347150
+                ],
+                },
+                {
+                "gene_data": None,
+                "entity_type": "region",
+                "entity_name": "ISCA-37406-Loss",
+                "verbose_name": "16p13.3 region (includes CREBBP) Loss",
+                "confidence_level": "3",
+                "penetrance": None,
+                "mode_of_pathogenicity": None,
+                "haploinsufficiency_score": "3",
+                "triplosensitivity_score": "",
+                "required_overlap_percentage": 60,
+                "type_of_variants": "cnv_loss",
+                "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown",
+                "chromosome": "16",
+                "grch37_coordinates": None,
+                "grch38_coordinates": [
+                    3725055,
+                    3880120
+                    ] 
+                }
+            ]
+        )
+
+        _insert_regions(test_panel, self.first_panel)
+
+        # check that both regions have been added to the database
+        regions = Region.objects.all()
+        assert len(regions) == 2
+        assert regions[0].name == "ISCA-37390-Loss"
+        assert regions[1].name == "ISCA-37406-Loss"
+
+
+        # check that both regions are linked to the correct panel
+        panel_regions = PanelRegion.objects.all()
+        assert len(panel_regions) == 2
+        first_panel_regions = panel_regions[0]
+        second_panel_regions = panel_regions[1]
+        assert first_panel_regions.panel == self.first_panel
+        assert first_panel_regions.region == regions[0]
+        assert second_panel_regions.panel == self.first_panel
+        assert second_panel_regions.region == regions[1]
+        
+
