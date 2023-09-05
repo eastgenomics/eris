@@ -241,9 +241,8 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
             region_id=region_instance.id,
             defaults={"justification": "PanelApp"},
         )
-        # TODO: backward deactivation for PanelRegion
-
-
+        # TODO: backward deactivation for PanelRegion, with history logging
+        
 @transaction.atomic
 def insert_data_into_db(panel: PanelClass, user: str) -> None:
     """
