@@ -168,6 +168,7 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
 
     # for each panel region, populate the region attribute models
     for single_region in panel.regions:
+        #TODO: should we skip confidence < 3?
         confidence_instance, _ = Confidence.objects.get_or_create(
             confidence_level=single_region.get("confidence_level"),
         )
@@ -242,7 +243,7 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
             defaults={"justification": "PanelApp"},
         )
         # TODO: backward deactivation for PanelRegion, with history logging
-        
+
 @transaction.atomic
 def insert_data_into_db(panel: PanelClass, user: str) -> None:
     """
