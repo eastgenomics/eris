@@ -13,7 +13,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import redirect
 
-from .forms import ClinicalIndicationForm, PanelForm
+from .forms import ClinicalIndicationForm, PanelForm, GeneForm
 from requests_app.management.commands.history import History
 from requests_app.management.commands.utils import parse_hgnc
 from .utils.utils import Genepanel
@@ -179,6 +179,12 @@ def clinical_indication(request, ci_id: int):
         .order_by("-pending")
     )
 
+    active_panel_ids = [
+        cip["panel_id"]
+        for cip in ci_panels
+        if cip["current"] == True and cip["pending"] == False
+    ]
+
     # converting version to readable format
     for cip in ci_panels:
         cip["td_version"] = normalize_version(cip["td_version"])
@@ -212,7 +218,9 @@ def clinical_indication(request, ci_id: int):
 
     # fetch panel-gene
     panel_genes: QuerySet[dict] = (
-        PanelGene.objects.filter(panel_id__in=[p.id for p in panels])
+        PanelGene.objects.filter(
+            panel_id__in=[p.id for p in panels if p.id in active_panel_ids]
+        )
         .order_by("panel_id")
         .values(
             "id",
@@ -355,7 +363,7 @@ def add_panel(request):
 
         genes = request.POST.getlist("genes")
 
-        form: bool = PanelForm(request.POST)
+        form = PanelForm(request.POST)
         # check form valid
         form_valid: bool = form.is_valid()
 
@@ -1202,13 +1210,12 @@ def gene(request, gene_id: int) -> None:
         "panel_id__pending",
     )
 
+    transcripts = Transcript.objects.filter(gene_id=gene_id)
+
     return render(
         request,
         "web/info/gene.html",
-        {
-            "gene": gene,
-            "panels": associated_panels,
-        },
+        {"gene": gene, "panels": associated_panels, "transcripts": transcripts},
     )
 
 
@@ -1248,9 +1255,9 @@ def genepanel(request):
         ci_panels[row["clinical_indication_id__r_code"]].append(row)
 
     # fetch all relevant genes for the relevant panels
-    for row in PanelGene.objects.filter(
-        panel_id__in=relevant_panels, pending=False
-    ).values("gene_id__hgnc_id", "gene_id", "panel_id"):
+    for row in PanelGene.objects.filter(panel_id__in=relevant_panels).values(
+        "gene_id__hgnc_id", "gene_id", "panel_id"
+    ):
         panel_genes[row["panel_id"]].append((row["gene_id__hgnc_id"], row["gene_id"]))
 
     list_of_genepanel: list[Genepanel] = []
@@ -1281,4 +1288,44 @@ def genepanel(request):
             Genepanel(r_code, ci_name, panel_name, panel_version, hgncs)
         )
 
+    list_of_genepanel = sorted(list_of_genepanel, key=lambda x: x.r_code)
+
     return render(request, "web/info/genepanel.html", {"genepanels": list_of_genepanel})
+
+
+def genes(request):
+    """
+    Page that display all genes present in database
+    POST request allows adding of custom gene into the database
+    """
+    genes = Gene.objects.all().order_by("hgnc_id")
+
+    if request.method == "POST":
+        # parse submitted form
+        form = GeneForm(request.POST)
+
+        if form.is_valid():
+            hgnc_id: str = request.POST.get("hgnc_id").strip()
+            gene_symbol: str = request.POST.get("gene_symbol").strip()
+
+            # if form valid, create gene
+            Gene.objects.create(
+                hgnc_id=hgnc_id.upper(),
+                gene_symbol=gene_symbol.upper(),
+            )
+
+        return render(
+            request,
+            "web/addition/add_gene.html",
+            {
+                "genes": genes,
+                "errors": form.errors if not form.is_valid() else None,
+                "success": hgnc_id if form.is_valid() else None,
+            },
+        )
+
+    return render(
+        request,
+        "web/addition/add_gene.html",
+        {"genes": genes},
+    )

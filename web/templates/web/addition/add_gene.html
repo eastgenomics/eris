@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <!-- error message -->
+    {% if errors %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {% for key, values in errors.items %}
+            {% for error in values %}
+            <strong>Beep!</strong> {{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button><br>
+            {% endfor %}
+        {% endfor %}
+    </div>
+    {% endif %}
+    <!-- end error message -->
+    <!-- success message -->
+    {% if success %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <strong>Success!</strong> Gene {{ success }} has been added into the database!.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+    <!-- end success message -->
+    <div class="row">
+        <div class="col-12">
+            <h3>Genes</h3>
+        </div>
+        <div class="col-4">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form method="POST" action="{% url 'genes' %}">
+                        {% csrf_token %}
+                        <div class="mb-1">
+                          <label class="form-label">HGNC ID</label>
+                          <input type="text" class="form-control" aria-describedby="hgncHelp" name="hgnc_id" required>
+                          <div id="hgncHelp" class="form-text">required.</div>
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label">Gene Symbol</label>
+                            <input type="text" class="form-control" aria-describedby="geneSymbolHelp" name="gene_symbol">
+                            <div id="geneSymbolHelp" class="form-text">optional.</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-8">
+            <table class="table table-bordered shadow">
+                <thead>
+                  <tr>
+                    <th scope="col">HGNC</th>
+                    <th scope="col">Gene Symbol</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for gene in genes %}
+                    <tr>
+                        <td><a href="{% url 'gene' gene.id %}">{{ gene.hgnc_id }}</a></td>
+                        {% if gene.gene_symbol %}
+                            <td><span class="badge text-bg-info">{{ gene.gene_symbol }}</span></td>
+                        {% else %}
+                            <td>-</td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
