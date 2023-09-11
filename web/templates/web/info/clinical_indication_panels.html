@@ -9,16 +9,16 @@
     </div>
     <div class="row">
         <div class="col">
-            <table class="table table-hover table-bordered shadow text-wrap text-break">
-                <thead>
+            <table class="table pt-3 table-striped" id="clinicalIndicationPanelTable">
+                <thead class="table-success">
                   <tr>
-                    <th scope="col">Clinical Indication</th>
-                    <th scope="col">Panel</th>
-                    <th class="col text-nowrap">PanelApp ID</th>
-                    <th class="col text-nowrap">TD Version</th>
-                    <th class="col text-nowrap">Config Source</th>
-                    <th class="col text-nowrap">Created</th>
-                    <th scope="col">Active</th>
+                    <th class="text-nowrap">Clinical Indication</th>
+                    <th class="text-nowrap">Panel</th>
+                    <th class="text-nowrap">PanelApp ID</th>
+                    <th class="text-nowrap">TD Version</th>
+                    <th class="text-nowrap">Config Source</th>
+                    <th class="text-nowrap">Created</th>
+                    <th class="text-nowrap">Active</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -50,4 +50,12 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block script %}
+<script>
+  $(document).ready(function () {
+    new DataTable('#clinicalIndicationPanelTable');
+  });
+</script>
 {% endblock %}

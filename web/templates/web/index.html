@@ -3,35 +3,69 @@
 {% block content %}
 <div class="container mb-5">
     <div class="row">
-        <div class="col-lg-6 col-sm-12">
+        <div class="col-12">
             <div class="d-flex justify-content-between mb-2">
                 <h3>Clinical Indications</h3>
                 <a class="btn btn-primary btn-sm m-2" href="{% url 'ci_add' %}" role="button">Add Clinical Indication</a>
             </div>
-            <ul class="list-group shadow">
-                {% for ci in cis %}
-                <a href="{% url 'clinical_indication' ci.id %}" class="list-group-item list-group-item-action text-break">
-                    <span class="badge bg-primary">{{ci.r_code }}</span> {{ci.name }} <br><span class="badge bg-secondary">{{ci.test_method }}</span>
-                </a>
-                {% endfor %}
-            </ul>
-
+            <table id="clinicalIndicationTable" class="table pt-2">
+                <thead class="table-success">
+                  <tr>
+                    <th>R Code</th>
+                    <th>Clinical Indication</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for ci in cis %}
+                    <tr>
+                        <td>{{ ci.r_code }}</td>
+                        <td><a href="{% url 'clinical_indication' ci.id %}">{{ ci.name }}</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        <div class="col-lg-6 col-sm-12">
+        <div class="col mt-3">
             <div class="d-flex justify-content-between mb-2">
                 <h3>Panels</h3>
                 <a class="btn btn-primary btn-sm m-2" href="{% url 'panel_add' %}" role="button">Add Panel</a>
             </div>
-            <ul class="list-group shadow">
-                {% for panel in panels %}
-                    {% if panel.external_id %}
-                    <a href="{% url 'panel' panel.id %}" class="list-group-item list-group-item-action text-break">{{ panel.panel_name }} <span class="badge bg-primary">{{ panel.external_id }}</span></a>
-                    {% else %}
-                    <a href="{% url 'panel' panel.id %}" class="list-group-item list-group-item-action text-break">{{ panel.panel_name }}</a>
-                    {% endif %}
-                {% endfor %}
-            </ul>
+            <table id="panelTable" class="table pt-2">
+                <thead class="table-success">
+                  <tr>
+                    <th>External ID</th>
+                    <th>Panel Name</th>
+                    <th>Panel Version</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for panel in panels %}
+                    <tr>
+                        {% if panel.external_id %}
+                            <td>{{ panel.external_id }}</td>
+                        {% else %}
+                            <td>None</td>
+                        {% endif %}
+                        <td><a href="{% url 'panel' panel.id %}">{{ panel.panel_name }}</a></td>
+                        {% if panel.panel_version %}
+                            <td>{{ panel.panel_version }}</td>
+                        {% else %}
+                            <td>1.0</td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block script %}
+<script>
+    $(document).ready(function () {
+        new DataTable('#clinicalIndicationTable');
+        new DataTable('#panelTable');
+    });
+</script>
 {% endblock %}
