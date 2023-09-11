@@ -241,111 +241,113 @@ class TestInsertGene_NewGene(TestCase):
         assert not errors, errors
 
 
-# class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
-#     """
-#     Tests for _insert_gene
-#     Situation where a panel has already been previously added, e.g. by PanelApp import,
-#     so that is is already present with the correct gene links
-#     """
-#     def setUp(self) -> None:
-#         """
-#         Start condition: Make a Panel, and linked genes
-#         """
-#         self.first_panel = Panel.objects.create(
-#             external_id="1141", 
-#             panel_name="Acute rhabdomyolosis", 
-#             panel_source="PanelApp", 
-#             panel_version="1.15"
-#         )
+class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
+    """
+    Tests for _insert_gene
+    Situation where a panel has already been previously added, e.g. by PanelApp import,
+    so that is is already present with the correct gene links
+    """
+    def setUp(self) -> None:
+        """
+        Start condition: Make a Panel, and linked genes
+        """
+        self.first_panel = Panel.objects.create(
+            external_id="1141", 
+            panel_name="Acute rhabdomyolosis", 
+            panel_source="PanelApp", 
+            panel_version="1.15"
+        )
 
-#         self.first_gene = Gene.objects.create(
-#             hgnc_id="21497",
-#             gene_symbol="ACAD9",
-#             alias_symbols="NPD002,MGC14452"
-#         )
+        self.first_gene = Gene.objects.create(
+            hgnc_id="21497",
+            gene_symbol="ACAD9",
+            alias_symbols="NPD002,MGC14452"
+        )
 
-#         self.confidence = Confidence.objects.create(
-#             confidence_level=3
-#         )
+        self.confidence = Confidence.objects.create(
+            confidence_level=3
+        )
 
-#         self.moi = ModeOfInheritance.objects.create(
-#             mode_of_inheritance="test"
-#         )
+        self.moi = ModeOfInheritance.objects.create(
+            mode_of_inheritance="test"
+        )
 
-#         self.mop = ModeOfPathogenicity.objects.create(
-#             mode_of_pathogenicity="test"
-#         )
+        self.mop = ModeOfPathogenicity.objects.create(
+            mode_of_pathogenicity="test"
+        )
 
-#         self.penetrance = Penetrance.objects.create(
-#             penetrance="test"
-#         )
+        self.penetrance = Penetrance.objects.create(
+            penetrance="test"
+        )
 
-#         self.first_link = PanelGene.objects.create(
-#             panel=self.first_panel,
-#             gene=self.first_gene,
-#             confidence_id=self.confidence.id,
-#             moi_id=self.moi.id,
-#             mop_id=self.mop.id,
-#             penetrance_id=self.penetrance.id,
-#             justification="PanelApp"
-#         )
+        self.first_link = PanelGene.objects.create(
+            panel=self.first_panel,
+            gene=self.first_gene,
+            confidence_id=self.confidence.id,
+            moi_id=self.moi.id,
+            mop_id=self.mop.id,
+            penetrance_id=self.penetrance.id,
+            justification="PanelApp"
+        )
 
 
-#     def test_that_unchanged_gene_is_ignored(self):
-#         """
-#         Test that for a panel-gene combination that is already in the database, 
-#         and not updated in the PanelApp API call, we don't change them
-#         """
-#         errors = []
+    def test_that_unchanged_gene_is_ignored(self):
+        """
+        Test that for a panel-gene combination that is already in the database, 
+        and not updated in the PanelApp API call, we don't change them
+        """
+        errors = []
 
-#         # make one of the test inputs for the function
-#         test_panel = PanelClass(id="1141", 
-#                                 name="Acute rhabdomyolyosis", 
-#                                 version="1.15", 
-#                                 panel_source="PanelApp",
-#                                 genes=[{"gene_data": 
-#                                         {"hgnc_id": 21497, 
-#                                          "gene_name": "acyl-CoA dehydrogenase family member 9",
-#                                          "gene_symbol": "ACAD9", 
-#                                          "alias": ["NPD002", "MGC14452"]},
-#                                          "confidence_level": 3,
-#                                          "mode_of_inheritance": "test",
-#                                          "mode_of_pathogenicity": "test",
-#                                          "penetrance": "test"}
-#                                         ],
-#                                 regions=[]
-#                                 )
+        # make one of the test inputs for the function
+        test_panel = PanelClass(id="1141", 
+                                name="Acute rhabdomyolyosis", 
+                                version="1.15", 
+                                panel_source="PanelApp",
+                                genes=[{"gene_data": 
+                                        {"hgnc_id": 21497, 
+                                         "gene_name": "acyl-CoA dehydrogenase family member 9",
+                                         "gene_symbol": "ACAD9", 
+                                         "alias": ["NPD002", "MGC14452"]},
+                                         "confidence_level": 3,
+                                         "mode_of_inheritance": "test",
+                                         "mode_of_pathogenicity": "test",
+                                         "penetrance": "test"}
+                                        ],
+                                regions=[]
+                                )
 
-#         # run the function under test
-#         _insert_gene(test_panel, self.first_panel)
+        # run the function under test
+        _insert_gene(test_panel, self.first_panel)
 
-#         # check that the gene is in the database 
-#         # and that it is unchanged from when we first added it
-#         new_genes = Gene.objects.all()
-#         if not len(new_genes) == 1:
-#             errors.append(f"Number of new genes in the datatable does not equal 1: {len(new_genes)}")
-#         new_gene = new_genes[0]
-#         assert new_gene.id == self.first_gene.id
-#         assert new_gene.hgnc_id == "21497"
-#         assert new_gene.gene_symbol == "ACAD9"
-#         assert new_gene.alias_symbols == "NPD002,MGC14452"
+        # check that the gene is in the database 
+        # and that it is unchanged from when we first added it
+        new_genes = Gene.objects.all()
+        errors += len_check_wrapper(new_genes, "genes", 1)
+        new_gene = new_genes[0]
+        errors += value_check_wrapper(new_gene.id, "gene ID", self.first_gene.id)
+        errors += value_check_wrapper(new_gene.hgnc_id, "gene HGNC ID", "21497")
+        errors += value_check_wrapper(new_gene.gene_symbol, "gene symbol", "ACAD9")
+        errors += value_check_wrapper(new_gene. alias_symbols, "gene alias symbols", "NPD002,MGC14452")
 
-#         # check that we still have just 1 PanelGene link, which should be the one
-#         # we made ourselves in set-up 
-#         panel_genes = PanelGene.objects.all()
-#         assert len(panel_genes) == 1
-#         assert panel_genes[0].id == self.first_link.id
+        # check that we still have just 1 PanelGene link, which should be the one
+        # we made ourselves in set-up 
+        panel_genes = PanelGene.objects.all()
+        errors += len_check_wrapper(panel_genes, "panel-genes", 1)
+        errors += value_check_wrapper(panel_genes[0].id, "panel-genes ID", self.first_link.id)
 
-#         # the gene will be in the database, but it will be the old record
-#         new_panelgene = panel_genes[0]
-#         confidence = Confidence.objects.filter(confidence_level=3)
-#         assert len(confidence) == 1
-#         assert new_panelgene.confidence_id == confidence[0].id
+        # the gene will be in the database, but it will be the old record
+        new_panelgene = panel_genes[0]
+        confidence = Confidence.objects.filter(confidence_level=3)
+        errors += len_check_wrapper(confidence, "confidence", 1)
+        errors += value_check_wrapper(new_panelgene.confidence_id, "panel-gene confidence ID", confidence[0].id)
 
-#         # there should not have been a history record made,
-#         # because there was not a change to the gene-panel link in this upload
-#         panel_gene_history = PanelGeneHistory.objects.all()
-#         assert len(panel_gene_history) == 0
+        # there should not have been a history record made,
+        # because there was not a change to the gene-panel link in this upload
+        panel_gene_history = PanelGeneHistory.objects.all()
+        errors += len_check_wrapper(panel_gene_history, "panel-gene history", 0)
+
+        errors = "".join(errors)
+        assert not errors, errors
 
 
 # class TestInsertGene_PreexistingGene_MultiplePanelVersions(TestCase):
