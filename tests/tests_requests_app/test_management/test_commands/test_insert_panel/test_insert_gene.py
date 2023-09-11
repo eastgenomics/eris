@@ -171,6 +171,8 @@ class TestInsertGene_NewGene(TestCase):
         errors += len_check_wrapper(new_panel_genes, "panel-genes", 1)
         if not new_panel_genes[0].panel == new_panels[0]:
             errors.append(f"PanelGene entry does not match our expected Panel: {new_panel_genes.panel}")
+
+            
         if not new_panel_genes[0].gene == new_genes[0]:
             errors.append(f"PanelGene entry does not match our expected Gene: {new_panel_genes.gene}")
 
@@ -184,56 +186,59 @@ class TestInsertGene_NewGene(TestCase):
         assert not errors, errors
 
 
-#     def test_rejects_no_hgnc_id_gene(self):
-#         """
-#         Test that panel and genes are rejected if the gene doesn't have a HGNC ID
-#         """
-#         # make one of the test inputs for the function
-#         test_panel = PanelClass(id="1141", 
-#                                 name="Acute rhabdomyolyosis", 
-#                                 version="1.15", 
-#                                 panel_source="PanelApp",
-#                                 genes=[{"gene_data": 
-#                                         {"hgnc_id": None, 
-#                                          "gene_name": "acyl-CoA dehydrogenase family member 9",
-#                                          "gene_symbol": "ACAD9", 
-#                                          "alias": ["NPD002", "MGC14452"]},
-#                                          "confidence_level": 3},
-#                                          {"gene_data": 
-#                                          {"hgnc_id": 89,
-#                                          "gene_name": "medium-chain acyl-CoA dehydrogenase",
-#                                          "gene_symbol": "ACADM", 
-#                                          "alias": ["MCAD", "MCADH", "ACAD1"]},
-#                                          "confidence_level": 3}
-#                                         ],
-#                                 regions=[]
-#                                 )
+    def test_rejects_no_hgnc_id_gene(self):
+        """
+        Test that panel and genes are rejected if the gene doesn't have a HGNC ID
+        """
+        errors = []
+        # make one of the test inputs for the function
+        test_panel = PanelClass(id="1141", 
+                                name="Acute rhabdomyolyosis", 
+                                version="1.15", 
+                                panel_source="PanelApp",
+                                genes=[{"gene_data": 
+                                        {"hgnc_id": None, 
+                                         "gene_name": "acyl-CoA dehydrogenase family member 9",
+                                         "gene_symbol": "ACAD9", 
+                                         "alias": ["NPD002", "MGC14452"]},
+                                         "confidence_level": 3},
+                                         {"gene_data": 
+                                         {"hgnc_id": 89,
+                                         "gene_name": "medium-chain acyl-CoA dehydrogenase",
+                                         "gene_symbol": "ACADM", 
+                                         "alias": ["MCAD", "MCADH", "ACAD1"]},
+                                         "confidence_level": 3}
+                                        ],
+                                regions=[]
+                                )
 
-#         # run the function under test
-#         _insert_gene(test_panel, self.first_panel)
+        # run the function under test
+        _insert_gene(test_panel, self.first_panel)
 
-#         # check there is a panel entry - this was in the DB already
-#         new_panels = Panel.objects.all()
-#         self.len_check_wrapper(new_panels, "panel", 1)
+        # check there is a panel entry - this was in the DB already
+        new_panels = Panel.objects.all()
+        errors += len_check_wrapper(new_panels, "panel", 1)
 
-#         # check that the no-HGNC ID gene was NOT added to the database
-#         # only the gene with hgnc_id 89 should be in there
-#         new_genes = Gene.objects.all()
-#         self.len_check_wrapper(new_genes, "genes", 1)
-#         assert new_genes[0].hgnc_id == "89"
+        # check that the no-HGNC ID gene was NOT added to the database
+        # only the gene with hgnc_id 89 should be in there
+        new_genes = Gene.objects.all()
+        errors += len_check_wrapper(new_genes, "genes", 1)
+        errors += value_check_wrapper(new_genes[0].hgnc_id, "gene HGNC ID", "89")
         
-#         # check 1 panel-gene entry, which will be for the gene with HGNC 89 
-#         new_panel_genes = PanelGene.objects.all()
-#         self.len_check_wrapper(new_panel_genes, "panel-genes", 1)
-#         assert new_panel_genes[0].panel == new_panels[0]
-#         assert new_panel_genes[0].gene == new_genes[0]
+        # check 1 panel-gene entry, which will be for the gene with HGNC 89 
+        new_panel_genes = PanelGene.objects.all()
+        errors += len_check_wrapper(new_panel_genes, "panel-genes", 1)
+        errors += value_check_wrapper(new_panel_genes[0].panel, "panel-gene link panel", new_panels[0])
+        errors += value_check_wrapper(new_panel_genes[0].gene, "panel-gene link panel", new_genes[0])
 
-#         # check 1 history entry
-#         new_history = PanelGeneHistory.objects.all()
-#         self.len_check_wrapper(new_history, "panel-gene history", 1)
-#         assert new_history[0].panel_gene == new_panel_genes[0]
+        # check 1 history entry
+        new_history = PanelGeneHistory.objects.all()
+        errors += len_check_wrapper(new_history, "panel-gene history", 1)
+        errors += value_check_wrapper(new_history[0].panel_gene, "panel-gene history's panel gene link", 
+                                      new_panel_genes[0])
 
-#         assert not self.errors, self.errors
+        errors = "".join(errors)
+        assert not errors, errors
 
 
 # class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
