@@ -1294,6 +1294,10 @@ def genepanel(request):
 
 
 def genes(request):
+    """
+    Page that display all genes present in database
+    POST request allows adding of custom gene into the database
+    """
     genes = Gene.objects.all().order_by("hgnc_id")
 
     if request.method == "POST":
