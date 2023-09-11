@@ -239,7 +239,7 @@ class TestInsertRegions_PreexistingRegion(TestCase):
         assert panel_regions[1].panel == self.first_panel
 
 
-class TestInsertRegions_PreexistinLink(TestCase):
+class TestInsertRegions_PreexistingLink(TestCase):
     def setUp(self) -> None:
         """
         Scenario: a panel has been made in the database
