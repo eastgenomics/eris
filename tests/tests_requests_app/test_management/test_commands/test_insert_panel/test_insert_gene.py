@@ -350,112 +350,115 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
         assert not errors, errors
 
 
-# class TestInsertGene_PreexistingGene_MultiplePanelVersions(TestCase):
-#     """
-#     Tests for _insert_gene
-#     Situation where a new version panel has been added, e.g. by PanelApp import,
-#     and it is linked to genes that already have a link to the old version of the panel
-#     (so the justification is the same)
-#     """
-#     def setUp(self) -> None:
-#         """
-#         Start condition: Make two versions of a Panel, the old one already has a linked gene
-#         The new version won't be linked until _insert_gene runs
-#         """
-#         self.first_panel = Panel.objects.create(
-#             external_id="1141", 
-#             panel_name="Acute rhabdomyolosis", 
-#             panel_source="PanelApp", 
-#             panel_version="1.15"
-#         )
+class TestInsertGene_PreexistingGene_MultiplePanelVersions(TestCase):
+    """
+    Tests for _insert_gene
+    Situation where a new version panel has been added, e.g. by PanelApp import,
+    and it is linked to genes that already have a link to the old version of the panel
+    (so the justification is the same)
+    """
+    def setUp(self) -> None:
+        """
+        Start condition: Make two versions of a Panel, the old one already has a linked gene
+        The new version won't be linked until _insert_gene runs
+        """
+        self.first_panel = Panel.objects.create(
+            external_id="1141", 
+            panel_name="Acute rhabdomyolosis", 
+            panel_source="PanelApp", 
+            panel_version="1.15"
+        )
 
-#         self.second_panel = Panel.objects.create(
-#             external_id="1141", 
-#             panel_name="Acute rhabdomyolosis", 
-#             panel_source="PanelApp", 
-#             panel_version="1.16" # note different version
-#         )
+        self.second_panel = Panel.objects.create(
+            external_id="1141", 
+            panel_name="Acute rhabdomyolosis", 
+            panel_source="PanelApp", 
+            panel_version="1.16" # note different version
+        )
 
-#         self.first_gene = Gene.objects.create(
-#             hgnc_id="21497",
-#             gene_symbol="ACAD9",
-#             alias_symbols="NPD002,MGC14452"
-#         )
+        self.first_gene = Gene.objects.create(
+            hgnc_id="21497",
+            gene_symbol="ACAD9",
+            alias_symbols="NPD002,MGC14452"
+        )
 
-#         self.confidence = Confidence.objects.create(
-#             confidence_level=3
-#         )
+        self.confidence = Confidence.objects.create(
+            confidence_level=3
+        )
 
-#         self.moi = ModeOfInheritance.objects.create(
-#             mode_of_inheritance="test"
-#         )
+        self.moi = ModeOfInheritance.objects.create(
+            mode_of_inheritance="test"
+        )
 
-#         self.mop = ModeOfPathogenicity.objects.create(
-#             mode_of_pathogenicity="test"
-#         )
+        self.mop = ModeOfPathogenicity.objects.create(
+            mode_of_pathogenicity="test"
+        )
 
-#         self.penetrance = Penetrance.objects.create(
-#             penetrance="test"
-#         )
+        self.penetrance = Penetrance.objects.create(
+            penetrance="test"
+        )
 
-#         self.first_link = PanelGene.objects.create(
-#             panel=self.first_panel,
-#             gene=self.first_gene,
-#             confidence_id=self.confidence.id,
-#             moi_id=self.moi.id,
-#             mop_id=self.mop.id,
-#             penetrance_id=self.penetrance.id,
-#             justification="PanelApp"
-#         )
-
-
-#     def test_that_gene_in_db_linked_to_new_panel_version(self):
-#         """
-#         Test that when the PanelApp API call has a NEW VERSION of a panel,
-#         and the old and new versions are both in the database, 
-#          the gene is successfully linked to the new panel
-#         """
-#         # make one of the test inputs for the function        
-#         test_panel = PanelClass(id="1141", 
-#                                 name="Acute rhabdomyolyosis", 
-#                                 version="1.16", #note version change 
-#                                 panel_source="PanelApp",
-#                                 genes=[{"gene_data": 
-#                                         {"hgnc_id": 21497, 
-#                                          "gene_name": "acyl-CoA dehydrogenase family member 9",
-#                                          "gene_symbol": "ACAD9", 
-#                                          "alias": ["NPD002", "MGC14452"]},
-#                                          "confidence_level": 3,
-#                                          "mode_of_inheritance": "test",
-#                                          "mode_of_pathogenicity": "test",
-#                                          "penetrance": "test"}
-#                                         ],
-#                                 regions=[]
-#                                 )
-
-#         # run the function under test
-#         _insert_gene(test_panel, self.second_panel)
-
-#         # check that the gene is in the database 
-#         # and that it is unchanged from when we first added it
-#         all_genes = Gene.objects.all()
-#         assert len(all_genes) == 1
-#         new_gene = all_genes[0]
-#         assert new_gene.id == self.first_gene.id
-#         assert new_gene.hgnc_id == "21497"
-#         assert new_gene.gene_symbol == "ACAD9"
-#         assert new_gene.alias_symbols == "NPD002,MGC14452"
-
-#         # check that we now have 2 PanelGene links, one which we made ourselves in set-up,
-#         # one which is made now as a panel version increases
-#         panel_genes = PanelGene.objects.all()
-#         assert len(panel_genes) == 2
-#         assert panel_genes[0].id == self.first_link.id
-#         assert panel_genes[1].panel == self.second_panel
+        self.first_link = PanelGene.objects.create(
+            panel=self.first_panel,
+            gene=self.first_gene,
+            confidence_id=self.confidence.id,
+            moi_id=self.moi.id,
+            mop_id=self.mop.id,
+            penetrance_id=self.penetrance.id,
+            justification="PanelApp"
+        )
 
 
-#         # History record should link the old gene to the new panel version
-#         panel_gene_history = PanelGeneHistory.objects.all()
-#         assert len(panel_gene_history) == 1
-#         assert panel_gene_history[0].panel_gene == panel_genes[1]
+    def test_that_gene_in_db_linked_to_new_panel_version(self):
+        """
+        Test that when the PanelApp API call has a NEW VERSION of a panel,
+        and the old and new versions are both in the database, 
+         the gene is successfully linked to the new panel
+        """
+        # make one of the test inputs for the function
+        errors = []
 
+        test_panel = PanelClass(id="1141", 
+                                name="Acute rhabdomyolyosis", 
+                                version="1.16", #note version change 
+                                panel_source="PanelApp",
+                                genes=[{"gene_data": 
+                                        {"hgnc_id": 21497, 
+                                         "gene_name": "acyl-CoA dehydrogenase family member 9",
+                                         "gene_symbol": "ACAD9", 
+                                         "alias": ["NPD002", "MGC14452"]},
+                                         "confidence_level": 3,
+                                         "mode_of_inheritance": "test",
+                                         "mode_of_pathogenicity": "test",
+                                         "penetrance": "test"}
+                                        ],
+                                regions=[]
+                                )
+
+        # run the function under test
+        _insert_gene(test_panel, self.second_panel)
+
+        # check that the gene is in the database 
+        # and that it is unchanged from when we first added it
+        all_genes = Gene.objects.all()
+        errors += len_check_wrapper(all_genes, "genes", 1)
+        new_gene = all_genes[0]
+        errors += value_check_wrapper(new_gene.id, "gene ID", self.first_gene.id)
+        errors += value_check_wrapper(new_gene.hgnc_id, "gene HGNC ID", "21497")
+        errors += value_check_wrapper(new_gene.gene_symbol, "gene symbol", "ACAD9")
+        errors += value_check_wrapper(new_gene.alias_symbols, "alias symbols", "NPD002,MGC14452")
+
+        # check that we now have 2 PanelGene links, one which we made ourselves in set-up,
+        # one which is made now as a panel version increases
+        panel_genes = PanelGene.objects.all()
+        errors += len_check_wrapper(panel_genes, "panel-genes", 2)
+        errors += value_check_wrapper(panel_genes[0].id, "panel-gene ID", self.first_link.id)
+        errors += value_check_wrapper(panel_genes[1].panel, "panel-gene panel", self.second_panel)
+
+        # History record should link the old gene to the new panel version
+        panel_gene_history = PanelGeneHistory.objects.all()
+        errors += len_check_wrapper(panel_gene_history, "panel-gene history", 1)
+        errors += value_check_wrapper(panel_gene_history[0].panel_gene, "panel-gene history link", panel_genes[1])
+
+        errors = "".join(errors)
+        assert not errors, errors
