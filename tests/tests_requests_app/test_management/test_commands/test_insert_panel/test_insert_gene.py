@@ -134,24 +134,31 @@ class TestInsertGene_NewGene(TestCase):
 
         # check there is a panel entry - this was in the DB already
         new_panels = Panel.objects.all()
-        assert len(new_panels) == 1
-
+        if not len(new_panels) == 1:
+            errors.append("More than 1 new panel is in the datatable")
         # check that the confidence < 3 gene was NOT added to the database
         # only the gene with hgnc_id 89 should be in there
         new_genes = Gene.objects.all()
-        assert len(new_genes) == 1
-        assert new_genes[0].hgnc_id == "89"
+        if not len(new_genes) == 1:
+            errors.append("More than 1 new gene is in the datatable")
+        if not new_genes[0].hgnc_id == "89":
+            errors.append(f"HGNC ID of new gene isn't the expected value: {new_genes[0].hgnc_id}")
 
         # check 1 panel-gene entry, which will be for the gene with HGNC 89 
         new_panel_genes = PanelGene.objects.all()
-        assert len(new_panel_genes) == 1
-        assert new_panel_genes[0].panel == new_panels[0]
-        assert new_panel_genes[0].gene == new_genes[0]
+        if not len(new_panel_genes) == 1:
+            errors.append(f"Number of PanelGene entries does not equal 1: {len(new_panel_genes)}")
+        if not new_panel_genes[0].panel == new_panels[0]:
+            errors.append(f"PanelGene entry does not match our expected Panel: {new_panel_genes.panel}")
+        if not new_panel_genes[0].gene == new_genes[0]:
+            errors.append(f"PanelGene entry does not match our expected Gene: {new_panel_genes.gene}")
 
         # check 1 history entry
         new_history = PanelGeneHistory.objects.all()
-        assert len(new_history) == 1
-        assert new_history[0].panel_gene == new_panel_genes[0]
+        if not len(new_history) == 1:
+            errors.append(f"Number of PanelGeneHistory entries does not equal 1: {len(new_history)}")
+        if not new_history[0].panel_gene == new_panel_genes[0]:
+            errors.append(f"History entry does not match our expected PanelGene: {new_history[0].panel_gene}")
 
         assert not errors, errors
 
