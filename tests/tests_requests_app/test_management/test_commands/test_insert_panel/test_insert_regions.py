@@ -11,7 +11,7 @@ from requests_app.management.commands._insert_panel import \
     _insert_regions
 
 from requests_app.management.commands.panelapp import PanelClass
-
+from .test_insert_gene import len_check_wrapper, value_check_wrapper
 
 ## _insert_regions
 class TestInsertRegions_NewRegion(TestCase):
@@ -29,6 +29,8 @@ class TestInsertRegions_NewRegion(TestCase):
 
 
     def test_new_panel_linked_to_acceptable_region(self):
+        errors = []
+
         # make one of the test inputs for the function        
         test_panel = PanelClass(
             id="162", 
@@ -84,21 +86,24 @@ class TestInsertRegions_NewRegion(TestCase):
 
         # check that both regions have been added to the database
         regions = Region.objects.all()
-        assert len(regions) == 2
-        assert regions[0].name == "ISCA-37390-Loss"
-        assert regions[1].name == "ISCA-37406-Loss"
+        errors += len_check_wrapper(regions, "regions", 2)
+        errors += value_check_wrapper(regions[0].name, "region name", "ISCA-37390-Loss")
+        errors += value_check_wrapper(regions[1].name, "region name", "ISCA-37406-Loss")
 
 
         # check that both regions are linked to the correct panel
         panel_regions = PanelRegion.objects.all()
-        assert len(panel_regions) == 2
+        errors += len_check_wrapper(panel_regions, "panel regions", 2)
         first_panel_regions = panel_regions[0]
         second_panel_regions = panel_regions[1]
-        assert first_panel_regions.panel == self.first_panel
-        assert first_panel_regions.region == regions[0]
-        assert second_panel_regions.panel == self.first_panel
-        assert second_panel_regions.region == regions[1]
-        
+
+        errors += value_check_wrapper(first_panel_regions.panel, "first panel-region panel", self.first_panel)
+        errors += value_check_wrapper(first_panel_regions.region, "first panel-region region", regions[0])
+        errors += value_check_wrapper(second_panel_regions.panel, "second panel-region panel", self.first_panel)
+        errors += value_check_wrapper(second_panel_regions.region, "second panel-region region", regions[1])
+
+        errors = "".join(errors)
+        assert not errors, errors
 
 class TestInsertRegions_PreexistingRegion(TestCase):
     def setUp(self) -> None:
