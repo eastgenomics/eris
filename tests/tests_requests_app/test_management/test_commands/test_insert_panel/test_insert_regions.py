@@ -326,6 +326,9 @@ class TestInsertRegions_PreexistingLink(TestCase):
 
 
     def test_pre_existing_panel_region_link(self):
+
+        errors = []
+
         # make one of the test inputs for the function        
         test_panel = PanelClass(
             id="162", 
@@ -384,16 +387,20 @@ class TestInsertRegions_PreexistingLink(TestCase):
         # and that the region which was already in the database isn't duplicated
         regions = Region.objects.all()
 
-        assert len(regions) == 2 
-
-        assert regions[0].name == self.first_region.name # the pre-populated value will show first
-        assert regions[1].name == "ISCA-37390-Loss"
+        errors += len_check_wrapper(regions, "regions", 2)
+        errors += value_check_wrapper(regions[0].name, "name of first region",
+                                       self.first_region.name) # the pre-populated value will show first
+        errors += value_check_wrapper(regions[1].name, "name of second region",
+                                      "ISCA-37390-Loss")
 
 
         # check that both regions are linked to the correct panel
         # the first link in PanelRegion will be the one we made in set-up
         panel_regions = PanelRegion.objects.all()
-        assert len(panel_regions) == 2
-        assert panel_regions[0] == self.first_panel_region_link
-        assert panel_regions[1].panel == self.first_panel
+        errors += len_check_wrapper(panel_regions, "panel-regions", 2)
+        errors += value_check_wrapper(panel_regions[0], "first panel-region", self.first_panel_region_link)
+        errors += value_check_wrapper(panel_regions[1].panel, "second panel-region's panel", 
+                                      self.first_panel)
 
+        errors = "".join(errors)
+        assert not errors, errors
