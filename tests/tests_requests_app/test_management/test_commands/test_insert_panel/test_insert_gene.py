@@ -32,9 +32,9 @@ class TestInsertGene_NewGene(TestCase):
         _insert_gene
         """
         self.first_panel = Panel.objects.create(
-            external_id="1141", \
-            panel_name="Acute rhabdomyolosis", \
-            panel_source="PanelApp", \
+            external_id="1141", 
+            panel_name="Acute rhabdomyolosis", 
+            panel_source="PanelApp", 
             panel_version="1.15"
         )
 
@@ -199,9 +199,9 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
         Start condition: Make a Panel, and linked genes
         """
         self.first_panel = Panel.objects.create(
-            external_id="1141", \
-            panel_name="Acute rhabdomyolosis", \
-            panel_source="PanelApp", \
+            external_id="1141", 
+            panel_name="Acute rhabdomyolosis", 
+            panel_source="PanelApp", 
             panel_version="1.15"
         )
 
@@ -305,16 +305,16 @@ class TestInsertGene_PreexistingGene_MultiplePanelVersions(TestCase):
         The new version won't be linked until _insert_gene runs
         """
         self.first_panel = Panel.objects.create(
-            external_id="1141", \
-            panel_name="Acute rhabdomyolosis", \
-            panel_source="PanelApp", \
+            external_id="1141", 
+            panel_name="Acute rhabdomyolosis", 
+            panel_source="PanelApp", 
             panel_version="1.15"
         )
 
         self.second_panel = Panel.objects.create(
-            external_id="1141", \
-            panel_name="Acute rhabdomyolosis", \
-            panel_source="PanelApp", \
+            external_id="1141", 
+            panel_name="Acute rhabdomyolosis", 
+            panel_source="PanelApp", 
             panel_version="1.16" # note different version
         )
 
