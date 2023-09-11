@@ -44,6 +44,8 @@ class TestInsertGene_NewGene(TestCase):
         Test that panel and genes are created,
         then linked, and their history logged
         """
+        errors = []
+
         # make one of the test inputs for the function
         test_panel = PanelClass(id="1141", 
                                 name="Acute rhabdomyolyosis", 
@@ -64,33 +66,48 @@ class TestInsertGene_NewGene(TestCase):
 
         # check that the gene was added to the database
         new_genes = Gene.objects.all()
-        assert len(new_genes) == 1
+        if not len(new_genes) == 1:
+            errors.append("More than 1 new gene is in the datatable")
         new_gene = new_genes[0]
-        assert new_gene.hgnc_id == "21497"
-        assert new_gene.gene_symbol == "ACAD9"
-        assert new_gene.alias_symbols == "NPD002,MGC14452"
+        if not new_gene.hgnc_id == "21497":
+            errors.append(f"Incorrect hgnc_id in Gene data table result, returned {new_gene.hgnc_id}")
+        if not new_gene.gene_symbol == "ACAD9":
+            errors.append(f"Incorrect gene symbol in Gene data table result, returned {new_gene.gene_symbol}")
+        if not new_gene.alias_symbols == "NPD002,MGC14452":
+            errors.append(f"Incorrect gene aliases in Gene data table result, returned {new_gene.alias_symbols}")
 
         # check that the gene was linked to the panel
         # with the correct confidence level
         panel_genes = PanelGene.objects.filter(panel=self.first_panel.id, gene=new_gene.id)
-        assert len(panel_genes) == 1
+        if not len(panel_genes) == 1:
+            errors.append("More than 1 new gene-panel link is in the datatable")
         new_panelgene = panel_genes[0]
         confidence = Confidence.objects.filter(confidence_level=3)
-        assert len(confidence) == 1
-        assert new_panelgene.confidence_id == confidence[0].id
+        if not len(confidence) == 1:
+            errors.append("More than 1 new Confidence object is in the datatable")
+        if not new_panelgene.confidence_id == confidence[0].id:
+            errors.append("The Confidence of the panel-gene link does not match the Confidence in the data table")
 
         # check a history record was made for a NEW link
         panel_gene_history = PanelGeneHistory.objects.filter(panel_gene=new_panelgene.id)
-        assert len(panel_gene_history) == 1
+        if not len(panel_gene_history) == 1:
+            errors.append("More than 1 new gene-panel-history entry is in the datatable")
         new_history = panel_gene_history[0]
-        assert new_history.note == History.panel_gene_created()
-        assert new_history.user == "PanelApp"
+        if not new_history.note == History.panel_gene_created():
+            errors.append(f"The History entry from the datatable, "
+                          f"does not have a 'panel gene created' note: {new_history.note}")
+        if not new_history.user == "PanelApp":
+            errors.append(f"The History entry from the datatable, "
+                          f"does not have the user set as PanelApp: {new_history.user}")
+        assert not errors, errors
 
 
     def test_reject_low_confidence_gene(self):
         """
         Test that panel and genes are rejected if the confidence is too low
         """
+        errors = []
+
         # make one of the test inputs for the function
         test_panel = PanelClass(id="1141", 
                                 name="Acute rhabdomyolyosis", 
@@ -135,6 +152,8 @@ class TestInsertGene_NewGene(TestCase):
         new_history = PanelGeneHistory.objects.all()
         assert len(new_history) == 1
         assert new_history[0].panel_gene == new_panel_genes[0]
+
+        assert not errors, errors
 
 
     def test_rejects_no_hgnc_id_gene(self):
