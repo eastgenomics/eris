@@ -46,6 +46,10 @@ def index(request):
     # fetch all panels
     all_panels: list[dict] = Panel.objects.order_by("panel_name").all()
 
+    # normalize panel version
+    for panel in all_panels:
+        panel.panel_version = normalize_version(panel.panel_version)
+
     return render(
         request,
         "web/index.html",
@@ -334,28 +338,17 @@ def add_panel(request):
     """
     Add panel page
     """
+    genes = Gene.objects.all().order_by("hgnc_id")
+
     if request.method == "GET":
-        gene_collections = collections.defaultdict(list)
-
-        for gene in Gene.objects.all().order_by("hgnc_id"):
-            initial_hgnc = gene.hgnc_id.lstrip("HGNC:")
-
-            gene_collections[initial_hgnc[0]].append(gene)
-
-        gene_collections.default_factory = (
-            None  # allows defaultdict to display in frontend
-        )
-
-        return render(
-            request, "web/addition/add_panel.html", {"genes": gene_collections}
-        )
+        return render(request, "web/addition/add_panel.html", {"genes": genes})
     else:  # POST
         # form submission
         external_id: str = request.POST.get("external_id", "")
         panel_name: str = request.POST.get("panel_name", "")
         panel_version: str = request.POST.get("panel_version", "")
 
-        genes = request.POST.getlist("genes")
+        selected_genes = request.POST.getlist("genes")
 
         form = PanelForm(request.POST)
         # check form valid
@@ -379,7 +372,7 @@ def add_panel(request):
             )
             penetrance, _ = Penetrance.objects.get_or_create(penetrance=None)
 
-            for gene_id in genes:
+            for gene_id in selected_genes:
                 pg_instance, pg_created = PanelGene.objects.get_or_create(
                     panel_id=panel.id,
                     gene_id=gene_id,
@@ -398,13 +391,17 @@ def add_panel(request):
                         note=History.panel_gene_created(),
                         user="online",
                     )
+
+            # success, clear form input
+            panel_name = ""
+            panel_version = ""
+            external_id = ""
         else:
             # if invalid, fetch panel from db
             try:
                 panel = Panel.objects.get(panel_name__iexact=panel_name)
             except Panel.DoesNotExist:
                 pass
-                # TODO: handle this error
 
         return render(
             request,
@@ -416,6 +413,7 @@ def add_panel(request):
                 "errors": form.errors if not form_valid else None,
                 "success": panel if form_valid else None,
                 "panel": panel if not form_valid else None,
+                "genes": genes,
             },
         )
 

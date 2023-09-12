@@ -279,7 +279,7 @@ class Gene(models.Model):
 
     :field: hgnc
     :field: gene_symbol
-    :field: alias_symbol
+    :field: alias_symbols
     """
 
     hgnc_id = models.CharField(verbose_name="HGNC id", max_length=20, unique=True)
