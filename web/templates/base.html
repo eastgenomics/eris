@@ -16,6 +16,15 @@
     <!-- Color Palette -->
     <!--  https://www.color-hex.com/color-palette/1027214  -->
 
+    <!-- jQuery JS -->
+    <script type="text/javascript" src="{% static 'js/code.jquery.com_jquery-3.7.1.slim.min.js' %}"></script>
+
+    <!-- Datatable JS -->
+    <script type="text/javascript" src="{% static 'js/cdn.datatables.net_1.13.6_js_jquery.dataTables.js' %}"></script>
+
+    <!-- Datatable CSS -->
+    <link rel="stylesheet" href="{% static 'css/cdn.datatables.net_1.13.6_css_jquery.dataTables.css' %}" type="text/css"/>
+
 </head>
 
 <body style="background-color: #f7f6f0">
@@ -52,8 +61,8 @@
         </div>
     </nav>
     <div class="container my-5 pb-1"></div>
-    {% block script %}{% endblock %}
     {% block content %}{% endblock %}
+    {% block script %}{% endblock %}
     <!-- Bootstrap JS -->
     <script type="text/javascript" src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 </body>

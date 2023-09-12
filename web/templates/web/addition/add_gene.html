@@ -47,11 +47,11 @@
             </div>
         </div>
         <div class="col-8">
-            <table class="table table-bordered shadow">
-                <thead>
+            <table class="table pt-3" id="geneTable">
+                <thead class="table-success">
                   <tr>
-                    <th scope="col">HGNC</th>
-                    <th scope="col">Gene Symbol</th>
+                    <th>HGNC</th>
+                    <th>Gene Symbol</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -70,4 +70,12 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block script %}
+<script>
+  $(document).ready(function () {
+    new DataTable('#geneTable');
+  });
+</script>
 {% endblock %}

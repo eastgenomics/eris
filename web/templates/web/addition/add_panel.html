@@ -49,29 +49,28 @@
                 <div class="mb-3">
                   <label for="panelVersion" class="form-label">Genes</label>
                   <!-- Genes selection -->
-                  <div class="accordion" id="accordionExample">
-                    {% for initial, genes in genes.items %}
-                    <div class="accordion-item">
-                      <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{initial}}" aria-expanded="false" aria-controls="collapse{{initial}}">
-                          HGNC {{ initial }}
-                        </button>
-                      </h2>
-                      <div id="collapse{{initial}}" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
-                        <div class="accordion-body">
-                          <!-- switch checkbox -->
-                          {% for gene in genes %}
-                          <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="genes" value="{{ gene.id }}">
-                            <label class="form-check-label" for="flexSwitchCheckDefault">{{ gene.hgnc_id }} <span class="badge text-bg-info">{{ gene.gene_symbol }}</span></label>
+                  <table class="table pt-2" id="geneSelectionTable">
+                    <thead class="table-success">
+                      <tr>
+                        <th>HGNC ID</th>
+                        <th>Gene Symbol</th>
+                        <th>Check</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for gene in genes %}
+                      <tr>
+                        <td>{{ gene.hgnc_id }}</td>
+                        <td>{{ gene.gene_symbol }}</td>
+                        <td>
+                          <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="{{ gene.id }}" name="genes">
                           </div>
-                          {% endfor %}
-                          <!-- end switch checkbox -->
-                        </div>
-                      </div>
-                    </div>
-                    {% endfor %}
-                  </div>
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
                   <!-- End Genes selection -->
                 </div>
                 <button type="submit" class="btn btn-primary">Submit</button>
@@ -80,4 +79,12 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block script %}
+<script>
+  $(document).ready(function () {
+    new DataTable('#geneSelectionTable');
+  });
+</script>
 {% endblock %}

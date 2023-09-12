@@ -16,13 +16,27 @@ services:
     container_name: eris-web
     image: eris-web:1.0
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: bash -c "python manage.py collectstatic --noinput && gunicorn panel_requests.wsgi:application --chdir /app/eris --bind :8005"
     env_file:
-      - /home/jason/github/eris/.env
-    ports:
-      - "8000:8000"
+      - /Users/jason/Github/eris/.env
+    expose:
+      - 8005
     depends_on:
       - db
+  nginx:
+    container_name: eris-nginx
+    image: eris-nginx:1.0
+    build: nginx
+    volumes:
+      - eris_static:/staticfiles
+    environment:
+      - VIRTUAL_HOST=localhost # change based on HOST
+      - VIRTUAL_PATH=/eris # change based on PATH
+    expose:
+      - 8006 # make sure nginx/nginx.conf PORT is changed too
+    depends_on:
+      - web
 
 volumes:
   eris_db:
+  eris_static:
