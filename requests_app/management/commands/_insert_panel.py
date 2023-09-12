@@ -32,6 +32,13 @@ from django.db import transaction
 
 
 def _backward_deactivate_panel_gene(panel: PanelClass, panel_instance: Panel) -> None:
+    """
+    Gets the HGNC IDs of genes from the panel's PanelApp import, and checks if they're in 
+    the panel instance present in the database.
+    If they aren't, the functions sets them to Pending, for manual review.
+    """
+    # TODO: pending-flag the opposite case, where genes are in the database, but not in the newest import
+    # Possible cause: a gene has downgraded from confidence 3 to 2
     hgnc_ids: list[str] = [
         gene.get("gene_data").get("hgnc_id")
         for gene in panel.genes
@@ -65,9 +72,21 @@ def _insert_gene(panel: PanelClass, panel_instance: Panel) -> None:
         hgnc_id = gene_data.get("hgnc_id")
         confidence_level = single_gene.get("confidence_level")
 
+        if not hgnc_id:
+            print(f"For panel {str(panel.name)}, skipping gene without HGNC ID: {str(gene_data['gene_name'])}")
+            continue
+
         # there is only confidence level 0 1 2 3
         # and we only fetch confidence level 3
-        if not hgnc_id or float(confidence_level) != 3.0:
+        try:
+            if float(confidence_level) != 3.0:
+                continue
+        except TypeError:
+            # the confidence_level is None or some other type that can't be converted to float
+            print(
+                f"For panel {str(panel.name)}, skipping gene without confidence "
+                f"information: {str(gene_data['gene_name'])}"
+            )
             continue
 
         gene_symbol = gene_data.get("gene_symbol")
@@ -150,6 +169,7 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
 
     # for each panel region, populate the region attribute models
     for single_region in panel.regions:
+        #TODO: should we skip confidence < 3?
         confidence_instance, _ = Confidence.objects.get_or_create(
             confidence_level=single_region.get("confidence_level"),
         )
@@ -223,8 +243,7 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
             region_id=region_instance.id,
             defaults={"justification": "PanelApp"},
         )
-        # TODO: backward deactivation for PanelRegion
-
+        # TODO: backward deactivation for PanelRegion, with history logging
 
 @transaction.atomic
 def insert_data_into_db(panel: PanelClass, user: str) -> None:
@@ -271,7 +290,8 @@ def insert_data_into_db(panel: PanelClass, user: str) -> None:
                 panel_instance.id, clinical_indication_id, "PanelApp"
             )
 
-    # attach each Gene record to the new Panel record,
+    # attach each Gene record to the Panel record, 
+    # whether it was created just now or was already in the database,
     # and populate region attribute models
     _insert_gene(panel, panel_instance)
     _insert_regions(panel, panel_instance)
