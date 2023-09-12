@@ -87,7 +87,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
         "NAME": os.environ.get("DB_NAME", "eris"),
-        "USER": os.environ.get("DB_USER", "root"),
+        "USER": os.environ.get("DB_USER", "postgres"),
         "PASSWORD": os.environ.get("DB_PASSWORD", "root"),
         "HOST": os.environ.get("DB_HOST", "localhost"),
         "PORT": os.environ.get("DB_PORT", "5432"),
@@ -121,11 +121,17 @@ USE_L10N = True
 
 USE_TZ = True
 
+ERIS_SERVER = os.environ.get(
+    "ERIS_SERVER", False
+)  # determine if eris is deployed on server and require subdirectory
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_URL = "static/"
+if ERIS_SERVER:
+    STATIC_URL = "eris/static/"  # on server thus subdirectory required
+else:
+    STATIC_URL = "static/"  # for local development
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [

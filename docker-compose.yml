@@ -10,19 +10,23 @@ services:
     volumes:
       - eris_db:/var/lib/postgresql/data/
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=eris # change based on DB
+      - POSTGRES_USER=postgres # change based on USER
+      - POSTGRES_PASSWORD=root  # change based on PASSWORD
   web:
     container_name: eris-web
     image: eris-web:1.0
     build: .
-    command: bash -c "python manage.py collectstatic --noinput && gunicorn panel_requests.wsgi:application --chdir /app/eris --bind :8005"
+    command: bash -c "python manage.py collectstatic --noinput && gunicorn panel_requests.wsgi:application --bind :8005"
     env_file:
       - /Users/jason/Github/eris/.env
+    volumes:
+      - eris_static:/app/staticfiles
     expose:
       - 8005
     depends_on:
       - db
+    restart: always
   nginx:
     container_name: eris-nginx
     image: eris-nginx:1.0
@@ -40,3 +44,8 @@ services:
 volumes:
   eris_db:
   eris_static:
+
+networks:
+  default:
+    name: nginx-default # change based on NETWORK
+    external: true
