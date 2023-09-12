@@ -20,9 +20,9 @@ class TestFlagCurrentLinksForClinicalIndication(TestCase):
         Then we can test whether the function correctly sets the link to False and logs it.
         """
         self.first_panel = Panel.objects.create(
-            external_id="one_test_panel_id", \
-            panel_name="one_test_panel_name", \
-            panel_source="source", \
+            external_id="one_test_panel_id", 
+            panel_name="one_test_panel_name", 
+            panel_source="source", 
             panel_version="5"
         )
 
@@ -75,9 +75,9 @@ class TestMakeProvisionalCiPanelLinkWithCi(TestCase):
         makes changes and forms history.
         """
         self.panel = Panel.objects.create(
-            external_id="one_test_panel_id", \
-            panel_name="one_test_panel_name", \
-            panel_source="source", \
+            external_id="one_test_panel_id", 
+            panel_name="one_test_panel_name", 
+            panel_source="source", 
             panel_version="5"
         )
 
