@@ -555,10 +555,15 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
             # deal with change in clinical indication-panel interaction
             # e.g. clinical indication R1 changed from panel 1 to panel 2
             for cip in ClinicalIndicationPanel.objects.filter(
-                clinical_indication_id=ci_instance.id,
+                clinical_indication_id__r_code=ci_instance.r_code,
                 current=True,
             ):
-                if cip.panel_id not in indication["panels"]:
+                associated_panel = Panel.objects.get(id=cip.panel_id)
+
+                if (
+                    associated_panel.external_id
+                    and associated_panel.external_id not in indication["panels"]
+                ):
                     with transaction.atomic():
                         cip.pending = True
                         cip.current = False
