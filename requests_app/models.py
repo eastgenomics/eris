@@ -368,6 +368,12 @@ class PanelGene(models.Model):
         max_length=255,
     )
 
+    # needed for PanelGene backward deactivation purpose
+    pending = models.BooleanField(
+        verbose_name="Pending Activation",
+        default=False,
+    )
+
     class Meta:
         db_table = "panel_gene"
 

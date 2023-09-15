@@ -26,6 +26,12 @@ from requests_app.models import (
 
 
 def _backward_deactivate(indications: list[dict], user: str) -> None:
+    """
+    This function flag any clinical indication that doesn't exist in TestDirectory
+
+    :params: indications [list]: list of clinical indication from TD
+    :params: user [str]: user who is importing the TD
+    """
     r_codes = set([indication["code"] for indication in indications])
 
     for clinical_indication in ClinicalIndication.objects.all():
@@ -545,6 +551,26 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
                         f"{indication['code']}: No Panel record has panelapp ID {pa_id}"
                     )
                     pass
+
+            # deal with change in clinical indication-panel interaction
+            # e.g. clinical indication R1 changed from panel 1 to panel 2
+            for cip in ClinicalIndicationPanel.objects.filter(
+                clinical_indication_id=ci_instance.id,
+                current=True,
+            ):
+                if cip.panel_id not in indication["panels"]:
+                    with transaction.atomic():
+                        cip.pending = True
+                        cip.current = False
+                        cip.save()
+
+                        ClinicalIndicationPanelHistory.objects.create(
+                            clinical_indication_panel_id=cip.id,
+                            note=History.flag_clinical_indication_panel(
+                                "ClinicalIndicationPanel does not exist in TD"
+                            ),
+                            user=td_source,
+                        )
 
         if hgnc_list:
             _make_panels_from_hgncs(json_data, ci_instance, hgnc_list)

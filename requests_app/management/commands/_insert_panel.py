@@ -33,7 +33,7 @@ from django.db import transaction
 
 def _backward_deactivate_panel_gene(panel: PanelClass, panel_instance: Panel) -> None:
     """
-    Gets the HGNC IDs of genes from the panel's PanelApp import, and checks if they're in 
+    Gets the HGNC IDs of genes from the panel's PanelApp import, and checks if they're in
     the panel instance present in the database.
     If they aren't, the functions sets them to Pending, for manual review.
     """
@@ -43,23 +43,32 @@ def _backward_deactivate_panel_gene(panel: PanelClass, panel_instance: Panel) ->
         gene.get("gene_data").get("hgnc_id")
         for gene in panel.genes
         if gene.get("gene_data")
+        and gene.get("confidence_level")
+        and float(gene.get("confidence_level")) == 3.0
     ]
 
+    # for each of the PanelGene record
     for panel_gene in PanelGene.objects.filter(panel_id=panel_instance.id).values(
-        "id", "gene_id__hgnc_id"
+        "id",
+        "gene_id__hgnc_id",
     ):
         if panel_gene["gene_id__hgnc_id"] not in hgnc_ids:
-            pg = PanelGene.objects.get(id=panel_gene["id"])
+            pg: PanelGene = PanelGene.objects.get(id=panel_gene["id"])
             pg.pending = True
             pg.save()
 
 
-def _insert_gene(panel: PanelClass, panel_instance: Panel) -> None:
+def _insert_gene(
+    panel: PanelClass,
+    panel_instance: Panel,
+    panel_created: bool,
+) -> None:
     """
     Function to insert gene component of Panel into database.
 
     :param panel: PanelClass object
     :param panel_instance: Panel object
+    :param panel_created: boolean to indicate if panel is newly created
     """
 
     # attaching each Gene record to Panel record
@@ -73,7 +82,9 @@ def _insert_gene(panel: PanelClass, panel_instance: Panel) -> None:
         confidence_level = single_gene.get("confidence_level")
 
         if not hgnc_id:
-            print(f"For panel {str(panel.name)}, skipping gene without HGNC ID: {str(gene_data['gene_name'])}")
+            print(
+                f"For panel {str(panel.name)}, skipping gene without HGNC ID: {str(gene_data['gene_name'])}"
+            )
             continue
 
         # there is only confidence level 0 1 2 3
@@ -119,19 +130,39 @@ def _insert_gene(panel: PanelClass, panel_instance: Panel) -> None:
         )
 
         # create PanelGene record linking Panel to HGNC
-        pg_instance, created = PanelGene.objects.get_or_create(
-            panel_id=panel_instance.id,
-            gene_id=gene_instance.id,
-            confidence_id=confidence_instance.id,
-            moi_id=moi_instance.id,
-            mop_id=mop_instance.id,
-            penetrance_id=penetrance_instance.id,
-            defaults={
-                "justification": "PanelApp",
-            },
-        )
+        if not panel_created:
+            # if panel is an existing panel in Eris
+            # this mean that panel has a change in PanelGene interaction
+            # in the new PanelApp seed, so any future PanelGene interaction
+            # will need to go through review
+            pg_instance, pg_created = PanelGene.objects.update_or_create(
+                panel_id=panel_instance.id,
+                gene_id=gene_instance.id,
+                defaults={
+                    "pending": True,
+                    "justification": "PanelApp",
+                    "confidence_id": confidence_instance.id,
+                    "moi_id": moi_instance.id,
+                    "mop_id": mop_instance.id,
+                    "penetrance_id": penetrance_instance.id,
+                },
+            )
+        else:
+            # if panel instance is created (new)
+            # thus we only link PanelGene since panel is new
+            pg_instance, pg_created = PanelGene.objects.get_or_create(
+                panel_id=panel_instance.id,
+                gene_id=gene_instance.id,
+                defaults={
+                    "justification": "PanelApp",
+                    "confidence_id": confidence_instance.id,
+                    "moi_id": moi_instance.id,
+                    "mop_id": mop_instance.id,
+                    "penetrance_id": penetrance_instance.id,
+                },
+            )
 
-        if created:
+        if pg_created:
             PanelGeneHistory.objects.create(
                 panel_gene_id=pg_instance.id,
                 note=History.panel_gene_created(),
@@ -169,7 +200,7 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
 
     # for each panel region, populate the region attribute models
     for single_region in panel.regions:
-        #TODO: should we skip confidence < 3?
+        # TODO: should we skip confidence < 3?
         confidence_instance, _ = Confidence.objects.get_or_create(
             confidence_level=single_region.get("confidence_level"),
         )
@@ -245,6 +276,7 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
         )
         # TODO: backward deactivation for PanelRegion, with history logging
 
+
 @transaction.atomic
 def insert_data_into_db(panel: PanelClass, user: str) -> None:
     """
@@ -278,7 +310,8 @@ def insert_data_into_db(panel: PanelClass, user: str) -> None:
         # mark previous CI-Panel links as needing review!
 
         for clinical_indication_panel in ClinicalIndicationPanel.objects.filter(
-            panel_id__external_id=panel_external_id
+            panel_id__external_id=panel_external_id,
+            current=True,
         ):
             flag_clinical_indication_panel_for_review(
                 clinical_indication_panel, "PanelApp"
@@ -290,11 +323,13 @@ def insert_data_into_db(panel: PanelClass, user: str) -> None:
                 panel_instance.id, clinical_indication_id, "PanelApp"
             )
 
-    # attach each Gene record to the Panel record, 
+    # attach each Gene record to the Panel record,
     # whether it was created just now or was already in the database,
     # and populate region attribute models
-    _insert_gene(panel, panel_instance)
+    _insert_gene(panel, panel_instance, created)
     _insert_regions(panel, panel_instance)
 
-    # backward checking if PanelGene interaction is still valid
-    _backward_deactivate_panel_gene(panel, panel_instance)
+    # for existing panel, check if PanelGene interaction is still valid
+    # meaning the panel is linked to confidence level 3 genes
+    if not created:
+        _backward_deactivate_panel_gene(panel, panel_instance)
