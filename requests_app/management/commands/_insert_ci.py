@@ -558,8 +558,12 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
                 clinical_indication_id__r_code=ci_instance.r_code,
                 current=True,
             ):
+                # grab associated panel
                 associated_panel = Panel.objects.get(id=cip.panel_id)
 
+                # if for the clinical indication
+                # the associated panel association is not in test directory
+                # flag for review
                 if (
                     associated_panel.external_id
                     and associated_panel.external_id not in indication["panels"]
