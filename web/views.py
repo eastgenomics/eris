@@ -1305,6 +1305,19 @@ def genepanel(request):
             # check dnanexus project id
             dx.DXProject(project_id)
 
+            project_metadata: dict = dx.DXProject(project_id).describe()
+            project_name: str = project_metadata.get("name", "")
+
+            if project_name.startswith("001") or project_name.startswith("002"):
+                return render(
+                    request,
+                    "web/info/genepanel.html",
+                    {
+                        "genepanels": list_of_genepanel,
+                        "error": "Uploading to 001 or 002 project is not allowed.",
+                    },
+                )
+
             # sort result
             file_result = sorted(file_result, key=lambda x: [x[0], x[1], x[2]])
 
@@ -1312,7 +1325,7 @@ def genepanel(request):
 
             # write result to dnanexus file
             with dx.new_dxfile(
-                name=f'{current_datetime}_genepanel.tsv',
+                name=f"{current_datetime}_genepanel.tsv",
                 project=project_id,
                 media_type="text/plain",
             ) as f:
