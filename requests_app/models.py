@@ -140,7 +140,7 @@ class ClinicalIndicationPanel(models.Model):
     current = models.BooleanField(verbose_name="latest association")
 
     pending = models.BooleanField(
-        verbose_name="pending activation",
+        verbose_name="pending review",
         null=True,
         default=False,
     )
@@ -366,6 +366,12 @@ class PanelGene(models.Model):
     justification = models.TextField(
         verbose_name="Justification",
         max_length=255,
+    )
+
+    # needed for PanelGene backward deactivation purpose
+    pending = models.BooleanField(
+        verbose_name="Pending Review",
+        default=False,
     )
 
     class Meta:
