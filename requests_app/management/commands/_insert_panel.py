@@ -33,12 +33,19 @@ from django.db import transaction
 
 def _backward_deactivate_panel_gene(panel: PanelClass, panel_instance: Panel) -> None:
     """
-    Gets the HGNC IDs of genes from the panel's PanelApp import, and checks if they're in
-    the panel instance present in the database.
+    Gets the HGNC IDs of genes (confidence 3) from the panel's PanelApp import
+    Check panel-gene interaction against that.
     If they aren't, the functions sets them to Pending, for manual review.
+
+    :param panel: PanelClass object returned from PanelApp API
+    :param panel_instance: Panel object from database
+
+    e.g. scenario
+    - panel A (panel_instance: Panel) has genes A, B, C
+    - panel A have only genes A with confidence 3 in new PanelApp import (panel: PanelClass)
     """
-    # TODO: pending-flag the opposite case, where genes are in the database, but not in the newest import
-    # Possible cause: a gene has downgraded from confidence 3 to 2
+
+    # fetch all confidence 3 hgnc_ids from PanelApp import
     hgnc_ids: list[str] = [
         gene.get("gene_data").get("hgnc_id")
         for gene in panel.genes
@@ -47,7 +54,7 @@ def _backward_deactivate_panel_gene(panel: PanelClass, panel_instance: Panel) ->
         and float(gene.get("confidence_level")) == 3.0
     ]
 
-    # for each of the PanelGene record
+    # for each panel-gene record, flag as pending if not in hgnc_ids
     for panel_gene in PanelGene.objects.filter(panel_id=panel_instance.id).values(
         "id",
         "gene_id__hgnc_id",
