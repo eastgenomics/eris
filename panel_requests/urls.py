@@ -18,6 +18,7 @@ from django.urls import path, include
 
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.views.generic.base import RedirectView
+from panel_requests.settings import ERIS_SERVER
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -25,5 +26,7 @@ urlpatterns = [
         "favicon.ico",
         RedirectView.as_view(url=staticfiles_storage.url("images/favicon.ico")),
     ),  # favicon
-    path(r"", include("web.urls")),
+    path("eris/", include("web.urls"))
+    if ERIS_SERVER
+    else path("", include("web.urls")),
 ]
