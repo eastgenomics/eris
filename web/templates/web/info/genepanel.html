@@ -7,7 +7,41 @@
             <h1>Genepanel</h1>
         </div>
     </div>
-    <div class="row">
+    
+    <!-- Alert -->
+    {% if error %}
+    <div class="alert alert-danger" role="alert">
+      {{ error }}
+    </div>
+    {% endif %}
+
+    {% if success %}
+    <div class="alert alert-success" role="alert">
+      File Uploaded Successfully!
+    </div>
+    {% endif %}
+
+    <!-- GenePanel Upload Form -->
+    <div class="row mt-2">
+      <div class="col">
+        <div class="card">
+          <div class="card-body">
+            <form action="{% url 'genepanel' %}" method="POST">
+              {% csrf_token %}
+              <div class="mb-3">
+                <label for="projectIdInput" class="form-label">Project ID</label>
+                <input type="text" class="form-control" name="project_id" aria-describedby="projectIdHelp" required>
+                <div id="projectIdHelp" class="form-text">e.g. project-GV4VJ2Q46b4p7k7z7491fFZ3</div>
+              </div>
+              <button type="submit" class="btn btn-success">Upload</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GenePanel List -->
+    <div class="row mt-4">
         <div class="col">
             <div class="accordion">
                 {% for genepanel in genepanels %}

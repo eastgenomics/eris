@@ -1,23 +1,20 @@
-import re
-import csv
 import secrets
 import string
-import pandas as pd
 import collections
 from itertools import chain
+import dxpy as dx
 import datetime as dt
 
-from django.shortcuts import render
-from django.db.models import QuerySet
+from django.shortcuts import render, redirect
+from django.db.models import QuerySet, Q
 from django.db import transaction
-from django.db.models import Q
-from django.shortcuts import redirect
 
 from .forms import ClinicalIndicationForm, PanelForm, GeneForm
-from requests_app.management.commands.history import History
-from requests_app.management.commands.utils import parse_hgnc
 from .utils.utils import Genepanel
-from panel_requests.settings import HGNC_IDS_TO_OMIT
+
+from requests_app.management.commands.history import History
+from requests_app.management.commands.utils import parse_hgnc, normalize_version
+from panel_requests.settings import HGNC_IDS_TO_OMIT, DNANEXUS_TOKEN
 
 from requests_app.models import (
     ClinicalIndication,
@@ -28,15 +25,12 @@ from requests_app.models import (
     PanelGene,
     PanelGeneHistory,
     Transcript,
-    PanelGeneTranscript,
     Gene,
     Confidence,
     ModeOfInheritance,
     ModeOfPathogenicity,
     Penetrance,
 )
-
-from requests_app.management.commands.utils import normalize_version
 
 
 def index(request):
@@ -1229,15 +1223,11 @@ def genepanel(request):
     ci_panels = collections.defaultdict(list)
     panel_genes = collections.defaultdict(list)
     relevant_panels = set()
+    success = None
 
+    # if there's no CiPanelAssociation date column, return empty list
     if not ClinicalIndicationPanel.objects.filter(current=True, pending=False).exists():
-        # if there's no CiPanelAssociation date column, high chance Test Directory
-        # has not been imported yet.
-        raise ValueError(
-            "Test Directory has yet been imported!"
-            "ClinicalIndicationPanel table is empty"
-            "python manage.py seed test_dir 220713_RD_TD.json Y"
-        )  # TODO: soft fail
+        return render(request, "web/info/genepanel.html", {"genepanels": []})
 
     # fetch all relevant clinical indication and panels
     for row in ClinicalIndicationPanel.objects.filter(
@@ -1260,6 +1250,7 @@ def genepanel(request):
 
     list_of_genepanel: list[Genepanel] = []
     ci_panel_to_genes = collections.defaultdict(list)
+    file_result: list[list[str]] = []
 
     # for each r code panel combo, we make a list of genes associated with it
     for r_code, panel_list in ci_panels.items():
@@ -1277,6 +1268,14 @@ def genepanel(request):
 
                 ci_panel_to_genes[unique_key].append((hgnc, gene_id))
 
+                file_result.append(
+                    [
+                        f"{r_code}_{ci_name}",
+                        f"{panel_dict['panel_id__panel_name']}_{normalize_version(panel_dict['panel_id__panel_version']) if panel_dict['panel_id__panel_version'] else '1.0'}",
+                        hgnc,
+                    ]
+                )
+
     # make GenePanel class for ease of rendering in front end
     for key, hgncs in ci_panel_to_genes.items():
         r_code, ci_name, panel_name, panel_version = [
@@ -1288,7 +1287,69 @@ def genepanel(request):
 
     list_of_genepanel = sorted(list_of_genepanel, key=lambda x: x.r_code)
 
-    return render(request, "web/info/genepanel.html", {"genepanels": list_of_genepanel})
+    if request.method == "POST":
+        project_id = request.POST.get("project_id").strip()
+
+        try:
+            # login dnanexus
+            dx.set_security_context(
+                {
+                    "auth_token_type": "Bearer",
+                    "auth_token": DNANEXUS_TOKEN,
+                }
+            )
+
+            # check dnanexus login
+            dx.api.system_whoami()
+
+            # check dnanexus project id
+            dx.DXProject(project_id)
+
+            project_metadata: dict = dx.DXProject(project_id).describe()
+            project_name: str = project_metadata.get("name", "")
+
+            if project_name.startswith("001") or project_name.startswith("002"):
+                return render(
+                    request,
+                    "web/info/genepanel.html",
+                    {
+                        "genepanels": list_of_genepanel,
+                        "error": "Uploading to 001 or 002 project is not allowed.",
+                    },
+                )
+
+            # sort result
+            file_result = sorted(file_result, key=lambda x: [x[0], x[1], x[2]])
+
+            current_datetime = dt.datetime.today().strftime("%Y%m%d")
+
+            # write result to dnanexus file
+            with dx.new_dxfile(
+                name=f"{current_datetime}_genepanel.tsv",
+                project=project_id,
+                media_type="text/plain",
+            ) as f:
+                for row in file_result:
+                    data = "\t".join(row)
+                    f.write(f"{data}\n")
+
+        except Exception as e:
+            return render(
+                request,
+                "web/info/genepanel.html",
+                {"genepanels": list_of_genepanel, "error": e},
+            )
+
+        success = True
+
+    return render(
+        request,
+        "web/info/genepanel.html",
+        {
+            "genepanels": list_of_genepanel,
+            "success": success,
+        },
+    )
 
 
 def genes(request):
