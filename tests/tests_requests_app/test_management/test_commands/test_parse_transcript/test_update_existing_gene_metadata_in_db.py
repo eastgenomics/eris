@@ -3,6 +3,7 @@ from django.test import TestCase
 from django.db.models import QuerySet
 import datetime
 from django_mock_queries.query import MockSet, MockModel
+import numpy as np
 
 from requests_app.models import \
     Panel, Gene, PanelGene, PanelGeneHistory, Confidence, ModeOfInheritance, \
@@ -17,18 +18,13 @@ from requests_app.management.commands.panelapp import PanelClass
 
 # possible cases - since the database was last populated:
 
-# HGNC gene's alias symbols have changed 
-# HGNC gene's alias symbols are the same
-# HGNC gene's alias symbols have become None
-
-
 class TestUpdateExistingGene(TestCase):
     """
     Test various cases on _update_existing_gene_metadata_in_db
     """
     def setUp(self) -> None:
         # Populate the Gene test database with some easy examples
-        Gene.objects.create(
+        self.FAM234A = Gene.objects.create(
             hgnc_id="14163", 
             gene_symbol="FAM234A", 
             alias_symbols="DKFZP761D0211,FLJ32603"
@@ -53,7 +49,22 @@ class TestUpdateExistingGene(TestCase):
         )
 
     
-    # TODO: null example
+    def test_no_changes(self):
+        """
+        A gene is unchanged
+        """
+        test_hgnc_approved = {"14163": "FAM234A"} 
+        test_aliases = {"14163": ["DKFZP761D0211", "FLJ32603"]}
+        
+        _update_existing_gene_metadata_in_db(test_hgnc_approved, test_aliases)
+
+        # check that the entry isn't changed from how it was at set-up
+        gene_db = Gene.objects.filter(hgnc_id="14163")
+        assert len(gene_db) == 1
+        assert gene_db[0].hgnc_id == self.FAM234A.hgnc_id
+        assert gene_db[0].gene_symbol == self.FAM234A.gene_symbol
+        assert gene_db[0].alias_symbols == self.FAM234A.alias_symbols
+
 
     def test_approved_name_change(self):
         """
@@ -109,3 +120,39 @@ class TestUpdateExistingGene(TestCase):
         gene_db = Gene.objects.filter(hgnc_id="14163")
         assert len(gene_db) == 1
         assert gene_db[0].alias_symbols == ",".join(made_up_aliases)
+
+
+    def test_alias_now_numpy_na(self):
+        """
+        Test case: the alias name has changed for a gene, since last update
+        It is now numpy 'na' data
+        Expected: the alias is skipped and the old one is kept
+        """
+        test_hgnc_approved = {"14163": "FAM234A"} 
+        made_up_aliases = [np.nan]
+        test_hgnc_aliases = {"14163": made_up_aliases}
+
+        _update_existing_gene_metadata_in_db(test_hgnc_approved, test_hgnc_aliases)
+
+        # expect the entry for 14163 in the Gene test datatable to NOT update
+        gene_db = Gene.objects.filter(hgnc_id="14163")
+        assert len(gene_db) == 1
+        assert gene_db[0].alias_symbols == self.FAM234A.alias_symbols
+
+    
+    def test_alias_list_empty(self):
+        """
+        Test case: the alias name has changed for a gene, since last update
+        It is now an empty list
+        Expected: the alias is skipped and the old one is kept
+        """
+        test_hgnc_approved = {"14163": "FAM234A"} 
+        made_up_aliases = []
+        test_hgnc_aliases = {"14163": made_up_aliases}
+
+        _update_existing_gene_metadata_in_db(test_hgnc_approved, test_hgnc_aliases)
+
+        # expect the entry for 14163 in the Gene test datatable to NOT update
+        gene_db = Gene.objects.filter(hgnc_id="14163")
+        assert len(gene_db) == 1
+        assert gene_db[0].alias_symbols == self.FAM234A.alias_symbols

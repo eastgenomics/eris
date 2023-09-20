@@ -11,7 +11,7 @@ from requests_app.models import Gene, Transcript
 def _update_existing_gene_metadata_in_db(
     hgnc_id_to_approved_symbol,
     hgnc_id_to_alias_symbols,
-) -> None:
+    ) -> None:
     """
     Function to update gene metadata in db using hgnc dump prepared dictionaries
 
