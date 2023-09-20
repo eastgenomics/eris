@@ -35,19 +35,13 @@ def _update_existing_gene_metadata_in_db(
         gene.save()
 
 
-def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
+def _sanity_check_hgnc_file(hgnc: pd.DataFrame) -> None:
     """
-    Read hgnc file and prepare four dictionaries:
-    1. gene symbol to hgnc id
-    2. hgnc id to approved symbol
-    4. hgnc id to alias symbols
+    Check for expected fields in the HGNC file.
 
-    :param hgnc_file: hgnc file path
-
-    :return: gene symbol to hgnc id dict
+    :param: hgnc - a Pandas Dataframe
+    :return: None 
     """
-    hgnc: pd.DataFrame = pd.read_csv(hgnc_file, delimiter="\t")
-
     # check if hgnc file has the correct columns
     assert "HGNC ID" in hgnc.columns, "Missing HGNC ID column. Check HGNC dump file"
     assert (
@@ -56,6 +50,23 @@ def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
     assert (
         "Alias symbols" in hgnc.columns
     ), "Missing Alias symbols column. Check HGNC dump file"
+
+
+def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
+    """
+    Read hgnc file, sanity-check it, and prepare four dictionaries:
+    1. gene symbol to hgnc id
+    2. hgnc id to approved symbol
+    4. hgnc id to alias symbols
+
+    Finally, update any metadata for existing genes in the Eris database - 
+    if this has changed since the last HGNC upload.
+
+    :param hgnc_file: hgnc file path
+    :return: gene symbol to hgnc id dict
+    """
+    hgnc: pd.DataFrame = pd.read_csv(hgnc_file, delimiter="\t")
+    _sanity_check_hgnc_file(hgnc)
 
     # prepare dictionary files
     hgnc_symbol_to_hgnc_id = dict(zip(hgnc["Approved symbol"], hgnc["HGNC ID"]))
