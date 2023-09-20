@@ -1,21 +1,9 @@
-from unittest import mock, expectedFailure
 from django.test import TestCase
-from django.db.models import QuerySet
-import datetime
-from django_mock_queries.query import MockSet, MockModel
 
 import pandas as pd
 
-from requests_app.models import \
-    Panel, Gene, PanelGene, PanelGeneHistory, Confidence, ModeOfInheritance, \
-    Penetrance, ModeOfPathogenicity
-
 from requests_app.management.commands._parse_transcript import \
     _sanity_check_hgnc_file
-
-from requests_app.management.commands.history import History
-from requests_app.management.commands.panelapp import PanelClass
-
 
 
 class TestSanityCheckHgncFile(TestCase):
