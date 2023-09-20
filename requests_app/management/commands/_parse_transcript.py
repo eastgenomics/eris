@@ -194,6 +194,22 @@ def _prepare_markname_file(markname_file: str) -> dict:
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
 
 
+def _add_gene_and_transcript_to_db(hgnc_id, transcripts, reference_genome, source):
+    """
+    Add each gene to the database, with any transcripts associated with it.
+    Source will often be something like "HGMD" but may be None for non-clinical transcripts
+    """
+    hgnc, _ = Gene.objects.get_or_create(hgnc_id=hgnc_id)
+
+    for tx in transcripts:
+        Transcript.objects.get_or_create(
+            transcript=tx,
+            source=source,
+            gene_id=hgnc.id,
+            reference_genome=reference_genome,
+        )
+
+
 def seed_transcripts(
     hgnc_filepath: str,
     mane_filepath: str,
@@ -323,26 +339,13 @@ def seed_transcripts(
 
     # make genes - clinical or non-clinical - in db
     for hgnc_id, transcript_source in gene_clinical_transcipt.items():
-        hgnc, _ = Gene.objects.get_or_create(hgnc_id=hgnc_id)
-
         transcript, source = transcript_source
-        Transcript.objects.get_or_create(
-            transcript=transcript,
-            source=source,
-            gene_id=hgnc.id,
-            reference_genome=reference_genome,
-        )
+        # make transcript into a list, because for non-clinical, it needs to iterate through transcripts
+        transcript = [transcript] 
+        _add_gene_and_transcript_to_db(hgnc_id, transcript, reference_genome, source)
 
     for hgnc_id, transcripts in gene_non_clinical_transcripts.items():
-        hgnc, _ = Gene.objects.get_or_create(hgnc_id=hgnc_id)
-
-        for tx in transcripts:
-            Transcript.objects.get_or_create(
-                transcript=tx,
-                source=None,
-                gene_id=hgnc.id,
-                reference_genome=reference_genome,
-            )
+        _add_gene_and_transcript_to_db(hgnc_id, transcripts, reference_genome, None)
 
     # write error log for those interested to see
     if write_error_log:
@@ -350,3 +353,5 @@ def seed_transcripts(
         with open(error_log, "w") as f:
             for row in all_errors:
                 f.write(f"{row}\n")
+
+
