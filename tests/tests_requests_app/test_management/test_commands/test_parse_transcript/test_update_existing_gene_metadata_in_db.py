@@ -1,22 +1,11 @@
-from unittest import mock, expectedFailure
 from django.test import TestCase
-from django.db.models import QuerySet
-import datetime
-from django_mock_queries.query import MockSet, MockModel
 import numpy as np
 
-from requests_app.models import \
-    Panel, Gene, PanelGene, PanelGeneHistory, Confidence, ModeOfInheritance, \
-    Penetrance, ModeOfPathogenicity
+from requests_app.models import Gene
 
 from requests_app.management.commands._parse_transcript import \
     _update_existing_gene_metadata_in_db
 
-from requests_app.management.commands.history import History
-from requests_app.management.commands.panelapp import PanelClass
-
-
-# possible cases - since the database was last populated:
 
 class TestUpdateExistingGene(TestCase):
     """
