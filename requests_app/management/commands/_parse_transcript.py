@@ -26,10 +26,10 @@ def _update_existing_gene_metadata_in_db(
             if gene.gene_symbol != hgnc_id_to_approved_symbol[gene.hgnc_id]:
                 gene.gene_symbol = hgnc_id_to_approved_symbol[gene.hgnc_id]
 
-        # if hgnc id in dictionary and alias symbols not pd.nan
+        # if hgnc id in dictionary, and alias symbols are not all pd.nan
         if gene.hgnc_id in hgnc_id_to_alias_symbols and not pd.isna(
             hgnc_id_to_alias_symbols[gene.hgnc_id]
-        ):
+        ).all():
             gene.alias_symbols = ",".join(hgnc_id_to_alias_symbols[gene.hgnc_id])
 
         gene.save()
