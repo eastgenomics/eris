@@ -188,7 +188,8 @@ def _prepare_markname_file(markname_file: str) -> dict:
     """
     markname = pd.read_csv(markname_file)
 
-    assert "hgncID" in markname.columns, "Missing hgncID column. Check markname file"
+    needed_cols = ["hgncID"]
+    _sanity_check_cols_exist(markname, needed_cols, "markname")
 
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
 
