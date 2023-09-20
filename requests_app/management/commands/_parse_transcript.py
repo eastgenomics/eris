@@ -35,25 +35,6 @@ def _update_existing_gene_metadata_in_db(
         gene.save()
 
 
-def _sanity_check_hgnc_file(hgnc: pd.DataFrame) -> None:
-    """
-    Check for expected columns in the HGNC DataFrame.
-    Collects together errors and asserts them all at once, if there's more than one issue.
-    :param: hgnc - a Pandas Dataframe
-    :return: None 
-    """
-    errors = []
-    if not "HGNC ID" in hgnc.columns:
-        errors.append("Missing HGNC ID column. Check HGNC dump file")
-    if not "Approved symbol" in hgnc.columns:
-        errors.append("Missing Approved symbol column. Check HGNC dump file")
-    if not "Alias symbols" in hgnc.columns:
-        errors.append("Missing Alias symbols column. Check HGNC dump file")
-    
-    errors = "; ".join(errors)
-    assert not errors, errors
-
-
 def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
     """
     Read hgnc file, sanity-check it, and prepare four dictionaries:
@@ -68,7 +49,9 @@ def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
     :return: gene symbol to hgnc id dict
     """
     hgnc: pd.DataFrame = pd.read_csv(hgnc_file, delimiter="\t")
-    _sanity_check_hgnc_file(hgnc)
+    
+    needed_cols = ["HGNC ID", "Approved symbol", "Alias symbols"]
+    _sanity_check_cols_exist(hgnc, needed_cols, "HGNC dump")
 
     # prepare dictionary files
     hgnc_symbol_to_hgnc_id = dict(zip(hgnc["Approved symbol"], hgnc["HGNC ID"]))
@@ -84,20 +67,19 @@ def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
     return hgnc_symbol_to_hgnc_id
 
 
-def _sanity_check_mane_file(mane):
+def _sanity_check_cols_exist(df: pd.DataFrame, needed_cols: list, filename: str) -> None:
     """
-    Check for expected columns in the MANE transcripts DataFrame.
+    Check for expected columns in a DataFrame.
     Collects together errors and asserts them all at once, if there's more than one issue.
-    :param: mane - a Pandas Dataframe
+    :param: df - a Pandas Dataframe
+    :param: needed_cols - a list of column names to check for
+    :param: filename - a reference to use for the file being checked
     :return: None 
     """
     errors = []
-    if not "Gene" in mane.columns:
-        errors.append("Missing Gene column. Check MANE file")
-    if not "MANE TYPE" in mane.columns:
-        errors.append("Missing MANE TYPE column. Check MANE file")
-    if not "RefSeq StableID GRCh38 / GRCh37" in mane.columns:
-        errors.append("Missing RefSeq column. Check MANE file")
+    for x_col in needed_cols:
+        if not x_col in df.columns:
+            errors.append(f"Missing column {x_col} from {filename} file - please check the file")
 
     errors = "; ".join(errors)
     assert not errors, errors
@@ -120,7 +102,9 @@ def _prepare_mane_file(
     :return: dictionary of hgnc id to mane transcript
     """
     mane = pd.read_csv(mane_file)
-    _sanity_check_mane_file(mane)
+
+    needed_cols = ["Gene", "MANE TYPE", "RefSeq StableID GRCh38 / GRCh37"]
+    _sanity_check_cols_exist(mane, needed_cols, "MANE")
 
     filtered_mane = mane[
         mane["MANE TYPE"] == "MANE SELECT"
@@ -157,6 +141,9 @@ def _prepare_gff_file(gff_file: str) -> dict[str, list]:
         dtype=str,
     )
 
+    needed_cols = ["hgnc", "transcript"]
+    _sanity_check_cols_exist(gff, needed_cols, "gff")
+
     return (
         gff.groupby("hgnc")
         .agg({"transcript": lambda x: list(set(list(x)))})
@@ -176,6 +163,9 @@ def _prepare_gene2refseq_file(g2refseq_file: str) -> dict:
 
     # read with dtype str to avoid pandas converting to int64
     df = pd.read_csv(g2refseq_file, dtype=str)
+
+    needed_cols = ["refcore", "refversion", "hgmdID"]
+    _sanity_check_cols_exist(df, needed_cols, "gene2refseq")
 
     # create list of refcore + refversion
     df["core_plus_version"] = pd.Series(zip(df["refcore"], df["refversion"])).map(list)
