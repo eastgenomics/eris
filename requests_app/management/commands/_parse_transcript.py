@@ -84,6 +84,25 @@ def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
     return hgnc_symbol_to_hgnc_id
 
 
+def _sanity_check_mane_file(mane):
+    """
+    Check for expected columns in the MANE transcripts DataFrame.
+    Collects together errors and asserts them all at once, if there's more than one issue.
+    :param: mane - a Pandas Dataframe
+    :return: None 
+    """
+    errors = []
+    if not "Gene" in mane.columns:
+        errors.append("Missing Gene column. Check MANE file")
+    if not "MANE TYPE" in mane.columns:
+        errors.append("Missing MANE TYPE column. Check MANE file")
+    if not "RefSeq StableID GRCh38 / GRCh37" in mane.columns:
+        errors.append("Missing RefSeq column. Check MANE file")
+
+    errors = "; ".join(errors)
+    assert not errors, errors
+
+
 def _prepare_mane_file(
     mane_file: str,
     hgnc_symbol_to_hgnc_id: dict[str, str],
@@ -101,12 +120,7 @@ def _prepare_mane_file(
     :return: dictionary of hgnc id to mane transcript
     """
     mane = pd.read_csv(mane_file)
-
-    assert "Gene" in mane.columns, "Missing Gene column. Check MANE file"
-    assert "MANE TYPE" in mane.columns, "Missing MANE TYPE column. Check MANE file"
-    assert (
-        "RefSeq StableID GRCh38 / GRCh37" in mane.columns
-    ), "Missing RefSeq column. Check MANE file"
+    _sanity_check_mane_file(mane)
 
     filtered_mane = mane[
         mane["MANE TYPE"] == "MANE SELECT"
