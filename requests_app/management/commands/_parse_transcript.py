@@ -37,19 +37,21 @@ def _update_existing_gene_metadata_in_db(
 
 def _sanity_check_hgnc_file(hgnc: pd.DataFrame) -> None:
     """
-    Check for expected fields in the HGNC file.
-
+    Check for expected columns in the HGNC DataFrame.
+    Collects together errors and asserts them all at once, if there's more than one issue.
     :param: hgnc - a Pandas Dataframe
     :return: None 
     """
-    # check if hgnc file has the correct columns
-    assert "HGNC ID" in hgnc.columns, "Missing HGNC ID column. Check HGNC dump file"
-    assert (
-        "Approved symbol" in hgnc.columns
-    ), "Missing Approved symbol column. Check HGNC dump file"
-    assert (
-        "Alias symbols" in hgnc.columns
-    ), "Missing Alias symbols column. Check HGNC dump file"
+    errors = []
+    if not "HGNC ID" in hgnc.columns:
+        errors.append("Missing HGNC ID column. Check HGNC dump file")
+    if not "Approved symbol" in hgnc.columns:
+        errors.append("Missing Approved symbol column. Check HGNC dump file")
+    if not "Alias symbols" in hgnc.columns:
+        errors.append("Missing Alias symbols column. Check HGNC dump file")
+    
+    errors = "; ".join(errors)
+    assert not errors, errors
 
 
 def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
