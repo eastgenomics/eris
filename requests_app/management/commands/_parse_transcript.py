@@ -266,13 +266,13 @@ def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict,
     # if hgnc id already have a clinical transcript
     # any following transcripts will be non-clinical by default
     if hgnc_id in gene_clinical_transcript:
-        # a transcript has been assigned either MANE or HGMD
-        clinical = False
-        return clinical, source, err
+        if tx in gene_clinical_transcript["hgnc_id"]:
+            # a transcript has been assigned either MANE or HGMD
+            clinical = False
+            return clinical, source, err
 
-    # comparing just the base, not version
     tx_base, _ = tx.split(".")
-
+    
     # if hgnc id in mane file
     if hgnc_id in mane_data:
         # MANE transcript search
@@ -362,7 +362,10 @@ def seed_transcripts(
     all_errors: list[str] = []
 
     # decide whether a transcript is clinical or not, and append it to the corresponding dict
+    # remove repeats of the transcript (with versions)
     for hgnc_id, transcripts in gff.items():
+        # get deduplicated transcripts
+        transcripts = set(transcripts)
         for tx in transcripts:
             clin, tx_source, err = \
                 _transcript_assigner(tx, hgnc_id, gene_clinical_transcipt, 
