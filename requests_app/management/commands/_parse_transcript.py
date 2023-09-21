@@ -251,7 +251,7 @@ def _markname_gene_id_error_checker(hgnc_id: str, markname_gene_id: str, gene2re
 
 def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict, 
                          mane_data: dict, markname_hgmd: dict, gene2refseq_hgmd: dict) \
-                            -> tuple(bool, str, str | None):
+                            -> tuple[bool, str, str | None]:
     """
     Carries out the logic for deciding whether a transcript is clinical, or non-clinical.
     Checks MANE first, then HGMD, to see if clinical status can be assigned
@@ -263,16 +263,18 @@ def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict,
     source = None
     err = None
 
+    tx_base, _ = tx.split(".")
+
+    #TODO: work out when and where to split the transcript down to base
+    
     # if hgnc id already have a clinical transcript
     # any following transcripts will be non-clinical by default
     if hgnc_id in gene_clinical_transcript:
-        if tx not in gene_clinical_transcript["hgnc_id"]:
+        if tx_base not in gene_clinical_transcript[hgnc_id][0].split(".", 1)[0]:
             # a different transcript has already been assigned as clinical for this gene
             # any remaining transcripts will be NON clinical
             clinical = False
             return clinical, source, err
-
-    tx_base, _ = tx.split(".")
     
     # if hgnc id in mane file
     if hgnc_id in mane_data:
