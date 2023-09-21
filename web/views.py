@@ -545,9 +545,9 @@ def add_ci_panel(request, ci_id: int):
         )
 
 
-def _get_clinical_indication_panel_history(
-    limit: int,
-) -> QuerySet[ClinicalIndicationPanelHistory]:
+def _get_clinical_indication_panel_history() -> (
+    QuerySet[ClinicalIndicationPanelHistory]
+):
     """
     Function to fetch clinical indication panel history with limit
 
@@ -555,87 +555,147 @@ def _get_clinical_indication_panel_history(
         limit (int): limit of history to fetch
     """
 
-    return ClinicalIndicationPanelHistory.objects.order_by("-created").values(
-        "created",
-        "note",
-        "user",
-        "clinical_indication_panel_id__clinical_indication_id__name",
-        "clinical_indication_panel_id__clinical_indication_id__r_code",
-        "clinical_indication_panel_id__panel_id__panel_name",
-        "clinical_indication_panel_id__panel_id__panel_version",
-        "clinical_indication_panel_id__clinical_indication_id",
-        "clinical_indication_panel_id__panel_id",
-    )[:limit]
+    return (
+        ClinicalIndicationPanelHistory.objects.order_by("-created")
+        .all()
+        .values(
+            "created",
+            "note",
+            "user",
+            "clinical_indication_panel_id__clinical_indication_id__name",
+            "clinical_indication_panel_id__clinical_indication_id__r_code",
+            "clinical_indication_panel_id__panel_id__panel_name",
+            "clinical_indication_panel_id__panel_id__panel_version",
+            "clinical_indication_panel_id__clinical_indication_id",
+            "clinical_indication_panel_id__panel_id",
+        )
+    )
 
 
 def history(request):
     """
-    Clinical indication panel history page
+    History page for clinical indication, panel, clinical indication-panel etc.
     """
 
-    limit: int = 50
-
     if request.method == "GET":
-        cip_histories = _get_clinical_indication_panel_history(50)
-    else:
-        # filter for what checkbox is ticked in the front-end
-        actions: list[str] = [
-            n
-            for n in [
-                request.POST.get("deactivated"),
-                request.POST.get("created"),
-                request.POST.get("changed"),
-                request.POST.get("manual review"),
-            ]
-            if n
-        ]
+        cip_histories = _get_clinical_indication_panel_history()
 
-        # if no checkbox ticked, fetch default history limit 50
-        if not actions:
-            cip_histories = _get_clinical_indication_panel_history(50)
-        else:
-            # else do cip-history filter with specific query filter
-            query_filters = Q()
-
-            for note_prefix in actions:
-                query_filters |= Q(note__icontains=note_prefix)
-
-            cip_histories: QuerySet[ClinicalIndicationPanelHistory] = (
-                ClinicalIndicationPanelHistory.objects.filter(query_filters)
-                .order_by("-created")
-                .values(
-                    "created",
-                    "note",
-                    "user",
-                    "clinical_indication_panel_id__clinical_indication_id__name",
-                    "clinical_indication_panel_id__clinical_indication_id__r_code",
-                    "clinical_indication_panel_id__panel_id__panel_name",
-                    "clinical_indication_panel_id__panel_id__panel_version",
-                    "clinical_indication_panel_id__clinical_indication_id",
-                    "clinical_indication_panel_id__panel_id",
-                )
+        # normalize panel version
+        for cip in cip_histories:
+            cip[
+                "clinical_indication_panel_id__panel_id__panel_version"
+            ] = normalize_version(
+                cip["clinical_indication_panel_id__panel_id__panel_version"]
             )
 
-            # just to display in front-end on how many rows are fetched
-            limit = len(cip_histories)
-
-    # normalize panel version
-    for history in cip_histories:
-        history[
-            "clinical_indication_panel_id__panel_id__panel_version"
-        ] = normalize_version(
-            history["clinical_indication_panel_id__panel_id__panel_version"]
+        return render(
+            request,
+            "web/history.html",
+            {
+                "data": cip_histories,
+                "showing": "Clinical Indication Panel",
+                "selected": "clinical indication-panel",
+            },
         )
+    else:
+        # POST method
+        history_selection = request.POST.get("history selection")
 
-    return render(
-        request,
-        "web/history.html",
-        {
-            "cip_histories": cip_histories,
-            "selected": request.POST.keys(),
-            "limit": limit,
-        },
-    )
+        if history_selection == "panels":
+            panels = Panel.objects.all()
+
+            for panel in panels:
+                panel.panel_version = normalize_version(panel.panel_version)
+
+            return render(
+                request,
+                "web/history.html",
+                {
+                    "data": panels,
+                    "showing": "Panels",
+                    "selected": "panels",
+                },
+            )
+        elif history_selection == "clinical indications":
+            clinical_indications = ClinicalIndication.objects.all()
+
+            return render(
+                request,
+                "web/history.html",
+                {
+                    "data": clinical_indications,
+                    "showing": "Clinical Indications",
+                    "selected": "clinical indications",
+                },
+            )
+        elif history_selection == "clinical indication-panel":
+            actions = request.POST.getlist("checkbox selections")
+
+            # if no checkbox ticked, fetch default history limit 50
+            if not actions:
+                cip_histories = _get_clinical_indication_panel_history()
+            else:
+                # else do cip-history filter with specific query filter
+                query_filters = Q()
+
+                for note_prefix in actions:
+                    query_filters |= Q(note__icontains=note_prefix)
+
+                cip_histories: QuerySet[ClinicalIndicationPanelHistory] = (
+                    ClinicalIndicationPanelHistory.objects.filter(query_filters)
+                    .order_by("-created")
+                    .values(
+                        "created",
+                        "note",
+                        "user",
+                        "clinical_indication_panel_id__clinical_indication_id__name",
+                        "clinical_indication_panel_id__clinical_indication_id__r_code",
+                        "clinical_indication_panel_id__panel_id__panel_name",
+                        "clinical_indication_panel_id__panel_id__panel_version",
+                        "clinical_indication_panel_id__clinical_indication_id",
+                        "clinical_indication_panel_id__panel_id",
+                    )
+                )
+
+            # normalize panel version
+            for history in cip_histories:
+                history[
+                    "clinical_indication_panel_id__panel_id__panel_version"
+                ] = normalize_version(
+                    history["clinical_indication_panel_id__panel_id__panel_version"]
+                )
+
+            return render(
+                request,
+                "web/history.html",
+                {
+                    "data": cip_histories,
+                    "showing": f"Clinical Indication Panel & {' + '.join([action.title() for action in actions])}"
+                    if actions
+                    else "Clinical Indication Panel",
+                    "selected": "clinical indication-panel",
+                },
+            )
+        elif history_selection == "panel-gene":
+            panel_genes = PanelGeneHistory.objects.values(
+                "created",
+                "note",
+                "user",
+                "panel_gene_id__panel_id__panel_name",
+                "panel_gene_id__panel_id",
+                "panel_gene_id__gene_id",
+                "panel_gene_id__gene_id__hgnc_id",
+            )
+
+            return render(
+                request,
+                "web/history.html",
+                {
+                    "data": panel_genes,
+                    "showing": "Panel Genes",
+                    "selected": "panel-gene",
+                },
+            )
 
 
 def _generate_random_characters(length: int) -> str:

@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
+<div class="container mb-5">
     <!-- title -->
     <div class="row">
         <div class="col">
             <h3>Edit Panel Gene</h3>
-            <p class="text-muted">This will create a new custom Panel based on this Panel rather than adding the gene to the existing Panel. This will not link existing old Panel's clinical indication to new custom Panel.</p>
+            <p class="text-muted">This will create a new custom Panel based on the Reference Panel rather than adding the gene to the existing Reference Panel.<br>This will not link existing old Panel's clinical indication to the new custom Panel.</p>
         </div>
     </div>
     <!-- end title -->
@@ -53,7 +53,7 @@
                         panel source: web <br>
                         panel version: None <br>
                         test directory: None <br>
-                        custom: <span class="badge text-bg-success">{{ panel.custom }}</span><br>
+                        custom: <span class="badge text-bg-success">True</span><br>
                         created: TBD <br>
                     </p>
                 </div>
@@ -65,12 +65,11 @@
     <form action="{% url 'gene_edit' panel.id  %}" method="POST">
         {% csrf_token %}
         <!-- current linked gene -->
-        <div class="row mt-2">
+        <div class="row my-2">
             <div class="col">
                 <h3>Current Genes</h3>
-                <button type="submit" class="btn btn-primary btn-sm p-1 my-2">Submit</button>
                 <table class="table table-bordered shadow">
-                    <thead>
+                    <thead class="table-info">
                         <tr>
                         <th scope="col">HGNC ID</th>
                         <th scope="col">Gene Symbol</th>
@@ -96,11 +95,11 @@
         <!-- current linked gene end -->
     
         <!-- other genes -->
-        <div class="row mt-2">
+        <div class="row my-2">
             <div class="col">
                 <h3>Other Genes</h3>
-                <table class="table table-bordered shadow">
-                    <thead>
+                <table class="table pt-3 mt-2" id="geneSelectionTable">
+                    <thead class="table-success">
                         <tr>
                         <th scope="col">HGNC ID</th>
                         <th scope="col">Gene Symbol</th>
@@ -124,6 +123,39 @@
             </div>
         </div>
         <!-- other linked genes end -->
+        <button type="submit" class="btn btn-primary btn-sm p-1 my-2">Submit</button>
     </form>
 </div>
+{% endblock %}
+
+{% block script %}
+<script>
+  $(document).ready(function () {
+    var table = $('#geneSelectionTable').DataTable();
+
+    // deal with issue on form not submitting all checked values due to
+    // how datatable works
+    // https://stackoverflow.com/questions/33240409/how-to-submit-checkboxes-from-all-pages-with-jquery-datatables
+    $('form').on('submit', function(e){
+      var $form = $(this);
+
+      // Iterate over all checkboxes in the table
+      table.$('input[type="checkbox"]').each(function(){
+          // If checkbox doesn't exist in DOM
+          if(!$.contains(document, this)){
+            // If checkbox is checked
+            if(this.checked){
+                // Create a hidden element 
+                $form.append(
+                  $('<input>')
+                      .attr('type', 'hidden')
+                      .attr('name', this.name)
+                      .val(this.value)
+                );
+            }
+          } 
+      });          
+    });
+  });
+</script>
 {% endblock %}
