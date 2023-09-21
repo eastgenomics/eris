@@ -266,8 +266,9 @@ def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict,
     # if hgnc id already have a clinical transcript
     # any following transcripts will be non-clinical by default
     if hgnc_id in gene_clinical_transcript:
-        if tx in gene_clinical_transcript["hgnc_id"]:
-            # a transcript has been assigned either MANE or HGMD
+        if tx not in gene_clinical_transcript["hgnc_id"]:
+            # a different transcript has already been assigned as clinical for this gene
+            # any remaining transcripts will be NON clinical
             clinical = False
             return clinical, source, err
 
@@ -355,7 +356,7 @@ def seed_transcripts(
     markname_hgmd = _prepare_markname_file(markname_filepath)
 
     # two dict for clinical and non-clinical tx assigment
-    gene_clinical_transcipt: dict[str, str] = {}
+    gene_clinical_transcript: dict[str, str] = {}
     gene_non_clinical_transcripts: dict[str, list] = collections.defaultdict(list)
 
     # for record purpose (just in case)
@@ -368,17 +369,17 @@ def seed_transcripts(
         transcripts = set(transcripts)
         for tx in transcripts:
             clin, tx_source, err = \
-                _transcript_assigner(tx, hgnc_id, gene_clinical_transcipt, 
+                _transcript_assigner(tx, hgnc_id, gene_clinical_transcript, 
                          mane_data, markname_hgmd, gene2refseq_hgmd)
             if clin:
-                gene_clinical_transcipt[hgnc_id] = [tx, tx_source]
+                gene_clinical_transcript[hgnc_id] = [tx, tx_source]
             else:
                 gene_non_clinical_transcripts[hgnc_id].append(tx)
             if err:
                 all_errors.append(err)
 
     # make genes - clinical or non-clinical - in db
-    for hgnc_id, transcript_source in gene_clinical_transcipt.items():
+    for hgnc_id, transcript_source in gene_clinical_transcript.items():
         transcript, source = transcript_source
         # make transcript into a list, because the transcript-adder is set up for a list
         transcript = [transcript] 
