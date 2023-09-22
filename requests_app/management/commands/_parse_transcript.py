@@ -211,73 +211,46 @@ def _add_gene_and_transcript_to_db(hgnc_id: str, transcripts: list,
         )
 
 
-def _markname_error_checker(short_hgnc_id: str, hgnc_id: str, markname_hgmd: dict) \
-    -> str | None:
-    """
-    Check for show-stopping errors in the markname table - 
-    a gene being absent or present more than once.
-    """
-    # hgnc id not in markname table / hgmd database, continue
-    if short_hgnc_id not in markname_hgmd:
-        err = f"{hgnc_id} not found in markname HGMD table"
-        return err
-
-    # hgnc id has more than one entry in markname table
-    # this is a problem with no solution, return as non-clinical
-    if len(markname_hgmd[short_hgnc_id]) > 1:
-        err = f"{hgnc_id} have two or more entries in markname HGMD table."
-        return err
-    
-    return None
-
-
-def _markname_gene_id_error_checker(hgnc_id: str, markname_gene_id: str, gene2refseq: dict) \
-    -> str | None:
-    """
-    Throw errors if the HGNC ID is None or pd.nan, if the gene ID from 
-    markname isn't in gene2refseq, or if a gene has multiple entries in the HGMD database,
-    because assessment of clinical/non-clinical won't be possible.
-    """
-    if not markname_gene_id or pd.isna(markname_gene_id):
-        err = f"{hgnc_id} has no gene_id in markname table"
-        return err
-
-    if markname_gene_id.strip() not in gene2refseq:
-        err = f"{hgnc_id} with gene id {markname_gene_id} not in gene2refseq table"
-        return err
-    
-    # we should have a list of 2 entities, the transcript, and its version
-    # if our list contains another list, there might be TWO lists of transcript/versions
-    if any(isinstance(x, list) for x in gene2refseq[markname_gene_id.strip()]):
-        err = f'{hgnc_id} has more than one transcript in the HGMD database: {",".join(gene2refseq)}'
-        return None, err
-    
-    return None
-
-
 def _get_clin_transcript_from_hgmd_files(hgnc_id, markname: dict, gene2refseq: dict) \
     -> tuple[str | None, str | None]:
     """
     Fetch the transcript linked to a particular gene in HGMD.
     First, need to find the gene's ID in the 'markname' table's file,
     then use the ID to find the gene's entries in the 'gene2refseq' table's file.
+    Catch various error scenarios too.
     :return: transcript linked to the gene in HGMD
     :return: error message if any
     """
     # HGMD database transcript search
     # hgmd write HGNC ID as XXXXX rather than HGNC:XXXXX
-    shortened_hgnc_id = hgnc_id.replace("HGNC:", "")
+    short_hgnc_id = hgnc_id.replace("HGNC:", "")
 
-    # markname is a table in HGMD database
-    err = _markname_error_checker(shortened_hgnc_id, hgnc_id, markname)
-    if err:
+    # Error states: hgnc id not in markname table / hgmd database,
+    # or hgnc id has more than one entry
+    if short_hgnc_id not in markname:
+        err = f"{hgnc_id} not found in markname HGMD table"
+        return None, err
+
+    if len(markname[short_hgnc_id]) > 1:
+        err = f"{hgnc_id} has two or more entries in markname HGMD table."
         return None, err
 
     # get the gene-id from markname table
-    markname_gene_id = markname[shortened_hgnc_id][0]
+    markname_gene_id = markname[short_hgnc_id][0]
 
-    err = _markname_gene_id_error_checker(hgnc_id, markname_gene_id, gene2refseq)
-    if err:
+    # Throw errors if the HGNC ID is None or pd.nan, if the gene ID from 
+    # markname isn't in gene2refseq, or if a gene has multiple entries in the HGMD database (list with lists),
+    # because assessment of clinical/non-clinical won't be possible.
+    if not markname_gene_id or pd.isna(markname_gene_id):
+        err = f"{hgnc_id} has no gene_id in markname table"
+        return None, err
+
+    if markname_gene_id.strip() not in gene2refseq:
+        err = f"{hgnc_id} with gene id {markname_gene_id} not in gene2refseq table"
+        return None, err
+    
+    if any(isinstance(x, list) for x in gene2refseq[markname_gene_id.strip()]):
+        err = f'{hgnc_id} has more than one transcript in the HGMD database: {",".join(gene2refseq)}'
         return None, err
 
     # gene2refseq data for gene-id
