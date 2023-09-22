@@ -55,3 +55,7 @@ class TestTranscriptAssigner_InMane(TestCase):
 
 
 #TODO: transcript assigner cases:
+# Transcript tagged as clinical if it's not in MANE, but is in gene2refseq/HGMD
+# Transcript tagged non-clinical, source=None, error=None, if:
+    # Transcript not in MANE or gene2refseq/HGMD
+# Expected error is thrown when a gene is in gene2refseq/HGMD twice

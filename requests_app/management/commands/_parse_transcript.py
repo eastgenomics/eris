@@ -249,6 +249,43 @@ def _markname_gene_id_error_checker(hgnc_id: str, markname_gene_id: str, gene2re
     return None
 
 
+def _get_clin_transcript_from_hgmd_files(hgnc_id, markname: dict, gene2refseq: dict) \
+    -> tuple[str | None, str | None]:
+    """
+    Fetch the transcript linked to a particular gene in HGMD.
+    First, need to find the gene's ID in the 'markname' table's file,
+    then use the ID to find the gene's entries in the 'gene2refseq' table's file.
+    :return: transcript linked to the gene in HGMD
+    :return: error message if any
+    """
+    # HGMD database transcript search
+    # hgmd write HGNC ID as XXXXX rather than HGNC:XXXXX
+    shortened_hgnc_id = hgnc_id.replace("HGNC:", "")
+
+    # markname is a table in HGMD database
+    err = _markname_error_checker(shortened_hgnc_id, hgnc_id, markname)
+    if err:
+        return None, err
+
+    # get the gene-id from markname table
+    markname_data = markname[shortened_hgnc_id][0]
+    markname_gene_id = markname_data.get("gene_id")
+
+    err = _markname_gene_id_error_checker(hgnc_id, markname_gene_id, gene2refseq)
+    if err:
+        return None, err
+
+    # gene2refseq data for gene-id
+    gene2refseq_data = gene2refseq[markname_gene_id.strip()]
+    if len(gene2refseq_data) > 1:
+        err = f'{hgnc_id} has more than one transcript in the HGMD database: {",".join(gene2refseq)}'
+        return None, err
+
+    # only one entry in gene2refseq data
+    hgmd_base, _ = gene2refseq_data[0]
+    return hgmd_base, None
+
+
 def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict, 
                          mane_data: dict, markname_hgmd: dict, gene2refseq_hgmd: dict) \
                             -> tuple[bool, str, str | None]:
@@ -280,7 +317,6 @@ def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict,
     if hgnc_id in mane_data:
         # MANE transcript search
         mane_tx = mane_data[hgnc_id]
-
         mane_base, _ = mane_tx.split(".")
 
         # compare transcript without the version
@@ -289,34 +325,12 @@ def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict,
             source = "MANE"
             return clinical, source, err
 
-    # HGMD database transcript search
-    # hgmd write HGNC ID as XXXXX rather than HGNC:XXXXX
-    shortened_hgnc_id = hgnc_id.replace("HGNC:", "")
-
-    # markname is a table in HGMD database
-    err = _markname_error_checker(shortened_hgnc_id, hgnc_id, markname_hgmd)
-    if err:
-        return clinical, source, err
-
-    # get the gene-id from markname table
-    markname_data = markname_hgmd[shortened_hgnc_id][0]
-    markname_gene_id = markname_data.get("gene_id")
-
-    err = _markname_gene_id_error_checker(hgnc_id, markname_gene_id, gene2refseq_hgmd)
-    if err:
-        return clinical, source, err
-
-    # gene2refseq data for gene-id
-    gene2refseq_data = gene2refseq_hgmd[markname_gene_id.strip()]
-
-    if len(gene2refseq_data) > 1:
-        err = f'{hgnc_id} have the following transcripts in HGMD database: {",".join(gene2refseq_hgmd)}'
-        return clinical, source, err
-
-    # only one entry in gene2refseq data
-    hgmd_base, _ = gene2refseq_data[0]
-
-    if tx_base == hgmd_base:
+    # hgnc id for the transcript's gene is not in MANE - 
+    # instead, see which transcript is linked to the gene in HGMD
+    hgmd_transcript, err = _get_clin_transcript_from_hgmd_files(hgnc_id, markname_hgmd, gene2refseq_hgmd)
+    
+    # does the HGMD transcript match the one we're currently looping through?
+    if tx_base == hgmd_transcript:
         clinical = True
         source = "HGMD"
     
