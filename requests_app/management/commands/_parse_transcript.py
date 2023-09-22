@@ -231,20 +231,26 @@ def _markname_error_checker(short_hgnc_id: str, hgnc_id: str, markname_hgmd: dic
     return None
 
 
-def _markname_gene_id_error_checker(hgnc_id: str, markname_gene_id: str, gene2refseq_hgmd: dict) \
+def _markname_gene_id_error_checker(hgnc_id: str, markname_gene_id: str, gene2refseq: dict) \
     -> str | None:
     """
-    Throw errors if the HGNC ID is None or pd.nan, or if the gene ID from 
-    markname isn't in gene2refseq, because assessment of clinical/non-clinical 
-    won't be possible.
+    Throw errors if the HGNC ID is None or pd.nan, if the gene ID from 
+    markname isn't in gene2refseq, or if a gene has multiple entries in the HGMD database,
+    because assessment of clinical/non-clinical won't be possible.
     """
     if not markname_gene_id or pd.isna(markname_gene_id):
         err = f"{hgnc_id} has no gene_id in markname table"
         return err
 
-    if markname_gene_id not in gene2refseq_hgmd:
+    if markname_gene_id.strip() not in gene2refseq:
         err = f"{hgnc_id} with gene id {markname_gene_id} not in gene2refseq table"
         return err
+    
+    # we should have a list of 2 entities, the transcript, and its version
+    # if our list contains another list, there might be TWO lists of transcript/versions
+    if any(isinstance(x, list) for x in gene2refseq[markname_gene_id.strip()]):
+        err = f'{hgnc_id} has more than one transcript in the HGMD database: {",".join(gene2refseq)}'
+        return None, err
     
     return None
 
@@ -268,21 +274,15 @@ def _get_clin_transcript_from_hgmd_files(hgnc_id, markname: dict, gene2refseq: d
         return None, err
 
     # get the gene-id from markname table
-    markname_data = markname[shortened_hgnc_id][0]
-    markname_gene_id = markname_data.get("gene_id")
+    markname_gene_id = markname[shortened_hgnc_id][0]
 
     err = _markname_gene_id_error_checker(hgnc_id, markname_gene_id, gene2refseq)
     if err:
         return None, err
 
     # gene2refseq data for gene-id
-    gene2refseq_data = gene2refseq[markname_gene_id.strip()]
-    if len(gene2refseq_data) > 1:
-        err = f'{hgnc_id} has more than one transcript in the HGMD database: {",".join(gene2refseq)}'
-        return None, err
+    hgmd_base = gene2refseq[markname_gene_id.strip()][0]
 
-    # only one entry in gene2refseq data
-    hgmd_base, _ = gene2refseq_data[0]
     return hgmd_base, None
 
 
@@ -309,7 +309,7 @@ def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict,
     if hgnc_id in gene_clinical_transcript:
         if tx_base not in gene_clinical_transcript[hgnc_id][0].split(".", 1)[0]:
             # a different transcript has already been assigned as clinical for this gene
-            # any remaining transcripts will be NON clinical
+            # any remaining transcripts will be NON-clinical
             clinical = False
             return clinical, source, err
     

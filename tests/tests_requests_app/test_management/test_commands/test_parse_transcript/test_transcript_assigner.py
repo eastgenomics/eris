@@ -54,8 +54,47 @@ class TestTranscriptAssigner_InMane(TestCase):
         assert not err
 
 
+class TestTranscriptAssigner_GeneInHgmd(TestCase):
+    """
+    CASE testing presence/absence in HGMD
+    """
+    def test_gene_transcript_in_hgmd(self):
+        # Transcript in HGMD matches the transcript we're currently feeding to the function
+        # Expect it to be tagged clinical with 'HGMD' as source
+        hgnc_id = "HGNC:1234"
+        tx = "NM00004.1"
+        gene_clinical_transcript = {}
+
+        mane_data = {}
+        markname_hgmd = {"1234": ["weird_hgmd_id"]}
+        gene2refseq_hgmd = {"weird_hgmd_id": ["NM00004", "2"]}
+
+        clinical, source, err = _transcript_assigner(tx, hgnc_id, gene_clinical_transcript, 
+                         mane_data, markname_hgmd, gene2refseq_hgmd)
+
+        assert clinical
+        assert source == "HGMD"
+        assert not err
+
+    def test_gene_in_hgmd_but_transcript_wrong(self):
+        # The gene is in HGMD, but the transcript in HGMD does not match our current input
+        # Expect it to be left as non-clinical with None source
+        hgnc_id = "HGNC:1234"
+        tx = "NM10.1"
+        gene_clinical_transcript = {}
+
+        mane_data = {}
+        markname_hgmd = {"1234": ["1"]}
+        gene2refseq_hgmd = {"1": ["NM00004", "2"]}
+
+        clinical, source, err = _transcript_assigner(tx, hgnc_id, gene_clinical_transcript, 
+                         mane_data, markname_hgmd, gene2refseq_hgmd)
+
+        assert not clinical
+        assert not source
+        assert not err
+
+
+
 #TODO: transcript assigner cases:
-# Transcript tagged as clinical if it's not in MANE, but is in gene2refseq/HGMD
-# Transcript tagged non-clinical, source=None, error=None, if:
-    # Transcript not in MANE or gene2refseq/HGMD
 # Expected error is thrown when a gene is in gene2refseq/HGMD twice
