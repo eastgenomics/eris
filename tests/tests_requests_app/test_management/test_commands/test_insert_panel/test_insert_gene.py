@@ -20,7 +20,7 @@ from requests_app.management.commands.panelapp import PanelClass
 # Old gene version in database without a HGNC number
 
 
-def len_check_wrapper(metric, metric_name, expected) -> str | list:
+def len_check(metric, metric_name, expected) -> str | list:
     """
     Checks that length of a list of metrics matches the expected length.
     Returns an error if not, otherwise returns an empty list.
@@ -35,7 +35,7 @@ def len_check_wrapper(metric, metric_name, expected) -> str | list:
         return [] # empty list
 
 
-def value_check_wrapper(metric, metric_name, expected) -> str | list:
+def value_check(metric, metric_name, expected) -> str | list:
     """
     Checks that value of a metric matches the expected value.
     Returns an error if not, otherwise returns an empty list.
@@ -96,25 +96,25 @@ class TestInsertGene_NewGene(TestCase):
 
         # check that the gene was added to the database
         new_genes = Gene.objects.all()
-        errors += len_check_wrapper(new_genes, "gene", 1)
+        errors += len_check(new_genes, "gene", 1)
         
         new_gene = new_genes[0]
-        errors += value_check_wrapper(new_gene.hgnc_id, "gene's HGNC ID", "21497")
-        errors += value_check_wrapper(new_gene.gene_symbol, "gene's symbol", "ACAD9")
-        errors += value_check_wrapper(new_gene.alias_symbols, "alias symbols", "NPD002,MGC14452")
+        errors += value_check(new_gene.hgnc_id, "gene's HGNC ID", "21497")
+        errors += value_check(new_gene.gene_symbol, "gene's symbol", "ACAD9")
+        errors += value_check(new_gene.alias_symbols, "alias symbols", "NPD002,MGC14452")
 
         # check that the gene was linked to the panel
         # with the correct confidence level
         panel_genes = PanelGene.objects.filter(panel=self.first_panel.id, gene=new_gene.id)
-        errors += len_check_wrapper(panel_genes, "panel-genes", 1)
+        errors += len_check(panel_genes, "panel-genes", 1)
         new_panelgene = panel_genes[0]
         confidence = Confidence.objects.filter(confidence_level=3)
-        errors += len_check_wrapper(confidence, "confidence", 1)
-        errors += value_check_wrapper(new_panelgene.confidence_id, "confidence ID", 1)
+        errors += len_check(confidence, "confidence", 1)
+        errors += value_check(new_panelgene.confidence_id, "confidence ID", 1)
 
         # check a history record was made for a NEW link
         panel_gene_history = PanelGeneHistory.objects.filter(panel_gene=new_panelgene.id)
-        errors += len_check_wrapper(panel_gene_history, "panel-gene history", 1)
+        errors += len_check(panel_gene_history, "panel-gene history", 1)
         new_history = panel_gene_history[0]
         if not new_history.note == History.panel_gene_created():
             errors.append(f"The History entry from the datatable, "
@@ -159,16 +159,16 @@ class TestInsertGene_NewGene(TestCase):
 
         # check there is a panel entry - this was in the DB already
         new_panels = Panel.objects.all()
-        errors += len_check_wrapper(new_panels, "panels", 1)
+        errors += len_check(new_panels, "panels", 1)
         # check that the confidence < 3 gene was NOT added to the database
         # only the gene with hgnc_id 89 should be in there
         new_genes = Gene.objects.all()
-        errors += len_check_wrapper(new_genes, "genes", 1)
-        errors += value_check_wrapper(new_genes[0].hgnc_id, "gene HGNC ID", "89")
+        errors += len_check(new_genes, "genes", 1)
+        errors += value_check(new_genes[0].hgnc_id, "gene HGNC ID", "89")
         
         # check 1 panel-gene entry, which will be for the gene with HGNC 89 
         new_panel_genes = PanelGene.objects.all()
-        errors += len_check_wrapper(new_panel_genes, "panel-genes", 1)
+        errors += len_check(new_panel_genes, "panel-genes", 1)
         if not new_panel_genes[0].panel == new_panels[0]:
             errors.append(f"PanelGene entry does not match our expected Panel: {new_panel_genes.panel}")
 
@@ -178,7 +178,7 @@ class TestInsertGene_NewGene(TestCase):
 
         # check 1 history entry
         new_history = PanelGeneHistory.objects.all()
-        errors += len_check_wrapper(new_history, "panel-gene history", 1)
+        errors += len_check(new_history, "panel-gene history", 1)
         if not new_history[0].panel_gene == new_panel_genes[0]:
             errors.append(f"History entry does not match our expected PanelGene: {new_history[0].panel_gene}")
 
@@ -217,24 +217,24 @@ class TestInsertGene_NewGene(TestCase):
 
         # check there is a panel entry - this was in the DB already
         new_panels = Panel.objects.all()
-        errors += len_check_wrapper(new_panels, "panel", 1)
+        errors += len_check(new_panels, "panel", 1)
 
         # check that the no-HGNC ID gene was NOT added to the database
         # only the gene with hgnc_id 89 should be in there
         new_genes = Gene.objects.all()
-        errors += len_check_wrapper(new_genes, "genes", 1)
-        errors += value_check_wrapper(new_genes[0].hgnc_id, "gene HGNC ID", "89")
+        errors += len_check(new_genes, "genes", 1)
+        errors += value_check(new_genes[0].hgnc_id, "gene HGNC ID", "89")
         
         # check 1 panel-gene entry, which will be for the gene with HGNC 89 
         new_panel_genes = PanelGene.objects.all()
-        errors += len_check_wrapper(new_panel_genes, "panel-genes", 1)
-        errors += value_check_wrapper(new_panel_genes[0].panel, "panel-gene link panel", new_panels[0])
-        errors += value_check_wrapper(new_panel_genes[0].gene, "panel-gene link panel", new_genes[0])
+        errors += len_check(new_panel_genes, "panel-genes", 1)
+        errors += value_check(new_panel_genes[0].panel, "panel-gene link panel", new_panels[0])
+        errors += value_check(new_panel_genes[0].gene, "panel-gene link panel", new_genes[0])
 
         # check 1 history entry
         new_history = PanelGeneHistory.objects.all()
-        errors += len_check_wrapper(new_history, "panel-gene history", 1)
-        errors += value_check_wrapper(new_history[0].panel_gene, "panel-gene history's panel gene link", 
+        errors += len_check(new_history, "panel-gene history", 1)
+        errors += value_check(new_history[0].panel_gene, "panel-gene history's panel gene link", 
                                       new_panel_genes[0])
 
         errors = "".join(errors)
@@ -322,29 +322,29 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
         # check that the gene is in the database 
         # and that it is unchanged from when we first added it
         new_genes = Gene.objects.all()
-        errors += len_check_wrapper(new_genes, "genes", 1)
+        errors += len_check(new_genes, "genes", 1)
         new_gene = new_genes[0]
-        errors += value_check_wrapper(new_gene.id, "gene ID", self.first_gene.id)
-        errors += value_check_wrapper(new_gene.hgnc_id, "gene HGNC ID", "21497")
-        errors += value_check_wrapper(new_gene.gene_symbol, "gene symbol", "ACAD9")
-        errors += value_check_wrapper(new_gene. alias_symbols, "gene alias symbols", "NPD002,MGC14452")
+        errors += value_check(new_gene.id, "gene ID", self.first_gene.id)
+        errors += value_check(new_gene.hgnc_id, "gene HGNC ID", "21497")
+        errors += value_check(new_gene.gene_symbol, "gene symbol", "ACAD9")
+        errors += value_check(new_gene. alias_symbols, "gene alias symbols", "NPD002,MGC14452")
 
         # check that we still have just 1 PanelGene link, which should be the one
         # we made ourselves in set-up 
         panel_genes = PanelGene.objects.all()
-        errors += len_check_wrapper(panel_genes, "panel-genes", 1)
-        errors += value_check_wrapper(panel_genes[0].id, "panel-genes ID", self.first_link.id)
+        errors += len_check(panel_genes, "panel-genes", 1)
+        errors += value_check(panel_genes[0].id, "panel-genes ID", self.first_link.id)
 
         # the gene will be in the database, but it will be the old record
         new_panelgene = panel_genes[0]
         confidence = Confidence.objects.filter(confidence_level=3)
-        errors += len_check_wrapper(confidence, "confidence", 1)
-        errors += value_check_wrapper(new_panelgene.confidence_id, "panel-gene confidence ID", confidence[0].id)
+        errors += len_check(confidence, "confidence", 1)
+        errors += value_check(new_panelgene.confidence_id, "panel-gene confidence ID", confidence[0].id)
 
         # there should not have been a history record made,
         # because there was not a change to the gene-panel link in this upload
         panel_gene_history = PanelGeneHistory.objects.all()
-        errors += len_check_wrapper(panel_gene_history, "panel-gene history", 0)
+        errors += len_check(panel_gene_history, "panel-gene history", 0)
 
         errors = "".join(errors)
         assert not errors, errors
@@ -441,24 +441,24 @@ class TestInsertGene_PreexistingGene_MultiplePanelVersions(TestCase):
         # check that the gene is in the database 
         # and that it is unchanged from when we first added it
         all_genes = Gene.objects.all()
-        errors += len_check_wrapper(all_genes, "genes", 1)
+        errors += len_check(all_genes, "genes", 1)
         new_gene = all_genes[0]
-        errors += value_check_wrapper(new_gene.id, "gene ID", self.first_gene.id)
-        errors += value_check_wrapper(new_gene.hgnc_id, "gene HGNC ID", "21497")
-        errors += value_check_wrapper(new_gene.gene_symbol, "gene symbol", "ACAD9")
-        errors += value_check_wrapper(new_gene.alias_symbols, "alias symbols", "NPD002,MGC14452")
+        errors += value_check(new_gene.id, "gene ID", self.first_gene.id)
+        errors += value_check(new_gene.hgnc_id, "gene HGNC ID", "21497")
+        errors += value_check(new_gene.gene_symbol, "gene symbol", "ACAD9")
+        errors += value_check(new_gene.alias_symbols, "alias symbols", "NPD002,MGC14452")
 
         # check that we now have 2 PanelGene links, one which we made ourselves in set-up,
         # one which is made now as a panel version increases
         panel_genes = PanelGene.objects.all()
-        errors += len_check_wrapper(panel_genes, "panel-genes", 2)
-        errors += value_check_wrapper(panel_genes[0].id, "panel-gene ID", self.first_link.id)
-        errors += value_check_wrapper(panel_genes[1].panel, "panel-gene panel", self.second_panel)
+        errors += len_check(panel_genes, "panel-genes", 2)
+        errors += value_check(panel_genes[0].id, "panel-gene ID", self.first_link.id)
+        errors += value_check(panel_genes[1].panel, "panel-gene panel", self.second_panel)
 
         # History record should link the old gene to the new panel version
         panel_gene_history = PanelGeneHistory.objects.all()
-        errors += len_check_wrapper(panel_gene_history, "panel-gene history", 1)
-        errors += value_check_wrapper(panel_gene_history[0].panel_gene, "panel-gene history link", panel_genes[1])
+        errors += len_check(panel_gene_history, "panel-gene history", 1)
+        errors += value_check(panel_gene_history[0].panel_gene, "panel-gene history link", panel_genes[1])
 
         errors = "".join(errors)
         assert not errors, errors

@@ -11,7 +11,7 @@ from requests_app.management.commands._insert_panel import \
     _insert_regions
 
 from requests_app.management.commands.panelapp import PanelClass
-from .test_insert_gene import len_check_wrapper, value_check_wrapper
+from .test_insert_gene import len_check, value_check
 
 ## _insert_regions
 class TestInsertRegions_NewRegion(TestCase):
@@ -86,21 +86,21 @@ class TestInsertRegions_NewRegion(TestCase):
 
         # check that both regions have been added to the database
         regions = Region.objects.all()
-        errors += len_check_wrapper(regions, "regions", 2)
-        errors += value_check_wrapper(regions[0].name, "region name", "ISCA-37390-Loss")
-        errors += value_check_wrapper(regions[1].name, "region name", "ISCA-37406-Loss")
+        errors += len_check(regions, "regions", 2)
+        errors += value_check(regions[0].name, "region name", "ISCA-37390-Loss")
+        errors += value_check(regions[1].name, "region name", "ISCA-37406-Loss")
 
 
         # check that both regions are linked to the correct panel
         panel_regions = PanelRegion.objects.all()
-        errors += len_check_wrapper(panel_regions, "panel regions", 2)
+        errors += len_check(panel_regions, "panel regions", 2)
         first_panel_regions = panel_regions[0]
         second_panel_regions = panel_regions[1]
 
-        errors += value_check_wrapper(first_panel_regions.panel, "first panel-region panel", self.first_panel)
-        errors += value_check_wrapper(first_panel_regions.region, "first panel-region region", regions[0])
-        errors += value_check_wrapper(second_panel_regions.panel, "second panel-region panel", self.first_panel)
-        errors += value_check_wrapper(second_panel_regions.region, "second panel-region region", regions[1])
+        errors += value_check(first_panel_regions.panel, "first panel-region panel", self.first_panel)
+        errors += value_check(first_panel_regions.region, "first panel-region region", regions[0])
+        errors += value_check(second_panel_regions.panel, "second panel-region panel", self.first_panel)
+        errors += value_check(second_panel_regions.region, "second panel-region region", regions[1])
 
         errors = "".join(errors)
         assert not errors, errors
@@ -233,19 +233,19 @@ class TestInsertRegions_PreexistingRegion(TestCase):
         # check that the new region has been added to the database
         # and that the region which was already in the database isn't duplicated
         regions = Region.objects.all()
-        errors += len_check_wrapper(regions, "regions", 2)
+        errors += len_check(regions, "regions", 2)
 
-        errors += value_check_wrapper(regions[0].name, "name of first region", self.first_region.name)
+        errors += value_check(regions[0].name, "name of first region", self.first_region.name)
         # the pre-populated value will show first
-        errors += value_check_wrapper(regions[1].name, "name of second region", "ISCA-37390-Loss")
+        errors += value_check(regions[1].name, "name of second region", "ISCA-37390-Loss")
 
 
         # check that both regions are linked to the correct panel
         panel_regions = PanelRegion.objects.all()
-        errors += len_check_wrapper(panel_regions, "panel-regions", 2)
-        errors += value_check_wrapper(panel_regions[0].panel, "first panel-regions' panel",
+        errors += len_check(panel_regions, "panel-regions", 2)
+        errors += value_check(panel_regions[0].panel, "first panel-regions' panel",
                                        self.first_panel)
-        errors += value_check_wrapper(panel_regions[1].panel, "first panel-regions' panel",
+        errors += value_check(panel_regions[1].panel, "first panel-regions' panel",
                                        self.first_panel)
         
         errors = "".join(errors)
@@ -387,19 +387,19 @@ class TestInsertRegions_PreexistingLink(TestCase):
         # and that the region which was already in the database isn't duplicated
         regions = Region.objects.all()
 
-        errors += len_check_wrapper(regions, "regions", 2)
-        errors += value_check_wrapper(regions[0].name, "name of first region",
+        errors += len_check(regions, "regions", 2)
+        errors += value_check(regions[0].name, "name of first region",
                                        self.first_region.name) # the pre-populated value will show first
-        errors += value_check_wrapper(regions[1].name, "name of second region",
+        errors += value_check(regions[1].name, "name of second region",
                                       "ISCA-37390-Loss")
 
 
         # check that both regions are linked to the correct panel
         # the first link in PanelRegion will be the one we made in set-up
         panel_regions = PanelRegion.objects.all()
-        errors += len_check_wrapper(panel_regions, "panel-regions", 2)
-        errors += value_check_wrapper(panel_regions[0], "first panel-region", self.first_panel_region_link)
-        errors += value_check_wrapper(panel_regions[1].panel, "second panel-region's panel", 
+        errors += len_check(panel_regions, "panel-regions", 2)
+        errors += value_check(panel_regions[0], "first panel-region", self.first_panel_region_link)
+        errors += value_check(panel_regions[1].panel, "second panel-region's panel", 
                                       self.first_panel)
 
         errors = "".join(errors)
