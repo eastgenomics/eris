@@ -154,8 +154,9 @@ def _prepare_gff_file(gff_file: str) -> dict[str, list]:
 def _prepare_gene2refseq_file(g2refseq_file: str) -> dict:
     """
     Reads through gene2refseq file (from HGMD database)
-    and generates a dict mapping of HGMD ID to list of [refcore, refversion]
-
+    and generates a dict mapping of HGMD ID to a list which can contain [refcore, refversion], 
+    e.g. 'id': [["NM_100", "2"]]
+    
     :param g2refseq_file: gene2refseq file path
 
     :return: dictionary of hgmd id to list of not "tuple" [refcore, refversion]
@@ -245,16 +246,19 @@ def _get_clin_transcript_from_hgmd_files(hgnc_id, markname: dict, gene2refseq: d
         err = f"{hgnc_id} has no gene_id in markname table"
         return None, err
 
-    if markname_gene_id.strip() not in gene2refseq:
+    markname_gene_id = markname_gene_id.strip()
+
+    if markname_gene_id not in gene2refseq:
         err = f"{hgnc_id} with gene id {markname_gene_id} not in gene2refseq table"
         return None, err
     
-    if any(isinstance(x, list) for x in gene2refseq[markname_gene_id.strip()]):
-        err = f'{hgnc_id} has more than one transcript in the HGMD database: {",".join(gene2refseq)}'
+    if len(gene2refseq[markname_gene_id]) > 1:
+        joined_entries = [i[0] for i in gene2refseq[markname_gene_id]]
+        err = f'{hgnc_id} has more than one transcript in the HGMD database: {",".join(joined_entries)}'
         return None, err
 
     # gene2refseq data for gene-id
-    hgmd_base = gene2refseq[markname_gene_id.strip()][0]
+    hgmd_base = gene2refseq[markname_gene_id][0][0]
 
     return hgmd_base, None
 
@@ -274,8 +278,6 @@ def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict,
     err = None
 
     tx_base, _ = tx.split(".")
-
-    #TODO: work out when and where to split the transcript down to base
     
     # if hgnc id already have a clinical transcript
     # any following transcripts will be non-clinical by default
@@ -300,10 +302,10 @@ def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict,
 
     # hgnc id for the transcript's gene is not in MANE - 
     # instead, see which transcript is linked to the gene in HGMD
-    hgmd_transcript, err = _get_clin_transcript_from_hgmd_files(hgnc_id, markname_hgmd, gene2refseq_hgmd)
+    hgmd_transcript_base, err = _get_clin_transcript_from_hgmd_files(hgnc_id, markname_hgmd, gene2refseq_hgmd)
     
     # does the HGMD transcript match the one we're currently looping through?
-    if tx_base == hgmd_transcript:
+    if tx_base == hgmd_transcript_base:
         clinical = True
         source = "HGMD"
     
@@ -342,6 +344,7 @@ def seed_transcripts(
     gff = _prepare_gff_file(gff_filepath)
     gene2refseq_hgmd = _prepare_gene2refseq_file(g2refseq_filepath)
     markname_hgmd = _prepare_markname_file(markname_filepath)
+
 
     # two dict for clinical and non-clinical tx assigment
     gene_clinical_transcript: dict[str, str] = {}

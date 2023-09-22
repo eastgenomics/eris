@@ -65,8 +65,8 @@ class TestTranscriptAssigner_GeneInHgmd(TestCase):
         gene_clinical_transcript = {}
 
         mane_data = {}
-        markname_hgmd = {"1234": ["weird_hgmd_id"]}
-        gene2refseq_hgmd = {"weird_hgmd_id": ["NM00004", "2"]}
+        markname_hgmd = {"1234": ["test"]}
+        gene2refseq_hgmd = {"test": [["NM00004", "1"]]}
 
         clinical, source, err = _transcript_assigner(tx, hgnc_id, gene_clinical_transcript, 
                          mane_data, markname_hgmd, gene2refseq_hgmd)
@@ -84,7 +84,7 @@ class TestTranscriptAssigner_GeneInHgmd(TestCase):
 
         mane_data = {}
         markname_hgmd = {"1234": ["1"]}
-        gene2refseq_hgmd = {"1": ["NM00004", "2"]}
+        gene2refseq_hgmd = {"1": [["NM00004", "2"]]}
 
         clinical, source, err = _transcript_assigner(tx, hgnc_id, gene_clinical_transcript, 
                          mane_data, markname_hgmd, gene2refseq_hgmd)
@@ -92,8 +92,3 @@ class TestTranscriptAssigner_GeneInHgmd(TestCase):
         assert not clinical
         assert not source
         assert not err
-
-
-
-#TODO: transcript assigner cases:
-# Expected error is thrown when a gene is in gene2refseq/HGMD twice
