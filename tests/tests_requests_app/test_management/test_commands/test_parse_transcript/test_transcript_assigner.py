@@ -12,7 +12,6 @@ class TestTranscriptAssigner_AlreadyAdded(TestCase):
     CASE: gene and transcript are in gene_clinical_transcript already
     EXPECT the transcript to return as non-clinical
     """
-    #TODO: work out when and where to split the transcript down to base
     def test_default_additional_transcript_non_clin(self):
 
         hgnc_id = "1234"
