@@ -98,7 +98,26 @@ def _insert_gene(
         # and we only fetch confidence level 3
         try:
             if float(confidence_level) != 3.0:
-                continue
+                # check if panel-gene exist in db
+                # flag as pending and return
+                # else move on
+                existing_panel_genes = PanelGene.objects.filter(
+                    gene_id__hgnc_id=hgnc_id, panel_id=panel_instance.id
+                )
+                if existing_panel_genes.exists():
+                    for panel_gene in existing_panel_genes:
+                        with transaction.atomic():
+                            panel_gene.pending = True
+                            panel_gene.save()
+
+                            PanelGeneHistory.objects.create(
+                                panel_gene_id=panel_gene.id,
+                                user="PanelApp",
+                                note=History.panel_gene_flagged(confidence_level),
+                            )
+                continue  # if panel-gene doesn't exist in db then we don't care about this gene with confidence level < 3
+            else:
+                pass  # if gene is confidence level 3 then we move on
         except TypeError:
             # the confidence_level is None or some other type that can't be converted to float
             print(
@@ -136,38 +155,24 @@ def _insert_gene(
             penetrance=single_gene.get("penetrance"),
         )
 
-        # create PanelGene record linking Panel to HGNC
-        if not panel_created:
-            # if panel is an existing panel in Eris
-            # this mean that panel has a change in PanelGene interaction
-            # in the new PanelApp seed, so any future PanelGene interaction
-            # will need to go through review
-            pg_instance, pg_created = PanelGene.objects.update_or_create(
-                panel_id=panel_instance.id,
-                gene_id=gene_instance.id,
-                defaults={
-                    "pending": True,
-                    "justification": "PanelApp",
-                    "confidence_id": confidence_instance.id,
-                    "moi_id": moi_instance.id,
-                    "mop_id": mop_instance.id,
-                    "penetrance_id": penetrance_instance.id,
-                },
-            )
-        else:
-            # if panel instance is created (new)
-            # thus we only link PanelGene since panel is new
-            pg_instance, pg_created = PanelGene.objects.get_or_create(
-                panel_id=panel_instance.id,
-                gene_id=gene_instance.id,
-                defaults={
-                    "justification": "PanelApp",
-                    "confidence_id": confidence_instance.id,
-                    "moi_id": moi_instance.id,
-                    "mop_id": mop_instance.id,
-                    "penetrance_id": penetrance_instance.id,
-                },
-            )
+        pg_instance, pg_created = PanelGene.objects.get_or_create(
+            panel_id=panel_instance.id,
+            gene_id=gene_instance.id,
+            defaults={
+                "justification": "PanelApp",
+                "confidence_id": confidence_instance.id,
+                "moi_id": moi_instance.id,
+                "mop_id": mop_instance.id,
+                "penetrance_id": penetrance_instance.id,
+            },
+        )
+
+        # if panel-gene record is newly created and the panel already exist in db
+        # this mean the panel-gene record is newly added in PanelApp API
+        # which will require our manual review
+        if pg_created and not panel_created:
+            pg_instance.pending = True
+            pg_instance.save()
 
         if pg_created:
             PanelGeneHistory.objects.create(
@@ -193,8 +198,6 @@ def _insert_gene(
 
                 pg_instance.justification = "PanelApp"
                 pg_instance.save()
-            else:
-                pass
 
 
 def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
