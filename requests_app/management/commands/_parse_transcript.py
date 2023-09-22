@@ -319,8 +319,7 @@ def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict,
     if tx_base == hgmd_base:
         clinical = True
         source = "HGMD"
-    else:
-        clinical = False
+    
     return clinical, source, err
 
 
