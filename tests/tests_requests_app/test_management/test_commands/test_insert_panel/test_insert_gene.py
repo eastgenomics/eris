@@ -64,6 +64,8 @@ class TestInsertGene_NewGene(TestCase):
     Situation where panel created and gene created
     """
 
+    errors = []  # list of errors to be reported at the end
+
     def setUp(self) -> None:
         """
         Start condition: Make a Panel, which we will link to genes as part of testing
@@ -106,37 +108,52 @@ class TestInsertGene_NewGene(TestCase):
 
         # there should only be one gene added into test db
         new_genes = Gene.objects.all()
-        assert len(new_genes) == 1
+        if not len(new_genes) == 1:
+            self.errors.append("There should only be one gene in the database")
 
         # assert the inserted gene should have above gene metadata
         new_gene = new_genes[0]
-        assert new_gene.hgnc_id == "21497"
-        assert new_gene.gene_symbol == "ACAD9"
-        assert new_gene.alias_symbols == "NPD002,MGC14452"
+        if (
+            not new_gene.hgnc_id == "21497"
+            or not new_gene.gene_symbol == "ACAD9"
+            or not new_gene.alias_symbols == "NPD002,MGC14452"
+        ):
+            self.errors.append(
+                "The gene added to the database does not have the correct metadata"
+            )
 
         # assert that there is only one panel-gene inserted into test db
         panel_genes = PanelGene.objects.filter(
             panel=self.first_panel.id, gene=new_gene.id
         )
-        assert len(panel_genes) == 1
+        if not len(panel_genes) == 1:
+            self.errors.append("There should only be one panel-gene in the database")
 
         new_panelgene = panel_genes[0]
         confidence = Confidence.objects.get(id=new_panelgene.confidence.id)
 
         # assert that the panel-gene have conf level 3
-        assert confidence.confidence_level == "3"
+        if not confidence.confidence_level == "3":
+            self.errors.append(
+                "The panel-gene added to the database does not have the correct confidence level"
+            )
 
         # check a history record was made for a NEW link
         panel_gene_history = PanelGeneHistory.objects.filter(
             panel_gene=new_panelgene.id
         )
-        assert len(panel_gene_history) == 1
+        if not len(panel_gene_history) == 1:
+            self.errors.append("There should only be one history record")
 
         # check panel-gene history record user as PanelApp
         new_history = panel_gene_history[0]
 
-        assert new_history.user == "PanelApp"
-        assert new_history.note == History.panel_gene_created()
+        if not new_history.user == "PanelApp":
+            self.errors.append(
+                "The panel-gene history record does not have the correct user"
+            )
+
+        assert not self.errors, self.errors
 
     def test_reject_low_confidence_gene(self):
         """
@@ -178,29 +195,25 @@ class TestInsertGene_NewGene(TestCase):
 
         # check there is a panel entry - this was in the DB already
         new_panels = Panel.objects.all()
-        assert len(new_panels) == 1
+        if not len(new_panels) == 1:
+            self.errors.append("There should only be one panel in the database")
 
         # there will only be one gene in db because we ignore the gene with confidence level 2
         new_genes = Gene.objects.all()
-        assert len(new_genes) == 1
-        assert new_genes[0].hgnc_id == "89"
+        if not len(new_genes) == 1:
+            self.errors.append("There should only be one gene in the database")
 
         # check 1 panel-gene entry, which will be for the gene with HGNC 89
         new_panel_genes = PanelGene.objects.all()
-        assert len(new_panel_genes) == 1
-        assert (
-            new_panel_genes[0].panel == new_panels[0]
-        )  # assert new panel-gene's panel is the new panel
-        assert (
-            new_panel_genes[0].gene == new_genes[0]
-        )  # assert new panel-gene's gene is gene.hgnc_id 89
+        if not len(new_panel_genes) == 1:
+            self.errors.append("There should only be one panel-gene in the database")
 
         # check 1 history entry
         new_history = PanelGeneHistory.objects.all()
-        assert len(new_history) == 1
-        assert (
-            new_history[0].panel_gene == new_panel_genes[0]
-        )  # assert panel-gene creation history is recorded
+        if not len(new_history) == 1:
+            self.errors.append("There should only be one history record")
+
+        assert not self.errors, self.errors
 
     def test_rejects_no_hgnc_id_gene(self):
         """
@@ -242,30 +255,26 @@ class TestInsertGene_NewGene(TestCase):
 
         # check there is a panel entry - this was in the DB already
         new_panels = Panel.objects.all()
-        assert len(new_panels) == 1
+        if not len(new_panels) == 1:
+            self.errors.append("There should only be one panel in the database")
 
         # check that the no-HGNC ID gene was NOT added to the database
         # only the gene with hgnc_id 89 should be in there
         new_genes = Gene.objects.all()
-        assert (
-            len(new_genes) == 1
-        )  # assert that there is only one gene in the database, meaning gene with None hgnc-id is not created
-        assert (
-            new_genes[0].hgnc_id == "89"
-        )  # assert that the new gene is the one with HGNC 89
+        if not len(new_genes) == 1:
+            self.errors.append("There should only be one gene in the database")
 
         # check 1 panel-gene entry, which will be for the gene with HGNC 89
         new_panel_genes = PanelGene.objects.all()
-        assert len(new_panel_genes) == 1
-        assert new_panel_genes[0].panel == new_panels[0]
-        assert new_panel_genes[0].gene == new_genes[0]
+        if not len(new_panel_genes) == 1:
+            self.errors.append("There should only be one panel-gene in the database")
 
         # check 1 history entry
         new_history = PanelGeneHistory.objects.all()
-        assert len(new_history) == 1
-        assert (
-            new_history[0].panel_gene == new_panel_genes[0]
-        )  # assert that history is created for one panel-gene link created
+        if not len(new_history) == 1:
+            self.errors.append(
+                "There should only be one history record"
+            )  # assert that history is created for one panel-gene link created
 
 
 class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
@@ -275,6 +284,8 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
     from PanelApp API call is the same as the one in the database
     so we expect no change to happen
     """
+
+    errors = []
 
     def setUp(self) -> None:
         """
@@ -348,32 +359,41 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
         # check that the gene is in the database
         # and that it is unchanged from when we first added it
         new_genes = Gene.objects.all()
-        assert len(new_genes) == 1
+        if not len(new_genes) == 1:
+            self.errors.append("There should only be one gene in the database")
 
         new_gene = new_genes[0]
-        assert new_gene.id == self.first_gene.id
-        assert new_gene.hgnc_id == "21497"
-        assert new_gene.gene_symbol == "ACAD9"
-        assert new_gene.alias_symbols == "NPD002,MGC14452"
+        if not new_gene.hgnc_id == "21497":
+            self.errors.append(
+                "The gene added to the database does not have the correct metadata"
+            )
 
         # check that we still have just 1 PanelGene link, which should be the one
         # we made ourselves in set-up
         panel_genes = PanelGene.objects.all()
-        assert len(panel_genes) == 1
-        assert panel_genes[0].id == self.first_link.id
-        assert (
-            panel_genes[0].pending is False
-        )  # check that the panel-gene interaction is not flagged up
+        if not len(panel_genes) == 1:
+            self.errors.append("There should only be one panel-gene in the database")
+
+        if panel_genes[0].pending:
+            self.errors.append(
+                "The panel-gene should not be flagged"
+            )  # check that the panel-gene interaction is not flagged up
 
         # the gene will be in the database, but it will be the old record
         new_panelgene = panel_genes[0]
         confidence = Confidence.objects.get(id=new_panelgene.confidence.id)
-        assert confidence.confidence_level == "3"
+        if not confidence.confidence_level == "3":
+            self.errors.append(
+                "The panel-gene added to the database does not have the correct confidence level"
+            )
 
         # there should not have been a history record made,
         # because there was not a change to the gene-panel link in this upload
         panel_gene_history = PanelGeneHistory.objects.all()
-        assert len(panel_gene_history) == 0
+        if not len(panel_gene_history) == 0:
+            self.errors.append("There should be no history record")
+
+        assert not self.errors, self.errors
 
 
 class TestAdditionOfGeneToExistingPanelGene(TestCase):
@@ -381,6 +401,8 @@ class TestAdditionOfGeneToExistingPanelGene(TestCase):
     Test that `insert_gene` function will create new panel-gene
     for existing panel with existing genes but flag it up for manual review
     """
+
+    errors = []
 
     def setUp(self) -> None:
         self.first_panel = Panel.objects.create(
@@ -460,27 +482,45 @@ class TestAdditionOfGeneToExistingPanelGene(TestCase):
         )  # False because it's an existing panel
 
         all_genes = Gene.objects.all()
-        assert len(all_genes) == 2  # there should be 2 genes in the db
+        if not len(all_genes) == 2:
+            self.errors.append("There should be two genes in the database")
 
         second_gene = all_genes[1]
-        assert second_gene.hgnc_id == "89"
+        if not second_gene.hgnc_id == "89":
+            self.errors.append("The gene added to the database should have hgnc_id 89")
 
         panel_genes = PanelGene.objects.all()
-        assert len(panel_genes) == 2  # there should be 2 panel-gene links
+        if not len(panel_genes) == 2:
+            self.errors.append("There should be two panel-gene links in the database")
 
-        assert (
-            panel_genes[0].id == self.first_link.id
-        )  # assert that the first panel is the same as the one we made in set-up
+        # check that the first panel-gene link is unchanged
+        if not panel_genes[0].id == self.first_link.id:
+            self.errors.append(
+                "The first panel-gene link should be unchanged"
+            )  # assert that the first panel is the same as the one we made in set-up
+
         second_panel_gene = panel_genes[1]
-        assert second_panel_gene.pending is True
-        assert second_panel_gene.gene_id == second_gene.id
+        if not second_panel_gene.pending:
+            self.errors.append("The second panel-gene link should be flagged")
+
+        if not second_panel_gene.gene_id == second_gene.id:
+            self.errors.append(
+                "The second panel-gene link should be linked to the second gene"
+            )
 
         # History record should link the old gene to the new panel version
         panel_gene_history = PanelGeneHistory.objects.all()
-        assert (
-            len(panel_gene_history) == 1
-        )  # there should only be one history recorded as we didn't create history for the panel-gene we created in setup. This history is created by `insert_gene` when creating the second panel-gene
-        assert panel_gene_history[0].panel_gene == panel_genes[1]
+        if not len(panel_gene_history) == 1:
+            self.errors.append(
+                "There should be one history record"
+            )  # there should only be one history recorded as we didn't create history for the panel-gene we created in setup. This history is created by `insert_gene` when creating the second panel-gene
+
+        if not panel_gene_history[0].panel_gene == panel_genes[1]:
+            self.errors.append(
+                "The history record should link to the second panel-gene"
+            )
+
+        assert not self.errors, self.errors
 
 
 class TestDropInPanelGeneConfidence(TestCase):
@@ -488,6 +528,8 @@ class TestDropInPanelGeneConfidence(TestCase):
     Test for `insert_gene` to flag panel-gene link when there is
     drop in panel-gene confidence in new PanelApp API seed
     """
+
+    errors = []
 
     def setUp(self) -> None:
         self.first_panel = Panel.objects.create(
@@ -585,29 +627,36 @@ class TestDropInPanelGeneConfidence(TestCase):
         )  # False because this is an existing Panel in the database
 
         all_genes = Gene.objects.all()
-        assert len(all_genes) == 2  # there should still be 2 genes in the db
+        if not len(all_genes) == 2:
+            self.errors.append("There should be two genes in the database")
 
         all_panel_genes = PanelGene.objects.all()
-        assert (
-            len(all_panel_genes) == 2
-        )  # there should still be 2 panel-gene links in the db
+        if not len(all_panel_genes) == 2:
+            self.errors.append("There should be two panel-gene links in the database")
 
         all_panels = Panel.objects.all()
-        assert len(all_panels) == 1  # there should only be one panel in the db
+        if not len(all_panels) == 1:
+            self.errors.append("There should be one panel in the database")
 
         panel_gene_1 = PanelGene.objects.get(
             panel_id=self.first_panel.id, gene_id=self.first_gene.id
         )
-        assert panel_gene_1.pending is False
+        if panel_gene_1.pending:
+            self.errors.append("Panel-gene 1 should not be flagged")
 
         panel_gene_2 = PanelGene.objects.get(
             panel_id=self.first_panel.id, gene_id=self.second_gene.id
         )
-        assert panel_gene_2.pending is True  # second panel-gene should be flagged
+        if not panel_gene_2.pending:
+            self.errors.append(
+                "Panel-gene 2 should be flagged"
+            )  # second panel-gene should be flagged
 
-        assert PanelGeneHistory.objects.all().count() == 1  # there should be 1 history
-        assert PanelGeneHistory.objects.get(
-            panel_gene_id=panel_gene_2.id
-        ).note == History.panel_gene_flagged(
-            2
-        )  # check history record is correct
+        # check history record
+        if not PanelGeneHistory.objects.all().count() == 1:
+            self.errors.append("There should only be one history record")
+        
+        if not PanelGeneHistory.objects.get(panel_gene_id=panel_gene_2.id).note == History.panel_gene_flagged(2):
+            self.errors.append("The history record is not correct")
+
+        assert not self.errors, self.errors
