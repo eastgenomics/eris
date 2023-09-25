@@ -81,6 +81,12 @@ class ClinicalIndication(models.Model):
         default=False,
     )
 
+    # creation date
+    created = models.DateTimeField(
+        verbose_name="created",
+        auto_now_add=True,
+    )
+
     class Meta:
         db_table = "clinical_indication"
 

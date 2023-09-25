@@ -31,7 +31,15 @@ SECRET_KEY = os.environ["SECRET_KEY"]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("ERIS_DEBUG", False)
 
-ALLOWED_HOSTS = []
+# allowed hosts
+ALLOWED_HOSTS = [
+    host.strip() for host in os.environ.get("ALLOWED_HOSTS", "").split(",")
+]
+
+# for form submission csrf token verification
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip() for origin in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")
+]
 
 
 # Application definition

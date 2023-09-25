@@ -32,22 +32,22 @@
             <form action="{% url 'panel_add' %}" method="post">
                 {% csrf_token %}
                 <div class="mb-3">
-                    <label for="externalId" class="form-label">External ID</label>
+                    <label class="form-label">External ID</label>
                     <input type="text" class="form-control" name="external_id" aria-describedby="externalIdHelp" placeholder="57" value="{{ external_id }}">
                     <div id="externalIdHelp" class="form-text">optional. This is the unique PanelApp id for each Panel. If not sure, just leave blank</div>
                   </div>
                 <div class="mb-3">
-                  <label for="panelName" class="form-label">Panel Name</label>
+                  <label class="form-label">Panel Name</label>
                   <input type="text" class="form-control" name="panel_name" placeholder="Stickler syndrome" value="{{ panel_name }}" required>
                   <div id="externalIdHelp" class="form-text">required</div>
                 </div>
                 <div class="mb-3">
-                  <label for="panelVersion" class="form-label">Panel Version</label>
+                  <label class="form-label">Panel Version</label>
                   <input type="text" class="form-control" name="panel_version" aria-describedby="panelNameHelp" value="{{ panel_version }}" placeholder="1">
                   <div id="panelVersionHelp" class="form-text">optional. Only accept number input. e.g. 1 or 2.5</div>
                 </div>
                 <div class="mb-3">
-                  <label for="panelVersion" class="form-label">Genes</label>
+                  <label class="form-label">Genes</label>
                   <!-- Genes selection -->
                   <table class="table pt-2" id="geneSelectionTable">
                     <thead class="table-success">
@@ -84,7 +84,31 @@
 {% block script %}
 <script>
   $(document).ready(function () {
-    new DataTable('#geneSelectionTable');
+    var table = $('#geneSelectionTable').DataTable();
+
+    // deal with issue on form not submitting all checked values due to
+    // how datatable works
+    // https://stackoverflow.com/questions/33240409/how-to-submit-checkboxes-from-all-pages-with-jquery-datatables
+    $('form').on('submit', function(e){
+      var $form = $(this);
+
+      // Iterate over all checkboxes in the table
+      table.$('input[type="checkbox"]').each(function(){
+          // If checkbox doesn't exist in DOM
+          if(!$.contains(document, this)){
+            // If checkbox is checked
+            if(this.checked){
+                // Create a hidden element 
+                $form.append(
+                  $('<input>')
+                      .attr('type', 'hidden')
+                      .attr('name', this.name)
+                      .val(this.value)
+                );
+            }
+          } 
+      });          
+    });
   });
 </script>
 {% endblock %}

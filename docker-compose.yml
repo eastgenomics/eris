@@ -3,6 +3,7 @@ version: "3.9"
 services:
   db:
     container_name: eris-db
+    platform: linux/amd64
     image: postgres:12.15-bullseye
     ports:
       - "5431:5432"
@@ -15,20 +16,22 @@ services:
       - POSTGRES_PASSWORD=root  # change based on PASSWORD
   web:
     container_name: eris-web
+    platform: linux/amd64
     image: eris-web:1.0
     build: .
-    command: bash -c "python manage.py collectstatic --noinput && gunicorn panel_requests.wsgi:application --bind :8005"
+    command: bash -c "python manage.py collectstatic --noinput && gunicorn panel_requests.wsgi:application --bind :8009"
     env_file:
       - /Users/jason/Github/eris/.env
     volumes:
       - eris_static:/app/staticfiles
     expose:
-      - 8005
+      - 8009
     depends_on:
       - db
     restart: always
   nginx:
     container_name: eris-nginx
+    platform: linux/amd64
     image: eris-nginx:1.0
     build: nginx
     volumes:
@@ -37,7 +40,7 @@ services:
       - VIRTUAL_HOST=localhost # change based on HOST
       - VIRTUAL_PATH=/eris # change based on PATH
     expose:
-      - 8006 # make sure nginx/nginx.conf PORT is changed too
+      - 8010 # make sure nginx/nginx.conf PORT is changed too
     depends_on:
       - web
 
