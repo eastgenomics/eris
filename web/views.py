@@ -70,7 +70,24 @@ def panel(request, panel_id: int):
     """
 
     # fetch panel
-    panel: Panel = Panel.objects.get(id=panel_id)
+    try:
+        panel: Panel = Panel.objects.get(id=panel_id)
+    except Panel.DoesNotExist:
+        return render(
+            request,
+            "web/info/panel.html",
+            {
+                "panel": None,
+                "ci_panels": [],
+                "cis": [],
+                "ci_history": [],
+                "pgs": [],
+                "transcripts": [],
+                "panel_pending_approval": None,
+                "ci_panel_pending_approval": None,
+            },
+        )
+
     panel.panel_version = (
         normalize_version(panel.panel_version) if panel.panel_version else None
     )
@@ -154,7 +171,24 @@ def clinical_indication(request, ci_id: int):
     """
 
     # fetch ci
-    ci: ClinicalIndication = ClinicalIndication.objects.get(id=ci_id)
+    try:
+        ci: ClinicalIndication = ClinicalIndication.objects.get(id=ci_id)
+    except ClinicalIndication.DoesNotExist:
+        return render(
+        request,
+        "web/info/clinical.html",
+        {
+            "ci": None,
+            "ci_panels": [],
+            "panels": [],
+            "ci_history": [],
+            "panel_genes": {},
+            "transcripts": [],
+            "ci_pending_approval": None,
+            "ci_panel_pending_approval": None,
+        },
+    )
+
 
     # fetch ci-panels
     # might have multiple panels but only one active
@@ -1248,7 +1282,14 @@ def gene(request, gene_id: int) -> None:
     Args:
         gene_id (int): gene id
     """
-    gene = Gene.objects.get(id=gene_id)
+    try:
+        gene = Gene.objects.get(id=gene_id)
+    except Gene.DoesNotExist:
+         return render(
+            request,
+            "web/info/gene.html",
+            {"gene": None, "panels": [], "transcripts": []},
+        )
 
     associated_panels = PanelGene.objects.filter(gene_id=gene_id).values(
         "panel_id__panel_name",
