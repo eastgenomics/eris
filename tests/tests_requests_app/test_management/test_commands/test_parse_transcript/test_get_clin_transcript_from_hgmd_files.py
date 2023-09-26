@@ -80,7 +80,6 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
 
     
     def test_gene2reqseq_entry_contains_list_of_lists(self):
-        #TODO: complete this test
         hgnc_id = "HGNC:1234"
         markname = {"1234": ["5678"]}
         gene2refseq = {"5678": [["NM005", "1"], ["NM009", "1"]]}
