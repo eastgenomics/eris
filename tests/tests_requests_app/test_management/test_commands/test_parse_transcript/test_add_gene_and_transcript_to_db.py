@@ -38,7 +38,7 @@ class TestAddGeneTranscript_FromScratch(TestCase):
         err += value_check(new_transcripts[0].source, "source", "MANE")
         err += value_check(new_transcripts[0].reference_genome, "ref", "")
 
-        errors = "".join(err)
+        errors = "; ".join(err)
         assert not errors, errors
 
 
@@ -72,7 +72,7 @@ class TestAddGeneTranscript_FromScratch(TestCase):
         err += value_check(second.source, "source", None)
         err += value_check(second.reference_genome, "ref", "")
 
-        errors = "".join(err)
+        errors = "; ".join(err)
         assert not errors, errors
 
 
@@ -114,5 +114,5 @@ class TestAddGeneTranscript_AlreadyExists(TestCase):
         err += value_check(new_tx.source, "source", None)
         err += value_check(new_tx.reference_genome, "ref", "38")
 
-        errors = "".join(err)
+        errors = "; ".join(err)
         assert not errors, errors
