@@ -24,8 +24,7 @@ from requests_app.management.commands._insert_panel import insert_data_into_db
 class TestInsertDataIntoDB(TestCase):
     def setUp(self) -> None:
         """
-        Start condition: Make a Panel, which we will link to genes as part of testing
-        _insert_gene
+        setup conditions for the test
         """
         self.first_panel = Panel.objects.create(
             external_id="1141",
@@ -48,7 +47,7 @@ class TestInsertDataIntoDB(TestCase):
             current=True,
         )
 
-    def test_core_function(
+    def test_that_a_new_panel_will_be_inserted_together_with_its_gene(
         self,
     ):
         """
