@@ -3,9 +3,7 @@
 
 from requests_app.models import (
     Panel,
-    ClinicalIndication,
     ClinicalIndicationPanel,
-    ClinicalIndicationPanelHistory,
     Gene,
     Confidence,
     Penetrance,
@@ -29,40 +27,6 @@ from ._insert_ci import (
 )
 from .panelapp import PanelClass
 from django.db import transaction
-
-
-def _backward_deactivate_panel_gene(panel: PanelClass, panel_instance: Panel) -> None:
-    """
-    Gets the HGNC IDs of genes (confidence 3) from the panel's PanelApp import
-    Check panel-gene interaction against that.
-    If they aren't, the functions sets them to Pending, for manual review.
-
-    :param panel: PanelClass object returned from PanelApp API
-    :param panel_instance: Panel object from database
-
-    e.g. scenario
-    - panel A (panel_instance: Panel) has genes A, B, C
-    - panel A have only genes A with confidence 3 in new PanelApp import (panel: PanelClass)
-    """
-
-    # fetch all confidence 3 hgnc_ids from PanelApp import
-    hgnc_ids: list[str] = [
-        gene.get("gene_data").get("hgnc_id")
-        for gene in panel.genes
-        if gene.get("gene_data")
-        and gene.get("confidence_level")
-        and float(gene.get("confidence_level")) == 3.0
-    ]
-
-    # for each panel-gene record, flag as pending if not in hgnc_ids
-    for panel_gene in PanelGene.objects.filter(panel_id=panel_instance.id).values(
-        "id",
-        "gene_id__hgnc_id",
-    ):
-        if panel_gene["gene_id__hgnc_id"] not in hgnc_ids:
-            pg: PanelGene = PanelGene.objects.get(id=panel_gene["id"])
-            pg.pending = True
-            pg.save()
 
 
 def _insert_gene(
@@ -335,8 +299,3 @@ def insert_data_into_db(panel: PanelClass, user: str) -> None:
     # and populate region attribute models
     _insert_gene(panel, panel_instance, created)
     _insert_regions(panel, panel_instance)
-
-    # for existing panel, check if PanelGene interaction is still valid
-    # meaning the panel is linked to confidence level 3 genes
-    if not created:
-        _backward_deactivate_panel_gene(panel, panel_instance)

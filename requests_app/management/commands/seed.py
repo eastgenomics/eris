@@ -122,7 +122,7 @@ class Command(BaseCommand):
         )
 
         transcript.add_argument(
-            "--refgenome",
+            "refgenome",
             type=str,
             help="Reference Genome",
         )
