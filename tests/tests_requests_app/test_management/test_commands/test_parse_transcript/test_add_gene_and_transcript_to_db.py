@@ -7,7 +7,7 @@ from requests_app.models import \
 
 from requests_app.management.commands._parse_transcript import \
     _add_gene_and_transcript_to_db
-from ..test_insert_panel.test_insert_gene import len_check, value_check
+from ..test_insert_panel.test_insert_gene import len_check_wrapper, value_check_wrapper
 
 
 class TestAddGeneTranscript_FromScratch(TestCase):
@@ -40,14 +40,14 @@ class TestAddGeneTranscript_FromScratch(TestCase):
         new_transcripts = Transcript.objects.all()
 
         # Check that the expected values were added to the database
-        err += len_check(new_genes, "gene", 1)
-        err += value_check(new_genes[0].hgnc_id, "gene HGNC", "HGNC:0001")
-        err += value_check(new_genes[0].gene_symbol, "gene symbol", None)
+        err += len_check_wrapper(new_genes, "gene", 1)
+        err += value_check_wrapper(new_genes[0].hgnc_id, "gene HGNC", "HGNC:0001")
+        err += value_check_wrapper(new_genes[0].gene_symbol, "gene symbol", None)
 
-        err += len_check(new_transcripts, "transcript", 1)
-        err += value_check(new_transcripts[0].transcript, "transcript name", "NM00045.6")
-        err += value_check(new_transcripts[0].source, "source", "MANE")
-        err += value_check(new_transcripts[0].reference_genome, "ref", "")
+        err += len_check_wrapper(new_transcripts, "transcript", 1)
+        err += value_check_wrapper(new_transcripts[0].transcript, "transcript name", "NM00045.6")
+        err += value_check_wrapper(new_transcripts[0].source, "source", "MANE")
+        err += value_check_wrapper(new_transcripts[0].reference_genome, "ref", "")
 
         errors = "; ".join(err)
         assert not errors, errors
@@ -71,19 +71,19 @@ class TestAddGeneTranscript_FromScratch(TestCase):
         new_transcripts = Transcript.objects.all()
 
         # Check that the expected values were added to the database
-        err += len_check(new_genes, "gene", 1)
-        err += value_check(new_genes[0].hgnc_id, "gene HGNC", "HGNC:0001")
-        err += value_check(new_genes[0].gene_symbol, "gene symbol", None)
+        err += len_check_wrapper(new_genes, "gene", 1)
+        err += value_check_wrapper(new_genes[0].hgnc_id, "gene HGNC", "HGNC:0001")
+        err += value_check_wrapper(new_genes[0].gene_symbol, "gene symbol", None)
 
-        err += len_check(new_transcripts, "transcript", 2)
+        err += len_check_wrapper(new_transcripts, "transcript", 2)
         first = new_transcripts[0]
         second = new_transcripts[1]
-        err += value_check(first.transcript, "transcript name", "NM00045.6")
-        err += value_check(first.source, "source", None)
-        err += value_check(first.reference_genome, "ref", "")
-        err += value_check(second.transcript, "transcript name", "NM00800.1")
-        err += value_check(second.source, "source", None)
-        err += value_check(second.reference_genome, "ref", "")
+        err += value_check_wrapper(first.transcript, "transcript name", "NM00045.6")
+        err += value_check_wrapper(first.source, "source", None)
+        err += value_check_wrapper(first.reference_genome, "ref", "")
+        err += value_check_wrapper(second.transcript, "transcript name", "NM00800.1")
+        err += value_check_wrapper(second.source, "source", None)
+        err += value_check_wrapper(second.reference_genome, "ref", "")
 
         errors = "; ".join(err)
         assert not errors, errors
@@ -127,11 +127,11 @@ class TestAddGeneTranscript_AlreadyExists(TestCase):
         all_transcripts = Transcript.objects.all()
 
         # expect old and new copy for the same transcript
-        err += len_check(all_transcripts, "transcript", 2)
+        err += len_check_wrapper(all_transcripts, "transcript", 2)
         new_tx = all_transcripts[1]
-        err += value_check(new_tx.transcript, "transcript name", "NM00045.6")
-        err += value_check(new_tx.source, "source", None)
-        err += value_check(new_tx.reference_genome, "ref", "38")
+        err += value_check_wrapper(new_tx.transcript, "transcript name", "NM00045.6")
+        err += value_check_wrapper(new_tx.source, "source", None)
+        err += value_check_wrapper(new_tx.reference_genome, "ref", "38")
 
         errors = "; ".join(err)
         assert not errors, errors
