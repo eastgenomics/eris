@@ -27,9 +27,9 @@ class TestTranscriptAssigner_AlreadyAdded(TestCase):
                                                      mane_data, markname_hgmd, 
                                                      gene2refseq_hgmd)
         
-        assert not clinical
-        assert not source
-        assert not err
+        errors = [x for x in [clinical, source, err] if x]
+
+        assert not errors, errors
 
 
 class TestTranscriptAssigner_InMane(TestCase):
@@ -103,6 +103,6 @@ class TestTranscriptAssigner_GeneInHgmd(TestCase):
                                                      markname_hgmd,
                                                      gene2refseq_hgmd)
 
-        assert not clinical
-        assert not source
-        assert not err
+        errors = [x for x in [clinical, source, err] if x]
+
+        assert not errors, errors
