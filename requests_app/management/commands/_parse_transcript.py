@@ -1,6 +1,7 @@
 import collections
 import datetime as dt
 import pandas as pd
+import re
 
 from requests_app.models import Gene, Transcript
 
@@ -277,7 +278,7 @@ def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict,
     source = None
     err = None
 
-    tx_base, _ = tx.split(".")
+    tx_base = re.sub(r'\.[\d]+$', '', tx)
     
     # if hgnc id already have a clinical transcript
     # any following transcripts will be non-clinical by default
@@ -292,7 +293,7 @@ def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict,
     if hgnc_id in mane_data:
         # MANE transcript search
         mane_tx = mane_data[hgnc_id]
-        mane_base, _ = mane_tx.split(".")
+        mane_base = re.sub(r'\.[\d]+$', '', mane_tx)
 
         # compare transcript without the version
         if tx_base == mane_base:
