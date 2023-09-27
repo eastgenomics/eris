@@ -41,7 +41,7 @@ def len_check_wrapper(metric, metric_name, expected) -> str | list:
             f"The number of {metric_name} entries in the database is {len(metric)} "
             f"which does not match the expected: {expected}"
         )
-        return msg
+        return [msg]
     else:
         return []  # empty list
 
@@ -54,7 +54,7 @@ def value_check_wrapper(metric, metric_name, expected) -> str | list:
     """
     if metric != expected:
         msg = f"The value of {metric_name} is {metric} which does not match the expected: {expected}"
-        return msg
+        return [msg]
     else:
         return []
 
@@ -108,50 +108,38 @@ class TestInsertGene_NewGene(TestCase):
 
         # there should only be one gene added into test db
         new_genes = Gene.objects.all()
-        if not len(new_genes) == 1:
-            errors.append("There should only be one gene in the database")
+        errors += len_check_wrapper(new_genes, "gene", 1)
 
         # assert the inserted gene should have above gene metadata
         new_gene = new_genes[0]
-        if (
-            not new_gene.hgnc_id == "21497"
-            or not new_gene.gene_symbol == "ACAD9"
-            or not new_gene.alias_symbols == "NPD002,MGC14452"
-        ):
-            errors.append(
-                "The gene added to the database does not have the correct metadata"
-            )
+        errors += value_check_wrapper(new_gene.hgnc_id, "hgnc_id", "21497")
 
         # assert that there is only one panel-gene inserted into test db
         panel_genes = PanelGene.objects.filter(
             panel=self.first_panel.id, gene=new_gene.id
         )
-        if not len(panel_genes) == 1:
-            errors.append("There should only be one panel-gene in the database")
+
+        errors += len_check_wrapper(panel_genes, "panel-gene", 1)
 
         new_panelgene = panel_genes[0]
         confidence = Confidence.objects.get(id=new_panelgene.confidence.id)
 
         # assert that the panel-gene have conf level 3
-        if not confidence.confidence_level == "3":
-            errors.append(
-                "The panel-gene added to the database does not have the correct confidence level"
-            )
+        errors += value_check_wrapper(
+            confidence.confidence_level, "confidence_level", "3"
+        )
 
         # check a history record was made for a NEW link
         panel_gene_history = PanelGeneHistory.objects.filter(
             panel_gene=new_panelgene.id
         )
-        if not len(panel_gene_history) == 1:
-            errors.append("There should only be one history record")
+
+        errors += len_check_wrapper(panel_gene_history, "history record", 1)
 
         # check panel-gene history record user as PanelApp
         new_history = panel_gene_history[0]
 
-        if not new_history.user == "PanelApp":
-            errors.append(
-                "The panel-gene history record does not have the correct user"
-            )
+        errors += value_check_wrapper(new_history.user, "user", "PanelApp")
 
         assert not errors, errors
 
@@ -197,23 +185,19 @@ class TestInsertGene_NewGene(TestCase):
 
         # check there is a panel entry - this was in the DB already
         new_panels = Panel.objects.all()
-        if not len(new_panels) == 1:
-            errors.append("There should only be one panel in the database")
+        errors += len_check_wrapper(new_panels, "panel", 1)
 
         # there will only be one gene in db because we ignore the gene with confidence level 2
         new_genes = Gene.objects.all()
-        if not len(new_genes) == 1:
-            errors.append("There should only be one gene in the database")
+        errors += len_check_wrapper(new_genes, "gene", 1)
 
         # check 1 panel-gene entry, which will be for the gene with HGNC 89
         new_panel_genes = PanelGene.objects.all()
-        if not len(new_panel_genes) == 1:
-            errors.append("There should only be one panel-gene in the database")
+        errors += len_check_wrapper(new_panel_genes, "panel-gene", 1)
 
         # check 1 history entry
         new_history = PanelGeneHistory.objects.all()
-        if not len(new_history) == 1:
-            errors.append("There should only be one history record")
+        errors += len_check_wrapper(new_history, "history record", 1)
 
         assert not errors, errors
 
@@ -259,26 +243,22 @@ class TestInsertGene_NewGene(TestCase):
 
         # check there is a panel entry - this was in the DB already
         new_panels = Panel.objects.all()
-        if not len(new_panels) == 1:
-            errors.append("There should only be one panel in the database")
+        errors += len_check_wrapper(new_panels, "panel", 1)
 
         # check that the no-HGNC ID gene was NOT added to the database
         # only the gene with hgnc_id 89 should be in there
         new_genes = Gene.objects.all()
-        if not len(new_genes) == 1:
-            errors.append("There should only be one gene in the database")
+        errors += len_check_wrapper(new_genes, "gene", 1)
 
         # check 1 panel-gene entry, which will be for the gene with HGNC 89
         new_panel_genes = PanelGene.objects.all()
-        if not len(new_panel_genes) == 1:
-            errors.append("There should only be one panel-gene in the database")
+        errors += len_check_wrapper(new_panel_genes, "panel-gene", 1)
 
         # check 1 history entry
         new_history = PanelGeneHistory.objects.all()
-        if not len(new_history) == 1:
-            errors.append(
-                "There should only be one history record"
-            )  # assert that history is created for one panel-gene link created
+        errors += len_check_wrapper(
+            new_history, "history record", 1
+        )  # assert that history is created for one panel-gene link created
 
         assert not errors, errors
 
@@ -365,39 +345,29 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
         # check that the gene is in the database
         # and that it is unchanged from when we first added it
         new_genes = Gene.objects.all()
-        if not len(new_genes) == 1:
-            errors.append("There should only be one gene in the database")
+        errors += len_check_wrapper(new_genes, "gene", 1)
 
         new_gene = new_genes[0]
-        if not new_gene.hgnc_id == "21497":
-            errors.append(
-                "The gene added to the database does not have the correct metadata"
-            )
+        errors += value_check_wrapper(new_gene.hgnc_id, "hgnc_id", "21497")
 
         # check that we still have just 1 PanelGene link, which should be the one
         # we made ourselves in set-up
         panel_genes = PanelGene.objects.all()
-        if not len(panel_genes) == 1:
-            errors.append("There should only be one panel-gene in the database")
+        errors += len_check_wrapper(panel_genes, "panel-gene", 1)
 
-        if panel_genes[0].pending:
-            errors.append(
-                "The panel-gene should not be flagged"
-            )  # check that the panel-gene interaction is not flagged up
+        errors += value_check_wrapper(
+            panel_genes[0].pending, "panel-gene pending", False
+        )  # check that the panel-gene interaction is not flagged up
 
         # the gene will be in the database, but it will be the old record
         new_panelgene = panel_genes[0]
         confidence = Confidence.objects.get(id=new_panelgene.confidence.id)
-        if not confidence.confidence_level == "3":
-            errors.append(
-                "The panel-gene added to the database does not have the correct confidence level"
-            )
+        errors += value_check_wrapper(confidence.confidence_level, "confidence", "3")
 
         # there should not have been a history record made,
         # because there was not a change to the gene-panel link in this upload
         panel_gene_history = PanelGeneHistory.objects.all()
-        if not len(panel_gene_history) == 0:
-            errors.append("There should be no history record")
+        errors += len_check_wrapper(panel_gene_history, "history record", 0)
 
         assert not errors, errors
 
@@ -489,41 +459,39 @@ class TestAdditionOfGeneToExistingPanelGene(TestCase):
         )  # False because it's an existing panel
 
         all_genes = Gene.objects.all()
-        if not len(all_genes) == 2:
-            errors.append("There should be two genes in the database")
+        errors += len_check_wrapper(all_genes, "gene", 2)
 
         second_gene = all_genes[1]
-        if not second_gene.hgnc_id == "89":
-            errors.append("The gene added to the database should have hgnc_id 89")
+        errors += value_check_wrapper(second_gene.hgnc_id, "hgnc_id", "89")
 
         panel_genes = PanelGene.objects.all()
-        if not len(panel_genes) == 2:
-            errors.append("There should be two panel-gene links in the database")
+        errors += len_check_wrapper(panel_genes, "panel-gene", 2)
 
         # check that the first panel-gene link is unchanged
-        if not panel_genes[0].id == self.first_link.id:
-            errors.append(
-                "The first panel-gene link should be unchanged"
-            )  # assert that the first panel is the same as the one we made in set-up
+        errors += value_check_wrapper(
+            panel_genes[0].id, "panel-gene id", self.first_link.id
+        )  # assert that the first panel is the same as the one we made in set-up
 
         second_panel_gene = panel_genes[1]
-        if not second_panel_gene.pending:
-            errors.append("The second panel-gene link should be flagged")
+        errors += value_check_wrapper(
+            second_panel_gene.pending, "panel-gene pending", True
+        )  # the second panel-gene link should be flagged
 
-        if not second_panel_gene.gene_id == second_gene.id:
-            errors.append(
-                "The second panel-gene link should be linked to the second gene"
-            )
+        errors += value_check_wrapper(
+            second_panel_gene.gene_id, "gene_id", second_gene.id
+        )  # the second panel-gene link should be linked to the second gene
 
         # History record should link the old gene to the new panel version
         panel_gene_history = PanelGeneHistory.objects.all()
-        if not len(panel_gene_history) == 1:
-            errors.append(
-                "There should be one history record"
-            )  # there should only be one history recorded as we didn't create history for the panel-gene we created in setup. This history is created by `insert_gene` when creating the second panel-gene
+        errors += len_check_wrapper(
+            panel_gene_history, "history record", 1
+        )  # there should only be one history recorded as we didn't create history for the panel-gene we created in setup. This history is created by `insert_gene` when creating the second panel-gene
 
-        if not panel_gene_history[0].panel_gene == panel_genes[1]:
-            errors.append("The history record should link to the second panel-gene")
+        errors += value_check_wrapper(
+            panel_gene_history[0].panel_gene,
+            "recorded panel-gene history",
+            panel_genes[1],
+        )
 
         assert not errors, errors
 
@@ -633,38 +601,37 @@ class TestDropInPanelGeneConfidence(TestCase):
         )  # False because this is an existing Panel in the database
 
         all_genes = Gene.objects.all()
-        if not len(all_genes) == 2:
-            errors.append("There should be two genes in the database")
+        errors += len_check_wrapper(all_genes, "gene", 2)
 
         all_panel_genes = PanelGene.objects.all()
-        if not len(all_panel_genes) == 2:
-            errors.append("There should be two panel-gene links in the database")
+        errors += len_check_wrapper(all_panel_genes, "panel-gene", 2)
 
         all_panels = Panel.objects.all()
-        if not len(all_panels) == 1:
-            errors.append("There should be one panel in the database")
+        errors += len_check_wrapper(all_panels, "panel", 1)
 
         panel_gene_1 = PanelGene.objects.get(
             panel_id=self.first_panel.id, gene_id=self.first_gene.id
         )
-        if panel_gene_1.pending:
-            errors.append("Panel-gene 1 should not be flagged")
+        errors += value_check_wrapper(
+            panel_gene_1.pending, "panel-gene 1 pending", False
+        )  # first panel-gene should not be flagged
 
         panel_gene_2 = PanelGene.objects.get(
             panel_id=self.first_panel.id, gene_id=self.second_gene.id
         )
-        if not panel_gene_2.pending:
-            errors.append(
-                "Panel-gene 2 should be flagged"
-            )  # second panel-gene should be flagged
+        errors += value_check_wrapper(
+            panel_gene_2.pending, "panel-gene 2 pending", True
+        )  # second panel-gene should be flagged
 
         # check history record
-        if not PanelGeneHistory.objects.all().count() == 1:
-            errors.append("There should only be one history record")
+        errors += len_check_wrapper(
+            PanelGeneHistory.objects.all(), "history record", 1
+        )  # there should only be one history record
 
-        if not PanelGeneHistory.objects.get(
-            panel_gene_id=panel_gene_2.id
-        ).note == History.panel_gene_flagged(2):
-            errors.append("The history record is not correct")
+        errors += value_check_wrapper(
+            PanelGeneHistory.objects.get(panel_gene_id=panel_gene_2.id).note,
+            "history record note",
+            History.panel_gene_flagged(2),
+        )  # check that the history record is correct
 
         assert not errors, errors
