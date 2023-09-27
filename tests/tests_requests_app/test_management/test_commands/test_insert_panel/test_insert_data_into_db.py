@@ -18,8 +18,9 @@ from requests_app.models import (
     PanelRegion,
 )
 from requests_app.management.commands.utils import sortable_version
-
 from requests_app.management.commands._insert_panel import insert_data_into_db
+
+from .test_insert_gene import len_check_wrapper, value_check_wrapper
 
 
 class TestInsertDataIntoDB(TestCase):
@@ -90,36 +91,39 @@ class TestInsertDataIntoDB(TestCase):
 
         insert_data_into_db(mock_api, "PanelApp")
 
-        if ClinicalIndicationPanel.objects.all().count() != 1:
-            errors.append(
-                "Expected 1 ClinicalIndicationPanel objects"
-            )  # assert that there is no new clinical indication-panel (just the one we created in setup)
+        errors += len_check_wrapper(
+            ClinicalIndicationPanel.objects.all(), "clinical indication-panel", 1
+        )  # assert that there is no new clinical indication-panel (just the one we created in setup)
 
-        if Panel.objects.all().count() != 2:
-            errors.append(
-                "Expected 2 Panel objects"
-            )  # first one is the one we made in setup, second one is inserted
+        errors += len_check_wrapper(
+            Panel.objects.all(), "panel", 2
+        )  # first one is the one we made in setup, second one is inserted
 
         panels = Panel.objects.all()
         attached_gene_hgnc_id = PanelGene.objects.filter(panel_id=panels[1].id).values(
             "gene_id__hgnc_id"
         )
 
-        if (
-            not attached_gene_hgnc_id
-            or attached_gene_hgnc_id[0]["gene_id__hgnc_id"] != "21497"
-        ):
-            errors.append(
-                "Expected second panel to be attached to hgnc-id 21497"
+        errors += len_check_wrapper(attached_gene_hgnc_id, "panel-gene", 1)
+
+        if attached_gene_hgnc_id:
+            errors += value_check_wrapper(
+                attached_gene_hgnc_id[0]["gene_id__hgnc_id"],
+                "panel-gene attached",
+                "21497",
             )  # assert that the second panel that is inserted is attached to gene hgnc-id 21497 through PanelGene
 
         attached_region = PanelRegion.objects.filter(panel_id=panels[1].id).values(
             "region_id__name"
         )
 
-        if attached_region[0]["region_id__name"] != "test region":
-            errors.append(
-                "Expected second panel to be attached to region 'test region'"
+        errors += len_check_wrapper(attached_region, "panel-region", 1)
+
+        if attached_region:
+            errors += value_check_wrapper(
+                attached_region[0]["region_id__name"],
+                "panel-region attached",
+                "test region",
             )  # assert that the second panel is attached to region 'test region'
 
         assert not errors, errors
@@ -160,31 +164,31 @@ class TestInsertDataIntoDB(TestCase):
 
         insert_data_into_db(mock_api, "PanelApp")
 
-        if ClinicalIndicationPanel.objects.all().count() != 2:
-            errors.append(
-                "Expected 2 ClinicalIndicationPanel objects"
-            )  # assert that there is one new clinical indication-panel
+        errors += len_check_wrapper(
+            ClinicalIndicationPanel.objects.all(), "clinical indication-panel", 2
+        )  # assert that there is one new clinical indication-panel
 
         clinical_indication_panels = ClinicalIndicationPanel.objects.all()
 
-        if (
-            not clinical_indication_panels[0].pending
-            or not clinical_indication_panels[1].pending
-        ):
-            errors.append(
-                "Expected both ClinicalIndicationPanel to be flagged for review"  # assert that both clinical indication-panels are flagged
-            )
+        errors += value_check_wrapper(
+            clinical_indication_panels[0].pending,
+            "first clinical indication-panel pending",
+            True,
+        )  # assert that the first clinical indication-panel is flagged for review
+        errors += value_check_wrapper(
+            clinical_indication_panels[1].pending,
+            "second clinical indication-panel pending",
+            True,
+        )  # assert that the second clinical indication-panel is flagged for review
 
-        if Panel.objects.all().count() != 2:
-            errors.append(
-                "Expected 2 Panel objects"
-            )  # assert that the panel with a different version is inserted
+        errors += len_check_wrapper(
+            Panel.objects.all(), "panel", 2
+        )  # assert that the panel with a different version is inserted
 
         panels = Panel.objects.all()
-        if not panels[1].panel_version == sortable_version(
-            "1.16"
-        ):  # assert second panel is the inserted panel
-            errors.append("Expected second panel to be version 1.16")
+        errors += value_check_wrapper(
+            panels[1].panel_version, "second panel version", sortable_version("1.16")
+        )  # assert second panel version is 1.16
 
         assert not errors, errors
 
@@ -224,33 +228,33 @@ class TestInsertDataIntoDB(TestCase):
 
         insert_data_into_db(mock_api, "PanelApp")
 
-        if ClinicalIndicationPanel.objects.all().count() != 2:
-            errors.append(
-                "Expected 2 ClinicalIndicationPanel objects"
-            )  # assert that there is a new clinical indication-panel
+        errors += len_check_wrapper(
+            ClinicalIndicationPanel.objects.all(), "ClinicalIndicationPanel", 2
+        )  # assert that there is a new clinical indication-panel
 
         clinical_indication_panels = ClinicalIndicationPanel.objects.all()
 
-        if (
-            not clinical_indication_panels[0].pending
-            or not clinical_indication_panels[1].pending
-        ):
-            errors.append(
-                "Expected both ClinicalIndicationPanel to be flagged for review"  # assert that both clinical indication-panels are flagged
-            )
+        errors += value_check_wrapper(
+            clinical_indication_panels[0].pending,
+            "first clinical indication-panel pending",
+            True,
+        )  # assert that the first clinical indication-panel is flagged for review
+        errors += value_check_wrapper(
+            clinical_indication_panels[1].pending,
+            "second clinical indication-panel pending",
+            True,
+        )  # assert that the second clinical indication-panel is flagged for review
 
-        if Panel.objects.all().count() != 2:
-            errors.append(
-                "Expected 2 Panel objects"
-            )  # assert that the panel with a different version is inserted
+        errors += len_check_wrapper(
+            Panel.objects.all(), "panel", 2
+        )  # assert that the panel with a different version is inserted
 
         panels = Panel.objects.all()
-        if (
-            not panels[1].panel_name == "Acute rhabdomyolosis with a different name"
-        ):  # assert second panel is the inserted panel
-            errors.append(
-                "Expected second panel to have a different name - Acute rhabdomyolosis with a different name"
-            )
+        errors += value_check_wrapper(
+            panels[1].panel_name,
+            "second panel name",
+            "Acute rhabdomyolosis with a different name",
+        )  # assert second panel name is "Acute rhabdomyolosis with a different name"
 
         assert not errors, errors
 
@@ -288,15 +292,13 @@ class TestInsertDataIntoDB(TestCase):
 
         insert_data_into_db(mock_api, "PanelApp")
 
-        if Panel.objects.all().count() != 1:
-            errors.append(
-                "Expected only 1 Panel objects"
-            )  # assert only one Panel in db
+        errors += len_check_wrapper(
+            Panel.objects.all(), "panel", 1
+        )  # assert only one Panel objects
 
         panels = Panel.objects.all()
-        if (
-            not panels[0].panel_name == "Acute rhabdomyolosis"
-        ):  # assert nothing has changed to the existing panel
-            errors.append("Expected the only panel to have the same name")
+        errors += value_check_wrapper(
+            panels[0].panel_name, "panel name", "Acute rhabdomyolosis"
+        )  # assert nothing has changed to the existing panel
 
         assert not errors, errors
