@@ -15,6 +15,7 @@ from requests_app.models import (
     ClinicalIndication,
     ClinicalIndicationPanel,
     PanelGene,
+    PanelRegion,
 )
 from requests_app.management.commands.utils import sortable_version
 
@@ -47,11 +48,12 @@ class TestInsertDataIntoDB(TestCase):
             current=True,
         )
 
-    def test_that_a_new_panel_will_be_inserted_together_with_its_gene(
+    def test_that_a_new_panel_will_be_inserted_together_with_its_gene_and_region(
         self,
     ):
         """
-        test that the core function of `insert_data_to_db` works - insert panel + their metadata
+        test that the core function of `insert_data_to_db` works
+        - this includes calling `insert_gene` and `insert_region` functions
         """
         errors = []
 
@@ -74,7 +76,16 @@ class TestInsertDataIntoDB(TestCase):
                     "penetrance": "test",
                 }
             ],
-            regions=[],
+            regions=[
+                {
+                    "entity_name": "test region",
+                    "verbose_name": "detailed test region",
+                    "chromosome": 1,
+                    "grch37_coordinates": (None, None),
+                    "grch38_coordinates": (1, 2),
+                    "entity_type": "test entity type",
+                }
+            ],
         )
 
         insert_data_into_db(mock_api, "PanelApp")
@@ -101,6 +112,15 @@ class TestInsertDataIntoDB(TestCase):
             errors.append(
                 "Expected second panel to be attached to hgnc-id 21497"
             )  # assert that the second panel that is inserted is attached to gene hgnc-id 21497 through PanelGene
+
+        attached_region = PanelRegion.objects.filter(panel_id=panels[1].id).values(
+            "region_id__name"
+        )
+
+        if attached_region[0]["region_id__name"] != "test region":
+            errors.append(
+                "Expected second panel to be attached to region 'test region'"
+            )  # assert that the second panel is attached to region 'test region'
 
         assert not errors, errors
 
