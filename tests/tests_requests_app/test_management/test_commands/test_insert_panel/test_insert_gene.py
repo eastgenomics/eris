@@ -101,7 +101,8 @@ class TestInsertGene_NewGene(TestCase):
         new_gene = new_genes[0]
         errors += value_check(new_gene.hgnc_id, "gene's HGNC ID", "21497")
         errors += value_check(new_gene.gene_symbol, "gene's symbol", "ACAD9")
-        errors += value_check(new_gene.alias_symbols, "alias symbols", "NPD002,MGC14452")
+        errors += value_check(new_gene.alias_symbols, "alias symbols", 
+                              "NPD002,MGC14452")
 
         # check that the gene was linked to the panel
         # with the correct confidence level
@@ -228,8 +229,10 @@ class TestInsertGene_NewGene(TestCase):
         # check 1 panel-gene entry, which will be for the gene with HGNC 89 
         new_panel_genes = PanelGene.objects.all()
         errors += len_check(new_panel_genes, "panel-genes", 1)
-        errors += value_check(new_panel_genes[0].panel, "panel-gene link panel", new_panels[0])
-        errors += value_check(new_panel_genes[0].gene, "panel-gene link panel", new_genes[0])
+        errors += value_check(new_panel_genes[0].panel, "panel-gene link panel", 
+                              new_panels[0])
+        errors += value_check(new_panel_genes[0].gene, "panel-gene link panel", 
+                              new_genes[0])
 
         # check 1 history entry
         new_history = PanelGeneHistory.objects.all()
@@ -327,7 +330,8 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
         errors += value_check(new_gene.id, "gene ID", self.first_gene.id)
         errors += value_check(new_gene.hgnc_id, "gene HGNC ID", "21497")
         errors += value_check(new_gene.gene_symbol, "gene symbol", "ACAD9")
-        errors += value_check(new_gene. alias_symbols, "gene alias symbols", "NPD002,MGC14452")
+        errors += value_check(new_gene. alias_symbols, "gene alias symbols", 
+                              "NPD002,MGC14452")
 
         # check that we still have just 1 PanelGene link, which should be the one
         # we made ourselves in set-up 
@@ -339,7 +343,8 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
         new_panelgene = panel_genes[0]
         confidence = Confidence.objects.filter(confidence_level=3)
         errors += len_check(confidence, "confidence", 1)
-        errors += value_check(new_panelgene.confidence_id, "panel-gene confidence ID", confidence[0].id)
+        errors += value_check(new_panelgene.confidence_id, "panel-gene confidence ID", 
+                              confidence[0].id)
 
         # there should not have been a history record made,
         # because there was not a change to the gene-panel link in this upload
@@ -458,7 +463,8 @@ class TestInsertGene_PreexistingGene_MultiplePanelVersions(TestCase):
         # History record should link the old gene to the new panel version
         panel_gene_history = PanelGeneHistory.objects.all()
         errors += len_check(panel_gene_history, "panel-gene history", 1)
-        errors += value_check(panel_gene_history[0].panel_gene, "panel-gene history link", panel_genes[1])
+        errors += value_check(panel_gene_history[0].panel_gene, "panel-gene history link", 
+                              panel_genes[1])
 
         errors = "".join(errors)
         assert not errors, errors
