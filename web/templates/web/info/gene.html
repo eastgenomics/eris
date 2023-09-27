@@ -4,10 +4,14 @@
 <div class="container mb-5">
     <div class="row">
         <div class="col">
+            {% if gene %}
             <h1>{{ gene.hgnc_id }}</h1>
             <h4>{{ gene.gene_symbol }}</h4>
             <h4>alias symbols: {{ gene.alias_symbols }}</h4>
             <h5>database id: {{ gene.id }}</h5>
+            {% else %}
+            <h1>Gene Does Not Exist.</h1>
+            {% endif %}
         </div>
     </div>
     <br>

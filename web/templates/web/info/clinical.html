@@ -7,17 +7,21 @@
         <div class="col">
             <div class="alert alert-warning shadow" role="alert">
                 Pending Approval
-              </div>
+            </div>
         </div>
     </div>
     {% endif %}
     <br> <!-- Clinical Indication Overview -->
     <div class="row">
         <div class="col">
+            {% if ci %}
             <h1>{{ ci.name }}</h1>
             <h4>r code: {{ ci.r_code }}</h4>
             <h4>test method: {{ ci.test_method }}</h4>
             <h5>database id: <span class="text-danger">{{ ci.id }}</span></h5>
+            {% else %}
+            <h1>Clinical Indication Does Not Exist.</h1>
+            {% endif %}
         </div>
     </div>
 
@@ -66,7 +70,7 @@
     <p class="fs-6 text-muted">all clinical indication-panel links</p>
     <div class="row my-3">
         <div class="col">
-            {% if not ci_pending_approval %}
+            {% if not ci_pending_approval and ci %}
                 <a href="{% url 'ci_panel_add' ci.id %}" class="btn btn-primary btn-sm">Edit Clinical Indication-Panel Link</a>
             {% endif %}
         </div>
@@ -91,7 +95,7 @@
                             <li class="list-group-item">created: {{ ci_panel.created }}</li>
                             <li class="list-group-item">last updated: {{ ci_panel.last_updated }}</li>
                             <li class="list-group-item">target: <a href="{% url 'panel' ci_panel.panel_id %}"><span class="text-info">{{ ci_panel.panel_id__panel_name }}</span></a></li>
-                         </ul>
+                        </ul>
                     </p>
 
                     {% if ci_panel.current %}
@@ -129,12 +133,12 @@
         <div class="col-12">
             <table class="table table-bordered shadow">
                 <thead>
-                  <tr>
+                <tr>
                     <th scope="col">Date</th>
                     <th scope="col">Modification</th>
                     <th class="col">User</th>
                     <th scope="col">Ci-Panel id</th>
-                  </tr>
+                </tr>
                 </thead>
                 <tbody>
                     {% for history in ci_history %}
@@ -176,11 +180,11 @@
                     <p class="card-text">
                         <table class="table table-bordered table-hover">
                             <thead>
-                              <tr>
+                            <tr>
                                 <th scope="col">HGNC id</th>
                                 <th scope="col">Gene Symbol</th>
                                 <th scope="col">Created</th>
-                              </tr>
+                            </tr>
                             </thead>
                             <tbody>
                                 {% for gene in values %}
@@ -214,11 +218,11 @@
         <div class="col-12">
             <table class="table table-bordered shadow">
                 <thead>
-                  <tr>
+                <tr>
                     <th scope="col">Gene</th>
                     <th scope="col">Transcript</th>
                     <th scope="col">Source</th>
-                  </tr>
+                </tr>
                 </thead>
                 <tbody>
                     {% for transcript in transcripts %}
@@ -243,5 +247,6 @@
         </div>
         {% endif %}
     </div>
+
 </div>
 {% endblock %}
