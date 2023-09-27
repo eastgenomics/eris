@@ -11,11 +11,22 @@ from ..test_insert_panel.test_insert_gene import len_check, value_check
 
 
 class TestAddGeneTranscript_FromScratch(TestCase):
+    """
+    Cases where transcripts and genes are being added to a 'clean' 
+    database with no entries - emulates situations where the gene 
+    and transcript aren't already in the database, have old 
+    versions that need handling, and so on.
+
+    One case is for when a gene has 1 transcript,
+    another is for multiple transcripts.
+    """
     def setUp(self) -> None:
         return super().setUp()
     
     def test_add_new_gene_new_transcript_single(self):
-        # Straightforward use case
+        """
+        Straightforward use case, one transcript per gene
+        """
         err = []
 
         hgnc_id = "HGNC:0001"
@@ -43,7 +54,9 @@ class TestAddGeneTranscript_FromScratch(TestCase):
 
 
     def test_add_new_gene_new_transcript_multiple(self):
-        # Straightforward case, but with multiple transcripts
+        """
+        Straightforward case, but with multiple transcripts
+        """
         err = []
 
         hgnc_id = "HGNC:0001"
@@ -78,8 +91,14 @@ class TestAddGeneTranscript_FromScratch(TestCase):
 
 class TestAddGeneTranscript_AlreadyExists(TestCase):
     """
-    Testing transcripts are created if they are different in e.g. their reference version 
-    or source, from an already-existing transcript
+    Cases where transcripts are being added to a database which
+    already contains a gene and transcript.
+
+    Testing transcripts are still created if they are different in e.g. their reference version 
+    or source, from an already-existing transcript.
+
+    #TODO: needs development - as part of plans to implement a more informative
+    versioning system for transcripts.
     """
 
     def setUp(self) -> None:

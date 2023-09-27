@@ -54,9 +54,9 @@ class TestTranscriptAssigner_InMane(TestCase):
                                                      markname_hgmd,
                                                      gene2refseq_hgmd)
 
-        assert clinical
-        assert source == "MANE"
-        assert not err
+        errors = [x for x in [clinical, source == "MANE", not err] if not x]
+
+        assert not errors, errors
 
 
 class TestTranscriptAssigner_GeneInHgmd(TestCase):
@@ -81,9 +81,9 @@ class TestTranscriptAssigner_GeneInHgmd(TestCase):
                                                      markname_hgmd,
                                                      gene2refseq_hgmd)
 
-        assert clinical
-        assert source == "HGMD"
-        assert not err
+        errors = [x for x in [clinical, source == "HGMD", not err] if not x]
+
+        assert not errors, errors
 
     def test_gene_in_hgmd_but_transcript_wrong(self):
         # The gene is in HGMD, but the transcript in HGMD does not match our current input
