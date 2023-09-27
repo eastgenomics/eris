@@ -283,7 +283,8 @@ def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict,
     # if hgnc id already have a clinical transcript
     # any following transcripts will be non-clinical by default
     if hgnc_id in gene_clinical_transcript:
-        if tx_base not in gene_clinical_transcript[hgnc_id][0].split(".", 1)[0]:
+        gene_clin_tx_base = re.sub(r'\.[\d]+$', '',  gene_clinical_transcript[hgnc_id][0])
+        if tx_base not in gene_clin_tx_base:
             # a different transcript has already been assigned as clinical for this gene
             # any remaining transcripts will be NON-clinical
             clinical = False
