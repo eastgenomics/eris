@@ -305,19 +305,116 @@ class Gene(models.Model):
         return str(self.id)
 
 
+class TranscriptSource(models.Model):
+    """
+    Defines a particular source of transcript information, e.g. MANE
+    """
+
+    source = models.CharField(
+        verbose_name="Transcript Source",
+        max_length=255,
+        null=True,
+        default=None,
+    )
+
+    class Meta:
+        db_table = "transcript_source"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class TranscriptRelease(models.Model):
+    """
+    Defines a specific release of a transcript source with metadata -
+    for example, MANE release 1.0, or a specific HGMD dump
+    """
+
+    source = models.ForeignKey(TranscriptSource, verbose_name="Transcript source id", 
+                               on_delete=models.PROTECT)
+    
+    external_release_version = models.CharField(
+        verbose_name="Transcript Release",
+        max_length=255,
+        null=True,
+        default=None
+    )
+
+    created = models.DateTimeField(
+        verbose_name="created",
+        auto_now_add=True,
+    )
+    
+    file_id = models.CharField(
+        verbose_name="File ID",
+        max_length=255,
+        null=True,
+        default=None
+    )
+
+    external_db_dump_date = models.DateTimeField(
+        verbose_name="External Db Dump Date"
+    )
+
+    class Meta:
+        db_table = "transcript_release"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class TranscriptReleaseHistory(models.Model):
+    transcript_release = models.ForeignKey(
+        TranscriptRelease,
+        verbose_name="TranscriptRelease id",
+        on_delete=models.CASCADE,
+    )
+
+    created = models.DateTimeField(
+        verbose_name="created",
+        auto_now_add=True,
+    )
+
+    note = models.CharField(
+        verbose_name="Note",
+        max_length=255,
+    )
+
+    user = models.CharField(
+        verbose_name="user",
+        max_length=255,
+        null=True,
+    )
+
+    class Meta:
+        db_table = "transcript_release_history"
+
+    def __str__(self):
+        return str(self.id)
+    
+
 class Transcript(models.Model):
     """Defines a single transcript by RefSeq ID"""
 
     transcript = models.CharField(verbose_name="Transcript", max_length=255, null=True)
 
-    source = models.CharField(
-        verbose_name="MANE or HGMD", max_length=255, null=True, default=None
-    )
-
     gene = models.ForeignKey(Gene, verbose_name="Gene id", on_delete=models.PROTECT)
 
     reference_genome = models.CharField(
         verbose_name="Reference Genome",
+        max_length=255,
+        null=True,
+        default=None,
+    )
+
+    transcript_release = models.ForeignKey(TranscriptRelease, 
+                                           verbose_name="Transcript release id",
+                                           on_delete=models.PROTECT)
+
+    # release_match_type = is the transcript represented perfectly in the release
+    # (e.g. both base and version match), or does just the base match?
+    release_match_type = models.CharField(
+        verbose_name="Transcript release match",
         max_length=255,
         null=True,
         default=None,
