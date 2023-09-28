@@ -3,10 +3,10 @@ import datetime as dt
 import pandas as pd
 import re
 
-from requests_app.models import Gene, Transcript
+from requests_app.management.commands.tx_match import MatchType
+from requests_app.models import Gene, Transcript, TranscriptRelease, TranscriptSource
 
 # TODO: build-37 and build-38 transcripts?
-# TODO: more informative transcript source column
 
 
 def _update_existing_gene_metadata_in_db(
@@ -225,6 +225,7 @@ def _assign_mane_release_to_tx(tx: str, tx_mane_release: list[dict]):
     Given a transcript with version, and a list-of-dicts of transcript information made 
     from user input and a MANE FTP file, look up the MANE release.
     :return: MANE release version, or None if no match available.
+    :return: type of match between transcript and MANE
     """
     tx_base = re.sub(r'\.[\d]+$', '', tx)
             
@@ -234,47 +235,79 @@ def _assign_mane_release_to_tx(tx: str, tx_mane_release: list[dict]):
                                         if item['tx_versionless'] == tx_base), None)
     if perfect_match_with_mane:
         release = perfect_match_with_mane["mane_release"]
+        match_type = MatchType.complete_match()
     elif imperfect_match_with_mane:
         release = imperfect_match_with_mane["mane_release"]
+        match_type = MatchType.versionless_match_only()
     else:
         release = None
+        match_type = None
+        # TODO: there's a logic hole to fix here - tx can be MANE but without release version?
 
-    # look up or create the TranscriptRelease object, if there is a result
     if release:
-        # TODO: create a database object
-        return release
+        # look up or create the source
+        source, _ = TranscriptSource.objects.get_or_create(
+            source = "MANE"
+        )
+
+        # look up or create the TranscriptRelease object
+        transcript_release, _ = TranscriptRelease.objects.get_or_create(
+            source=source,
+            external_release_version=release,
+            file_id=None,
+            external_db_dump_date=None
+            )
+        
+        return transcript_release, match_type
     else:
-        return None
+        return None, None
 
 
-def _add_gene_and_transcript_to_db(hgnc_id: str, transcripts: list, 
+def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str, 
                                    reference_genome: str, source: str | None,
                                    tx_mane_release: dict) -> None:
     """
-    Add each gene to the database, with any transcripts associated with it.
-    Source will often be something like "HGMD", but may be None for non-clinical transcripts
+    Add each gene to the database, with its transcript.
+    Source will often be something like "HGMD"
     """
     hgnc, _ = Gene.objects.get_or_create(hgnc_id=hgnc_id)
+
+    # assign versions if possible
+    if source == "MANE":
+        release, match_type = _assign_mane_release_to_tx(transcript, tx_mane_release)
+
+    elif source == "HGMD":
+        #TODO: assign logic here - leaving as None for now
+        release = match_type = None
+
+    else:
+        release = match_type = None
+
+    # finally, create the transcript
+    Transcript.objects.get_or_create(
+        transcript=transcript,
+        gene=hgnc.id,
+        reference_genome=reference_genome,
+        transcript_release=release,
+        release_match_type=match_type
+    )
+
+
+def _add_non_clinical_gene_and_transcript_to_db(hgnc_id: str, transcripts: list, 
+                                   reference_genome: str) -> None:
+    """
+    Add each gene to the database, with its transcript.
+    """
+    hgnc, _ = Gene.objects.get_or_create(hgnc_id=hgnc_id)
+
     for tx in transcripts:
-        mane_release = None
-        hgmd_release = None
-
-        # assign versions if possible
-        if source == "MANE":
-            mane_release = _assign_mane_release_to_tx(tx, tx_mane_release)
-
-        elif source == "HGMD":
-            #TODO: assign logic here - leaving as None for now
-            hgmd_release = None
-
-        # finally, create the transcript
+        # create the transcript
         Transcript.objects.get_or_create(
             transcript=tx,
-            source=source,
-            gene_id=hgnc.id,
+            gene=hgnc.id,
             reference_genome=reference_genome,
-            mane_version = mane_release,
-            hgmd_version = hgmd_release
+            transcript_release=None,
+            release_match_type=None
         )
 
 
@@ -441,14 +474,11 @@ def seed_transcripts(
     # make genes - clinical or non-clinical - in db
     for hgnc_id, transcript_source in gene_clinical_transcript.items():       
         transcript, source = transcript_source
-        # make transcript into a list, because the transcript-adder is set up for a list
-        transcript = [transcript]
-        _add_gene_and_transcript_to_db(hgnc_id, transcript, reference_genome, source,
+        _add_clinical_gene_and_transcript_to_db(hgnc_id, transcript, reference_genome, source,
                                        mane_ftp_data)
 
     for hgnc_id, transcripts in gene_non_clinical_transcripts.items():
-        _add_gene_and_transcript_to_db(hgnc_id, transcripts, reference_genome, None,
-                                       mane_ftp_data)
+        _add_non_clinical_gene_and_transcript_to_db(hgnc_id, transcripts, reference_genome)
 
     # write error log for those interested to see
     if write_error_log:
@@ -456,5 +486,4 @@ def seed_transcripts(
         with open(error_log, "w") as f:
             for row in all_errors:
                 f.write(f"{row}\n")
-
 

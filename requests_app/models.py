@@ -1,6 +1,5 @@
 from django.db import models
 
-
 class Panel(models.Model):
     """Defines a single internal panel"""
 
@@ -391,7 +390,7 @@ class TranscriptReleaseHistory(models.Model):
 
     def __str__(self):
         return str(self.id)
-    
+
 
 class Transcript(models.Model):
     """Defines a single transcript by RefSeq ID"""
