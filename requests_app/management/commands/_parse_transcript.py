@@ -128,11 +128,11 @@ def _prepare_mane_ftp_file(filepath: str, mane_version: str) -> dict:
     needed_ftp_cols = ["MANE_Select_RefSeq_acc"]
     _sanity_check_cols_exist(mane_ftp, needed_ftp_cols, "MANE FTP")
 
-    mane_ftp.rename(columns={"MANE_Select_RefSeq_acc": "tx"})
+    mane_ftp = mane_ftp.rename(columns={"MANE_Select_RefSeq_acc": "tx"})
 
     mane_ftp["mane_release"] = str(mane_version)
-    mane_ftp["tx_base"] = mane_ftp["tx"].apply(re.sub(r'\.[\d]+$', ''))
-    mane_ftp["tx_version"] = mane_ftp["tx"].apply(re.sub(r'NM[\d]+$\.', ''))
+    mane_ftp["tx_base"] = mane_ftp["tx"].str.replace(r'\.[\d]+$', '', regex=True)
+    mane_ftp["tx_version"] = mane_ftp["tx"].str.replace(r'^NM[\d]+\.', '', regex=True)
 
     final_df = mane_ftp[["tx", "tx_base", "tx_version", "mane_release"]].copy()
 
@@ -220,7 +220,7 @@ def _prepare_markname_file(markname_file: str) -> dict:
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
 
 
-def _assign_mane_release_to_tx(tx: str, tx_mane_release: list(dict)):
+def _assign_mane_release_to_tx(tx: str, tx_mane_release: list[dict]):
     """
     Given a transcript with version, and a list-of-dicts of transcript information made 
     from user input and a MANE FTP file, look up the MANE release.
