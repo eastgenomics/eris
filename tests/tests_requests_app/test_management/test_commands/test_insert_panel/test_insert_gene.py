@@ -9,7 +9,6 @@ A few scenarios tested here for insert_gene function
 - flagging new panel-gene link on existing panel with linked genes
 """
 
-
 from django.test import TestCase
 
 from requests_app.models import (
@@ -120,7 +119,6 @@ class TestInsertGene_NewGene(TestCase):
         )
 
         errors += len_check_wrapper(panel_genes, "panel-gene", 1)
-
         new_panelgene = panel_genes[0]
         confidence = Confidence.objects.get(id=new_panelgene.confidence.id)
 
@@ -362,6 +360,7 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
         # the gene will be in the database, but it will be the old record
         new_panelgene = panel_genes[0]
         confidence = Confidence.objects.get(id=new_panelgene.confidence.id)
+
         errors += value_check_wrapper(confidence.confidence_level, "confidence", "3")
 
         # there should not have been a history record made,

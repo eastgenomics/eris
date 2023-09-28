@@ -1,6 +1,7 @@
 import collections
 import datetime as dt
 import pandas as pd
+import re
 
 from requests_app.models import Gene, Transcript
 
@@ -11,7 +12,7 @@ from requests_app.models import Gene, Transcript
 def _update_existing_gene_metadata_in_db(
     hgnc_id_to_approved_symbol,
     hgnc_id_to_alias_symbols,
-) -> None:
+    ) -> None:
     """
     Function to update gene metadata in db using hgnc dump prepared dictionaries
 
@@ -26,10 +27,10 @@ def _update_existing_gene_metadata_in_db(
             if gene.gene_symbol != hgnc_id_to_approved_symbol[gene.hgnc_id]:
                 gene.gene_symbol = hgnc_id_to_approved_symbol[gene.hgnc_id]
 
-        # if hgnc id in dictionary and alias symbols not pd.nan
+        # if hgnc id in dictionary, and alias symbols are not all pd.nan
         if gene.hgnc_id in hgnc_id_to_alias_symbols and not pd.isna(
             hgnc_id_to_alias_symbols[gene.hgnc_id]
-        ):
+        ).all():
             gene.alias_symbols = ",".join(hgnc_id_to_alias_symbols[gene.hgnc_id])
 
         gene.save()
@@ -37,25 +38,21 @@ def _update_existing_gene_metadata_in_db(
 
 def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
     """
-    Read hgnc file and prepare four dictionaries:
+    Read hgnc file, sanity-check it, and prepare four dictionaries:
     1. gene symbol to hgnc id
     2. hgnc id to approved symbol
     4. hgnc id to alias symbols
 
-    :param hgnc_file: hgnc file path
+    Finally, update any metadata for existing genes in the Eris database - 
+    if this has changed since the last HGNC upload.
 
+    :param hgnc_file: hgnc file path
     :return: gene symbol to hgnc id dict
     """
     hgnc: pd.DataFrame = pd.read_csv(hgnc_file, delimiter="\t")
-
-    # check if hgnc file has the correct columns
-    assert "HGNC ID" in hgnc.columns, "Missing HGNC ID column. Check HGNC dump file"
-    assert (
-        "Approved symbol" in hgnc.columns
-    ), "Missing Approved symbol column. Check HGNC dump file"
-    assert (
-        "Alias symbols" in hgnc.columns
-    ), "Missing Alias symbols column. Check HGNC dump file"
+    
+    needed_cols = ["HGNC ID", "Approved symbol", "Alias symbols"]
+    _sanity_check_cols_exist(hgnc, needed_cols, "HGNC dump")
 
     # prepare dictionary files
     hgnc_symbol_to_hgnc_id = dict(zip(hgnc["Approved symbol"], hgnc["HGNC ID"]))
@@ -69,6 +66,24 @@ def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
     )
 
     return hgnc_symbol_to_hgnc_id
+
+
+def _sanity_check_cols_exist(df: pd.DataFrame, needed_cols: list, filename: str) -> None:
+    """
+    Check for expected columns in a DataFrame.
+    Collects together errors and asserts them all at once, if there's more than one issue.
+    :param: df - a Pandas Dataframe
+    :param: needed_cols - a list of column names to check for
+    :param: filename - a reference to use for the file being checked
+    :return: None 
+    """
+    errors = []
+    for x_col in needed_cols:
+        if not x_col in df.columns:
+            errors.append(f"Missing column {x_col} from {filename} file - please check the file")
+
+    errors = "; ".join(errors)
+    assert not errors, errors
 
 
 def _prepare_mane_file(
@@ -89,11 +104,8 @@ def _prepare_mane_file(
     """
     mane = pd.read_csv(mane_file)
 
-    assert "Gene" in mane.columns, "Missing Gene column. Check MANE file"
-    assert "MANE TYPE" in mane.columns, "Missing MANE TYPE column. Check MANE file"
-    assert (
-        "RefSeq StableID GRCh38 / GRCh37" in mane.columns
-    ), "Missing RefSeq column. Check MANE file"
+    needed_cols = ["Gene", "MANE TYPE", "RefSeq StableID GRCh38 / GRCh37"]
+    _sanity_check_cols_exist(mane, needed_cols, "MANE")
 
     filtered_mane = mane[
         mane["MANE TYPE"] == "MANE SELECT"
@@ -130,6 +142,9 @@ def _prepare_gff_file(gff_file: str) -> dict[str, list]:
         dtype=str,
     )
 
+    needed_cols = ["hgnc", "transcript"]
+    _sanity_check_cols_exist(gff, needed_cols, "gff")
+
     return (
         gff.groupby("hgnc")
         .agg({"transcript": lambda x: list(set(list(x)))})
@@ -140,8 +155,9 @@ def _prepare_gff_file(gff_file: str) -> dict[str, list]:
 def _prepare_gene2refseq_file(g2refseq_file: str) -> dict:
     """
     Reads through gene2refseq file (from HGMD database)
-    and generates a dict mapping of HGMD ID to list of [refcore, refversion]
-
+    and generates a dict mapping of HGMD ID to a list which can contain [refcore, refversion], 
+    e.g. 'id': [["NM_100", "2"]]
+    
     :param g2refseq_file: gene2refseq file path
 
     :return: dictionary of hgmd id to list of not "tuple" [refcore, refversion]
@@ -149,6 +165,9 @@ def _prepare_gene2refseq_file(g2refseq_file: str) -> dict:
 
     # read with dtype str to avoid pandas converting to int64
     df = pd.read_csv(g2refseq_file, dtype=str)
+
+    needed_cols = ["refcore", "refversion", "hgmdID"]
+    _sanity_check_cols_exist(df, needed_cols, "gene2refseq")
 
     # create list of refcore + refversion
     df["core_plus_version"] = pd.Series(zip(df["refcore"], df["refversion"])).map(list)
@@ -171,9 +190,126 @@ def _prepare_markname_file(markname_file: str) -> dict:
     """
     markname = pd.read_csv(markname_file)
 
-    assert "hgncID" in markname.columns, "Missing hgncID column. Check markname file"
+    needed_cols = ["hgncID"]
+    _sanity_check_cols_exist(markname, needed_cols, "markname")
 
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
+
+
+def _add_gene_and_transcript_to_db(hgnc_id: str, transcripts: list, 
+                                   reference_genome: str, source: str | None) -> None:
+    """
+    Add each gene to the database, with any transcripts associated with it.
+    Source will often be something like "HGMD", but may be None for non-clinical transcripts
+    """
+    hgnc, _ = Gene.objects.get_or_create(hgnc_id=hgnc_id)
+
+    for tx in transcripts:
+        Transcript.objects.get_or_create(
+            transcript=tx,
+            source=source,
+            gene_id=hgnc.id,
+            reference_genome=reference_genome,
+        )
+
+
+def _get_clin_transcript_from_hgmd_files(hgnc_id, markname: dict, gene2refseq: dict) \
+    -> tuple[str | None, str | None]:
+    """
+    Fetch the transcript linked to a particular gene in HGMD.
+    First, need to find the gene's ID in the 'markname' table's file,
+    then use the ID to find the gene's entries in the 'gene2refseq' table's file.
+    Catch various error scenarios too.
+    :return: transcript linked to the gene in HGMD
+    :return: error message if any
+    """
+    # HGMD database transcript search
+    # hgmd write HGNC ID as XXXXX rather than HGNC:XXXXX
+    short_hgnc_id = hgnc_id.replace("HGNC:", "")
+
+    # Error states: hgnc id not in markname table / hgmd database,
+    # or hgnc id has more than one entry
+    if short_hgnc_id not in markname:
+        err = f"{hgnc_id} not found in markname HGMD table"
+        return None, err
+
+    if len(markname[short_hgnc_id]) > 1:
+        err = f"{hgnc_id} has two or more entries in markname HGMD table."
+        return None, err
+
+    # get the gene-id from markname table
+    markname_gene_id = markname[short_hgnc_id][0]
+
+    # Throw errors if the HGNC ID is None or pd.nan, if the gene ID from 
+    # markname isn't in gene2refseq, or if a gene has multiple entries in the HGMD database (list with lists),
+    # because assessment of clinical/non-clinical won't be possible.
+    if not markname_gene_id or pd.isna(markname_gene_id):
+        err = f"{hgnc_id} has no gene_id in markname table"
+        return None, err
+
+    markname_gene_id = markname_gene_id.strip()
+
+    if markname_gene_id not in gene2refseq:
+        err = f"{hgnc_id} with gene id {markname_gene_id} not in gene2refseq table"
+        return None, err
+    
+    if len(gene2refseq[markname_gene_id]) > 1:
+        joined_entries = [i[0] for i in gene2refseq[markname_gene_id]]
+        err = f'{hgnc_id} has more than one transcript in the HGMD database: {",".join(joined_entries)}'
+        return None, err
+
+    # gene2refseq data for gene-id
+    hgmd_base = gene2refseq[markname_gene_id][0][0]
+
+    return hgmd_base, None
+
+
+def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict, 
+                         mane_data: dict, markname_hgmd: dict, gene2refseq_hgmd: dict) \
+                            -> tuple[bool, str, str | None]:
+    """
+    Carries out the logic for deciding whether a transcript is clinical, or non-clinical.
+    Checks MANE first, then HGMD, to see if clinical status can be assigned
+    :return: clinical - boolean, True is clinical, False is non-clinical
+    :return: source, for a clinical transcript
+    :return: err - an error string, or None if no errors
+    """
+    clinical = False
+    source = None
+    err = None
+
+    tx_base = re.sub(r'\.[\d]+$', '', tx)
+    
+    # if hgnc id already have a clinical transcript
+    # any following transcripts will be non-clinical by default
+    if hgnc_id in gene_clinical_transcript:
+        # a different transcript has already been assigned as clinical for this gene
+        # any remaining transcripts will be NON-clinical
+        clinical = False
+        return clinical, source, err
+    
+    # if hgnc id in mane file
+    if hgnc_id in mane_data:
+        # MANE transcript search
+        mane_tx = mane_data[hgnc_id]
+        mane_base = re.sub(r'\.[\d]+$', '', mane_tx)
+
+        # compare transcript without the version
+        if tx_base == mane_base:
+            clinical = True
+            source = "MANE"
+            return clinical, source, err
+
+    # hgnc id for the transcript's gene is not in MANE - 
+    # instead, see which transcript is linked to the gene in HGMD
+    hgmd_transcript_base, err = _get_clin_transcript_from_hgmd_files(hgnc_id, markname_hgmd, gene2refseq_hgmd)
+    
+    # does the HGMD transcript match the one we're currently looping through?
+    if tx_base == hgmd_transcript_base:
+        clinical = True
+        source = "HGMD"
+    
+    return clinical, source, err
 
 
 def seed_transcripts(
@@ -209,122 +345,39 @@ def seed_transcripts(
     gene2refseq_hgmd = _prepare_gene2refseq_file(g2refseq_filepath)
     markname_hgmd = _prepare_markname_file(markname_filepath)
 
+
     # two dict for clinical and non-clinical tx assigment
-    gene_clinical_transcipt: dict[str, str] = {}
+    gene_clinical_transcript: dict[str, str] = {}
     gene_non_clinical_transcripts: dict[str, list] = collections.defaultdict(list)
 
     # for record purpose (just in case)
     all_errors: list[str] = []
 
+    # decide whether a transcript is clinical or not, and append it to the corresponding dict
+    # remove repeats of the transcript (with versions)
     for hgnc_id, transcripts in gff.items():
+        # get deduplicated transcripts
+        transcripts = set(transcripts)
         for tx in transcripts:
-            # if hgnc id already have a clinical transcript
-            # any following transcripts will be non-clinical by default
-            if hgnc_id in gene_clinical_transcipt:
-                # a transcript has been assigned either MANE or HGMD
-                gene_non_clinical_transcripts[hgnc_id].append(tx)
-                continue
-
-            # comparing just the base, not version
-            tx_base, _ = tx.split(".")
-
-            # if hgnc id in mane file
-            if hgnc_id in mane_data:
-                # MANE transcript search
-                mane_tx = mane_data[hgnc_id]
-
-                mane_base, _ = mane_tx.split(".")
-
-                # compare transcript without the version
-                if tx_base == mane_base:
-                    gene_clinical_transcipt[hgnc_id] = [tx, "MANE"]
-                else:
-                    gene_non_clinical_transcripts[hgnc_id].append(tx)
-
+            clin, tx_source, err = \
+                _transcript_assigner(tx, hgnc_id, gene_clinical_transcript, 
+                         mane_data, markname_hgmd, gene2refseq_hgmd)
+            if clin:
+                gene_clinical_transcript[hgnc_id] = [tx, tx_source]
             else:
-                # HGMD database transcript search
-
-                # hgmd write HGNC ID as XXXXX rather than HGNC:XXXXX
-                shortened_hgnc_id = hgnc_id.replace("HGNC:", "")
-
-                # markname is a table in HGMD database
-                # hgnc id not in markname table / hgmd database, continue
-                if shortened_hgnc_id not in markname_hgmd:
-                    all_errors.append(f"{hgnc_id} not found in HGMD table")
-                    gene_non_clinical_transcripts[hgnc_id].append(tx)
-                    continue
-
-                # hgnc id has more than one entry in markname table
-                # this is a problem with no solution, continue
-                if len(markname_hgmd[shortened_hgnc_id]) > 2:
-                    all_errors.append(f"{hgnc_id} have two entries in markname table.")
-                    gene_non_clinical_transcripts[hgnc_id].append(tx)
-                    continue
-
-                # hgnc id has one entry in markname table
-                markname_data = markname_hgmd[shortened_hgnc_id][0]
-
-                # get the gene-id from markname table
-                markname_gene_id = markname_data.get("gene_id")
-
-                # the gene-id return None or pd.nan
-                if not markname_gene_id or not pd.isna(markname_gene_id):
-                    all_errors.append(f"{hgnc_id} has no gene_id in markname table")
-                    gene_non_clinical_transcripts[hgnc_id].append(tx)
-                    continue
-
-                # gene-id returned from markname not in gene2refseq table
-                # no point continuing
-                if markname_gene_id not in gene2refseq_hgmd:
-                    all_errors.append(
-                        f"{hgnc_id} with gene id {markname_gene_id} not in gene2refseq table"
-                    )
-                    gene_non_clinical_transcripts[hgnc_id].append(tx)
-                    continue
-
-                # gene2refseq data for gene-id
-                gene2refseq_data = gene2refseq_hgmd[markname_gene_id.strip()]
-
-                # gene2refseq data has more than two entries
-                # this is a problem with no solution, continue
-                if len(gene2refseq_data) > 2:
-                    all_errors.append(
-                        f'{hgnc_id} have the following transcripts in HGMD database: {",".join(gene2refseq_hgmd)}'
-                    )
-                    gene_non_clinical_transcripts[hgnc_id].append(tx)
-                    continue
-
-                # only one entry in gene2refseq data
-                else:
-                    hgmd_base, _ = gene2refseq_data[0]
-
-                    if tx_base == hgmd_base:
-                        gene_clinical_transcipt[hgnc_id] = [tx, "HGMD"]
-                    else:
-                        gene_non_clinical_transcripts[hgnc_id].append(tx)
+                gene_non_clinical_transcripts[hgnc_id].append(tx)
+            if err:
+                all_errors.append(err)
 
     # make genes - clinical or non-clinical - in db
-    for hgnc_id, transcript_source in gene_clinical_transcipt.items():
-        hgnc, _ = Gene.objects.get_or_create(hgnc_id=hgnc_id)
-
+    for hgnc_id, transcript_source in gene_clinical_transcript.items():
         transcript, source = transcript_source
-        Transcript.objects.get_or_create(
-            transcript=transcript,
-            source=source,
-            gene_id=hgnc.id,
-            reference_genome=reference_genome,
-        )
+        # make transcript into a list, because the transcript-adder is set up for a list
+        transcript = [transcript] 
+        _add_gene_and_transcript_to_db(hgnc_id, transcript, reference_genome, source)
 
     for hgnc_id, transcripts in gene_non_clinical_transcripts.items():
-        hgnc, _ = Gene.objects.get_or_create(hgnc_id=hgnc_id)
-
-        for tx in transcripts:
-            Transcript.objects.get_or_create(
-                transcript=tx,
-                source=None,
-                gene_id=hgnc.id,
-                reference_genome=reference_genome,
-            )
+        _add_gene_and_transcript_to_db(hgnc_id, transcripts, reference_genome, None)
 
     # write error log for those interested to see
     if write_error_log:
@@ -332,3 +385,5 @@ def seed_transcripts(
         with open(error_log, "w") as f:
             for row in all_errors:
                 f.write(f"{row}\n")
+
+
