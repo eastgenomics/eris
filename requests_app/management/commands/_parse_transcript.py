@@ -87,11 +87,11 @@ def _sanity_check_cols_exist(df: pd.DataFrame, needed_cols: list, filename: str)
 
 
 def _prepare_mane_file(
-    mane_file: str,
+    mane_37_file: str,
     hgnc_symbol_to_hgnc_id: dict[str, str],
 ) -> dict:
     """
-    Read through MANE file and prepare
+    Read through MANE files and prepare
     dict of hgnc id to mane transcript
 
     Function inspiration from https://github.com/eastgenomics/g2t_ops/blob/main/g2t_ops/transcript_assigner.py#L36
@@ -102,10 +102,10 @@ def _prepare_mane_file(
 
     :return: dictionary of hgnc id to mane transcript
     """
-    mane = pd.read_csv(mane_file)
+    mane = pd.read_csv(mane_37_file)
 
-    needed_cols = ["Gene", "MANE TYPE", "RefSeq StableID GRCh38 / GRCh37"]
-    _sanity_check_cols_exist(mane, needed_cols, "MANE")
+    needed_mane_cols = ["Gene", "MANE TYPE", "RefSeq StableID GRCh38 / GRCh37"]
+    _sanity_check_cols_exist(mane, needed_mane_cols, "MANE")
 
     filtered_mane = mane[
         mane["MANE TYPE"] == "MANE SELECT"
@@ -115,6 +115,30 @@ def _prepare_mane_file(
 
     return dict(
         zip(filtered_mane["HGNC ID"], filtered_mane["RefSeq StableID GRCh38 / GRCh37"])
+    )
+
+def _prepare_mane_ftp_file(filepath: str, mane_version: str) -> dict:
+    """
+    Read FTP file to dataframe and sanity-check
+    Assign the MANE version specified by the user for this release, if possible
+    Return as a dict
+    """   
+    mane_ftp = pd.read_csv(filepath)
+
+    needed_ftp_cols = ["MANE_Select_RefSeq_acc"]
+    _sanity_check_cols_exist(mane_ftp, needed_ftp_cols, "MANE FTP")
+
+    mane_ftp.rename(columns={"MANE_Select_RefSeq_acc": "tx"})
+
+    mane_ftp["mane_release"] = str(mane_version)
+    mane_ftp["tx_base"] = mane_ftp["tx"].apply(re.sub(r'\.[\d]+$', ''))
+    mane_ftp["tx_version"] = mane_ftp["tx"].apply(re.sub(r'NM[\d]+$\.', ''))
+
+    final_df = mane_ftp[["tx", "tx_base", "tx_version", "mane_release"]].copy()
+
+    # return only accession (with version) and MANE release cols
+    return (
+        final_df.to_dict(orient='records')
     )
 
 
@@ -196,20 +220,61 @@ def _prepare_markname_file(markname_file: str) -> dict:
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
 
 
+def _assign_mane_release_to_tx(tx: str, tx_mane_release: list(dict)):
+    """
+    Given a transcript with version, and a list-of-dicts of transcript information made 
+    from user input and a MANE FTP file, look up the MANE release.
+    :return: MANE release version, or None if no match available.
+    """
+    tx_base = re.sub(r'\.[\d]+$', '', tx)
+            
+    # assign MANE release version from the dictionary of known-release FTP data
+    perfect_match_with_mane = next((item for item in tx_mane_release if item['tx'] == tx), None)
+    imperfect_match_with_mane = next((item for item in tx_mane_release 
+                                        if item['tx_versionless'] == tx_base), None)
+    if perfect_match_with_mane:
+        release = perfect_match_with_mane["mane_release"]
+    elif imperfect_match_with_mane:
+        release = imperfect_match_with_mane["mane_release"]
+    else:
+        release = None
+
+    # look up or create the TranscriptRelease object, if there is a result
+    if release:
+        # TODO: create a database object
+        return release
+    else:
+        return None
+
+
 def _add_gene_and_transcript_to_db(hgnc_id: str, transcripts: list, 
-                                   reference_genome: str, source: str | None) -> None:
+                                   reference_genome: str, source: str | None,
+                                   tx_mane_release: dict) -> None:
     """
     Add each gene to the database, with any transcripts associated with it.
     Source will often be something like "HGMD", but may be None for non-clinical transcripts
     """
     hgnc, _ = Gene.objects.get_or_create(hgnc_id=hgnc_id)
-
     for tx in transcripts:
+        mane_release = None
+        hgmd_release = None
+
+        # assign versions if possible
+        if source == "MANE":
+            mane_release = _assign_mane_release_to_tx(tx, tx_mane_release)
+
+        elif source == "HGMD":
+            #TODO: assign logic here - leaving as None for now
+            hgmd_release = None
+
+        # finally, create the transcript
         Transcript.objects.get_or_create(
             transcript=tx,
             source=source,
             gene_id=hgnc.id,
             reference_genome=reference_genome,
+            mane_version = mane_release,
+            hgmd_version = hgmd_release
         )
 
 
@@ -315,6 +380,8 @@ def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict,
 def seed_transcripts(
     hgnc_filepath: str,
     mane_filepath: str,
+    mane_ftp_filepath: str,
+    mane_release: str,
     gff_filepath: str,
     g2refseq_filepath: str,
     markname_filepath: str,
@@ -325,7 +392,8 @@ def seed_transcripts(
     Main function to seed transcripts
 
     :param hgnc_filepath: hgnc file path
-    :param mane_filepath: mane file path
+    :param mane_filepath: mane file path for GRCh37-compatible transcripts
+    :param mane_ftp_filepath: mane file path for FTP file - known MANE version, but GRCh38
     :param gff_filepath: gff file path
     :param g2refseq_filepath: gene2refseq file path
     :param markname_filepath: markname file path
@@ -341,6 +409,7 @@ def seed_transcripts(
     # files preparation
     hgnc_symbol_to_hgnc_id = _prepare_hgnc_file(hgnc_filepath)
     mane_data = _prepare_mane_file(mane_filepath, hgnc_symbol_to_hgnc_id)
+    mane_ftp_data = _prepare_mane_ftp_file(mane_ftp_filepath, mane_release)
     gff = _prepare_gff_file(gff_filepath)
     gene2refseq_hgmd = _prepare_gene2refseq_file(g2refseq_filepath)
     markname_hgmd = _prepare_markname_file(markname_filepath)
@@ -370,14 +439,16 @@ def seed_transcripts(
                 all_errors.append(err)
 
     # make genes - clinical or non-clinical - in db
-    for hgnc_id, transcript_source in gene_clinical_transcript.items():
+    for hgnc_id, transcript_source in gene_clinical_transcript.items():       
         transcript, source = transcript_source
         # make transcript into a list, because the transcript-adder is set up for a list
-        transcript = [transcript] 
-        _add_gene_and_transcript_to_db(hgnc_id, transcript, reference_genome, source)
+        transcript = [transcript]
+        _add_gene_and_transcript_to_db(hgnc_id, transcript, reference_genome, source,
+                                       mane_ftp_data)
 
     for hgnc_id, transcripts in gene_non_clinical_transcripts.items():
-        _add_gene_and_transcript_to_db(hgnc_id, transcripts, reference_genome, None)
+        _add_gene_and_transcript_to_db(hgnc_id, transcripts, reference_genome, None,
+                                       mane_ftp_data)
 
     # write error log for those interested to see
     if write_error_log:

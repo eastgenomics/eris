@@ -194,18 +194,22 @@ class Command(BaseCommand):
             if not test_mode:
                 insert_test_directory_data(json_data, force)
 
-        # python manage.py seed transcript --hgnc <path> --mane <path> --gff <path> --g2refseq <path> --markname <path> --refgenome <ref_genome_version> --error
+        # python manage.py seed transcript --hgnc <path> --mane_grch37 <path> --mane_ftp <path> 
+        # --mane_release <str> --gff <path> --g2refseq <path> --markname <path> 
+        # --refgenome <ref_genome_version> --error
         elif command == "transcript":
             """
             This seeding requires the following files:
             1. hgnc dump - with HGNC ID, Approved Symbol, Previous Symbols, Alias Symbols
             2. MANE file grch37 csv (http://tark.ensembl.org/web/mane_GRCh37_list/)
-            3. parsed gff file on DNAnexus (project-Fkb6Gkj433GVVvj73J7x8KbV:file-GF611Z8433Gk7gZ47gypK7ZZ)
-            4. gene2refseq table from HGMD database
-            5. markname table from HGMD database
+            3. MANE FTP (Ensembl) transcripts-by-gene file - grch38 with known release version
+            4. MANE release version of the Ensembl FTP file - e.g. 1.0
+            5. parsed gff file on DNAnexus (project-Fkb6Gkj433GVVvj73J7x8KbV:file-GF611Z8433Gk7gZ47gypK7ZZ)
+            6. gene2refseq table from HGMD database
+            7. markname table from HGMD database
 
             And a string argument:
-            6. reference genome - e.g. 37/38
+            8. reference genome - e.g. 37/38
             """
 
             # fetch input reference genome - case sensitive
@@ -214,7 +218,9 @@ class Command(BaseCommand):
             print("Seeding transcripts")
 
             hgnc_file = kwargs.get("hgnc")
-            mane_file = kwargs.get("mane")
+            mane_file = kwargs.get("mane_grch37")
+            mane_ftp_file = kwargs.get("mane_ftp")
+            mane_release = kwargs.get("mane_release")
             gff_file = kwargs.get("gff")
             g2refseq_file = kwargs.get("g2refseq")
             markname_file = kwargs.get("markname")
@@ -223,6 +229,7 @@ class Command(BaseCommand):
                 [
                     hgnc_file,
                     mane_file,
+                    mane_ftp_file,
                     gff_file,
                     g2refseq_file,
                     markname_file,
@@ -234,6 +241,8 @@ class Command(BaseCommand):
             seed_transcripts(
                 hgnc_file,
                 mane_file,
+                mane_ftp_file,
+                mane_release,
                 gff_file,
                 g2refseq_file,
                 markname_file,
