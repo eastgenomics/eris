@@ -343,13 +343,6 @@ class TranscriptRelease(models.Model):
         verbose_name="created",
         auto_now_add=True,
     )
-    
-    file_id = models.CharField(
-        verbose_name="File ID",
-        max_length=255,
-        null=True,
-        default=None
-    )
 
     external_db_dump_date = models.DateTimeField(
         verbose_name="External Db Dump Date"
@@ -360,33 +353,35 @@ class TranscriptRelease(models.Model):
 
     def __str__(self):
         return str(self.id)
+    
 
-
-class TranscriptReleaseHistory(models.Model):
+class TranscriptReleaseFile(models.Model):
+    """
+    Files used to define a specific release of a transcript source -
+    for example, MANE release 1.0
+    """
     transcript_release = models.ForeignKey(
         TranscriptRelease,
         verbose_name="TranscriptRelease id",
         on_delete=models.CASCADE,
     )
 
-    created = models.DateTimeField(
-        verbose_name="created",
-        auto_now_add=True,
-    )
-
-    note = models.CharField(
-        verbose_name="Note",
-        max_length=255,
-    )
-
-    user = models.CharField(
-        verbose_name="user",
+    file_id = models.CharField(
+        verbose_name="File ID in external storage",
         max_length=255,
         null=True,
+        default=None
+    )
+
+    file_type = models.CharField(
+        verbose_name="File type",
+        max_length=255,
+        null=True,
+        default=None
     )
 
     class Meta:
-        db_table = "transcript_release_history"
+        db_table = "transcript"
 
     def __str__(self):
         return str(self.id)
