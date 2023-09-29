@@ -381,7 +381,7 @@ class TranscriptReleaseFile(models.Model):
     )
 
     class Meta:
-        db_table = "transcript"
+        db_table = "transcript_release_file"
 
     def __str__(self):
         return str(self.id)

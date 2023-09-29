@@ -215,7 +215,7 @@ class Command(BaseCommand):
         # --mane_grch37_ext_id <str> --mane_ftp <path> 
         # --mane_ftp_ext_id <str> --mane_release <str> --gff <path> --g2refseq <path> 
         # --g2refseq_ext_id <str> --markname <path> --markname_ext_id <str>
-        # --refgenome <ref_genome_version> --error
+        # --hgmd_release_label <str> --refgenome <ref_genome_version> --error
         elif command == "transcript":
             """
             This seeding requires the following files:
@@ -230,6 +230,7 @@ class Command(BaseCommand):
             9. gene2refseq table - the external ID
             10. markname table from HGMD database
             11. markname table from HGMD database - the external ID
+            12. hgmd release label - in-house label assigned to this version of the data dump
 
             And a string argument:
             12. reference genome - e.g. 37/38
@@ -251,6 +252,7 @@ class Command(BaseCommand):
             g2refseq_ext_id = kwargs.get("g2refseq_ext_id")
             markname_file = kwargs.get("markname")
             markname_ext_id = kwargs.get("markname_ext_id")
+            hgmd_release_label = kwargs.get("hgmd_release_label")
 
             self._validate_file_exist(
                 [
@@ -286,8 +288,9 @@ class Command(BaseCommand):
                 g2refseq_ext_id,
                 markname_file,
                 markname_ext_id,
+                hgmd_release_label,
                 ref_genome,
-                error_log,
+                error_log
             )
 
             print("Seed transcripts completed.")

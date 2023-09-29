@@ -221,24 +221,24 @@ def _prepare_markname_file(markname_file: str) -> dict:
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
 
 
-def _assign_mane_release_to_tx(tx: str, tx_mane_release: list[dict],
-                               source: TranscriptSource, mane_ext_id: str,
-                               mane_ftp_ext_id: str):
+def _get_tx_mane_match_and_level(tx_mane_release: list[dict], tx: str):
     """
-    Given a transcript with version, a list-of-dicts of transcript information made 
-    from user input and a MANE FTP file, and the TranscriptSource, 
-    look up the MANE release.
-    If a new release is made, then log it.
-    :return: MANE release version, or None if no match available.
-    :return: type of match between transcript and MANE
+    Search for a transcript in the list-of-dicts storing MANE releases 
+    with transcripts.
+    Try to find a match with the same version of the transcript, but
+    failing that, settle for a different version (e.g. NM001.1 vs
+    NM001.1NM001.2).
+    Return the MANE release with the match type.
+    :return: release of MANE
+    :return: match_type 
     """
     tx_base = re.sub(r'\.[\d]+$', '', tx)
 
-    # assign MANE release version from the dictionary of known-release FTP data
     perfect_match_with_mane = next((
         item for item in tx_mane_release if item['tx'] == tx), None)
     imperfect_match_with_mane = next((
         item for item in tx_mane_release if item['tx_versionless'] == tx_base), None)
+    
     if perfect_match_with_mane:
         release = perfect_match_with_mane["mane_release"]
         match_type = MatchType.complete_match()
@@ -249,43 +249,40 @@ def _assign_mane_release_to_tx(tx: str, tx_mane_release: list[dict],
         release = None
         match_type = None
 
-    if release:
-        # look up or create the TranscriptRelease object
-        transcript_release, tx_release_created =TranscriptRelease.objects.get_or_create(
-            source=source,
-            external_release_version=release,
-            file_id=None,
-            external_db_dump_date=None
-            )
-        
-        #TODO: contemplate a situation in which multiple files of the same kind
-        # are assigned to a single release - how should we lock this down?
-        if tx_release_created:
-            # MANE file
-            TranscriptReleaseFile.objects.get_or_create(
-                transcript_release=transcript_release,
-                file_id=mane_ext_id,
-                file_type="mane_grch37"
-            )
-            # MANE FTP file
-            TranscriptReleaseFile.objects.get_or_create(
-                transcript_release=transcript_release,
-                file_id=mane_ftp_ext_id,
-                file_type="mane_grch38_known_release"
-            )
-        
-        return transcript_release, match_type
-    else:
-        return None, None
+    return release, match_type
 
 
-def _assign_hgmd_release_to_tx():
-    #TODO: write this
-    return None
+def _assign_tx_release(release: str,
+                    source: TranscriptSource,
+                    files: dict[str: str]):
+    """
+    Given a source of transcript information, the release name for the
+    source, and a dict of supporting files (where keys are external file IDs
+    and values are file categories), make the TranscriptRelease
+    and TranscriptReleaseFile objects.
+    :returns: transcript release
+    """
+    transcript_release, tx_release_created = TranscriptRelease.objects.get_or_create(
+        source=source,
+        external_release_version=release,
+        file_id=None,
+        external_db_dump_date=None
+        )
+    
+    #TODO: contemplate a situation in which multiple files of the same kind
+    # are assigned to a single release - how should we lock this down?
+    if tx_release_created:
+        for file_id, file_category in files:
+            TranscriptReleaseFile.objects.get_or_create(
+            transcript_release=transcript_release,
+            file_id=file_id,
+            file_type=file_category
+            )
 
 
 def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str, 
                                    reference_genome: str, source: str | None,
+                                   hgmd_release_label: str,
                                    tx_mane_release: dict, mane_ext_id: str,
                                    mane_ftp_ext_id: str, g2refseq_ext_id: str,
                                    markname_ext_id: str) -> None:
@@ -302,19 +299,25 @@ def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str,
         source, _ = TranscriptSource.objects.get_or_create(
             source = "MANE"
         )
-
-        release, match_type = _assign_mane_release_to_tx(transcript, tx_mane_release, 
-                                                         source, mane_ext_id, 
-                                                         mane_ftp_ext_id)
+        # assign MANE release version from the dictionary of known-release FTP data
+        release_version, match_type = _get_tx_mane_match_and_level(
+            tx_mane_release, transcript)
+        if release:
+            mane_files = {mane_ext_id: "mane_grch37",
+                          mane_ftp_ext_id: "mane_hrch38_ftp"}
+            release = _assign_tx_release(release_version,
+                                         source, mane_files)
 
     elif source == "HGMD":
         # look up or create the source
         source, _ = TranscriptSource.objects.get_or_create(
             source = "HGMD"
         )
-
-        release, match_type = _assign_hgmd_release_to_tx(transcript, tx_mane_release, 
-                                                         source)
+        hgmd_files = {g2refseq_ext_id: "hgmd_gene2refseq",
+                      markname_ext_id: "hgmd_markname"}
+        release = _assign_tx_release(hgmd_release_label, 
+                                    source,
+                                    hgmd_files)
 
     else:
         release = match_type = None
@@ -459,6 +462,7 @@ def seed_transcripts(
     g2refseq_ext_id: str,
     markname_filepath: str,
     markname_ext_id: str,
+    hgmd_release_label: str,
     reference_genome: str,  # add reference genome metadata on transcript model
     write_error_log: bool,
 ) -> None:
@@ -516,6 +520,7 @@ def seed_transcripts(
     for hgnc_id, transcript_source in gene_clinical_transcript.items():       
         transcript, source = transcript_source
         _add_clinical_gene_and_transcript_to_db(hgnc_id, transcript, reference_genome, source,
+                                                hgmd_release_label,
                                                 mane_ftp_data, mane_ext_id, mane_ftp_ext_id,
                                                 g2refseq_ext_id, markname_ext_id)
 
