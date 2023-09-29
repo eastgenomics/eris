@@ -406,6 +406,10 @@ class Transcript(models.Model):
         default=None,
     )
 
+    source = models.ForeignKey(TranscriptSource,
+                               verbose_name="Transcript source",
+                               on_delete=models.PROTECT)
+
     transcript_release = models.ForeignKey(TranscriptRelease, 
                                            verbose_name="Transcript release id",
                                            on_delete=models.PROTECT)

@@ -220,15 +220,15 @@ def _prepare_markname_file(markname_file: str) -> dict:
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
 
 
-def _assign_mane_release_to_tx(tx: str, tx_mane_release: list[dict]):
+def _assign_mane_release_to_tx(tx: str, tx_mane_release: list[dict], source: TranscriptSource):
     """
-    Given a transcript with version, and a list-of-dicts of transcript information made 
-    from user input and a MANE FTP file, look up the MANE release.
+    Given a transcript with version, a list-of-dicts of transcript information made 
+    from user input and a MANE FTP file, and the TranscriptSource, look up the MANE release.
     :return: MANE release version, or None if no match available.
     :return: type of match between transcript and MANE
     """
     tx_base = re.sub(r'\.[\d]+$', '', tx)
-            
+
     # assign MANE release version from the dictionary of known-release FTP data
     perfect_match_with_mane = next((item for item in tx_mane_release if item['tx'] == tx), None)
     imperfect_match_with_mane = next((item for item in tx_mane_release 
@@ -242,14 +242,8 @@ def _assign_mane_release_to_tx(tx: str, tx_mane_release: list[dict]):
     else:
         release = None
         match_type = None
-        # TODO: there's a logic hole to fix here - tx can be MANE but without release version?
 
     if release:
-        # look up or create the source
-        source, _ = TranscriptSource.objects.get_or_create(
-            source = "MANE"
-        )
-
         # look up or create the TranscriptRelease object
         transcript_release, _ = TranscriptRelease.objects.get_or_create(
             source=source,
@@ -274,9 +268,17 @@ def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str,
 
     # assign versions if possible
     if source == "MANE":
-        release, match_type = _assign_mane_release_to_tx(transcript, tx_mane_release)
+        # look up or create the source
+        source, _ = TranscriptSource.objects.get_or_create(
+            source = "MANE"
+        )
+        release, match_type = _assign_mane_release_to_tx(transcript, tx_mane_release, source)
 
     elif source == "HGMD":
+        # look up or create the source
+        source, _ = TranscriptSource.objects.get_or_create(
+            source = "HGMD"
+        )
         #TODO: assign logic here - leaving as None for now
         release = match_type = None
 
@@ -288,6 +290,7 @@ def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str,
         transcript=transcript,
         gene=hgnc.id,
         reference_genome=reference_genome,
+        source=source,
         transcript_release=release,
         release_match_type=match_type
     )
