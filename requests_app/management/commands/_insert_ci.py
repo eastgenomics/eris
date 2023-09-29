@@ -419,7 +419,7 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
     for indication in all_indication:
         r_code: str = indication["code"].strip()
 
-        ci_instance, created = ClinicalIndication.objects.get_or_create(
+        ci_instance, ci_created = ClinicalIndication.objects.get_or_create(
             r_code=r_code,
             name=indication["name"],
             defaults={
@@ -427,7 +427,7 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
             },
         )
 
-        if created:
+        if ci_created:
             # New clinical indication - the old CI-panel entries with the same R code,
             # will be set to 'pending = True'. The new CI will be linked to those panels,
             # again with 'pending = True' to make it "provisional".
@@ -493,7 +493,7 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
                 if panel_record:
                     (
                         cip_instance,
-                        created,
+                        cip_created,
                     ) = ClinicalIndicationPanel.objects.get_or_create(
                         clinical_indication_id=ci_instance.id,
                         panel_id=panel_record.id,
@@ -504,7 +504,7 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
                         },
                     )
 
-                    if created:
+                    if cip_created:
                         # if CI-Panel record is created, create a history record
                         ClinicalIndicationPanelHistory.objects.create(
                             clinical_indication_panel_id=cip_instance.id,
