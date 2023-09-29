@@ -41,6 +41,23 @@ class Command(BaseCommand):
 
         return True
 
+    def _validate_ext_ids(self, file_ids: list[str]) -> bool:
+        """Validate that the external file ids are in the correct format"""
+        missing_ids: list[str] = []
+
+        for file_id in file_ids:
+            if len(file_id) == 0:
+                missing_ids.append(file_id)
+            #TODO: regex for file-
+            if not len(r'^file-[\w]+$', file_id):
+                missing_ids.append(file_id)
+        
+        if missing_ids:
+            raise Exception(f"External file IDs {', '.join(missing_ids)} do not exist"
+                            " or are misformatted")
+        
+        return True
+
     def add_arguments(self, parser) -> None:
         """Define the source of the data to import."""
 
@@ -194,22 +211,28 @@ class Command(BaseCommand):
             if not test_mode:
                 insert_test_directory_data(json_data, force)
 
-        # python manage.py seed transcript --hgnc <path> --mane_grch37 <path> --mane_ftp <path> 
-        # --mane_release <str> --gff <path> --g2refseq <path> --markname <path> 
+        # python manage.py seed transcript --hgnc <path> --mane_grch37 <path> 
+        # --mane_grch37_ext_id <str> --mane_ftp <path> 
+        # --mane_ftp_ext_id <str> --mane_release <str> --gff <path> --g2refseq <path> 
+        # --g2refseq_ext_id <str> --markname <path> --markname_ext_id <str>
         # --refgenome <ref_genome_version> --error
         elif command == "transcript":
             """
             This seeding requires the following files:
             1. hgnc dump - with HGNC ID, Approved Symbol, Previous Symbols, Alias Symbols
             2. MANE file grch37 csv (http://tark.ensembl.org/web/mane_GRCh37_list/)
-            3. MANE FTP (Ensembl) transcripts-by-gene file - grch38 with known release version
-            4. MANE release version of the Ensembl FTP file - e.g. 1.0
-            5. parsed gff file on DNAnexus (project-Fkb6Gkj433GVVvj73J7x8KbV:file-GF611Z8433Gk7gZ47gypK7ZZ)
-            6. gene2refseq table from HGMD database
-            7. markname table from HGMD database
+            3. MANE file grch37 csv - the external ID
+            4. MANE FTP (Ensembl) transcripts-by-gene file - grch38 with known release version
+            5. MANE FTP (Ensembl) transcripts-by-gene file - the external ID
+            6. MANE release version of the Ensembl FTP file - e.g. 1.0
+            7. parsed gff file on DNAnexus (project-Fkb6Gkj433GVVvj73J7x8KbV:file-GF611Z8433Gk7gZ47gypK7ZZ)
+            8. gene2refseq table from HGMD database
+            9. gene2refseq table - the external ID
+            10. markname table from HGMD database
+            11. markname table from HGMD database - the external ID
 
             And a string argument:
-            8. reference genome - e.g. 37/38
+            12. reference genome - e.g. 37/38
             """
 
             # fetch input reference genome - case sensitive
@@ -219,11 +242,15 @@ class Command(BaseCommand):
 
             hgnc_file = kwargs.get("hgnc")
             mane_file = kwargs.get("mane_grch37")
+            mane_grch37_ext_id = kwargs.get("mane_grch37_ext_id")
             mane_ftp_file = kwargs.get("mane_ftp")
+            mane_ftp_ext_id = kwargs.get("mane_ftp_ext_id")
             mane_release = kwargs.get("mane_release")
             gff_file = kwargs.get("gff")
             g2refseq_file = kwargs.get("g2refseq")
+            g2refseq_ext_id = kwargs.get("g2refseq_ext_id")
             markname_file = kwargs.get("markname")
+            markname_ext_id = kwargs.get("markname_ext_id")
 
             self._validate_file_exist(
                 [
@@ -236,16 +263,29 @@ class Command(BaseCommand):
                 ]
             )
 
+            self._validate_ext_ids(
+                [
+                    mane_grch37_ext_id,
+                    mane_ftp_ext_id,
+                    g2refseq_ext_id,
+                    markname_ext_id
+                ]
+            )
+
             error_log = kwargs.get("error_log", False)
 
             seed_transcripts(
                 hgnc_file,
                 mane_file,
+                mane_grch37_ext_id,
                 mane_ftp_file,
+                mane_ftp_ext_id,
                 mane_release,
                 gff_file,
                 g2refseq_file,
+                g2refseq_ext_id,
                 markname_file,
+                markname_ext_id,
                 ref_genome,
                 error_log,
             )
