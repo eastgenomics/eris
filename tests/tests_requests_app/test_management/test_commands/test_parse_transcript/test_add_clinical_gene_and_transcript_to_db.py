@@ -30,7 +30,7 @@ class TestAddClinicalGeneTranscript_FromScratch(TestCase):
         err = []
 
         hgnc_id = "HGNC:0001"
-        transcripts = ["NM00045.6"]
+        transcript = "NM00045.6"
         reference = ""
         source = "MANE"
         hgmd_release_label = "release_2"
@@ -40,7 +40,7 @@ class TestAddClinicalGeneTranscript_FromScratch(TestCase):
         g2refseq_ext_id = "file-345"
         markname_ext_id = "file-456"
 
-        _add_clinical_gene_and_transcript_to_db(hgnc_id, transcripts, reference, source,
+        _add_clinical_gene_and_transcript_to_db(hgnc_id, transcript, reference, source,
                                                 hgmd_release_label, tx_mane_release, mane_ext_id,
                                                 mane_ftp_ext_id, g2refseq_ext_id, markname_ext_id)
 
@@ -67,62 +67,14 @@ class TestAddClinicalGeneTranscript_FromScratch(TestCase):
         assert not errors, errors
 
 
-    def test_add_new_gene_new_transcript_multiple(self):
-        """
-        Straightforward case, but with multiple transcripts
-        """
-        err = []
-
-        hgnc_id = "HGNC:0001"
-        transcripts = ["NM00045.6", "NM00800.1"]
-        reference = ""
-        source = "MANE"
-        hgmd_release_label = "release_2"
-        tx_mane_release = "1.0"
-        mane_ext_id = "file-123"
-        mane_ftp_ext_id = "file-234"
-        g2refseq_ext_id = "file-345"
-        markname_ext_id = "file-456"
-
-        _add_clinical_gene_and_transcript_to_db(hgnc_id, transcripts, reference, source,
-                                                hgmd_release_label, tx_mane_release, mane_ext_id,
-                                                mane_ftp_ext_id, g2refseq_ext_id, markname_ext_id)
-
-        new_genes = Gene.objects.all()
-        new_sources = TranscriptSource.objects.all()
-        new_transcripts = Transcript.objects.all()
-
-        # Check that the expected genes were added to the database
-        err += len_check_wrapper(new_genes, "gene", 1)
-        err += value_check_wrapper(new_genes[0].hgnc_id, "gene HGNC", "HGNC:0001")
-        err += value_check_wrapper(new_genes[0].gene_symbol, "gene symbol", None)
-
-        # Check that the sources were added
-        err += len_check_wrapper(new_sources, "tx source", 1)
-        err += value_check_wrapper(new_sources[0].source, "tx source", "HGMD")
-
-        # Check multiple transcripts added
-        err += len_check_wrapper(new_transcripts, "transcript", 2)
-        first = new_transcripts[0]
-        second = new_transcripts[1]
-        err += value_check_wrapper(first.transcript, "transcript name", "NM00045.6")
-        err += value_check_wrapper(first.source, "source", new_sources[0])
-        err += value_check_wrapper(first.reference_genome, "ref", "")
-        err += value_check_wrapper(second.transcript, "transcript name", "NM00800.1")
-        err += value_check_wrapper(second.source, "source", new_sources[0])
-        err += value_check_wrapper(second.reference_genome, "ref", "")
-
-        errors = "; ".join(err)
-        assert not errors, errors
-
-
 class TestAddGeneTranscript_AlreadyExists(TestCase):
     """
     Cases where transcripts are being added to a database which
     already contains a gene and transcript.
 
-    Testing transcripts are still created if they are different in e.g. their reference version 
-    or source, from an already-existing transcript.
+    The second transcript will be added. Most of the time this is
+    NOT desired behaviour, however, it may be in some circumstances
+    (e.g. 37 having a different transcript from 38)
     """
 
     def setUp(self) -> None:
@@ -154,7 +106,7 @@ class TestAddGeneTranscript_AlreadyExists(TestCase):
         err = []
 
         hgnc_id = "HGNC:0001"
-        transcripts = ["NM00045.6"]
+        transcripts = "NM00045.6"
         reference = "38"
         source = "HGMD"
 

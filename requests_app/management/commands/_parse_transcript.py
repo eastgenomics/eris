@@ -231,7 +231,8 @@ def _get_tx_mane_match_and_level(tx_mane_release: list[dict], tx: str):
     perfect_match_with_mane = next((
         item for item in tx_mane_release if item['tx'] == tx), None)
     imperfect_match_with_mane = next((
-        item for item in tx_mane_release if item['tx_versionless'] == tx_base), None)
+        item for item in tx_mane_release if item['tx_base'] == tx_base),
+         None)
     
     if perfect_match_with_mane:
         release = perfect_match_with_mane["mane_release"]
@@ -246,8 +247,8 @@ def _get_tx_mane_match_and_level(tx_mane_release: list[dict], tx: str):
     return release, match_type
 
 def _assign_tx_release(release: str,
-                    source: TranscriptSource,
-                    files: dict[str: str]):
+                       source: TranscriptSource,
+                       files: dict[str: str]):
     """
     Given a source of transcript information, the release name for the
     source, and a dict of supporting files (where keys are external file IDs
@@ -263,6 +264,7 @@ def _assign_tx_release(release: str,
     #TODO: contemplate a situation in which multiple files of the same kind
     # are assigned to a single release - how should we lock this down?
     if tx_release_created:
+        transcript_release.save()
         for file_id, file_category in files.items():
             TranscriptReleaseFile.objects.get_or_create(
             transcript_release=transcript_release,
@@ -272,13 +274,13 @@ def _assign_tx_release(release: str,
     #else:
         #TODO: catch a case where new files are being linked to a tx release
         #check the files are the same and ALERT if not
-        
+    return transcript_release
 
 
 def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str, 
                                    reference_genome: str, source: str | None,
                                    hgmd_release_label: str,
-                                   tx_mane_release: dict, mane_ext_id: str,
+                                   tx_mane_release: list[dict], mane_ext_id: str,
                                    mane_ftp_ext_id: str, g2refseq_ext_id: str,
                                    markname_ext_id: str) -> None:
     """
@@ -292,11 +294,15 @@ def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str,
     if source == "MANE":
         # look up or create the source
         source, _ = TranscriptSource.objects.get_or_create(
-            source = source
+            source=source
         )
+        source.save()
+
         # assign MANE release version from the dictionary of known-release FTP data
         release_version, match_type = _get_tx_mane_match_and_level(
             tx_mane_release, transcript)
+        release_version.save()
+        
         if release:
             mane_files = {mane_ext_id: "mane_grch37",
                           mane_ftp_ext_id: "mane_hrch38_ftp"}
@@ -309,6 +315,7 @@ def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str,
         source, _ = TranscriptSource.objects.get_or_create(
             source = source
         )
+        source.save()
         match_type = MatchType.versionless_match_only
         hgmd_files = {g2refseq_ext_id: "hgmd_gene2refseq",
                       markname_ext_id: "hgmd_markname"}
@@ -486,7 +493,7 @@ def seed_transcripts(
     markname_hgmd = _prepare_markname_file(markname_filepath)
 
     # two dict for clinical and non-clinical tx assigment
-    gene_clinical_transcript: dict[str, str] = {}
+    gene_clinical_transcript: dict[str, list] = {}
     gene_non_clinical_transcripts: dict[str, list] = collections.defaultdict(list)
 
     # for record purpose (just in case)
@@ -502,7 +509,7 @@ def seed_transcripts(
                 _transcript_assigner(tx, hgnc_id, gene_clinical_transcript, 
                          mane_data, markname_hgmd, gene2refseq_hgmd)
             if clin:
-                gene_clinical_transcript[hgnc_id] = [tx, tx_source]
+                gene_clinical_transcript[hgnc_id] = tuple(tx, tx_source)
             else:
                 gene_non_clinical_transcripts[hgnc_id].append(tx)
             if err:
@@ -510,7 +517,7 @@ def seed_transcripts(
 
     # make genes - clinical or non-clinical - in db
     for hgnc_id, transcript_source in gene_clinical_transcript.items():       
-        transcript, source = transcript_source       
+        (transcript, source) = transcript_source #TODO: transcript showing as list here?
         _add_clinical_gene_and_transcript_to_db(hgnc_id, transcript, reference_genome, source,
                                                 hgmd_release_label,
                                                 mane_ftp_data, mane_ext_id, mane_ftp_ext_id,
