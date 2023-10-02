@@ -312,7 +312,6 @@ class TranscriptSource(models.Model):
     source = models.CharField(
         verbose_name="Transcript Source",
         max_length=255,
-        null=True,
         default=None,
     )
 
@@ -329,8 +328,11 @@ class TranscriptRelease(models.Model):
     for example, MANE release 1.0, or a specific HGMD dump
     """
 
-    source = models.ForeignKey(TranscriptSource, verbose_name="Transcript source id", 
-                               on_delete=models.PROTECT)
+    source = models.ForeignKey(TranscriptSource,
+                               verbose_name="Transcript source id",
+                               on_delete=models.PROTECT,
+                               null=True,
+                               default=None)
     
     external_release_version = models.CharField(
         verbose_name="Transcript Release",
@@ -403,11 +405,15 @@ class Transcript(models.Model):
 
     source = models.ForeignKey(TranscriptSource,
                                verbose_name="Transcript source",
-                               on_delete=models.PROTECT)
+                               on_delete=models.PROTECT,
+                               null=True,
+                               default=None)
 
     transcript_release = models.ForeignKey(TranscriptRelease, 
                                            verbose_name="Transcript release id",
-                                           on_delete=models.PROTECT)
+                                           on_delete=models.PROTECT,
+                                           null=True,
+                                           default=None)
 
     # release_match_type = is the transcript represented perfectly in the release
     # (e.g. both base and version match), or does just the base match?

@@ -68,7 +68,6 @@ def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
 
     return hgnc_symbol_to_hgnc_id
 
-
 def _sanity_check_cols_exist(df: pd.DataFrame, needed_cols: list, filename: str) -> None:
     """
     Check for expected columns in a DataFrame.
@@ -85,7 +84,6 @@ def _sanity_check_cols_exist(df: pd.DataFrame, needed_cols: list, filename: str)
 
     errors = "; ".join(errors)
     assert not errors, errors
-
 
 def _prepare_mane_file(
     mane_37_file: str,
@@ -142,7 +140,6 @@ def _prepare_mane_ftp_file(filepath: str, mane_version: str) -> dict:
         final_df.to_dict(orient='records')
     )
 
-
 def _prepare_gff_file(gff_file: str) -> dict[str, list]:
     """
     Read through gff files (from DNANexus)
@@ -176,7 +173,6 @@ def _prepare_gff_file(gff_file: str) -> dict[str, list]:
         .to_dict()["transcript"]
     )
 
-
 def _prepare_gene2refseq_file(g2refseq_file: str) -> dict:
     """
     Reads through gene2refseq file (from HGMD database)
@@ -203,7 +199,6 @@ def _prepare_gene2refseq_file(g2refseq_file: str) -> dict:
     # return dictionary of hgmd id to list of [refcore, refversion]
     return df.groupby("hgmdID")["core_plus_version"].apply(list).to_dict()
 
-
 def _prepare_markname_file(markname_file: str) -> dict:
     """
     Reads through markname file (from HGMD database)
@@ -219,7 +214,6 @@ def _prepare_markname_file(markname_file: str) -> dict:
     _sanity_check_cols_exist(markname, needed_cols, "markname")
 
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
-
 
 def _get_tx_mane_match_and_level(tx_mane_release: list[dict], tx: str):
     """
@@ -251,7 +245,6 @@ def _get_tx_mane_match_and_level(tx_mane_release: list[dict], tx: str):
 
     return release, match_type
 
-
 def _assign_tx_release(release: str,
                     source: TranscriptSource,
                     files: dict[str: str]):
@@ -263,10 +256,9 @@ def _assign_tx_release(release: str,
     :returns: transcript release
     """
     transcript_release, tx_release_created = TranscriptRelease.objects.get_or_create(
-        source=source,
         external_release_version=release,
-        file_id=None,
-        external_db_dump_date=None
+        external_db_dump_date=None,
+        source=source
         )
     
     #TODO: contemplate a situation in which multiple files of the same kind
@@ -279,7 +271,6 @@ def _assign_tx_release(release: str,
             file_type=file_category
             )
 
-
 def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str, 
                                    reference_genome: str, source: str | None,
                                    hgmd_release_label: str,
@@ -291,13 +282,13 @@ def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str,
     plus information on transcript release and supporting
     files.
     """
-    hgnc, _ = Gene.objects.get_or_create(hgnc_id=hgnc_id)
+    gene, _ = Gene.objects.get_or_create(hgnc_id=hgnc_id)
 
     # assign versions if possible
     if source == "MANE":
         # look up or create the source
         source, _ = TranscriptSource.objects.get_or_create(
-            source = "MANE"
+            source = source
         )
         # assign MANE release version from the dictionary of known-release FTP data
         release_version, match_type = _get_tx_mane_match_and_level(
@@ -306,12 +297,13 @@ def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str,
             mane_files = {mane_ext_id: "mane_grch37",
                           mane_ftp_ext_id: "mane_hrch38_ftp"}
             release = _assign_tx_release(release_version,
-                                         source, mane_files)
+                                         source,
+                                         mane_files)
 
     elif source == "HGMD":
         # look up or create the source
         source, _ = TranscriptSource.objects.get_or_create(
-            source = "HGMD"
+            source = source
         )
         hgmd_files = {g2refseq_ext_id: "hgmd_gene2refseq",
                       markname_ext_id: "hgmd_markname"}
@@ -325,13 +317,12 @@ def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str,
     # finally, create the transcript
     Transcript.objects.get_or_create(
         transcript=transcript,
-        gene=hgnc.id,
+        gene=gene,
         reference_genome=reference_genome,
         source=source,
         transcript_release=release,
         release_match_type=match_type
     )
-
 
 def _add_non_clinical_gene_and_transcript_to_db(hgnc_id: str, transcripts: list, 
                                    reference_genome: str) -> None:
@@ -349,7 +340,6 @@ def _add_non_clinical_gene_and_transcript_to_db(hgnc_id: str, transcripts: list,
             transcript_release=None,
             release_match_type=None
         )
-
 
 def _get_clin_transcript_from_hgmd_files(hgnc_id, markname: dict, gene2refseq: dict) \
     -> tuple[str | None, str | None]:
@@ -401,7 +391,6 @@ def _get_clin_transcript_from_hgmd_files(hgnc_id, markname: dict, gene2refseq: d
 
     return hgmd_base, None
 
-
 def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict, 
                          mane_data: dict, markname_hgmd: dict, gene2refseq_hgmd: dict) \
                             -> tuple[bool, str, str | None]:
@@ -449,7 +438,6 @@ def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict,
     
     return clinical, source, err
 
-
 def seed_transcripts(
     hgnc_filepath: str,
     mane_filepath: str,
@@ -492,7 +480,6 @@ def seed_transcripts(
     gene2refseq_hgmd = _prepare_gene2refseq_file(g2refseq_filepath)
     markname_hgmd = _prepare_markname_file(markname_filepath)
 
-
     # two dict for clinical and non-clinical tx assigment
     gene_clinical_transcript: dict[str, str] = {}
     gene_non_clinical_transcripts: dict[str, list] = collections.defaultdict(list)
@@ -518,7 +505,7 @@ def seed_transcripts(
 
     # make genes - clinical or non-clinical - in db
     for hgnc_id, transcript_source in gene_clinical_transcript.items():       
-        transcript, source = transcript_source
+        transcript, source = transcript_source       
         _add_clinical_gene_and_transcript_to_db(hgnc_id, transcript, reference_genome, source,
                                                 hgmd_release_label,
                                                 mane_ftp_data, mane_ext_id, mane_ftp_ext_id,

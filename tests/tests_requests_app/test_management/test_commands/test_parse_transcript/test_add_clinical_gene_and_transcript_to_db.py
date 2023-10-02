@@ -2,15 +2,15 @@ from django.test import TestCase
 
 
 from requests_app.models import \
-    Gene, Transcript
+    Gene, Transcript, TranscriptSource
 
 
 from requests_app.management.commands._parse_transcript import \
-    _add_gene_and_transcript_to_db
+    _add_clinical_gene_and_transcript_to_db
 from ..test_insert_panel.test_insert_gene import len_check_wrapper, value_check_wrapper
 
 
-class TestAddGeneTranscript_FromScratch(TestCase):
+class TestAddClinicalGeneTranscript_FromScratch(TestCase):
     """
     Cases where transcripts and genes are being added to a 'clean' 
     database with no entries - emulates situations where the gene 
@@ -33,20 +33,34 @@ class TestAddGeneTranscript_FromScratch(TestCase):
         transcripts = ["NM00045.6"]
         reference = ""
         source = "MANE"
+        hgmd_release_label = "release_2"
+        tx_mane_release = "1.0"
+        mane_ext_id = "file-123"
+        mane_ftp_ext_id = "file-234"
+        g2refseq_ext_id = "file-345"
+        markname_ext_id = "file-456"
 
-        _add_gene_and_transcript_to_db(hgnc_id, transcripts, reference, source)
+        _add_clinical_gene_and_transcript_to_db(hgnc_id, transcripts, reference, source,
+                                                hgmd_release_label, tx_mane_release, mane_ext_id,
+                                                mane_ftp_ext_id, g2refseq_ext_id, markname_ext_id)
 
         new_genes = Gene.objects.all()
+        new_sources = TranscriptSource.objects.all()
         new_transcripts = Transcript.objects.all()
 
-        # Check that the expected values were added to the database
+        # Check that the expected genes were added to the database
         err += len_check_wrapper(new_genes, "gene", 1)
         err += value_check_wrapper(new_genes[0].hgnc_id, "gene HGNC", "HGNC:0001")
         err += value_check_wrapper(new_genes[0].gene_symbol, "gene symbol", None)
 
+        # Check that the sources were added
+        err += len_check_wrapper(new_sources, "tx source", 1)
+        err += value_check_wrapper(new_sources[0].source, "tx source", "HGMD")
+
+        # Check that the transcripts were added
         err += len_check_wrapper(new_transcripts, "transcript", 1)
         err += value_check_wrapper(new_transcripts[0].transcript, "transcript name", "NM00045.6")
-        err += value_check_wrapper(new_transcripts[0].source, "source", "MANE")
+        err += value_check_wrapper(new_transcripts[0].source, "source", new_sources[0])
         err += value_check_wrapper(new_transcripts[0].reference_genome, "ref", "")
 
         errors = "; ".join(err)
@@ -62,27 +76,40 @@ class TestAddGeneTranscript_FromScratch(TestCase):
         hgnc_id = "HGNC:0001"
         transcripts = ["NM00045.6", "NM00800.1"]
         reference = ""
-        source = None
+        source = "MANE"
+        hgmd_release_label = "release_2"
+        tx_mane_release = "1.0"
+        mane_ext_id = "file-123"
+        mane_ftp_ext_id = "file-234"
+        g2refseq_ext_id = "file-345"
+        markname_ext_id = "file-456"
 
-        _add_gene_and_transcript_to_db(hgnc_id, transcripts, reference, source)
-
+        _add_clinical_gene_and_transcript_to_db(hgnc_id, transcripts, reference, source,
+                                                hgmd_release_label, tx_mane_release, mane_ext_id,
+                                                mane_ftp_ext_id, g2refseq_ext_id, markname_ext_id)
 
         new_genes = Gene.objects.all()
+        new_sources = TranscriptSource.objects.all()
         new_transcripts = Transcript.objects.all()
 
-        # Check that the expected values were added to the database
+        # Check that the expected genes were added to the database
         err += len_check_wrapper(new_genes, "gene", 1)
         err += value_check_wrapper(new_genes[0].hgnc_id, "gene HGNC", "HGNC:0001")
         err += value_check_wrapper(new_genes[0].gene_symbol, "gene symbol", None)
 
+        # Check that the sources were added
+        err += len_check_wrapper(new_sources, "tx source", 1)
+        err += value_check_wrapper(new_sources[0].source, "tx source", "HGMD")
+
+        # Check multiple transcripts added
         err += len_check_wrapper(new_transcripts, "transcript", 2)
         first = new_transcripts[0]
         second = new_transcripts[1]
         err += value_check_wrapper(first.transcript, "transcript name", "NM00045.6")
-        err += value_check_wrapper(first.source, "source", None)
+        err += value_check_wrapper(first.source, "source", new_sources[0])
         err += value_check_wrapper(first.reference_genome, "ref", "")
         err += value_check_wrapper(second.transcript, "transcript name", "NM00800.1")
-        err += value_check_wrapper(second.source, "source", None)
+        err += value_check_wrapper(second.source, "source", new_sources[0])
         err += value_check_wrapper(second.reference_genome, "ref", "")
 
         errors = "; ".join(err)
@@ -96,33 +123,48 @@ class TestAddGeneTranscript_AlreadyExists(TestCase):
 
     Testing transcripts are still created if they are different in e.g. their reference version 
     or source, from an already-existing transcript.
-
-    #TODO: needs development - as part of plans to implement a more informative
-    versioning system for transcripts.
     """
 
     def setUp(self) -> None:
+        self.start_tx_source = TranscriptSource.objects.get_or_create(
+            source="MANE"
+        )
+
         self.start_gene = Gene.objects.create(
             hgnc_id="HGNC:0001"
         )
 
         self.start_transcript = Transcript.objects.get_or_create(
             transcript="NM00045.6",
-            source="MANE",
-            gene_id=self.start_gene.pk,
+            source=self.start_tx_source[0],
+            gene_id=self.start_gene.id,
             reference_genome="37"
         )
     
 
     def test_add_old_gene_changed_transcript(self):
+        """
+        We expect there to be 2 copies of NM00045.6, one for each
+        reference genome
+        """
         err = []
 
         hgnc_id = "HGNC:0001"
         transcripts = ["NM00045.6"]
         reference = "38"
-        source = None
+        source = "HGMD"
 
-        _add_gene_and_transcript_to_db(hgnc_id, transcripts, reference, source)
+        hgmd_release_label = "release_2"
+        tx_mane_release = "1.0"
+        mane_ext_id = "file-123"
+        mane_ftp_ext_id = "file-234"
+        g2refseq_ext_id = "file-345"
+        markname_ext_id = "file-456"
+        
+        _add_clinical_gene_and_transcript_to_db(hgnc_id, transcripts, reference, source,
+                                                hgmd_release_label, tx_mane_release, mane_ext_id,
+                                                mane_ftp_ext_id, g2refseq_ext_id, markname_ext_id)
+
 
         all_transcripts = Transcript.objects.all()
 
