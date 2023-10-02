@@ -263,12 +263,17 @@ def _assign_tx_release(release: str,
     #TODO: contemplate a situation in which multiple files of the same kind
     # are assigned to a single release - how should we lock this down?
     if tx_release_created:
-        for file_id, file_category in files:
+        for file_id, file_category in files.items():
             TranscriptReleaseFile.objects.get_or_create(
             transcript_release=transcript_release,
             file_id=file_id,
             file_type=file_category
             )
+    #else:
+        #TODO: catch a case where new files are being linked to a tx release
+        #check the files are the same and ALERT if not
+        
+
 
 def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str, 
                                    reference_genome: str, source: str | None,
@@ -277,7 +282,7 @@ def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str,
                                    mane_ftp_ext_id: str, g2refseq_ext_id: str,
                                    markname_ext_id: str) -> None:
     """
-    Add each gene to the database, with its transcript,
+    Add each gene to the database, with its found transcript,
     plus information on transcript release and supporting
     files.
     """
@@ -304,6 +309,7 @@ def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str,
         source, _ = TranscriptSource.objects.get_or_create(
             source = source
         )
+        match_type = MatchType.versionless_match_only
         hgmd_files = {g2refseq_ext_id: "hgmd_gene2refseq",
                       markname_ext_id: "hgmd_markname"}
         release = _assign_tx_release(hgmd_release_label, 

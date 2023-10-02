@@ -126,8 +126,12 @@ class TestAddGeneTranscript_AlreadyExists(TestCase):
     """
 
     def setUp(self) -> None:
-        self.start_tx_source = TranscriptSource.objects.get_or_create(
+        self.start_tx_mane_source = TranscriptSource.objects.get_or_create(
             source="MANE"
+        )
+
+        self.start_tx_hgmd_source = TranscriptSource.objects.get_or_create(
+            source="HGMD"
         )
 
         self.start_gene = Gene.objects.create(
@@ -136,7 +140,7 @@ class TestAddGeneTranscript_AlreadyExists(TestCase):
 
         self.start_transcript = Transcript.objects.get_or_create(
             transcript="NM00045.6",
-            source=self.start_tx_source[0],
+            source=self.start_tx_mane_source[0],
             gene_id=self.start_gene.id,
             reference_genome="37"
         )
@@ -165,14 +169,13 @@ class TestAddGeneTranscript_AlreadyExists(TestCase):
                                                 hgmd_release_label, tx_mane_release, mane_ext_id,
                                                 mane_ftp_ext_id, g2refseq_ext_id, markname_ext_id)
 
-
         all_transcripts = Transcript.objects.all()
 
         # expect old and new copy for the same transcript
         err += len_check_wrapper(all_transcripts, "transcript", 2)
         new_tx = all_transcripts[1]
         err += value_check_wrapper(new_tx.transcript, "transcript name", "NM00045.6")
-        err += value_check_wrapper(new_tx.source, "source", None)
+        err += value_check_wrapper(new_tx.source, "source", self.start_tx_hgmd_source[0])
         err += value_check_wrapper(new_tx.reference_genome, "ref", "38")
 
         errors = "; ".join(err)
