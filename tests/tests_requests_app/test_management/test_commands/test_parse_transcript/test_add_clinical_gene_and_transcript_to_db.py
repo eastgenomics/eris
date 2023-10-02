@@ -34,7 +34,14 @@ class TestAddClinicalGeneTranscript_FromScratch(TestCase):
         reference = ""
         source = "MANE"
         hgmd_release_label = "release_2"
-        tx_mane_release = "1.0"
+        tx_mane_release = [
+            {
+                "tx": "NM00045.6",
+                "tx_base": "NM00045",
+                "tx_version": "6",
+                "mane_release": "release_2"
+            }
+        ]
         mane_ext_id = "file-123"
         mane_ftp_ext_id = "file-234"
         g2refseq_ext_id = "file-345"
@@ -55,7 +62,7 @@ class TestAddClinicalGeneTranscript_FromScratch(TestCase):
 
         # Check that the sources were added
         err += len_check_wrapper(new_sources, "tx source", 1)
-        err += value_check_wrapper(new_sources[0].source, "tx source", "HGMD")
+        err += value_check_wrapper(new_sources[0].source, "tx source", "MANE")
 
         # Check that the transcripts were added
         err += len_check_wrapper(new_transcripts, "transcript", 1)

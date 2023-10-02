@@ -301,9 +301,8 @@ def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str,
         # assign MANE release version from the dictionary of known-release FTP data
         release_version, match_type = _get_tx_mane_match_and_level(
             tx_mane_release, transcript)
-        release_version.save()
         
-        if release:
+        if release_version:
             mane_files = {mane_ext_id: "mane_grch37",
                           mane_ftp_ext_id: "mane_hrch38_ftp"}
             release = _assign_tx_release(release_version,
