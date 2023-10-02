@@ -346,10 +346,6 @@ class TranscriptRelease(models.Model):
         auto_now_add=True,
     )
 
-    external_db_dump_date = models.DateTimeField(
-        verbose_name="External Db Dump Date"
-    )
-
     class Meta:
         db_table = "transcript_release"
 

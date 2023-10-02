@@ -257,7 +257,6 @@ def _assign_tx_release(release: str,
     """
     transcript_release, tx_release_created = TranscriptRelease.objects.get_or_create(
         external_release_version=release,
-        external_db_dump_date=None,
         source=source
         )
     
