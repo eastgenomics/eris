@@ -346,6 +346,13 @@ class TranscriptRelease(models.Model):
         auto_now_add=True,
     )
 
+    reference_genome = models.CharField(
+        verbose_name="Reference Genome",
+        max_length=255,
+        null=True,
+        default=None,
+    )
+
     class Meta:
         db_table = "transcript_release"
 
@@ -399,17 +406,27 @@ class Transcript(models.Model):
         default=None,
     )
 
-    source = models.ForeignKey(TranscriptSource,
-                               verbose_name="Transcript source",
-                               on_delete=models.PROTECT,
-                               null=True,
-                               default=None)
+    class Meta:
+        db_table = "transcript"
 
-    transcript_release = models.ForeignKey(TranscriptRelease, 
-                                           verbose_name="Transcript release id",
-                                           on_delete=models.PROTECT,
-                                           null=True,
-                                           default=None)
+    def __str__(self):
+        return str(self.id)
+
+
+class TranscriptReleaseLink(models.Model):
+    """Defines the link between a single transcript and a single release"""
+
+    transcript = models.ForeignKey(
+        Transcript,
+        verbose_name="Transcript",
+        on_delete=models.CASCADE
+    )
+
+    release = models.ForeignKey(
+        TranscriptRelease,
+        verbose_name="Transcript release",
+        on_delete=models.CASCADE
+    )
 
     # release_match_type = is the transcript represented perfectly in the release
     # (e.g. both base and version match), or does just the base match?
@@ -421,7 +438,7 @@ class Transcript(models.Model):
     )
 
     class Meta:
-        db_table = "transcript"
+        db_table = "transcript_release_link"
 
     def __str__(self):
         return str(self.id)
