@@ -3,9 +3,8 @@ import datetime as dt
 import pandas as pd
 import re
 
-from requests_app.management.commands.tx_match import MatchType
 from requests_app.models import Gene, Transcript, TranscriptRelease, \
-    TranscriptSource, TranscriptReleaseFile
+    TranscriptSource, TranscriptReleaseFile, TranscriptReleaseLink
 
 # TODO: build-37 and build-38 transcripts?
 
@@ -224,7 +223,7 @@ def _get_tx_mane_match_and_level(tx_mane_release: list[dict], tx: str):
     NM001.1NM001.2).
     Return the MANE release with the match type.
     :return: release of MANE
-    :return: match_type 
+    :return: match_version - True for matches version, False for matches base only
     """
     tx_base = re.sub(r'\.[\d]+$', '', tx)
 
@@ -236,15 +235,15 @@ def _get_tx_mane_match_and_level(tx_mane_release: list[dict], tx: str):
     
     if perfect_match_with_mane:
         release = perfect_match_with_mane["mane_release"]
-        match_type = MatchType.complete_match()
+        match_version = True
     elif imperfect_match_with_mane:
         release = imperfect_match_with_mane["mane_release"]
-        match_type = MatchType.versionless_match_only()
+        match_version = False
     else:
         release = None
-        match_type = None
+        match_version = False
 
-    return release, match_type
+    return release, match_version
 
 def _assign_tx_release(release: str,
                        source: TranscriptSource,
@@ -299,7 +298,7 @@ def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str,
         source.save()
 
         # assign MANE release version from the dictionary of known-release FTP data
-        release_version, match_type = _get_tx_mane_match_and_level(
+        release_version, match_full_version = _get_tx_mane_match_and_level(
             tx_mane_release, transcript)
         
         if release_version:
@@ -315,7 +314,8 @@ def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str,
             source = source
         )
         source.save()
-        match_type = MatchType.versionless_match_only
+        
+        match_full_version = False
         hgmd_files = {g2refseq_ext_id: "hgmd_gene2refseq",
                       markname_ext_id: "hgmd_markname"}
         release = _assign_tx_release(hgmd_release_label, 
@@ -323,17 +323,23 @@ def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str,
                                     hgmd_files)
 
     else:
-        release = match_type = None
+        release = match_full_version = None
 
-    # finally, create the transcript
-    Transcript.objects.get_or_create(
+    # create the transcript
+    tx = Transcript.objects.get_or_create(
         transcript=transcript,
         gene=gene,
-        reference_genome=reference_genome,
-        source=source,
-        transcript_release=release,
-        release_match_type=match_type
+        reference_genome=reference_genome
     )
+    tx.save()
+
+    # finally link the transcript to the release
+    tx_link = TranscriptReleaseLink.objects.get_or_create(
+        transcript=tx,
+        release=release,
+        match_full_version=match_full_version
+    )
+    tx_link.save()
 
 def _add_non_clinical_gene_and_transcript_to_db(hgnc_id: str, transcripts: list, 
                                    reference_genome: str) -> None:
@@ -347,9 +353,7 @@ def _add_non_clinical_gene_and_transcript_to_db(hgnc_id: str, transcripts: list,
         Transcript.objects.get_or_create(
             transcript=tx,
             gene=hgnc.id,
-            reference_genome=reference_genome,
-            transcript_release=None,
-            release_match_type=None
+            reference_genome=reference_genome
         )
 
 def _get_clin_transcript_from_hgmd_files(hgnc_id, markname: dict, gene2refseq: dict) \
@@ -516,7 +520,7 @@ def seed_transcripts(
 
     # make genes - clinical or non-clinical - in db
     for hgnc_id, transcript_source in gene_clinical_transcript.items():       
-        (transcript, source) = transcript_source #TODO: transcript showing as list here?
+        (transcript, source) = transcript_source
         _add_clinical_gene_and_transcript_to_db(hgnc_id, transcript, reference_genome, source,
                                                 hgmd_release_label,
                                                 mane_ftp_data, mane_ext_id, mane_ftp_ext_id,

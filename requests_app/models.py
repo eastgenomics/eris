@@ -428,11 +428,11 @@ class TranscriptReleaseLink(models.Model):
         on_delete=models.CASCADE
     )
 
-    # release_match_type = is the transcript represented perfectly in the release
-    # (e.g. both base and version match), or does just the base match?
-    release_match_type = models.CharField(
-        verbose_name="Transcript release match",
-        max_length=255,
+    # match_version=True means the transcript WITH VERSION matches the
+    # transcript in the release
+    # it its False, that means only the base accession without version matches
+    match_version = models.BooleanField(
+        verbose_name="Transcript matches version?",
         null=True,
         default=None,
     )
