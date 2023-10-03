@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
 <div class="container mb-5">
@@ -20,6 +21,8 @@
       File Uploaded Successfully!
     </div>
     {% endif %}
+
+    <img src="{% static 'images/hamster-loader.gif' %}" alt="hamster"/>
 
     <!-- GenePanel Upload Form -->
     <div class="row mt-2">
