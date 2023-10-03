@@ -16,13 +16,17 @@
         <div class="col">
             {% if panel %}
             <h1>{{ panel.panel_name }}</h1>
+            {% if panel.external_id %}
             <h4>external id: {{ panel.external_id }}</h4>
+            {% else %}
+            <h4>external id: None</h4>
+            {% endif %}
             <h4>panel source: {{ panel.panel_source }}</h4>
             <h4>test directory: {{ panel.test_directory }}</h4>
             {% if panel.panel_version %}
-            <h4>panel version: {{ panel.panel_version }}</h4>
+                <h4>panel version: {{ panel.panel_version }}</h4>
             {% else %}
-            <h4>panel version: None</h4>
+                <h4>panel version: None</h4>
             {% endif %}
             <h4>custom: {{ panel.custom }}</h4>
             <h4>created: {{ panel.created }}</h4>
@@ -99,7 +103,11 @@
 
                     <ul class="list-group">
                         <li class="list-group-item">r code: {{ ci.r_code }}</li>
+                        {% if ci.test_method %}
                         <li class="list-group-item">test method: {{ ci.test_method }}</li>
+                        {% else %}
+                        <li class="list-group-item">test method: None</li>
+                        {% endif %}
                     </ul>
                 </div>
             </div>
@@ -159,8 +167,8 @@
     <div class="row">
         {% if pgs %}
         <div class="col">
-            <table class="table table-bordered shadow">
-                <thead>
+            <table id="geneTable" class="table pt-2">
+                <thead class="table-success">
                   <tr>
                     <th scope="col">HGNC ID</th>
                     <th scope="col">Gene Symbol</th>
@@ -191,8 +199,8 @@
     <div class="row">
         {% if transcripts %}
         <div class="col-12">
-            <table class="table table-bordered shadow">
-                <thead>
+            <table class="table pt-2" id="transcriptTable">
+                <thead class="table-success">
                   <tr>
                     <th scope="col">Gene</th>
                     <th scope="col">Transcript</th>
@@ -223,4 +231,13 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block script %}
+<script>
+    $(document).ready(function () {
+        new DataTable('#geneTable');
+        new DataTable('#transcriptTable');
+    });
+</script>
 {% endblock %}

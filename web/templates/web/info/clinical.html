@@ -17,7 +17,11 @@
             {% if ci %}
             <h1>{{ ci.name }}</h1>
             <h4>r code: {{ ci.r_code }}</h4>
-            <h4>test method: {{ ci.test_method }}</h4>
+            {% if ci.test_method %}
+                <h4>test method: {{ ci.test_method }}</h4>
+            {% else %}
+                <h4>test method: None</h4>
+            {% endif %}
             <h5>database id: <span class="text-danger">{{ ci.id }}</span></h5>
             {% else %}
             <h1>Clinical Indication Does Not Exist.</h1>
@@ -178,8 +182,8 @@
                     <h5 class="card-title">panel id: <span class="text-info">{{ key }}</span></h5>
 
                     <p class="card-text">
-                        <table class="table table-bordered table-hover">
-                            <thead>
+                        <table class="table pt-2" id="geneTable">
+                            <thead class="table-success">
                             <tr>
                                 <th scope="col">HGNC id</th>
                                 <th scope="col">Gene Symbol</th>
@@ -189,7 +193,7 @@
                             <tbody>
                                 {% for gene in values %}
                                 <tr>
-                                    <td><a href="{% url 'gene' gene.id %}">{{ gene.hgnc }}</a></td>
+                                    <td><a href="{% url 'gene' gene.gene_id %}">{{ gene.hgnc }}</a></td>
                                     <td>{{ gene.symbol }}</td>
                                     <td>{{ gene.created }}</td>
                                 </tr>
@@ -216,8 +220,8 @@
     <div class="row">
         {% if transcripts %}
         <div class="col-12">
-            <table class="table table-bordered shadow">
-                <thead>
+            <table class="table pt-2" id="transcriptTable">
+                <thead class="table-success">
                 <tr>
                     <th scope="col">Gene</th>
                     <th scope="col">Transcript</th>
@@ -249,4 +253,13 @@
     </div>
 
 </div>
+{% endblock %}
+
+{% block script %}
+<script>
+    $(document).ready(function () {
+        new DataTable('#geneTable');
+        new DataTable('#transcriptTable');
+    });
+</script>
 {% endblock %}
