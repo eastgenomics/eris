@@ -7,7 +7,9 @@
             {% if gene %}
             <h1>{{ gene.hgnc_id }}</h1>
             <h4>{{ gene.gene_symbol }}</h4>
-            <h4>alias symbols: {{ gene.alias_symbols }}</h4>
+            {% if gene.alias_symbols %}
+                <h4>alias symbols: {{ gene.alias_symbols }}</h4>
+            {% endif %}
             <h5>database id: {{ gene.id }}</h5>
             {% else %}
             <h1>Gene Does Not Exist.</h1>
@@ -37,7 +39,7 @@
                         {% else %}
                         <li class="list-group-item">custom panel: <span class="badge text-bg-danger">{{ panel.panel_id__custom }}</span></li>
                         {% endif %}
-                        <li class="list-group-item">created: {{ panel.panel_id__created_date }} {{ panel.panel_id__created_time }}</li>
+                        <li class="list-group-item">created: {{ panel.panel_id__created }}</li>
                     </ul>
                 </div>
             </div>
