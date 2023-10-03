@@ -109,8 +109,11 @@ class TestAddGeneTranscript_AlreadyExists(TestCase):
 
     def test_add_old_gene_changed_transcript(self):
         """
-        We expect there to be 2 copies of NM00045.6, one for each
-        reference genome
+        Scenario: a new transcript is added to a database. Its gene is
+        already in the database, as is a different transcript for that gene.
+
+        Expect: 2 copies of NM00045.6 in Transcript, one for each reference genome
+        We also expect release and linking table to be in the database.
         """
         err = []
 

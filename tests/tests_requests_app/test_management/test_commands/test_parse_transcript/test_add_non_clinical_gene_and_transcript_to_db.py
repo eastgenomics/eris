@@ -18,6 +18,7 @@ class TestNonClinicalGene_FromScratch(TestCase):
     def test_from_scratch(self):
         """
         Case: Add 2 transcripts to a new gene
+        Expect: Gene and Transcripts to be added to the db tables.
         """
         err = []
 
@@ -66,9 +67,9 @@ class TestNonClinicalGene_AlreadyExists(TestCase):
         
     def test_gene_exists_already(self):
         """
-        Case: Add 2 transcripts to a new gene. One tx already
-        exists so it doesn't get re-added, the second is new
-        and is added.
+        Case: Add 2 transcripts to a new gene. 
+        Expect: One tx already exists in the db so it doesn't get re-added,
+        the second tx is new and is added.
         """
         err = []
 
