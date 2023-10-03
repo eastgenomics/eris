@@ -26,14 +26,22 @@
       <div class="col">
         <div class="card">
           <div class="card-body">
-            <form action="{% url 'genepanel' %}" method="POST">
+            <h5 class="card-title">Upload GenePanel File to DNANexus Project</h5>
+            <form action="{% url 'genepanel' %}" method="POST" id="genepanelForm">
               {% csrf_token %}
+              <div class="mb-3">
+                <label for="projectIdInput" class="form-label">DNANexus API Token</label>
+                <input type="text" class="form-control" name="dnanexus_token" aria-describedby="dnanexusTokenHelp" required>
+                <div id="dnanexusTokenHelp" class="form-text">Get this from DNANexus Settings</div>
+              </div>
               <div class="mb-3">
                 <label for="projectIdInput" class="form-label">Project ID</label>
                 <input type="text" class="form-control" name="project_id" aria-describedby="projectIdHelp" required>
                 <div id="projectIdHelp" class="form-text">e.g. project-GV4VJ2Q46b4p7k7z7491fFZ3</div>
               </div>
-              <button type="submit" class="btn btn-success">Upload</button>
+              <button type="submit" class="btn btn-success">Upload
+                <span class="spinner-border spinner-border-sm ml-2 visually-hidden" aria-hidden="true"></span>
+              </button>
             </form>
           </div>
         </div>
@@ -78,4 +86,17 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block script %}
+<script>
+  $(document).ready(function() {
+    // script to block submit button on form submission and show loading indicator
+    $('#genepanelForm').submit(function() {
+      console.log('form submitted!');
+      $(this).find('button[type="submit"]').prop('disabled', true);
+      $(this).find('button[type="submit"]').find('.visually-hidden').removeClass('visually-hidden');
+    });
+  });
+</script>
 {% endblock %}

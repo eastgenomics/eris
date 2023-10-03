@@ -89,7 +89,7 @@ def provisionally_link_clinical_indication_to_panel(
     Intended for use when you are making 'best guesses' for links based on
     previous CI-Panel links.
     """
-    ci_panel_instance, created = ClinicalIndicationPanel.objects.get_or_create(
+    ci_panel_instance, created = ClinicalIndicationPanel.objects.update_or_create(
         clinical_indication_id=clinical_indication_id,
         panel_id=panel_id,
         defaults={
@@ -410,15 +410,16 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
         if sortable_version(td_version) <= sortable_version(
             latest_td_version_in_db.td_version
         ):
-            print(f"TD version {td_version} already in database. Abdandoning import.")
-            return
+            raise Exception(
+                f"TD version {td_version} lower than one in db {normalize_version(latest_td_version_in_db.td_version)}. Abdandoning import."
+            )
 
     all_indication: list[dict] = json_data["indications"]
 
     for indication in all_indication:
         r_code: str = indication["code"].strip()
 
-        ci_instance, created = ClinicalIndication.objects.get_or_create(
+        ci_instance, ci_created = ClinicalIndication.objects.get_or_create(
             r_code=r_code,
             name=indication["name"],
             defaults={
@@ -426,7 +427,7 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
             },
         )
 
-        if created:
+        if ci_created:
             # New clinical indication - the old CI-panel entries with the same R code,
             # will be set to 'pending = True'. The new CI will be linked to those panels,
             # again with 'pending = True' to make it "provisional".
@@ -492,7 +493,7 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
                 if panel_record:
                     (
                         cip_instance,
-                        created,
+                        cip_created,
                     ) = ClinicalIndicationPanel.objects.get_or_create(
                         clinical_indication_id=ci_instance.id,
                         panel_id=panel_record.id,
@@ -503,7 +504,7 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
                         },
                     )
 
-                    if created:
+                    if cip_created:
                         # if CI-Panel record is created, create a history record
                         ClinicalIndicationPanelHistory.objects.create(
                             clinical_indication_panel_id=cip_instance.id,
@@ -587,3 +588,4 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
     _backward_deactivate(all_indication, td_source)
 
     print("Data insertion completed.")
+    return True
