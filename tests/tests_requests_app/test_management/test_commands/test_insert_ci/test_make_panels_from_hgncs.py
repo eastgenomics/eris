@@ -206,3 +206,27 @@ class TestMakePanelsFromHgncs(TestCase):
     # the clinical indication will be linked to it (and both old and new will be flagged for review)
     # this is different from the panel-gene interaction where panel get their genes from PanelApp API
     # thus there's a need to monitor the changes in panel-gene relationship
+
+    def test_long_hgnc_list(self):
+        """
+        scenario where there's a long list of hgncs and db limit for CharField
+        is only 255 chars thus there is a need to limit panel name to 200 chars
+        if length exceed 255
+
+        we expect the function to truncate the panel name to 200 chars and store it in db
+        """
+        mock_test_directory = {
+            "td_source": "rare-and-inherited-disease-national-gnomic-test-directory-v5.2.xlsx",
+            "config_source": "230401_RD",
+            "date": "230616",
+        }
+
+        hgncs = [f"HGNC:{i}" for i in range(1000)]
+
+        _make_panels_from_hgncs(
+            mock_test_directory, self.first_clinical_indication, hgncs
+        )
+
+        panel = Panel.objects.first()
+
+        assert len(panel.panel_name) == 200  # assert that panel name length is 200
