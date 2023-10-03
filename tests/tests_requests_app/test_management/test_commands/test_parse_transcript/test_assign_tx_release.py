@@ -22,6 +22,8 @@ class TestAssignTxRelease_NewRelease(TestCase):
             source="MANE"
         )
         self.tx_mane_source.save()
+
+        self.tx_ref_genome = "37"
     
     def test_novel_release_mane(self):
         """
@@ -31,21 +33,20 @@ class TestAssignTxRelease_NewRelease(TestCase):
         """
         err = []
 
-        ref_genome = "37"
         files = {"file-1234": "mane_grch37",
                  "file-5678": "mane_hrch38_ftp"}
 
         tx_release = _assign_tx_release(self.release, self.tx_mane_source, 
-                                        ref_genome, files)
+                                        self.tx_ref_genome, files)
 
         # check the new release is made in TranscriptRelease
         transcript_release = TranscriptRelease.objects.all()
 
         assert len(transcript_release) == 1
-        assert value_check_wrapper(transcript_release[0].source, "release source", "MANE")
-        assert value_check_wrapper(transcript_release[0].external_release_version,
-                                   "ext release version", None)
-        # TODO: release shouldn't be None - why is it happening?
+        err += value_check_wrapper(transcript_release[0].source.source, "release source",
+                                   "MANE")
+        err += value_check_wrapper(transcript_release[0].external_release_version,
+                                   "ext release version", "1.1.5")
 
         # check tx release supporting files are made
         transcript_release_file = TranscriptReleaseFile.objects.all()
@@ -53,15 +54,18 @@ class TestAssignTxRelease_NewRelease(TestCase):
         assert len(transcript_release_file) == 2
         first_file = transcript_release_file[0]
         second_file = transcript_release_file[1]
-        assert value_check_wrapper(first_file.file_id, "file id", "file-5678")
-        assert value_check_wrapper(first_file.file_type, "file type", "mane_hrch38_ftp")
-        assert value_check_wrapper(second_file.file_id, "file id", "file-1234")
-        assert value_check_wrapper(second_file.file_type, "file type", "mane_grch37")
+        err += value_check_wrapper(first_file.file_id, "file id", "file-1234")
+        err += value_check_wrapper(first_file.file_type, "file type", "mane_grch37")
+        err += value_check_wrapper(second_file.file_id, "file id", "file-5678")
+        err += value_check_wrapper(second_file.file_type, "file type", "mane_hrch38_ftp")
+        
         # check both files are linked to the correct release!
-        assert value_check_wrapper(first_file.transcript_release, "tx release",
-                                   transcript_release_file[0])
-        assert value_check_wrapper(second_file.transcript_release, "tx release",
-                                   transcript_release_file[0])
+        err += value_check_wrapper(first_file.transcript_release,
+                                   "tx release",
+                                   tx_release)
+        err += value_check_wrapper(second_file.transcript_release,
+                                   "tx release",
+                                   tx_release)
 
         errors = "; ".join(err)
         assert not errors, errors
