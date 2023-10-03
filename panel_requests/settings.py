@@ -161,5 +161,3 @@ HGNC_IDS_TO_OMIT = (
 PANELAPP_API_URL = os.environ.get(
     "PANELAPP_API_URL", "https://panelapp.genomicsengland.co.uk/api/v1/panels/"
 )
-
-DNANEXUS_TOKEN = os.environ.get("DNANEXUS_TOKEN", None)  # fetch dnanexus token
