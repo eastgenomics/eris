@@ -297,9 +297,9 @@ def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str,
     
     if release_version:
         release = _assign_tx_release(release_version,
-                                        source,
-                                        reference_genome,
-                                        file_info)
+                                    source,
+                                    reference_genome,
+                                    file_info)
 
     # create the transcript
     tx, _ = Transcript.objects.get_or_create(
@@ -322,13 +322,13 @@ def _add_non_clinical_gene_and_transcript_to_db(hgnc_id: str, transcripts: list,
     """
     Add each gene to the database, with its transcript.
     """
-    hgnc, _ = Gene.objects.get_or_create(hgnc_id=hgnc_id)
+    gene, _ = Gene.objects.get_or_create(hgnc_id=hgnc_id)
 
     for tx in transcripts:
         # create the transcript
         Transcript.objects.get_or_create(
             transcript=tx,
-            gene=hgnc.id,
+            gene=gene,
             reference_genome=reference_genome
         )
 
