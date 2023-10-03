@@ -16,9 +16,6 @@ class TestAddClinicalGeneTranscript_FromScratch(TestCase):
     database with no entries - emulates situations where the gene 
     and transcript aren't already in the database, have old 
     versions that need handling, and so on.
-
-    One case is for when a gene has 1 transcript,
-    another is for multiple transcripts.
     """
     def setUp(self) -> None:
         return super().setUp()
@@ -31,7 +28,7 @@ class TestAddClinicalGeneTranscript_FromScratch(TestCase):
 
         hgnc_id = "HGNC:0001"
         transcript = "NM00045.6"
-        reference = ""
+        reference = "37"
         source = "MANE"
         hgmd_release_label = "release_2"
         tx_mane_release = [
@@ -67,8 +64,7 @@ class TestAddClinicalGeneTranscript_FromScratch(TestCase):
         # Check that the transcripts were added
         err += len_check_wrapper(new_transcripts, "transcript", 1)
         err += value_check_wrapper(new_transcripts[0].transcript, "transcript name", "NM00045.6")
-        err += value_check_wrapper(new_transcripts[0].source, "source", new_sources[0])
-        err += value_check_wrapper(new_transcripts[0].reference_genome, "ref", "")
+        err += value_check_wrapper(new_transcripts[0].reference_genome, "ref", "37")
 
         errors = "; ".join(err)
         assert not errors, errors
@@ -99,8 +95,7 @@ class TestAddGeneTranscript_AlreadyExists(TestCase):
 
         self.start_transcript = Transcript.objects.get_or_create(
             transcript="NM00045.6",
-            source=self.start_tx_mane_source[0],
-            gene_id=self.start_gene.id,
+            gene=self.start_gene,
             reference_genome="37"
         )
     
@@ -134,7 +129,6 @@ class TestAddGeneTranscript_AlreadyExists(TestCase):
         err += len_check_wrapper(all_transcripts, "transcript", 2)
         new_tx = all_transcripts[1]
         err += value_check_wrapper(new_tx.transcript, "transcript name", "NM00045.6")
-        err += value_check_wrapper(new_tx.source, "source", self.start_tx_hgmd_source[0])
         err += value_check_wrapper(new_tx.reference_genome, "ref", "38")
 
         errors = "; ".join(err)

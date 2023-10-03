@@ -31,10 +31,12 @@ class TestAssignTxRelease_NewRelease(TestCase):
         """
         err = []
 
+        ref_genome = "37"
         files = {"file-1234": "mane_grch37",
                  "file-5678": "mane_hrch38_ftp"}
 
-        tx_release = _assign_tx_release(self.release, self.tx_mane_source, files)
+        tx_release = _assign_tx_release(self.release, self.tx_mane_source, 
+                                        ref_genome, files)
 
         # check the new release is made in TranscriptRelease
         transcript_release = TranscriptRelease.objects.all()

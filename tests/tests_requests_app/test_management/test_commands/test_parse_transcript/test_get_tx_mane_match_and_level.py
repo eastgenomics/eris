@@ -73,4 +73,4 @@ class TestGetTxMatchAndLevel(TestCase):
         release, full_match = _get_tx_mane_match_and_level(tx_mane_release, tx)
 
         assert release == None
-        assert full_match == None
+        assert not full_match

@@ -247,6 +247,7 @@ def _get_tx_mane_match_and_level(tx_mane_release: list[dict], tx: str):
 
 def _assign_tx_release(release: str,
                        source: TranscriptSource,
+                       ref_genome: str,
                        files: dict[str: str]):
     """
     Given a source of transcript information, the release name for the
@@ -256,8 +257,9 @@ def _assign_tx_release(release: str,
     :returns: transcript release
     """
     transcript_release, tx_release_created = TranscriptRelease.objects.get_or_create(
+        source=source,
         external_release_version=release,
-        source=source
+        reference_genome=ref_genome
         )
     
     #TODO: contemplate a situation in which multiple files of the same kind
@@ -306,6 +308,7 @@ def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str,
                           mane_ftp_ext_id: "mane_hrch38_ftp"}
             release = _assign_tx_release(release_version,
                                          source,
+                                         reference_genome,
                                          mane_files)
 
     elif source == "HGMD":
@@ -320,13 +323,14 @@ def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str,
                       markname_ext_id: "hgmd_markname"}
         release = _assign_tx_release(hgmd_release_label, 
                                     source,
+                                    reference_genome,
                                     hgmd_files)
 
     else:
         release = match_full_version = None
 
     # create the transcript
-    tx = Transcript.objects.get_or_create(
+    tx, _ = Transcript.objects.get_or_create(
         transcript=transcript,
         gene=gene,
         reference_genome=reference_genome
@@ -334,10 +338,10 @@ def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str,
     tx.save()
 
     # finally link the transcript to the release
-    tx_link = TranscriptReleaseLink.objects.get_or_create(
+    tx_link, _ = TranscriptReleaseLink.objects.get_or_create(
         transcript=tx,
         release=release,
-        match_full_version=match_full_version
+        match_version=match_full_version
     )
     tx_link.save()
 
