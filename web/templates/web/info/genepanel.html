@@ -22,7 +22,7 @@
     </div>
     {% endif %}
 
-    <img src="{% static 'images/hamster-loader.gif' %}" alt="hamster"/>
+    <img class="visually-hidden" id="hamster"  src="{% static 'images/hamster-loader.gif' %}" alt="hamster" style="position:absolute;top:0;left:0;right:0;bottom:0;margin:auto;z-index:999"/>
 
     <!-- GenePanel Upload Form -->
     <div class="row mt-2">
@@ -96,9 +96,9 @@
   $(document).ready(function() {
     // script to block submit button on form submission and show loading indicator
     $('#genepanelForm').submit(function() {
-      console.log('form submitted!');
       $(this).find('button[type="submit"]').prop('disabled', true);
       $(this).find('button[type="submit"]').find('.visually-hidden').removeClass('visually-hidden');
+      $('#hamster').removeClass('visually-hidden');
     });
   });
 </script>
