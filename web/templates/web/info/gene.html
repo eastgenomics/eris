@@ -9,6 +9,8 @@
             <h4>{{ gene.gene_symbol }}</h4>
             {% if gene.alias_symbols %}
                 <h4>alias symbols: {{ gene.alias_symbols }}</h4>
+            {% else %}
+                <h4>alias symbols: None</h4>
             {% endif %}
             <h5>database id: {{ gene.id }}</h5>
             {% else %}
