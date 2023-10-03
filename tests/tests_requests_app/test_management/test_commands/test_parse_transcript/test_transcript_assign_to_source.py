@@ -4,7 +4,7 @@ import pandas as pd
 
 
 from requests_app.management.commands._parse_transcript import \
-    _transcript_assigner
+    _transcript_assign_to_source
 
 
 class TestTranscriptAssigner_AlreadyAdded(TestCase):
@@ -22,7 +22,7 @@ class TestTranscriptAssigner_AlreadyAdded(TestCase):
         markname_hgmd = {}
         gene2refseq_hgmd = {}
 
-        clinical, source, err = _transcript_assigner(tx, hgnc_id, 
+        clinical, source, err = _transcript_assign_to_source(tx, hgnc_id, 
                                                      gene_clinical_transcript, 
                                                      mane_data, markname_hgmd, 
                                                      gene2refseq_hgmd)
@@ -47,7 +47,7 @@ class TestTranscriptAssigner_InMane(TestCase):
         markname_hgmd = {}
         gene2refseq_hgmd = {}
 
-        clinical, source, err = _transcript_assigner(tx,
+        clinical, source, err = _transcript_assign_to_source(tx,
                                                      hgnc_id,
                                                      gene_clinical_transcript,
                                                      mane_data,
@@ -74,7 +74,7 @@ class TestTranscriptAssigner_GeneInHgmd(TestCase):
         markname_hgmd = {"1234": ["test"]}
         gene2refseq_hgmd = {"test": [["NM00004", "1"]]}
 
-        clinical, source, err = _transcript_assigner(tx,
+        clinical, source, err = _transcript_assign_to_source(tx,
                                                      hgnc_id,
                                                      gene_clinical_transcript,
                                                      mane_data,
@@ -96,7 +96,7 @@ class TestTranscriptAssigner_GeneInHgmd(TestCase):
         markname_hgmd = {"1234": ["1"]}
         gene2refseq_hgmd = {"1": [["NM00004", "2"]]}
 
-        clinical, source, err = _transcript_assigner(tx,
+        clinical, source, err = _transcript_assign_to_source(tx,
                                                      hgnc_id,
                                                      gene_clinical_transcript,
                                                      mane_data,

@@ -18,6 +18,7 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
 
         expected_err = "HGNC:1234 not found in markname HGMD table"
 
+        assert not result
         assert test_error == expected_err
 
     def test_markname_multiple_entries(self):
@@ -30,6 +31,7 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
 
         expected_err = "HGNC:1234 has two or more entries in markname HGMD table."
 
+        assert not result
         assert test_error == expected_err
         
     def test_markname_gene_id_blank_string(self):
@@ -42,6 +44,7 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
 
         expected_err = "HGNC:1234 has no gene_id in markname table"
 
+        assert not result
         assert test_error == expected_err
 
     def test_markname_gene_id_nonetype(self):
@@ -54,6 +57,7 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
 
         expected_err = "HGNC:1234 has no gene_id in markname table"
 
+        assert not result
         assert test_error == expected_err
 
     def test_markname_gene_id_nantype(self):
@@ -64,6 +68,7 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
         result, test_error = _get_clin_transcript_from_hgmd_files(hgnc_id, markname, 
                                                                   gene2refseq)
 
+        assert not result
         expected_err = "HGNC:1234 has no gene_id in markname table"
 
         assert test_error == expected_err
@@ -78,6 +83,7 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
 
         expected_err = "HGNC:1234 with gene id 5678 not in gene2refseq table"
 
+        assert not result
         assert test_error == expected_err
     
     def test_gene2reqseq_entry_contains_list_of_lists(self):
@@ -91,6 +97,7 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
         expected_err = \
             "HGNC:1234 has more than one transcript in the HGMD database: NM005,NM009"
 
+        assert not result
         assert test_error == expected_err
 
 # For passing states, see the tests for the parent function, _transcript_assigner

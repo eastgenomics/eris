@@ -30,23 +30,14 @@ class TestAddClinicalGeneTranscript_FromScratch(TestCase):
         transcript = "NM00045.6"
         reference = "37"
         source = "MANE"
-        hgmd_release_label = "release_2"
-        tx_mane_release = [
-            {
-                "tx": "NM00045.6",
-                "tx_base": "NM00045",
-                "tx_version": "6",
-                "mane_release": "release_2"
-            }
-        ]
-        mane_ext_id = "file-123"
-        mane_ftp_ext_id = "file-234"
-        g2refseq_ext_id = "file-345"
-        markname_ext_id = "file-456"
+        release_version = "release_2"
+        match_full_version = True
+        file_info = {"file-123": "mane_grch37",
+                     "file-234": "mane_hrch38_ftp"}
 
         _add_clinical_gene_and_transcript_to_db(hgnc_id, transcript, reference, source,
-                                                hgmd_release_label, tx_mane_release, mane_ext_id,
-                                                mane_ftp_ext_id, g2refseq_ext_id, markname_ext_id)
+                                                release_version, match_full_version,
+                                                file_info)
 
         new_genes = Gene.objects.all()
         new_sources = TranscriptSource.objects.all()
@@ -108,25 +99,28 @@ class TestAddGeneTranscript_AlreadyExists(TestCase):
         err = []
 
         hgnc_id = "HGNC:0001"
-        transcripts = "NM00045.6"
+        transcript = "NM00045.6"
         reference = "38"
         source = "HGMD"
 
-        hgmd_release_label = "release_2"
-        tx_mane_release = "1.0"
-        mane_ext_id = "file-123"
-        mane_ftp_ext_id = "file-234"
-        g2refseq_ext_id = "file-345"
-        markname_ext_id = "file-456"
-        
-        _add_clinical_gene_and_transcript_to_db(hgnc_id, transcripts, reference, source,
-                                                hgmd_release_label, tx_mane_release, mane_ext_id,
-                                                mane_ftp_ext_id, g2refseq_ext_id, markname_ext_id)
+        release_version = "release_2"
+        match_full_version = False
+        file_info = {"file-345": "hgmd_gene2refseq",
+                     "file-456": "hgmd_markname"}
+
+        _add_clinical_gene_and_transcript_to_db(hgnc_id, transcript, reference, source,
+                                                release_version, match_full_version,
+                                                file_info)
 
         all_transcripts = Transcript.objects.all()
 
         # expect old and new copy for the same transcript
         err += len_check_wrapper(all_transcripts, "transcript", 2)
+        
+        old_tx = all_transcripts[0]
+        err += value_check_wrapper(old_tx.transcript, "transcript name", "NM00045.6")
+        err += value_check_wrapper(old_tx.reference_genome, "ref", "37")
+        
         new_tx = all_transcripts[1]
         err += value_check_wrapper(new_tx.transcript, "transcript name", "NM00045.6")
         err += value_check_wrapper(new_tx.reference_genome, "ref", "38")
