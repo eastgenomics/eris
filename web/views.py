@@ -1492,6 +1492,12 @@ def genes(request):
 
 
 def genetotranscript(request):
+    """
+    g2t page where user can view all genes and its associated transcripts
+    there is a form to allow user to upload g2t to specified dnanexus project
+    similar to the one in genepanel page
+
+    """
     success = None
 
     transcripts = (
