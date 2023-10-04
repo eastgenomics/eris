@@ -204,9 +204,17 @@ def _make_panels_from_hgncs(
 
     conf, moi, mop, pen = _retrieve_unknown_metadata_records()
 
+    # basically the max length of panel_name of Panel mode is 255
+    # if the length of panel_name is more than 255, truncate it to 245 and add TRUNCATED (9 chars) which will be 254 chars in total
+
+    panel_name = ",".join(sorted(hgnc_list))
+    formatted_panel_name = (
+        panel_name[:245] + "TRUNCATED" if len(panel_name) > 255 else panel_name
+    )
+
     # create Panel record only when HGNC difference
     panel_instance, panel_created = Panel.objects.get_or_create(
-        panel_name=",".join(hgnc_list),
+        panel_name=formatted_panel_name,
         test_directory=True,
         defaults={
             "panel_source": unique_td_source,

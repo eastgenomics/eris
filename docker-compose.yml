@@ -21,7 +21,7 @@ services:
     build: .
     command: bash -c "python manage.py collectstatic --noinput && gunicorn panel_requests.wsgi:application --bind :8009"
     env_file:
-      - /home/jason/github/eris/.env
+      - .env # change to relative path when docker compose build
     volumes:
       - eris_static:/app/staticfiles
     expose:
