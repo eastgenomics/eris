@@ -229,4 +229,4 @@ class TestMakePanelsFromHgncs(TestCase):
 
         panel = Panel.objects.first()
 
-        assert len(panel.panel_name) == 200  # assert that panel name length is 200
+        assert len(panel.panel_name) == 254  # assert that panel name length is 200
