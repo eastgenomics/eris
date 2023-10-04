@@ -1489,3 +1489,76 @@ def genes(request):
         "web/addition/add_gene.html",
         {"genes": genes},
     )
+
+
+def genetotranscript(request):
+    success = None
+
+    transcripts = (
+        Transcript.objects.order_by("gene_id")
+        .all()
+        .values("gene_id__hgnc_id", "gene_id", "transcript", "source")
+    )
+
+    if request.method == "POST":
+        project_id = request.POST.get("project_id").strip()
+        dnanexus_token = request.POST.get("dnanexus_token").strip()
+
+        try:
+            # login dnanexus
+            dx.set_security_context(
+                {
+                    "auth_token_type": "Bearer",
+                    "auth_token": dnanexus_token,
+                }
+            )
+
+            # check dnanexus login
+            dx.api.system_whoami()
+
+            # check dnanexus project id
+            dx.DXProject(project_id)
+
+            project_metadata: dict = dx.DXProject(project_id).describe()
+            project_name: str = project_metadata.get("name", "")
+
+            if project_name.startswith("001") or project_name.startswith("002"):
+                return render(
+                    request,
+                    "web/info/gene2transcript.html",
+                    {
+                        "transcripts": transcripts,
+                        "error": "Uploading to 001 or 002 project is not allowed.",
+                    },
+                )
+
+            current_datetime = dt.datetime.today().strftime("%Y%m%d")
+
+            # write result to dnanexus file
+            with dx.new_dxfile(
+                name=f"{current_datetime}_g2t.tsv",
+                project=project_id,
+                media_type="text/plain",
+            ) as f:
+                for row in transcripts:
+                    hgnc_id = row["gene_id__hgnc_id"]
+                    transcript = row["transcript"]
+                    source = row.get("source")
+
+                    data = "\t".join([hgnc_id, transcript, 'clinical' if source else 'non-clinical'])
+                    f.write(f"{data}\n")
+
+        except Exception as e:
+             return render(
+                request,
+                "web/info/gene2transcript.html",
+                {"transcripts": transcripts, 'error': e},
+            )
+
+        success = True
+
+    return render(
+        request,
+        "web/info/gene2transcript.html",
+        {"transcripts": transcripts, 'success': success},
+    )
