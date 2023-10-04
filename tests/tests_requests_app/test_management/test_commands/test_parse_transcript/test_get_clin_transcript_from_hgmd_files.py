@@ -8,7 +8,15 @@ from requests_app.management.commands._parse_transcript import \
 
 
 class TestHgmdFileFetcher_ErrorStates(TestCase):
+    """
+    Tests for _get_clin_transcript_from_hgmd_files, focusing
+    on catching possible error states.
+    """
     def test_short_hgnc_not_in_markname(self):
+        """
+        Test that if a gene ID isn't in the markname HGMD table,
+        an error is returned.
+        """
         hgnc_id = "HGNC:1234"
         markname = {"not_1234": ["5678"]}
         gene2refseq = {}
@@ -22,6 +30,10 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
         assert test_error == expected_err
 
     def test_markname_multiple_entries(self):
+        """
+        Test that if a gene ID has several entries in the markname HGMD table,
+        an error is returned.
+        """
         hgnc_id = "HGNC:1234"
         markname = {"1234": ["5678", "9101"]}
         gene2refseq = {}
@@ -35,6 +47,10 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
         assert test_error == expected_err
         
     def test_markname_gene_id_blank_string(self):
+        """
+        Test that if a gene ID has a blank ID in the markname HGMD table,
+        an error is returned.
+        """
         hgnc_id = "HGNC:1234"
         markname = {"1234": [""]}
         gene2refseq = {}
@@ -48,6 +64,10 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
         assert test_error == expected_err
 
     def test_markname_gene_id_nonetype(self):
+        """
+        Test that if a gene ID has a None entry in the markname HGMD table,
+        an error is returned.
+        """
         hgnc_id = "HGNC:1234"
         markname = {"1234": [None]}
         gene2refseq = {}
@@ -61,6 +81,10 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
         assert test_error == expected_err
 
     def test_markname_gene_id_nantype(self):
+        """
+        Test that if a gene ID has an np.nan entry in the markname HGMD table,
+        an error is returned.
+        """
         hgnc_id = "HGNC:1234"
         markname = {"1234": [np.nan]}
         gene2refseq = {}
@@ -74,6 +98,10 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
         assert test_error == expected_err
 
     def test_gene2refseq_lacks_gene_id(self):
+        """
+        Test that if a gene's HGMD-markname ID isn't in the gene2refseq table,
+        an error is returned.
+        """
         hgnc_id = "HGNC:1234"
         markname = {"1234": ["5678"]}
         gene2refseq = {}
@@ -87,6 +115,10 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
         assert test_error == expected_err
     
     def test_gene2reqseq_entry_contains_list_of_lists(self):
+        """
+        Test that if a gene's HGMD-markname ID has several transcript entries in
+        the gene2refseq table, an error is returned.
+        """
         hgnc_id = "HGNC:1234"
         markname = {"1234": ["5678"]}
         gene2refseq = {"5678": [["NM005", "1"], ["NM009", "1"]]}

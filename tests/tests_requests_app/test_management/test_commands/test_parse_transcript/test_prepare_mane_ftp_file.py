@@ -8,12 +8,13 @@ from requests_app.management.commands._parse_transcript import _prepare_mane_ftp
 
 class TestManeFtpProduced(TestCase):
     """
-    Test that the file correctly parses to a dict
+    Test that FTP format files are correctly parsed to a dict
     """
     @patch('requests_app.management.commands._parse_transcript.pd.read_csv')
     def test_correct_parsing(self, mock_read_csv):
         """
-        Use mock data to check that our final dict emits correctly
+        Check that our final dict emits correctly.
+        Patch Pandas read_csv to mock out the dataframe within the function call.
         """
         mock_read_csv.return_value = pd.DataFrame({"MANE_Select_RefSeq_acc": 
                                                     pd.Series(["NM0001.1", "NM0002.1"])})
