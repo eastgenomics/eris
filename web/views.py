@@ -14,7 +14,7 @@ from .utils.utils import Genepanel
 
 from requests_app.management.commands.history import History
 from requests_app.management.commands.utils import parse_hgnc, normalize_version
-from panel_requests.settings import HGNC_IDS_TO_OMIT, DNANEXUS_TOKEN
+from panel_requests.settings import HGNC_IDS_TO_OMIT
 
 from requests_app.models import (
     ClinicalIndication,
@@ -175,20 +175,19 @@ def clinical_indication(request, ci_id: int):
         ci: ClinicalIndication = ClinicalIndication.objects.get(id=ci_id)
     except ClinicalIndication.DoesNotExist:
         return render(
-        request,
-        "web/info/clinical.html",
-        {
-            "ci": None,
-            "ci_panels": [],
-            "panels": [],
-            "ci_history": [],
-            "panel_genes": {},
-            "transcripts": [],
-            "ci_pending_approval": None,
-            "ci_panel_pending_approval": None,
-        },
-    )
-
+            request,
+            "web/info/clinical.html",
+            {
+                "ci": None,
+                "ci_panels": [],
+                "panels": [],
+                "ci_history": [],
+                "panel_genes": {},
+                "transcripts": [],
+                "ci_pending_approval": None,
+                "ci_panel_pending_approval": None,
+            },
+        )
 
     # fetch ci-panels
     # might have multiple panels but only one active
@@ -1285,7 +1284,7 @@ def gene(request, gene_id: int) -> None:
     try:
         gene = Gene.objects.get(id=gene_id)
     except Gene.DoesNotExist:
-         return render(
+        return render(
             request,
             "web/info/gene.html",
             {"gene": None, "panels": [], "transcripts": []},
@@ -1390,13 +1389,14 @@ def genepanel(request):
 
     if request.method == "POST":
         project_id = request.POST.get("project_id").strip()
+        dnanexus_token = request.POST.get("dnanexus_token").strip()
 
         try:
             # login dnanexus
             dx.set_security_context(
                 {
                     "auth_token_type": "Bearer",
-                    "auth_token": DNANEXUS_TOKEN,
+                    "auth_token": dnanexus_token,
                 }
             )
 
