@@ -214,23 +214,24 @@ def _prepare_markname_file(markname_file: str) -> dict:
 
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
 
-def _get_tx_mane_match_and_level(tx_mane_release: list[dict], tx: str):
+
+def _get_tx_mane_release_and_match_level(release: list[dict], tx: str):
     """
-    Search for a transcript in the list-of-dicts storing MANE releases 
-    with transcripts.
+    Search for a transcript in the list-of-dicts which store transcripts
+    with release data.
     Try to find a match with the same version of the transcript, but
     failing that, settle for a different version (e.g. NM001.1 vs
     NM001.1NM001.2).
     Return the MANE release with the match type.
-    :return: release of MANE
+    :return: MANE release for the transcript
     :return: match_version - True for matches version, False for matches base only
     """
     tx_base = re.sub(r'\.[\d]+$', '', tx)
 
     perfect_match_with_mane = next((
-        item for item in tx_mane_release if item['tx'] == tx), None)
+        item for item in release if item['tx'] == tx), None)
     imperfect_match_with_mane = next((
-        item for item in tx_mane_release if item['tx_base'] == tx_base),
+        item for item in release if item['tx_base'] == tx_base),
          None)
     
     if perfect_match_with_mane:
@@ -430,6 +431,31 @@ def _transcript_assign_to_source(tx: str, hgnc_id: str, gene_clinical_transcript
     
     return clinical, source, err
 
+
+def _assign_mane_to_known_version(known_37: dict, known_version, release):
+    """
+    We have 2 data sources for MANE: one is a versionless file of known
+    GRCh37 transcripts, the other is a known-version file of transcripts
+    which are from GRCh38. 
+    For every transcript in GRCh37, loop through the GRCh38 transcript
+    and assign the release if it matches.
+    """
+    mane_with_versions = {}
+    for gene, transcript in known_37.values():
+        for i in known_version:
+            if i["tx"] == transcript:
+                mane_with_versions[gene] = {"tx": transcript, "full_match": True,
+                                            "release": release}
+            elif re.sub(r'\.[\d]+$', '', i["tx"]) == re.sub(r'\.[\d]+$', '', transcript):
+                mane_with_versions[gene] = {"tx": transcript, "full_match": False,
+                                            "release": release}
+            else:
+                mane_with_versions[gene] = {"tx": transcript, "full_match": None,
+                                            "release": None}
+    
+    return mane_with_versions
+
+
 def seed_transcripts(
     hgnc_filepath: str,
     mane_filepath: str,
@@ -457,7 +483,7 @@ def seed_transcripts(
     :param markname_filepath: markname file path
     :param write_error_log: write error log or not
     """
-
+    #TODO: add more infor here
     # take today datetime
     current_datetime = dt.datetime.today().strftime("%Y%m%d")
 
@@ -471,6 +497,12 @@ def seed_transcripts(
     gff = _prepare_gff_file(gff_filepath)
     gene2refseq_hgmd = _prepare_gene2refseq_file(g2refseq_filepath)
     markname_hgmd = _prepare_markname_file(markname_filepath)
+
+    # for MANE - if the GRCh38 known-release transcripts are in GRCh37,
+    # then you can assign the specified MANE version
+    mane_with_version = _assign_mane_to_known_version(mane_data, mane_ftp_data,
+                                                      mane_release) 
+    #TODO: test mane_with_version
 
     # two dict for clinical and non-clinical tx assigment
     gene_clinical_transcript: dict[str, list] = {}
@@ -487,7 +519,7 @@ def seed_transcripts(
         for tx in transcripts:
             clin, tx_source, err = \
                 _transcript_assign_to_source(tx, hgnc_id, gene_clinical_transcript, 
-                         mane_data, markname_hgmd, gene2refseq_hgmd)
+                         mane_with_version, markname_hgmd, gene2refseq_hgmd)
             if clin:
                 gene_clinical_transcript[hgnc_id] = tuple(tx, tx_source)
             else:
@@ -499,8 +531,8 @@ def seed_transcripts(
     for hgnc_id, transcript_source in gene_clinical_transcript.items():       
         (transcript, source) = transcript_source
         if source == "MANE":
-            release_version, match_full_version = _get_tx_mane_match_and_level(
-                mane_release, transcript)
+            release_version, match_full_version = _get_tx_mane_release_and_match_level(
+                mane_with_version, transcript)
             file_info = {mane_ext_id: "mane_grch37",
                         mane_ftp_ext_id: "mane_hrch38_ftp"}
         elif source == "HGMD":

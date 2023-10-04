@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from requests_app.management.commands._parse_transcript import \
-    _get_tx_mane_match_and_level
+    _get_tx_mane_release_and_match_level
 from ..test_insert_panel.test_insert_gene import len_check_wrapper, value_check_wrapper
 
 
@@ -27,7 +27,7 @@ class TestGetTxMatchAndLevel(TestCase):
 
         tx = "NM0001.3"
 
-        release, full_match = _get_tx_mane_match_and_level(tx_mane_release, tx)
+        release, full_match = _get_tx_mane_release_and_match_level(tx_mane_release, tx)
 
         assert release == "Release_5"
         assert full_match == True
@@ -49,7 +49,7 @@ class TestGetTxMatchAndLevel(TestCase):
 
         tx = "NM0001.3"
 
-        release, full_match = _get_tx_mane_match_and_level(tx_mane_release, tx)
+        release, full_match = _get_tx_mane_release_and_match_level(tx_mane_release, tx)
 
         assert release == "Release_5"
         assert full_match == False
@@ -70,7 +70,7 @@ class TestGetTxMatchAndLevel(TestCase):
 
         tx = "NM1234.5"
 
-        release, full_match = _get_tx_mane_match_and_level(tx_mane_release, tx)
+        release, full_match = _get_tx_mane_release_and_match_level(tx_mane_release, tx)
 
         assert release == None
         assert not full_match
