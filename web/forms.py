@@ -1,3 +1,4 @@
+import re
 from django import forms
 
 from requests_app.models import ClinicalIndication, Panel, Gene
@@ -57,8 +58,14 @@ class GeneForm(forms.Form):
     def clean_hgnc_id(self):
         hgnc_id: str = self.cleaned_data["hgnc_id"].upper()
 
+        if not hgnc_id:
+            self.add_error("hgnc_id", "HGNC ID cannot be empty!")
+
         if not hgnc_id.startswith("HGNC:"):
-            self.add_error("hgnc_id", "HGNC ID must start with HGNC:")
+            self.add_error("hgnc_id", "HGNC ID must start with 'HGNC:'")
+
+        if not re.match(r"^[0-9]+$", hgnc_id[5:]):
+            self.add_error("hgnc_id", "HGNC ID must be followed by numbers!")
 
         try:
             Gene.objects.get(hgnc_id=hgnc_id)
@@ -69,3 +76,17 @@ class GeneForm(forms.Form):
             pass
 
         return hgnc_id
+
+    def clean_gene_symbol(self):
+        gene_symbol = self.cleaned_data["gene_symbol"].strip().upper()
+
+        try:
+            Gene.objects.get(gene_symbol=gene_symbol)
+
+            self.add_error("gene_symbol", "Gene with this gene symbol already exists!")
+
+        except:
+            # no gene with this gene_symbol exists, that's good
+            pass
+
+        return gene_symbol
