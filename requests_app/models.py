@@ -426,12 +426,6 @@ class Transcript(models.Model):
         default=None,
     )
 
-    default_clinical = models.BooleanField(
-        verbose_name="Is the transcript clinical?",
-        null=True,
-        default=False,
-    )
-
     class Meta:
         db_table = "transcript"
 
@@ -456,7 +450,8 @@ class TranscriptReleaseTranscript(models.Model):
 
     # match_version=True means the transcript WITH VERSION matches the
     # transcript in the release
-    # it its False, that means only the base accession without version matches
+    # if its False, that means only the base accession without version matches
+    # None means it wasn't assessed
     match_version = models.BooleanField(
         verbose_name="Transcript matches version?",
         null=True,
@@ -467,6 +462,12 @@ class TranscriptReleaseTranscript(models.Model):
         verbose_name="Transcript matches accession base?",
         null=True,
         default=None,
+    )
+
+    default_clinical = models.BooleanField(
+        verbose_name="Is the transcript clinical?",
+        null=True,
+        default=False,
     )
 
     class Meta:
