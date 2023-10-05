@@ -40,7 +40,14 @@
     <!-- Title -->
     <div class="row">
         <div class="col">
-            <div class="h3">Review</div>
+            <div class="h3">Manual Review</div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="alert alert-warning" role="alert">
+                Changes to the database relationships in need of manual review.
+            </div>
         </div>
     </div>
     <!-- Panel Review -->
@@ -204,5 +211,54 @@
         </div>
     </div>
     <!-- Clinical Indication Panel Review End -->
+    <!-- Panel Gene Review -->
+    <div class="row">
+        <div class="col">
+            <h5>Panel Gene</h5>
+            {% if panel_gene %}
+            <table class="table table-bordered shadow">
+                <thead>
+                  <tr>
+                    <th scope="col">Panel</th>
+                    <th scope="col">Gene</th>
+                    <th scope="col">Reason</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for pg in panel_gene %}
+                    <tr>
+                        <td>{{ pg.panel_id__panel_name }}</td>
+                        <td>{{ pg.gene_id__hgnc_id }}</td>
+                        <td>
+                            <div class="d-flex justify-content-around">
+                                <!-- approving new ci-panel link -->
+                                <form action="{% url 'review' %}" method="POST">
+                                    {% csrf_token %}
+                                    <input type="text" class="form-control visually-hidden" name="pg_id" value="{{ pg.id }}">
+                                    <input type="text" class="form-control visually-hidden" name="action" value="approve_pg">
+                                    <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                </form>
+                                <!-- ignoring action on ci-panel link -->
+                                <form action="{% url 'review' %}" method="POST">
+                                    {% csrf_token %}
+                                    <input type="text" class="form-control visually-hidden" name="pg_id" value="{{ pg.id }}">
+                                    <input type="text" class="form-control visually-hidden" name="action" value="remove_pg">
+                                    <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                                </form>                                
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="alert alert-primary" role="alert">
+                Nothing pending
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <!-- Panel Gene Review End -->
 </div>
 {% endblock %}

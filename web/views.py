@@ -1075,7 +1075,7 @@ def review(request) -> None:
                     clinical_indication.save()
             else:
                 # remove clinical indication action
-                ClinicalIndication.objects.filter(id=clinical_indication_id).delete()
+                ClinicalIndication.objects.get(id=clinical_indication_id).delete()
 
                 action_ci = True
                 approve_bool = False
@@ -1095,7 +1095,7 @@ def review(request) -> None:
             # this will be called when removing new panel request
             panel_id = request.POST.get("panel_id")
 
-            Panel.objects.filter(id=panel_id).delete()
+            Panel.objects.get(id=panel_id).delete()
 
             action_panel = True
             approve_bool = False
@@ -1228,10 +1228,7 @@ def review(request) -> None:
 
             # determine if test method is changed
             # or it's a new clinical indication creation
-            if indication_history:
-                indication.reason = indication_history
-            else:
-                indication.reason = "New"
+            indication.reason = indication_history if indication_history else "New"
 
     clinical_indication_panels: QuerySet[ClinicalIndicationPanel] = (
         ClinicalIndicationPanel.objects.filter(pending=True)
@@ -1257,6 +1254,14 @@ def review(request) -> None:
         else:
             cip["panel_id__panel_version"] = 1.0
 
+    panel_gene = PanelGene.objects.filter(pending=True).values(
+        "id",
+        "panel_id__panel_name",
+        "panel_id",
+        "gene_id__hgnc_id",
+        "gene_id",
+    )
+
     return render(
         request,
         "web/review/pending.html",
@@ -1264,6 +1269,7 @@ def review(request) -> None:
             "panels": panels,
             "cis": clinical_indications,
             "cips": clinical_indication_panels,
+            "panel_gene": panel_gene,
             "action_cip": action_cip,
             "action_ci": action_ci,
             "action_panel": action_panel,
@@ -1551,14 +1557,16 @@ def genetotranscript(request):
                     transcript = row["transcript"]
                     source = row.get("source")
 
-                    data = "\t".join([hgnc_id, transcript, 'clinical' if source else 'non-clinical'])
+                    data = "\t".join(
+                        [hgnc_id, transcript, "clinical" if source else "non-clinical"]
+                    )
                     f.write(f"{data}\n")
 
         except Exception as e:
-             return render(
+            return render(
                 request,
                 "web/info/gene2transcript.html",
-                {"transcripts": transcripts, 'error': e},
+                {"transcripts": transcripts, "error": e},
             )
 
         success = True
@@ -1566,5 +1574,5 @@ def genetotranscript(request):
     return render(
         request,
         "web/info/gene2transcript.html",
-        {"transcripts": transcripts, 'success': success},
+        {"transcripts": transcripts, "success": success},
     )
