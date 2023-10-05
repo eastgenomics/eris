@@ -58,6 +58,14 @@ def _insert_gene(
             )
             continue
 
+        # NOTE: PanelApp API returns some really stupid genes and confidence levels attached to super panel
+        # e.g. panel external id 465 "Other rare neuromuscular disorders"
+        # it returns 3 of the same gene FLNC with the same hgnc-id HGNC:3756
+        # 2 with confidence level 3 and one with confidence level 2
+        # which make no sense at all. On their website, they only showed the two with confidence level 3 (both have same hgnc id)
+
+        # TODO: need a logic to deal with super panel showing duplicate genes but with different confidence level
+
         # there is only confidence level 0 1 2 3
         # and we only fetch confidence level 3
         try:
@@ -74,6 +82,8 @@ def _insert_gene(
                             panel_gene.pending = True
                             panel_gene.save()
 
+                            # this is recording duplicate records as there're duplicate genes within the same panel with varying confidence level
+                            # either filter out those genes or something
                             PanelGeneHistory.objects.create(
                                 panel_gene_id=panel_gene.id,
                                 user="PanelApp",
@@ -93,7 +103,8 @@ def _insert_gene(
         gene_symbol = gene_data.get("gene_symbol")
         alias_symbols = gene_data.get("alias", [])
 
-        gene_instance, _ = Gene.objects.update_or_create(
+        # don't update gene symbol here. We do it when seeding hgnc dump
+        gene_instance, _ = Gene.objects.get_or_create(
             hgnc_id=hgnc_id,
             defaults={
                 "gene_symbol": gene_symbol,
