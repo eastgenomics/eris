@@ -4,7 +4,7 @@ import pandas as pd
 import re
 
 from requests_app.models import Gene, Transcript, TranscriptRelease, \
-    TranscriptSource, TranscriptReleaseFile, TranscriptReleaseLink
+    TranscriptSource, TranscriptFile, TranscriptReleaseTranscript
 
 # TODO: build-37 and build-38 transcripts?
 
@@ -268,7 +268,7 @@ def _assign_tx_release(release: str,
     if tx_release_created:
         transcript_release.save()
         for file_id, file_category in files.items():
-            TranscriptReleaseFile.objects.get_or_create(
+            TranscriptFile.objects.get_or_create(
             transcript_release=transcript_release,
             file_id=file_id,
             file_type=file_category
@@ -311,7 +311,7 @@ def _add_clinical_gene_and_transcript_to_db(hgnc_id: str, transcript: str,
     tx.save()
 
     # finally link the transcript to the release
-    tx_link, _ = TranscriptReleaseLink.objects.get_or_create(
+    tx_link, _ = TranscriptReleaseTranscript.objects.get_or_create(
         transcript=tx,
         release=release,
         match_version=match_full_version
@@ -460,8 +460,6 @@ def seed_transcripts(
     hgnc_filepath: str,
     mane_filepath: str,
     mane_ext_id: str,
-    mane_ftp_filepath: str,
-    mane_ftp_ext_id: str,
     mane_release: str,
     gff_filepath: str,
     g2refseq_filepath: str,

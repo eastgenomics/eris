@@ -306,7 +306,8 @@ class Gene(models.Model):
 
 class TranscriptSource(models.Model):
     """
-    Defines a particular source of transcript information, e.g. MANE
+    Defines a particular source AND category of transcript information,
+    e.g. MANE Select, MANE Plus Clinical, HGMD
     """
 
     source = models.CharField(
@@ -360,17 +361,12 @@ class TranscriptRelease(models.Model):
         return str(self.id)
     
 
-class TranscriptReleaseFile(models.Model):
+class TranscriptFile(models.Model):
     """
     Files used to define a specific release of a transcript source -
     for example, MANE release 1.0
     """
-    transcript_release = models.ForeignKey(
-        TranscriptRelease,
-        verbose_name="TranscriptRelease id",
-        on_delete=models.CASCADE,
-    )
-
+    
     file_id = models.CharField(
         verbose_name="File ID in external storage",
         max_length=255,
@@ -386,7 +382,29 @@ class TranscriptReleaseFile(models.Model):
     )
 
     class Meta:
-        db_table = "transcript_release_file"
+        db_table = "transcript_file"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class TranscriptReleaseTranscriptFile(models.Model):
+    """Links transcript releases to the file(s) that characterise them"""
+
+    transcript_release = models.ForeignKey(
+        TranscriptRelease,
+        verbose_name="Transcript release",
+        on_delete=models.PROTECT
+    )
+
+    transcript_file = models.ForeignKey(
+        TranscriptFile,
+        verbose_name="Transcript release",
+        on_delete=models.PROTECT
+    )
+
+    class Meta:
+        db_table = "transcript_release_transcript_file"
 
     def __str__(self):
         return str(self.id)
@@ -406,6 +424,12 @@ class Transcript(models.Model):
         default=None,
     )
 
+    default_clinical = models.BooleanField(
+        verbose_name="Is the transcript clinical?",
+        null=True,
+        default=False,
+    )
+
     class Meta:
         db_table = "transcript"
 
@@ -413,7 +437,7 @@ class Transcript(models.Model):
         return str(self.id)
 
 
-class TranscriptReleaseLink(models.Model):
+class TranscriptReleaseTranscript(models.Model):
     """Defines the link between a single transcript and a single release"""
 
     transcript = models.ForeignKey(
@@ -433,6 +457,12 @@ class TranscriptReleaseLink(models.Model):
     # it its False, that means only the base accession without version matches
     match_version = models.BooleanField(
         verbose_name="Transcript matches version?",
+        null=True,
+        default=None,
+    )
+
+    match_base = models.BooleanField(
+        verbose_name="Transcript matches accession base?",
         null=True,
         default=None,
     )

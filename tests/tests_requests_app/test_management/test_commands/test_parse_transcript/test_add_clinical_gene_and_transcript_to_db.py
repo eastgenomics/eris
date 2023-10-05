@@ -3,7 +3,7 @@ from django.test import TestCase
 
 from requests_app.models import \
     Gene, Transcript, TranscriptSource, TranscriptRelease,\
-    TranscriptReleaseLink
+    TranscriptReleaseTranscript
 
 
 from requests_app.management.commands._parse_transcript import \
@@ -45,7 +45,7 @@ class TestAddClinicalGeneTranscript_FromScratch(TestCase):
         new_genes = Gene.objects.all()
         new_sources = TranscriptSource.objects.all()
         new_transcripts = Transcript.objects.all()
-        new_links = TranscriptReleaseLink.objects.all()
+        new_links = TranscriptReleaseTranscript.objects.all()
         new_release = TranscriptRelease.objects.all()
 
         # Check that the expected genes were added to the database
@@ -132,7 +132,7 @@ class TestAddGeneTranscript_AlreadyExists(TestCase):
                                                 file_info)
 
         all_transcripts = Transcript.objects.all()
-        new_links = TranscriptReleaseLink.objects.all()
+        new_links = TranscriptReleaseTranscript.objects.all()
         new_release = TranscriptRelease.objects.all()
 
         # expect old and new copy for the same transcript

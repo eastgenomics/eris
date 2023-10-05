@@ -3,7 +3,7 @@ from django.test import TestCase
 
 from requests_app.models import \
     Gene, Transcript, TranscriptSource, TranscriptRelease,\
-    TranscriptReleaseFile
+    TranscriptFile
 
 from requests_app.management.commands._parse_transcript import \
     _assign_tx_release
@@ -49,7 +49,7 @@ class TestAssignTxRelease_NewRelease(TestCase):
                                    "ext release version", "1.1.5")
 
         # check tx release supporting files are made
-        transcript_release_file = TranscriptReleaseFile.objects.all()
+        transcript_release_file = TranscriptFile.objects.all()
 
         assert len(transcript_release_file) == 2
         first_file = transcript_release_file[0]
