@@ -1,3 +1,4 @@
+import re
 from django import forms
 
 from requests_app.models import ClinicalIndication, Panel, Gene
@@ -63,7 +64,7 @@ class GeneForm(forms.Form):
         if not hgnc_id.startswith("HGNC:"):
             self.add_error("hgnc_id", "HGNC ID must start with 'HGNC:'")
 
-        if not hgnc_id[5:].isdigit():
+        if not re.match(r"^[0-9]+$", hgnc_id[5:]):
             self.add_error("hgnc_id", "HGNC ID must be followed by numbers!")
 
         try:
