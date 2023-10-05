@@ -4,7 +4,8 @@ import pandas as pd
 import re
 
 from requests_app.models import Gene, Transcript, TranscriptRelease, \
-    TranscriptSource, TranscriptFile, TranscriptReleaseTranscript
+    TranscriptSource, TranscriptFile, TranscriptReleaseTranscript, \
+        TranscriptReleaseTranscriptFile
 
 # TODO: build-37 and build-38 transcripts?
 
@@ -432,28 +433,49 @@ def _transcript_assign_to_source(tx: str, hgnc_id: str, gene_clinical_transcript
     return clinical, source, err
 
 
-def _assign_mane_to_known_version(known_37: dict, known_version, release):
+def _add_transcript_release_info_to_db(source: str, version: str, ref_genome: str,
+                                       files: dict) -> None:
     """
-    We have 2 data sources for MANE: one is a versionless file of known
-    GRCh37 transcripts, the other is a known-version file of transcripts
-    which are from GRCh38. 
-    For every transcript in GRCh37, loop through the GRCh38 transcript
-    and assign the release if it matches.
+    For each transcript release, make sure the source, release, and
+    supporting files are added to the database.
+    Note that the files parameter needs to be provided as a dict, in which keys are
+    file types and values are external IDs.
+    Throws an error if the transcript release for that source already exists in the
+    TranscriptRelease table.
     """
-    mane_with_versions = {}
-    for gene, transcript in known_37.values():
-        for i in known_version:
-            if i["tx"] == transcript:
-                mane_with_versions[gene] = {"tx": transcript, "full_match": True,
-                                            "release": release}
-            elif re.sub(r'\.[\d]+$', '', i["tx"]) == re.sub(r'\.[\d]+$', '', transcript):
-                mane_with_versions[gene] = {"tx": transcript, "full_match": False,
-                                            "release": release}
-            else:
-                mane_with_versions[gene] = {"tx": transcript, "full_match": None,
-                                            "release": None}
+
+    # look up or create the source
+    source, _ = TranscriptSource.objects.get_or_create(
+        source=source
+    )
+    source.save()
     
-    return mane_with_versions
+    # create the transcript release
+    if TranscriptRelease.objects.filter(
+        external_release_version=version, source=source
+        ).exists():
+        print(f"This release version was already added to Eris - aborting" +
+              f": {source} {version}")
+    else:
+        release = TranscriptRelease.objects.create(
+            source=source,
+            external_release_version=release,
+            reference_genome=ref_genome
+            )
+
+    # create the files from the dictionary provided, and link them to releases
+    for file_type, file_id in files.items():
+        file, _ = TranscriptFile.objects.get_or_create(
+            file_id=file_id,
+            file_type=file_type
+        )
+        file.save()
+
+        file_release, _ = TranscriptReleaseTranscriptFile.objects.get_or_create(
+            transcript_release=release,
+            transcript_file=file
+        )
+        file_release.save()
 
 
 def seed_transcripts(
@@ -466,7 +488,7 @@ def seed_transcripts(
     g2refseq_ext_id: str,
     markname_filepath: str,
     markname_ext_id: str,
-    hgmd_release_label: str,
+    hgmd_release: str,
     reference_genome: str,  # add reference genome metadata on transcript model
     write_error_log: bool,
 ) -> None:
@@ -481,7 +503,7 @@ def seed_transcripts(
     :param markname_filepath: markname file path
     :param write_error_log: write error log or not
     """
-    #TODO: add more infor here
+    #TODO: add more info here
     # take today datetime
     current_datetime = dt.datetime.today().strftime("%Y%m%d")
 
@@ -491,16 +513,21 @@ def seed_transcripts(
     # files preparation
     hgnc_symbol_to_hgnc_id = _prepare_hgnc_file(hgnc_filepath)
     mane_data = _prepare_mane_file(mane_filepath, hgnc_symbol_to_hgnc_id)
-    mane_ftp_data = _prepare_mane_ftp_file(mane_ftp_filepath, mane_release)
     gff = _prepare_gff_file(gff_filepath)
     gene2refseq_hgmd = _prepare_gene2refseq_file(g2refseq_filepath)
     markname_hgmd = _prepare_markname_file(markname_filepath)
 
-    # for MANE - if the GRCh38 known-release transcripts are in GRCh37,
-    # then you can assign the specified MANE version
-    mane_with_version = _assign_mane_to_known_version(mane_data, mane_ftp_data,
-                                                      mane_release) 
-    #TODO: test mane_with_version
+    # set up the transcript release by adding it, any data sources, and and
+    # supporting files to the database. Throw errors for repeated versions.
+    _add_transcript_release_info_to_db(
+        "MANE Select", mane_release, reference_genome, {"mane_grch37": mane_ext_id})
+    _add_transcript_release_info_to_db(
+        "MANE Plus Clinical", mane_release, reference_genome,
+        {"mane_grch37": mane_ext_id})
+    _add_transcript_release_info_to_db(
+        "HGMD", hgmd_release, reference_genome, 
+        {"hgmd_g2refseq": g2refseq_ext_id,
+         "hgmd_markname": markname_ext_id})
 
     # two dict for clinical and non-clinical tx assigment
     gene_clinical_transcript: dict[str, list] = {}
@@ -517,7 +544,7 @@ def seed_transcripts(
         for tx in transcripts:
             clin, tx_source, err = \
                 _transcript_assign_to_source(tx, hgnc_id, gene_clinical_transcript, 
-                         mane_with_version, markname_hgmd, gene2refseq_hgmd)
+                         mane_data, markname_hgmd, gene2refseq_hgmd)
             if clin:
                 gene_clinical_transcript[hgnc_id] = tuple(tx, tx_source)
             else:

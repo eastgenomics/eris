@@ -356,6 +356,8 @@ class TranscriptRelease(models.Model):
 
     class Meta:
         db_table = "transcript_release"
+        # stop people inserting the same version for a source more than once
+        unique_together = ('source', 'external_release_version')
 
     def __str__(self):
         return str(self.id)
