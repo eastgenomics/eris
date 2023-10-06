@@ -367,8 +367,10 @@ def _add_transcript_release_info_to_db(source: str, release_version: str,
     if TranscriptRelease.objects.filter(
         external_release_version=release_version, source=source
         ).exists():
-        print(f"This release version was already added to Eris - aborting" +
-              f": {source} {release_version}")
+        msg = f"This release version was already added to Eris - "
+        f"aborting: {source} {release_version}"
+        print(msg)
+        raise ValueError(msg)
     else:
         release = TranscriptRelease.objects.create(
             source=source,
