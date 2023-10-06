@@ -7,7 +7,6 @@ from requests_app.models import Gene, Transcript, TranscriptRelease, \
     TranscriptSource, TranscriptFile, TranscriptReleaseTranscript, \
         TranscriptReleaseTranscriptFile
 
-# TODO: build-37 and build-38 transcripts?
 
 def _update_existing_gene_metadata_in_db(
     hgnc_id_to_approved_symbol,
@@ -346,7 +345,8 @@ def _transcript_assign_to_source(tx: str, hgnc_id: str, mane_data: dict, marknam
     
     return mane_select_data, mane_plus_clinical_data, hgmd_data, err
 
-def _add_transcript_release_info_to_db(source: str, version: str, ref_genome: str,
+def _add_transcript_release_info_to_db(source: str, release_version: str,
+                                       ref_genome: str,
                                        files: dict) -> None:
     """
     For each transcript release, make sure the source, release, and
@@ -365,14 +365,14 @@ def _add_transcript_release_info_to_db(source: str, version: str, ref_genome: st
     
     # create the transcript release
     if TranscriptRelease.objects.filter(
-        external_release_version=version, source=source
+        external_release_version=release_version, source=source
         ).exists():
         print(f"This release version was already added to Eris - aborting" +
-              f": {source} {version}")
+              f": {source} {release_version}")
     else:
         release = TranscriptRelease.objects.create(
             source=source,
-            external_release_version=release,
+            external_release_version=release_version,
             reference_genome=ref_genome
             )
 
