@@ -84,7 +84,7 @@ def _sanity_check_cols_exist(df: pd.DataFrame, needed_cols: list, filename: str)
     assert not errors, errors
 
 def _prepare_mane_file(
-    mane_37_file: str,
+    mane_file: str,
     hgnc_symbol_to_hgnc_id: dict[str, str],
 ) -> dict:
     """
@@ -99,7 +99,7 @@ def _prepare_mane_file(
 
     :return: dictionary of hgnc id to mane transcript
     """
-    mane = pd.read_csv(mane_37_file)
+    mane = pd.read_csv(mane_file)
 
     needed_mane_cols = ["Gene", "MANE TYPE", "RefSeq StableID GRCh38 / GRCh37"]
     _sanity_check_cols_exist(mane, needed_mane_cols, "MANE")
@@ -415,7 +415,7 @@ def seed_transcripts(
     Finally, each transcript is linked to the releases, allowing the user to
     see what information was used in decision-making.
     :param hgnc_filepath: hgnc file path
-    :param mane_filepath: mane file path for GRCh37-compatible transcripts
+    :param mane_filepath: mane file path for transcripts
     :param mane_ftp_filepath: mane file path for FTP file - known MANE version, but GRCh38
     :param gff_filepath: gff file path
     :param g2refseq_filepath: gene2refseq file path
@@ -438,10 +438,10 @@ def seed_transcripts(
     # set up the transcript release by adding it, any data sources, and and
     # supporting files to the database. Throw errors for repeated versions.
     mane_select_rel = _add_transcript_release_info_to_db(
-        "MANE Select", mane_release, reference_genome, {"mane_grch37": mane_ext_id})
+        "MANE Select", mane_release, reference_genome, {"mane": mane_ext_id})
     mane_plus_clinical_rel = _add_transcript_release_info_to_db(
         "MANE Plus Clinical", mane_release, reference_genome,
-        {"mane_grch37": mane_ext_id})
+        {"mane": mane_ext_id})
     hgmd_rel = _add_transcript_release_info_to_db(
         "HGMD", hgmd_release, reference_genome, 
         {"hgmd_g2refseq": g2refseq_ext_id,

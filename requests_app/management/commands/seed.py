@@ -114,7 +114,7 @@ class Command(BaseCommand):
             default="testing_files/mane_grch37.csv",
         )
         transcript.add_argument(
-            "--mane_grch37_ext_id",
+            "--mane_ext_id",
             type=str,
             help="The file ID of the MANE .csv file. Will start with 'file-'"
         )
@@ -235,7 +235,7 @@ class Command(BaseCommand):
                 insert_test_directory_data(json_data, force)
 
         # python manage.py seed transcript --hgnc <path> --mane_grch37 <path> 
-        # --mane_grch37_ext_id <str> --mane_release <str> --gff <path> --g2refseq <path> 
+        # --mane_ext_id <str> --mane_release <str> --gff <path> --g2refseq <path> 
         # --g2refseq_ext_id <str> --markname <path> --markname_ext_id <str>
         # --hgmd_release_label <str> --refgenome <ref_genome_version> --error
         elif command == "transcript":
@@ -263,7 +263,7 @@ class Command(BaseCommand):
 
             hgnc_file = kwargs.get("hgnc")
             mane_file = kwargs.get("mane_grch37")
-            mane_grch37_ext_id = kwargs.get("mane_grch37_ext_id")
+            mane_ext_id = kwargs.get("mane_ext_id")
             mane_release = kwargs.get("mane_release")
             gff_file = kwargs.get("gff")
             g2refseq_file = kwargs.get("g2refseq")
@@ -284,7 +284,7 @@ class Command(BaseCommand):
 
             self._validate_ext_ids(
                 [
-                    mane_grch37_ext_id,
+                    mane_ext_id,
                     g2refseq_ext_id,
                     markname_ext_id
                 ]
@@ -295,7 +295,7 @@ class Command(BaseCommand):
             seed_transcripts(
                 hgnc_file,
                 mane_file,
-                mane_grch37_ext_id,
+                mane_ext_id,
                 mane_release,
                 gff_file,
                 g2refseq_file,
