@@ -1,14 +1,13 @@
-import collections
 import datetime as dt
 import pandas as pd
 import re
+from django.db import transaction
 
 from requests_app.models import Gene, Transcript, TranscriptRelease, \
     TranscriptSource, TranscriptFile, TranscriptReleaseTranscript, \
         TranscriptReleaseTranscriptFile
 
 # TODO: build-37 and build-38 transcripts?
-
 
 def _update_existing_gene_metadata_in_db(
     hgnc_id_to_approved_symbol,
@@ -35,7 +34,6 @@ def _update_existing_gene_metadata_in_db(
             gene.alias_symbols = ",".join(hgnc_id_to_alias_symbols[gene.hgnc_id])
 
         gene.save()
-
 
 def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
     """
@@ -120,30 +118,6 @@ def _prepare_mane_file(
         )
     )
 
-def _prepare_mane_ftp_file(filepath: str, mane_version: str) -> dict:
-    """
-    Read FTP file to dataframe and sanity-check
-    Assign the MANE version specified by the user for this release, if possible
-    Return as a dict
-    """   
-    mane_ftp = pd.read_csv(filepath)
-
-    needed_ftp_cols = ["MANE_Select_RefSeq_acc"]
-    _sanity_check_cols_exist(mane_ftp, needed_ftp_cols, "MANE FTP")
-
-    mane_ftp = mane_ftp.rename(columns={"MANE_Select_RefSeq_acc": "tx"})
-
-    mane_ftp["mane_release"] = str(mane_version)
-    mane_ftp["tx_base"] = mane_ftp["tx"].str.replace(r'\.[\d]+$', '', regex=True)
-    mane_ftp["tx_version"] = mane_ftp["tx"].str.replace(r'^NM[\d]+\.', '', regex=True)
-
-    final_df = mane_ftp[["tx", "tx_base", "tx_version", "mane_release"]].copy()
-
-    # return only accession (with version) and MANE release cols
-    return (
-        final_df.to_dict(orient='records')
-    )
-
 def _prepare_gff_file(gff_file: str) -> dict[str, list]:
     """
     Read through gff files (from DNANexus)
@@ -219,39 +193,6 @@ def _prepare_markname_file(markname_file: str) -> dict:
 
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
 
-def _assign_tx_release(release: str,
-                       source: TranscriptSource,
-                       ref_genome: str,
-                       files: dict[str: str]):
-    """
-    Given a source of transcript information, the release name for the
-    source, and a dict of supporting files (where keys are external file IDs
-    and values are file categories), make the TranscriptRelease
-    and TranscriptReleaseFile objects.
-    :returns: transcript release
-    """
-    transcript_release, tx_release_created = TranscriptRelease.objects.get_or_create(
-        source=source,
-        external_release_version=release,
-        reference_genome=ref_genome
-        )
-    
-    #TODO: contemplate a situation in which multiple files of the same kind
-    # are assigned to a single release - how should we lock this down?
-    if tx_release_created:
-        transcript_release.save()
-        for file_id, file_category in files.items():
-            TranscriptFile.objects.get_or_create(
-            transcript_release=transcript_release,
-            file_id=file_id,
-            file_type=file_category
-            )
-    #else:
-        #TODO: catch a case where new files are being linked to a tx release
-        #check the files are the same and ALERT if not
-    return transcript_release
-
-
 def _add_gene_to_db(hgnc_id):
     # create the gene
     gene, _ = Gene.objects.get_or_create(
@@ -274,19 +215,16 @@ def _add_transcript_to_db(gene: Gene, transcript: str,
     return tx
 
 def _add_transcript_categorisation_to_db(transcript: Transcript,
-                                         mane_select_data: dict,
-                                         mane_plus_clinical_data: dict,
-                                         hgmd_data: dict):
-    #TODO: create the transcript-release links for all 3 releases
-    for rel in [mane_select_data, mane_plus_clinical_data, hgmd_data]:
-        tx_link, _ = TranscriptReleaseTranscript.objects.get_or_create(
-            transcript=transcript,
-            release="", #TODO: add here, get the models
-            match_version=rel["match_version"],
-            match_base=rel["match_base"],
-            default_clinical=rel["clinical"]
-            )
-        tx_link.save()
+                                         release: TranscriptRelease,
+                                         data: dict) -> None:
+    tx_link, _ = TranscriptReleaseTranscript.objects.get_or_create(
+        transcript=transcript,
+        release=release,
+        match_version=data["match_version"],
+        match_base=data["match_base"],
+        default_clinical=data["clinical"]
+        )
+    tx_link.save()
 
 def _get_clin_transcript_from_hgmd_files(hgnc_id, markname: dict, gene2refseq: dict) \
     -> tuple[str | None, str | None]:
@@ -408,7 +346,6 @@ def _transcript_assign_to_source(tx: str, hgnc_id: str, mane_data: dict, marknam
     
     return mane_select_data, mane_plus_clinical_data, hgmd_data, err
 
-
 def _add_transcript_release_info_to_db(source: str, version: str, ref_genome: str,
                                        files: dict) -> None:
     """
@@ -453,7 +390,9 @@ def _add_transcript_release_info_to_db(source: str, version: str, ref_genome: st
         )
         file_release.save()
 
-
+# 'atomic' should ensure that any failure rolls back the entire attempt to seed 
+# transcripts - resetting the database to its start position
+@transaction.atomic
 def seed_transcripts(
     hgnc_filepath: str,
     mane_filepath: str,
@@ -470,7 +409,11 @@ def seed_transcripts(
 ) -> None:
     """
     Main function to seed transcripts
-
+    Information on transcript releases (and accompanying files) are added to the db.
+    Then every gene is added to the db, and each transcript is checked against the 
+    transcript releases, to work out whether or not its a clinical transcript.
+    Finally, each transcript is linked to the releases, allowing the user to
+    see what information was used in decision-making.
     :param hgnc_filepath: hgnc file path
     :param mane_filepath: mane file path for GRCh37-compatible transcripts
     :param mane_ftp_filepath: mane file path for FTP file - known MANE version, but GRCh38
@@ -479,8 +422,6 @@ def seed_transcripts(
     :param markname_filepath: markname file path
     :param write_error_log: write error log or not
     """
-    #TODO: ensure this whole wrapper function is 1 single transaction
-    #TODO: add more info here
     # take today datetime
     current_datetime = dt.datetime.today().strftime("%Y%m%d")
 
@@ -509,20 +450,28 @@ def seed_transcripts(
     # for record purpose (just in case)
     all_errors: list[str] = []
 
-    # decide whether a transcript is clinical or not, and append it to the corresponding dict
-    # remove repeats of the transcript (with versions)
+    # decide whether a transcript is clinical or not
+    # add all this information to the database
     for hgnc_id, transcripts in gff.items():
         gene = _add_gene_to_db(hgnc_id)
         # get deduplicated transcripts
         transcripts = set(transcripts)
         for tx in transcripts:
+            # get information about how the transcript matches against MANE and HGMD
             mane_select_data, mane_plus_clinical_data, hgmd_data, err = \
                 _transcript_assign_to_source(tx, hgnc_id, mane_data, markname_hgmd, gene2refseq_hgmd)
-            transcript = _add_transcript_to_db(gene, tx, reference_genome)
-            _add_transcript_categorisation_to_db(transcript, mane_select_data,
-                                                 mane_plus_clinical_data, hgmd_data)
             if err:
                 all_errors.append(err)
+
+            # add the transcript to the Transcript table
+            transcript = _add_transcript_to_db(gene, tx, reference_genome)
+
+            # link all the releases to the Transcript
+            releases_and_data_to_link = {mane_select_rel: mane_select_data,
+                                         mane_plus_clinical_rel: mane_plus_clinical_data,
+                                         hgmd_rel: hgmd_data}
+            for release, data in releases_and_data_to_link.items():
+                _add_transcript_categorisation_to_db(transcript, release, data)
 
     # write error log for those interested to see
     if write_error_log:
@@ -530,4 +479,3 @@ def seed_transcripts(
         with open(error_log, "w") as f:
             for row in all_errors:
                 f.write(f"{row}\n")
-
