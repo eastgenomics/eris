@@ -53,7 +53,13 @@ class History:
     ) -> str:
         return f"ClinicalIndicationPanel linking clinical indication {ci_id} to panel {panel_id} deactivated online {'by review' if review else ''}"
 
-    def panel_gene_flagged(
+    def panel_gene_flagged_due_to_confidence(
         confidence_level: str,
     ) -> str:
         return f"PanelGene flagged for manual review - confidence level dropped to {confidence_level}"
+
+    def panel_gene_approved(user) -> str:
+        return f"PanelGene approved by {user}"
+
+    def panel_gene_reverted(user) -> str:
+        return f"PanelGene reverted by {user}"

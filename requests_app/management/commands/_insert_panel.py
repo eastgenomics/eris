@@ -71,13 +71,16 @@ def _insert_gene(
                 if existing_panel_genes.exists():
                     for panel_gene in existing_panel_genes:
                         with transaction.atomic():
+                            panel_gene.active = False
                             panel_gene.pending = True
                             panel_gene.save()
 
                             PanelGeneHistory.objects.create(
                                 panel_gene_id=panel_gene.id,
                                 user="PanelApp",
-                                note=History.panel_gene_flagged(confidence_level),
+                                note=History.panel_gene_flagged_due_to_confidence(
+                                    confidence_level
+                                ),
                             )
                 continue  # if panel-gene doesn't exist in db then we don't care about this gene with confidence level < 3
             else:
@@ -128,6 +131,7 @@ def _insert_gene(
                 "moi_id": moi_instance.id,
                 "mop_id": mop_instance.id,
                 "penetrance_id": penetrance_instance.id,
+                "active": True,
             },
         )
 

@@ -134,6 +134,7 @@ def panel(request, panel_id: int):
             "gene_id",
             "gene_id__hgnc_id",
             "gene_id__gene_symbol",
+            "active",
         )
         .order_by("gene_id__gene_symbol")
     )
@@ -1015,6 +1016,8 @@ def review(request) -> None:
     action_cip = None
     action_panel = None
     action_ci = None
+    action_pg = None
+
     approve_bool = None
 
     if request.method == "POST":
@@ -1204,6 +1207,78 @@ def review(request) -> None:
             )
             approve_bool = False
 
+        elif action == "approve_pg":
+            panel_gene_id = request.POST.get("pg_id")
+
+            with transaction.atomic():
+                panel_gene = PanelGene.objects.get(id=panel_gene_id)
+                panel_gene.pending = False
+                panel_gene.save()
+
+                PanelGeneHistory.objects.create(
+                    panel_gene_id=panel_gene_id,
+                    note=History.panel_gene_approved("manual review"),
+                )
+
+                PanelGeneHistory.objects.create(
+                    panel_gene_id=panel_gene_id,
+                    note=History.panel_gene_metadata_changed(
+                        "active",
+                        not panel_gene.active,
+                        panel_gene.active,
+                    ),
+                    user="online",
+                )
+
+            action_pg = (
+                PanelGene.objects.filter(id=panel_gene_id)
+                .values(
+                    "panel_id__panel_name",
+                    "gene_id__hgnc_id",
+                    "panel_id",
+                    "gene_id",
+                    "active",
+                )
+                .first()
+            )
+
+        elif action == "revert_pg":
+            panel_gene_id = request.POST.get("pg_id")
+
+            with transaction.atomic():
+                panel_gene = PanelGene.objects.get(id=panel_gene_id)
+
+                PanelGeneHistory.objects.create(
+                    panel_gene_id=panel_gene_id,
+                    note=History.panel_gene_reverted("manual review"),
+                )
+
+                PanelGeneHistory.objects.create(
+                    panel_gene_id=panel_gene_id,
+                    note=History.panel_gene_metadata_changed(
+                        "active",
+                        panel_gene.active,
+                        not panel_gene.active,
+                    ),
+                    user="online",
+                )
+
+                panel_gene.active = not panel_gene.active
+                panel_gene.pending = False
+                panel_gene.save()
+
+            action_pg = (
+                PanelGene.objects.filter(id=panel_gene_id)
+                .values(
+                    "panel_id__panel_name",
+                    "gene_id__hgnc_id",
+                    "panel_id",
+                    "gene_id",
+                    "active",
+                )
+                .first()
+            )
+
     panels: QuerySet[Panel] = Panel.objects.filter(pending=True).all()
 
     # normalize panel version
@@ -1260,7 +1335,17 @@ def review(request) -> None:
         "panel_id",
         "gene_id__hgnc_id",
         "gene_id",
+        "active",
     )
+
+    for pg in panel_gene:
+        pg_history = (
+            PanelGeneHistory.objects.filter(panel_gene_id=pg["id"])
+            .order_by("-id")
+            .first()
+        )
+
+        pg["reason"] = pg_history.note if pg_history else "Reason not found"
 
     return render(
         request,
@@ -1273,6 +1358,7 @@ def review(request) -> None:
             "action_cip": action_cip,
             "action_ci": action_ci,
             "action_panel": action_panel,
+            "action_pg": action_pg,
             "approve_bool": approve_bool,
         },
     )
@@ -1306,6 +1392,7 @@ def gene(request, gene_id: int) -> None:
         "panel_id__custom",
         "panel_id__created",
         "panel_id__pending",
+        "active",
     )
 
     transcripts = Transcript.objects.filter(gene_id=gene_id)

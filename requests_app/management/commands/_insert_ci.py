@@ -240,6 +240,7 @@ def _make_panels_from_hgncs(
             moi_id=moi.id,
             mop_id=mop.id,
             penetrance_id=pen.id,
+            active=True,  # this should be True because it's linking HGNC panel to HGNC
             defaults={
                 "justification": unique_td_source,
             },
