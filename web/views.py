@@ -1,6 +1,7 @@
 import secrets
 import string
 import collections
+import json
 from itertools import chain
 import dxpy as dx
 import datetime as dt
@@ -15,6 +16,7 @@ from .utils.utils import Genepanel
 from requests_app.management.commands.history import History
 from requests_app.management.commands.utils import parse_hgnc, normalize_version
 from panel_requests.settings import HGNC_IDS_TO_OMIT
+from requests_app.management.commands._insert_ci import insert_test_directory_data
 
 from requests_app.models import (
     ClinicalIndication,
@@ -1674,4 +1676,34 @@ def genetotranscript(request):
         request,
         "web/info/gene2transcript.html",
         {"transcripts": transcripts, "success": success},
+    )
+
+
+def test_directory(request):
+    """
+    This page allows file upload (test directory json file)
+    and will insert the data into the database
+    """
+
+    error = None
+    success = None
+
+    if request.method == "POST":
+        try:
+            force_update = request.POST.get("force")
+            test_directory_data = json.loads(
+                request.FILES.get("td_upload").read().decode()
+            )
+
+            insert_test_directory_data(
+                test_directory_data, True if force_update else False
+            )
+
+            success = True
+
+        except Exception as e:
+            error = e
+
+    return render(
+        request, "web/info/test_directory.html", {"success": success, "error": error}
     )
