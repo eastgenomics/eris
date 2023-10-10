@@ -13,6 +13,7 @@ urlpatterns = [
         views.clinical_indication_panels,
         name="clinical_indication_panels",
     ),
+    path("td", views.test_directory, name="td"),
     path("gene/<int:gene_id>/", views.gene, name="gene"),
     path("genepanel/", views.genepanel, name="genepanel"),
     path("genes/", views.genes, name="genes"),

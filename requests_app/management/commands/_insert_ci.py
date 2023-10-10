@@ -39,6 +39,7 @@ def _backward_deactivate(indications: list[dict], user: str) -> None:
             for cip in ClinicalIndicationPanel.objects.filter(
                 clinical_indication_id=clinical_indication.id
             ):
+                cip.current = False  # deactivate ci-panel link
                 cip.pending = True
                 cip.save()
 
@@ -394,7 +395,7 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
         td_current [bool]: is this the current TD version
     """
 
-    print("Inserting test directory data into database...")
+    print(f"Inserting test directory data into database... forced: {force}")
 
     # fetch td source from json file
     td_source: str = json_data.get("td_source")
