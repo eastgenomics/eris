@@ -27,6 +27,9 @@
                 <div class="card-body">
                     <h5 class="text-break"><a href="{% url 'panel' panel.panel_id %}">{{ panel.panel_id__panel_name }}</a></h5>
                     <h6 class="text-muted">panel id in database: <span class="text-info">{{ panel.panel_id }}</span></h6>
+                    {% if not panel.active %}
+                    <span class="badge text-bg-warning">Link Inactive</span>
+                    {% endif %}
 
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">panelapp id: {{ panel.panel_id__external_id }}</li>

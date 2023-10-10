@@ -134,6 +134,7 @@ def panel(request, panel_id: int):
             "gene_id",
             "gene_id__hgnc_id",
             "gene_id__gene_symbol",
+            "active",
         )
         .order_by("gene_id__gene_symbol")
     )
@@ -1015,6 +1016,8 @@ def review(request) -> None:
     action_cip = None
     action_panel = None
     action_ci = None
+    action_pg = None
+
     approve_bool = None
 
     if request.method == "POST":
@@ -1075,7 +1078,7 @@ def review(request) -> None:
                     clinical_indication.save()
             else:
                 # remove clinical indication action
-                ClinicalIndication.objects.filter(id=clinical_indication_id).delete()
+                ClinicalIndication.objects.get(id=clinical_indication_id).delete()
 
                 action_ci = True
                 approve_bool = False
@@ -1095,7 +1098,7 @@ def review(request) -> None:
             # this will be called when removing new panel request
             panel_id = request.POST.get("panel_id")
 
-            Panel.objects.filter(id=panel_id).delete()
+            Panel.objects.get(id=panel_id).delete()
 
             action_panel = True
             approve_bool = False
@@ -1204,6 +1207,90 @@ def review(request) -> None:
             )
             approve_bool = False
 
+        elif action == "approve_pg":
+            # this is called when approving new panel gene link, either for activation or de-activation
+            # depends on what's shown in the front-end
+
+            # we then record the action in history table
+            # 1. panel gene approved through manual review
+            # 2. panel gene metadata changed (active)
+            panel_gene_id = request.POST.get("pg_id")
+
+            with transaction.atomic():
+                panel_gene = PanelGene.objects.get(id=panel_gene_id)
+                panel_gene.pending = False
+                panel_gene.save()
+
+                PanelGeneHistory.objects.create(
+                    panel_gene_id=panel_gene_id,
+                    note=History.panel_gene_approved("manual review"),
+                )
+
+                PanelGeneHistory.objects.create(
+                    panel_gene_id=panel_gene_id,
+                    note=History.panel_gene_metadata_changed(
+                        "active",
+                        not panel_gene.active,
+                        panel_gene.active,
+                    ),
+                    user="online",
+                )
+
+            action_pg = (
+                PanelGene.objects.filter(id=panel_gene_id)
+                .values(
+                    "panel_id__panel_name",
+                    "gene_id__hgnc_id",
+                    "panel_id",
+                    "gene_id",
+                    "active",
+                )
+                .first()
+            )
+
+        elif action == "revert_pg":
+            # this is called when reverting a change to existing panel gene link
+            # this can be viewed as the opposite of above statement but the logic is the same in terms of making the panel-gene `pending` False
+            # both actions "approve_pg" and "revert_pg" makes the panel-gene link `pending` False
+            # however, `revert_pg` reverse the `active` field of a panel-gene link
+            # so if the front-end shows "pending deactivation", this function will instead
+            # "revert" - making the panel-gene active `True` again
+            panel_gene_id = request.POST.get("pg_id")
+
+            with transaction.atomic():
+                panel_gene = PanelGene.objects.get(id=panel_gene_id)
+
+                PanelGeneHistory.objects.create(
+                    panel_gene_id=panel_gene_id,
+                    note=History.panel_gene_reverted("manual review"),
+                )
+
+                PanelGeneHistory.objects.create(
+                    panel_gene_id=panel_gene_id,
+                    note=History.panel_gene_metadata_changed(
+                        "active",
+                        panel_gene.active,
+                        not panel_gene.active,
+                    ),
+                    user="online",
+                )
+
+                panel_gene.active = not panel_gene.active
+                panel_gene.pending = False
+                panel_gene.save()
+
+            action_pg = (
+                PanelGene.objects.filter(id=panel_gene_id)
+                .values(
+                    "panel_id__panel_name",
+                    "gene_id__hgnc_id",
+                    "panel_id",
+                    "gene_id",
+                    "active",
+                )
+                .first()
+            )
+
     panels: QuerySet[Panel] = Panel.objects.filter(pending=True).all()
 
     # normalize panel version
@@ -1228,10 +1315,7 @@ def review(request) -> None:
 
             # determine if test method is changed
             # or it's a new clinical indication creation
-            if indication_history:
-                indication.reason = indication_history
-            else:
-                indication.reason = "New"
+            indication.reason = indication_history if indication_history else "New"
 
     clinical_indication_panels: QuerySet[ClinicalIndicationPanel] = (
         ClinicalIndicationPanel.objects.filter(pending=True)
@@ -1257,6 +1341,24 @@ def review(request) -> None:
         else:
             cip["panel_id__panel_version"] = 1.0
 
+    panel_gene = PanelGene.objects.filter(pending=True).values(
+        "id",
+        "panel_id__panel_name",
+        "panel_id",
+        "gene_id__hgnc_id",
+        "gene_id",
+        "active",
+    )
+
+    for pg in panel_gene:
+        pg_history = (
+            PanelGeneHistory.objects.filter(panel_gene_id=pg["id"])
+            .order_by("-id")
+            .first()
+        )
+
+        pg["reason"] = pg_history.note if pg_history else "Reason not found"
+
     return render(
         request,
         "web/review/pending.html",
@@ -1264,9 +1366,11 @@ def review(request) -> None:
             "panels": panels,
             "cis": clinical_indications,
             "cips": clinical_indication_panels,
+            "panel_gene": panel_gene,
             "action_cip": action_cip,
             "action_ci": action_ci,
             "action_panel": action_panel,
+            "action_pg": action_pg,
             "approve_bool": approve_bool,
         },
     )
@@ -1300,6 +1404,7 @@ def gene(request, gene_id: int) -> None:
         "panel_id__custom",
         "panel_id__created",
         "panel_id__pending",
+        "active",
     )
 
     transcripts = Transcript.objects.filter(gene_id=gene_id)
@@ -1551,14 +1656,16 @@ def genetotranscript(request):
                     transcript = row["transcript"]
                     source = row.get("source")
 
-                    data = "\t".join([hgnc_id, transcript, 'clinical' if source else 'non-clinical'])
+                    data = "\t".join(
+                        [hgnc_id, transcript, "clinical" if source else "non-clinical"]
+                    )
                     f.write(f"{data}\n")
 
         except Exception as e:
-             return render(
+            return render(
                 request,
                 "web/info/gene2transcript.html",
-                {"transcripts": transcripts, 'error': e},
+                {"transcripts": transcripts, "error": e},
             )
 
         success = True
@@ -1566,5 +1673,5 @@ def genetotranscript(request):
     return render(
         request,
         "web/info/gene2transcript.html",
-        {"transcripts": transcripts, 'success': success},
+        {"transcripts": transcripts, "success": success},
     )

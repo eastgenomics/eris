@@ -301,6 +301,7 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
             moi_id=self.moi.id,
             mop_id=self.mop.id,
             penetrance_id=self.penetrance.id,
+            active=True,
             justification="PanelApp",
         )
 
@@ -406,6 +407,7 @@ class TestAdditionOfGeneToExistingPanelGene(TestCase):
             moi_id=self.moi.id,
             mop_id=self.mop.id,
             penetrance_id=self.penetrance.id,
+            active=True,
             justification="PanelApp",
         )
 
@@ -537,6 +539,7 @@ class TestDropInPanelGeneConfidence(TestCase):
             moi_id=self.moi.id,
             mop_id=self.mop.id,
             penetrance_id=self.penetrance.id,
+            active=True,
             justification="PanelApp",
         )
 
@@ -547,6 +550,7 @@ class TestDropInPanelGeneConfidence(TestCase):
             moi_id=self.moi.id,
             mop_id=self.mop.id,
             penetrance_id=self.penetrance.id,
+            active=True,
             justification="PanelApp",
         )
 
@@ -630,7 +634,7 @@ class TestDropInPanelGeneConfidence(TestCase):
         errors += value_check_wrapper(
             PanelGeneHistory.objects.get(panel_gene_id=panel_gene_2.id).note,
             "history record note",
-            History.panel_gene_flagged(2),
+            History.panel_gene_flagged_due_to_confidence(2),
         )  # check that the history record is correct
 
         assert not errors, errors

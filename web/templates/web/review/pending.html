@@ -3,7 +3,9 @@
 {% block content %}
 <div class="container mb-5">
     <!-- Success notification -->
-    {% if action_cip or action_ci or action_panel %}
+    {% if action_cip or action_ci or action_panel or action_pg %}
+        <!-- Depending on what has been approved, show relevant notice -->
+        <!-- Clinical Indication Panel -->
         {% if action_cip %}
             {% if approve_bool %}
             <div class="alert alert-success" role="alert">
@@ -14,6 +16,7 @@
                 <a href="{% url 'clinical_indication' action_cip.clinical_indication_id %}">{{ action_cip.clinical_indication_id__r_code }} {{ action_cip.clinical_indication_id__name }}</a> to <a href="{% url 'panel' action_cip.panel_id %}">{{ action_cip.panel_id__panel_name }} v{{ action_cip.panel_id__panel_version }}</a> has been reverted!
             </div>
             {% endif %}
+        <!-- Clinical Indication -->
         {% elif action_ci %}
             {% if approve_bool %}
             <div class="alert alert-success" role="alert">
@@ -24,7 +27,8 @@
                 Clinical Indication has been removed!
             </div>
             {% endif %}
-        {% else %}
+        <!-- Panel -->
+        {% elif action_panel %}
             {% if approve_bool %}
             <div class="alert alert-success" role="alert">
                 <a href="{% url 'panel' action_panel.id %}">{{ action_panel.panel_name }}</a> has been approved!
@@ -34,13 +38,25 @@
                 Panel has been removed!
             </div>
             {% endif %}
+        <!-- Panel Gene -->
+        {% elif action_pg %}
+            <div class="alert alert-success" role="alert">
+                Link between <a href="{{ action_pg.panel_id }}">{{ action_pg.panel_id__panel_name }}</a> and <a href="{{ action_pg.gene_id }}">{{ action_pg.gene_id__hgnc_id }}</a> now set to active status: {{ action_pg.active}}!
+            </div>
         {% endif %}
     {% endif %}
     <!-- End notification -->
     <!-- Title -->
     <div class="row">
         <div class="col">
-            <div class="h3">Review</div>
+            <div class="h3">Manual Review</div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="alert alert-info" role="alert">
+                Changes to the database relationships in need of manual review.
+            </div>
         </div>
     </div>
     <!-- Panel Review -->
@@ -204,5 +220,61 @@
         </div>
     </div>
     <!-- Clinical Indication Panel Review End -->
+    <!-- Panel Gene Review -->
+    <div class="row">
+        <div class="col">
+            <h5>Panel Gene</h5>
+            {% if panel_gene %}
+            <table class="table table-bordered shadow">
+                <thead>
+                  <tr>
+                    <th scope="col">Panel</th>
+                    <th scope="col">Gene</th>
+                    <th scope="col">Reason</th>
+                    <th scope="col">Pending</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for pg in panel_gene %}
+                    <tr>
+                        <td class="text-break text-wrap" style="max-width: 17em;"><a href="{% url 'panel' pg.panel_id %}">{{ pg.panel_id__panel_name }}</a></td>
+                        <td><a href="{% url 'gene' pg.gene_id %}">{{ pg.gene_id__hgnc_id }}</a></td>
+                        <td>{{ pg.reason }}</td>
+                        {% if pg.active %}
+                        <td>Pending Activation</td>
+                        {% else %}
+                        <td>Pending Deactivation</td>
+                        {% endif %}
+                        <td>
+                            <div class="d-flex justify-content-around">
+                                <!-- approving new ci-panel link -->
+                                <form action="{% url 'review' %}" method="POST">
+                                    {% csrf_token %}
+                                    <input type="text" class="form-control visually-hidden" name="pg_id" value="{{ pg.id }}">
+                                    <input type="text" class="form-control visually-hidden" name="action" value="approve_pg">
+                                    <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                </form>
+                                <!-- ignoring action on ci-panel link -->
+                                <form action="{% url 'review' %}" method="POST">
+                                    {% csrf_token %}
+                                    <input type="text" class="form-control visually-hidden" name="pg_id" value="{{ pg.id }}">
+                                    <input type="text" class="form-control visually-hidden" name="action" value="revert_pg">
+                                    <button type="submit" class="btn btn-warning btn-sm">Revert</button>
+                                </form>                                
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="alert alert-primary" role="alert">
+                Nothing pending
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <!-- Panel Gene Review End -->
 </div>
 {% endblock %}

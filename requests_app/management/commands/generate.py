@@ -84,9 +84,10 @@ class Command(BaseCommand):
         """
         panel_genes = collections.defaultdict(list)
 
-        for row in PanelGene.objects.filter(panel_id__in=relevant_panels).values(
-            "gene_id__hgnc_id", "panel_id"
-        ):
+        for row in PanelGene.objects.filter(
+            panel_id__in=relevant_panels,
+            active=True,  # only fetch active panel-gene links
+        ).values("gene_id__hgnc_id", "panel_id"):
             panel_genes[row["panel_id"]].append(row["gene_id__hgnc_id"])
 
         return panel_genes
