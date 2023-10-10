@@ -168,8 +168,10 @@
 {% block script %}
 <script>
     $(document).ready(function () {
+        // make table a DataTable (sortable and searchable)
         new DataTable('#historyTable');
 
+        // disable form submit button when form submitted, prevent double submission
         $('#historyForm').submit(function() {
             $(this).find('button[type="submit"]').prop('disabled', true);
             $(this).find('button[type="submit"]').find('.visually-hidden').removeClass('visually-hidden');

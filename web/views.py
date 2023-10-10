@@ -1208,6 +1208,12 @@ def review(request) -> None:
             approve_bool = False
 
         elif action == "approve_pg":
+            # this is called when approving new panel gene link, either for activation or de-activation
+            # depends on what's shown in the front-end
+
+            # we then record the action in history table
+            # 1. panel gene approved through manual review
+            # 2. panel gene metadata changed (active)
             panel_gene_id = request.POST.get("pg_id")
 
             with transaction.atomic():
@@ -1243,6 +1249,12 @@ def review(request) -> None:
             )
 
         elif action == "revert_pg":
+            # this is called when reverting a change to existing panel gene link
+            # this can be viewed as the opposite of above statement but the logic is the same in terms of making the panel-gene `pending` False
+            # both actions "approve_pg" and "revert_pg" makes the panel-gene link `pending` False
+            # however, `revert_pg` reverse the `active` field of a panel-gene link
+            # so if the front-end shows "pending deactivation", this function will instead
+            # "revert" - making the panel-gene active `True` again
             panel_gene_id = request.POST.get("pg_id")
 
             with transaction.atomic():
