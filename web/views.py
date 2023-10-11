@@ -412,6 +412,7 @@ def add_panel(request):
                 pg_instance, pg_created = PanelGene.objects.get_or_create(
                     panel_id=panel.id,
                     gene_id=gene_id,
+                    active=True,
                     defaults={
                         "confidence_id": conf.id,
                         "moi_id": moi.id,
@@ -742,7 +743,7 @@ def _generate_random_characters(length: int) -> str:
 
 def edit_gene(request, panel_id: int):
     """
-    Edit Panel gene page
+    Edit Panel gene page, the page where you make custom panel from an existing Panel
 
     Args:
         panel_id (int): panel id
@@ -806,6 +807,7 @@ def edit_gene(request, panel_id: int):
                         mop_id=mop_instance.id,
                         penetrance_id=penetrance_instance.id,
                         justification="online",
+                        active=True,
                     )
 
                     PanelGeneHistory.objects.create(
@@ -1450,7 +1452,7 @@ def genepanel(request):
         ci_panels[row["clinical_indication_id__r_code"]].append(row)
 
     # fetch all relevant genes for the relevant panels
-    for row in PanelGene.objects.filter(panel_id__in=relevant_panels).values(
+    for row in PanelGene.objects.filter(panel_id__in=relevant_panels, active=True).values(
         "gene_id__hgnc_id", "gene_id", "panel_id"
     ):
         panel_genes[row["panel_id"]].append((row["gene_id__hgnc_id"], row["gene_id"]))
