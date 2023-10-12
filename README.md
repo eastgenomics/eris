@@ -66,20 +66,34 @@ The arguments for this command are:
 
 
 ### 3. Seed transcript
+
+Adds transcripts to the database for either GRCh37 or GRCh38. 
+MANE and HGMD files are used to assign transcripts as 'default' clinical or non-clinical for each gene - though this can be over-ridden for specific panels, where a non-default transcript is more clinically appropriate. 
+MANE and HGMD files should be version-controlled locally, with file IDs for every file, a release version for MANE, and a release version for HGMD. These are provided as string arguments during transcript seeding. Then, each transcript will be linked to the MANE/HGMD releases which informed the 'clinical/non-clinical' decision.
+
 ```
-python manage.py seed transcript --hgnc <path to hgnc.txt> --mane <path to mane.csv> --gff <path to parsed gff.tsv> --g2refseq <path to g2refseq.csv from HGMD database> --markname <path to markname.csv from HGMD database> <refgenome>
+python manage.py seed transcript \
+--hgnc <path> --mane <path> --mane_ext_id <file ID> --mane_release <release> \
+--gff <path> --g2refseq <path> --g2refseq_ext_id <file ID> --markname <path> \
+--markname_ext_id <file ID> --hgmd_release_label <str> --refgenome <version> \
+--error
 ```
-Arguments:
-- `hgnc`: path to hgnc dump txt file
-- `mane`: path to mane csv file
+
+The arguments are as follows:
+- `hgnc`: path to HGMC dump txt file, allowing gene names to be standardised. The file is CSV format and contains columns for HGNC ID, Approved Symbol, Previous Symbols, Alias Symbols. This file should be documented with a release version. An example HGNC file can be downloaded from: https://www.genenames.org/download/custom/
+- `mane`: path to MANE CSV file, which informs which transcripts are labelled as clinical. This file should be documented with a release version. An example GRCh37 file is available at: http://tark.ensembl.org/web/mane_GRCh37_list/
+- `mane_ext_id`: the external file ID for the release-tagged MANE CSV file
+- `mane_release`: the release version associated with the MANE CSV file and its file ID.
 - `gff`: path to parsed gff.tsv (project-Fkb6Gkj433GVVvj73J7x8KbV:file-GF611Z8433Gk7gZ47gypK7ZZ)
-- `g2refseq`: path to g2refseq table of HGMD database csv csv format
-- `markname`: path to markanem table of HGMD database as csv format
+- `g2refseq`: path to the g2refseq table from the HGMD database, in csv format
+- `g2refseq_ext_id`: external file ID for release-tagged HGMD g2refseq table
+- `markname`: path to markname table from the HGMD database, in csv format
+- `markname_ext_id`: external file ID for versioned HGMD markname table
+- `hgmd_release_label`: the release version of HGMD, associated with both markname and g2refseq
 - `refgenome`: reference genome e.g. 37 or GRCh37 or GRCh38
 
 *HGMD database source can be found on DNAnexus (project-Fz4Q15Q42Z9YjYk110b3vGYQ:file-Fz4Q46842Z9z2Q6ZBjy7jVPY)
-*g2refseq and markname are both exported table from HGMD database as csv format
-*hgnc dump can be obtained from https://www.genenames.org/download/custom/
+
 
 # Generating outputs
 ## Generate genepanel
