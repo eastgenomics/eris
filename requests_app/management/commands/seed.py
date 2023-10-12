@@ -234,7 +234,7 @@ class Command(BaseCommand):
             if not test_mode:
                 insert_test_directory_data(json_data, force)
 
-        # python manage.py seed transcript --hgnc <path> --mane_grch37 <path> 
+        # python manage.py seed transcript --hgnc <path> --mane <path> 
         # --mane_ext_id <str> --mane_release <str> --gff <path> --g2refseq <path> 
         # --g2refseq_ext_id <str> --markname <path> --markname_ext_id <str>
         # --hgmd_release_label <str> --refgenome <ref_genome_version> --error
@@ -262,7 +262,7 @@ class Command(BaseCommand):
             print("Seeding transcripts")
 
             hgnc_file = kwargs.get("hgnc")
-            mane_file = kwargs.get("mane_grch37")
+            mane_file = kwargs.get("mane")
             mane_ext_id = kwargs.get("mane_ext_id")
             mane_release = kwargs.get("mane_release")
             gff_file = kwargs.get("gff")
