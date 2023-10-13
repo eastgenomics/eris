@@ -4,6 +4,7 @@ python manage.py seed --help
 
 import os
 import json
+import re
 
 from ._insert_panel import insert_data_into_db
 from ._parse_transcript import seed_transcripts
@@ -49,7 +50,8 @@ class Command(BaseCommand):
             if len(file_id) == 0:
                 missing_ids.append(file_id)
             #TODO: regex for file-
-            if not len(r'^file-[\w]+$', file_id):
+            matches = re.match(r'^file-[\w]+$', file_id)
+            if not matches:
                 missing_ids.append(file_id)
         
         if missing_ids:
@@ -108,7 +110,7 @@ class Command(BaseCommand):
             default="testing_files/hgnc_dump_20230613.txt",
         )
         transcript.add_argument(
-            "--mane_grch37",
+            "--mane",
             type=str,
             help="Path to mane .csv file",
             default="testing_files/mane_grch37.csv",
@@ -162,7 +164,7 @@ class Command(BaseCommand):
             help="write error log for transcript seeding",
         )
         transcript.add_argument(
-            "refgenome",
+            "--refgenome",
             type=str,
             help="Reference Genome",
         )
@@ -240,10 +242,10 @@ class Command(BaseCommand):
         # --hgmd_release_label <str> --refgenome <ref_genome_version> --error
         elif command == "transcript":
             """
-            This seeding requires the following files:
+            This seeding requires the following files and strings:
             1. hgnc dump - with HGNC ID, Approved Symbol, Previous Symbols, Alias Symbols
-            2. MANE file grch37 csv (http://tark.ensembl.org/web/mane_GRCh37_list/)
-            3. MANE file grch37 csv - the external ID
+            2. MANE file csv (http://tark.ensembl.org/web/mane_GRCh37_list/)
+            3. MANE file csv - the external ID
             4. MANE release version
             5. parsed gff file on DNAnexus (project-Fkb6Gkj433GVVvj73J7x8KbV:file-GF611Z8433Gk7gZ47gypK7ZZ)
             6. gene2refseq table from HGMD database
@@ -251,8 +253,6 @@ class Command(BaseCommand):
             8. markname table from HGMD database
             9. markname table from HGMD database - the external ID
             10. hgmd release label - in-house label assigned to this version of the data dump
-
-            And a string argument:
             11. reference genome - e.g. 37/38
             """
 

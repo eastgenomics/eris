@@ -216,6 +216,16 @@ def _add_transcript_to_db(gene: Gene, transcript: str,
 def _add_transcript_categorisation_to_db(transcript: Transcript,
                                          release: TranscriptRelease,
                                          data: dict) -> None:
+    """
+    Each transcript has been searched for in different transcript release files,
+    to work out whether its a default clinical transcript or not.
+    For example, if a transcript was found in MANE Select, causing the search for a 
+    transcript to stop, then the transcript will be 'clinical=True' in its linked 
+    'MANE Select' release, and 'clinical=None' in the linked releases of 'MANE Plus Clinical'
+    and 'HGMD'.
+    This function stores that search information, along with the transcript-release
+    link.
+    """
     tx_link, _ = TranscriptReleaseTranscript.objects.get_or_create(
         transcript=transcript,
         release=release,

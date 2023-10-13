@@ -162,7 +162,6 @@ class TestTranscriptAssigner_InMane(TestCase):
         self.assertDictEqual(hgmd_data, no_data) 
 
 
-# TODO: rewrites for HGMD
 class TestTranscriptAssigner_InHgmd(TestCase):
     """
     Tests for scenarios where the transcript is present in HGMD.

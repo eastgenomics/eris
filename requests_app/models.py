@@ -332,7 +332,6 @@ class TranscriptRelease(models.Model):
     source = models.ForeignKey(TranscriptSource,
                                verbose_name="Transcript source id",
                                on_delete=models.PROTECT,
-                               null=True,
                                default=None)
     
     external_release_version = models.CharField(
@@ -469,6 +468,14 @@ class TranscriptReleaseTranscript(models.Model):
         null=True,
         default=False,
     )
+
+    # 'created' is here so that we can fetch the most up-to-date record,
+    # if a transcript is looked up in a release more than once
+    created = models.DateTimeField(
+        verbose_name="created",
+        auto_now_add=True,
+    )
+
 
     class Meta:
         db_table = "transcript_release_link"
