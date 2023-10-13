@@ -35,7 +35,7 @@ def _update_existing_gene_metadata_in_db(
 
         gene.save()
 
-def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
+def _prepare_hgnc_file(hgnc_file: str) -> tuple[dict[str, str], list[dict]]:
     """
     Read hgnc file, sanity-check it, and prepare four dictionaries:
     1. gene symbol to hgnc id
@@ -47,6 +47,7 @@ def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
 
     :param hgnc_file: hgnc file path
     :return: gene symbol to hgnc id dict
+    :return: a list of dicts, each dict contains symbol AND alias AND hgnd_id
     """
     hgnc: pd.DataFrame = pd.read_csv(hgnc_file, delimiter="\t")
     
@@ -65,7 +66,10 @@ def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
         hgnc_id_to_approved_symbol, hgnc_id_to_alias_symbols
     )
 
-    return hgnc_symbol_to_hgnc_id
+    all_together = hgnc[needed_cols]
+    all_together = all_together.to_dict("records")
+
+    return hgnc_symbol_to_hgnc_id, all_together
 
 def _sanity_check_cols_exist(df: pd.DataFrame, needed_cols: list, filename: str) -> None:
     """
@@ -192,13 +196,6 @@ def _prepare_markname_file(markname_file: str) -> dict:
 
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
 
-def _add_gene_to_db(hgnc_id):
-    # create the gene
-    gene, _ = Gene.objects.get_or_create(
-        hgnd_id=gene
-    )
-    gene.save()
-    return gene
 
 def _add_transcript_to_db(gene: Gene, transcript: str,
                           ref_genome: str) -> None:
@@ -397,6 +394,33 @@ def _add_transcript_release_info_to_db(source: str, release_version: str,
         )
         file_release.save()
 
+
+def _get_or_create_gene_from_db(hgnc_id: str, hgnc_file_records: list[dict])\
+    -> Gene:
+    """
+    If a gene exists in the db, fetch its record
+    Otherwise, fill in its details
+    Throw an error if the gene is in the HGNC data more than once
+    """
+    matches = [i for i in hgnc_file_records if i["HGNC ID"] == hgnc_id]
+    if len(matches) > 1:
+        raise ValueError("HGNC ID appears twice in HGNC file")
+    elif len(matches) == 1:
+        gene, _ = Gene.objects.get_or_create(
+            hgnc_id=hgnc_id,
+            gene_symbol=matches[0]["Approved symbol"],
+            alias_symbols=matches[0]["Alias symbols"]
+        )
+        return gene
+    else:
+        # we don't know the symbol or alias IDs
+        gene, _ = Gene.objects.get_or_create(
+            hgnc_id=hgnc_id
+        )
+        return gene
+
+
+
 # 'atomic' should ensure that any failure rolls back the entire attempt to seed 
 # transcripts - resetting the database to its start position
 @transaction.atomic
@@ -436,7 +460,7 @@ def seed_transcripts(
     error_log: str = f"{current_datetime}_transcript_error.txt"
 
     # files preparation
-    hgnc_symbol_to_hgnc_id = _prepare_hgnc_file(hgnc_filepath)
+    hgnc_symbol_to_hgnc_id, hgnc_with_info = _prepare_hgnc_file(hgnc_filepath)
     mane_data = _prepare_mane_file(mane_filepath, hgnc_symbol_to_hgnc_id)
     gff = _prepare_gff_file(gff_filepath)
     gene2refseq_hgmd = _prepare_gene2refseq_file(g2refseq_filepath)
@@ -460,12 +484,11 @@ def seed_transcripts(
     # decide whether a transcript is clinical or not
     # add all this information to the database
     for hgnc_id, transcripts in gff.items():
-        gene = _add_gene_to_db(hgnc_id)
+        gene = _get_or_create_gene_from_db(hgnc_id, hgnc_with_info)
         # get deduplicated transcripts
         transcripts = set(transcripts)
         for tx in transcripts:
             # get information about how the transcript matches against MANE and HGMD
-
             mane_select_data, mane_plus_clinical_data, hgmd_data, err = \
                 _transcript_assign_to_source(tx, hgnc_id, mane_data, markname_hgmd, gene2refseq_hgmd)
             if err:
