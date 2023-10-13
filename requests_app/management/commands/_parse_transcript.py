@@ -2,6 +2,7 @@ import datetime as dt
 import pandas as pd
 import re
 from django.db import transaction
+pd.options.mode.chained_assignment = None  # default='warn'
 
 from requests_app.models import Gene, Transcript, TranscriptRelease, \
     TranscriptSource, TranscriptFile, TranscriptReleaseTranscript, \
@@ -54,6 +55,7 @@ def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
 
     # prepare dictionary files
     hgnc_symbol_to_hgnc_id = dict(zip(hgnc["Approved symbol"], hgnc["HGNC ID"]))
+
     hgnc_id_to_approved_symbol = dict(zip(hgnc["HGNC ID"], hgnc["Approved symbol"]))
     hgnc_id_to_alias_symbols = (
         hgnc.groupby("HGNC ID")["Alias symbols"].apply(list).to_dict()
@@ -96,7 +98,7 @@ def _prepare_mane_file(
     :param hgnc_symbol_to_hgnc_id: dictionary of hgnc symbol to hgnc id
         to turn gene-id in mane to hgnc-id
 
-    :return: dictionary of hgnc id to mane transcript
+    :return: dataframe
     """
     mane = pd.read_csv(mane_file)
 
@@ -107,7 +109,7 @@ def _prepare_mane_file(
         mane["MANE TYPE"].isin(["MANE SELECT", "MANE PLUS CLINICAL"])
     ]  # only mane select and mane plus clinical transcripts
 
-    filtered_mane["HGNC ID"] = filtered_mane["Gene"].map(hgnc_symbol_to_hgnc_id)
+    filtered_mane["HGNC_ID"] = filtered_mane["Gene"].astype(str).map(hgnc_symbol_to_hgnc_id)
 
     # some renaming
     filtered_mane = filtered_mane.rename(columns={"RefSeq StableID GRCh38 / GRCh37": "RefSeq"})
@@ -299,39 +301,40 @@ def _transcript_assign_to_source(tx: str, hgnc_id: str, mane_data: list(dict), m
     
     # Try to find hgnc id in the MANE file
     # Note that data in MANE can be Plus Clinical or Select
-    if hgnc_id in mane_data:
-        mane_tx = mane_data[hgnc_id]["refseq"]
-        mane_base = re.sub(r'\.[\d]+$', '', mane_tx)
-        
-        # compare transcript with the version
-        if tx == mane_tx:
-            clinical = True
-            source = mane_data[hgnc_id]["type"]
-            if source.lower() == "mane select":
-                mane_select_data["clinical"] = True
-                mane_select_data["match_base"] = True
-                mane_select_data["match_version"] = True
-            elif source.lower() == "mane plus clinical":
-                mane_plus_clinical_data["clinical"] = True
-                mane_plus_clinical_data["match_base"] = True
-                mane_plus_clinical_data["match_version"] = True
-            return clinical, mane_select_data, mane_plus_clinical_data, \
-                hgmd_data, err
-        
-        # compare transcript without the version
-        if tx_base == mane_base:
-            clinical = True
-            source = mane_data[hgnc_id]["type"]
-            if source.lower() == "mane select":
-                mane_select_data["clinical"] = True
-                mane_select_data["match_base"] = False
-                mane_select_data["match_version"] = True
-            elif source.lower() == "mane plus clinical":
-                mane_plus_clinical_data["clinical"] = True
-                mane_plus_clinical_data["match_base"] = False
-                mane_plus_clinical_data["match_version"] = True
-            return clinical, mane_select_data, mane_plus_clinical_data, \
-                hgmd_data, err
+
+    hgnc_mane_df = mane_data.loc[mane_data["HGNC_ID"] == hgnc_id]
+    # TODO: try-excepts here
+    source = hgnc_mane_df["MANE TYPE"].iloc[0]
+    mane_tx = hgnc_mane_df["RefSeq StableID GRCh38 / GRCh37"].iloc[0]
+    mane_base = re.sub(r'\.[\d]+$', '', mane_tx)
+    
+    # compare transcript with the version
+    if tx == mane_tx:
+        clinical = True
+        if str(source).lower() == "mane select":
+            mane_select_data["clinical"] = True
+            mane_select_data["match_base"] = True
+            mane_select_data["match_version"] = True
+        elif str(source).lower() == "mane plus clinical":
+            mane_plus_clinical_data["clinical"] = True
+            mane_plus_clinical_data["match_base"] = True
+            mane_plus_clinical_data["match_version"] = True
+        return clinical, mane_select_data, mane_plus_clinical_data, \
+            hgmd_data, err
+    
+    # compare transcript without the version
+    if tx_base == mane_base:
+        clinical = True
+        if str(source).lower() == "mane select":
+            mane_select_data["clinical"] = True
+            mane_select_data["match_base"] = False
+            mane_select_data["match_version"] = True
+        elif str(source).lower() == "mane plus clinical":
+            mane_plus_clinical_data["clinical"] = True
+            mane_plus_clinical_data["match_base"] = False
+            mane_plus_clinical_data["match_version"] = True
+        return clinical, mane_select_data, mane_plus_clinical_data, \
+            hgmd_data, err
 
     # hgnc id for the transcript's gene is not in MANE - 
     # instead, see which transcript is linked to the gene in HGMD
@@ -365,23 +368,19 @@ def _add_transcript_release_info_to_db(source: str, release_version: str,
     )
     source.save()
     
-    # create the transcript release
-    if TranscriptRelease.objects.filter(
-        external_release_version=release_version, source=source
-        ).exists():
-        msg = f"This release version was already added to Eris - "
-        f"aborting: {source} {release_version}"
-        print(msg)
-        raise ValueError(msg)
-    else:
-        release = TranscriptRelease.objects.create(
-            source=source,
-            external_release_version=release_version,
-            reference_genome=ref_genome
-            )
+    # create the transcript release.
+    # Block multiple releases of the same source and ref genome from being created.
+    release = TranscriptRelease.objects.get_or_create(
+        source=source.id,
+        external_release_version=release_version,
+        reference_genome=ref_genome
+        )
 
-    # create the files from the dictionary provided, and link them to releases
+    # Create the files from the dictionary provided, and link them to releases
+    #TODO: Before creating the file, check that the file doesn't exist already and is linked to a 
+    # different release/different ref genome - this is very likely to be a user error
     for file_type, file_id in files.items():
+
         file, _ = TranscriptFile.objects.get_or_create(
             file_id=file_id,
             file_type=file_type
@@ -462,6 +461,7 @@ def seed_transcripts(
         transcripts = set(transcripts)
         for tx in transcripts:
             # get information about how the transcript matches against MANE and HGMD
+
             mane_select_data, mane_plus_clinical_data, hgmd_data, err = \
                 _transcript_assign_to_source(tx, hgnc_id, mane_data, markname_hgmd, gene2refseq_hgmd)
             if err:

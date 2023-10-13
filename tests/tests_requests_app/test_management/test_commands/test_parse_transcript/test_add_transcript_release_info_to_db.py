@@ -71,19 +71,34 @@ class TestAddTranscriptRelease_ErrorsOnVersionRepeats(TestCase):
     If a transcript release already exists in the DB for the source being
     processed, it should raise a ValueError to block the process.
     """
-    # TODO: set this up
     def setUp(self) -> None:
-        # TODO: we need a TranscriptRelease already in the db, and a source too
+        self.source = TranscriptSource.objects.create(
+            source="HGMD"
+        )
+        self.release = TranscriptRelease.objects.create(
+            source=self.source,
+            external_release_version="v1.0.5",
+            reference_genome="37"
+        )
         pass
 
     def test_quits_if_repeat_external_release_version(self):
         """
-        Add to a db with a release already in it
-        Expect: throws information ValueError
+        Add to a db with a perfectly-matching release already in it.
+        Expect: throws ValueError, because a release of that ref genome and source already
+        exists.
         """
-        err = []
+        source = "HGMD"
+        version = "v1.0.5"
+        ref_genome = "37"
+        data = {"mane": "file-1357", "another_mane": "file-101010"}
 
-        #TODO: write body of test here
+        with self.assertRaises(ValueError):
+            _add_transcript_release_info_to_db(source, version, ref_genome,
+                                           data)
+            
 
-        errors = "".join(err)
-        assert not errors, errors
+
+
+# TODO: block file creation/fetching if it's linked to another release (via linking table)
+# TODO: block file creation/fetching if it's linked to another reference genome (via linking table)
