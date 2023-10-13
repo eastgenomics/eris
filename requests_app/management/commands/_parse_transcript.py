@@ -365,8 +365,6 @@ def _add_transcript_release_info_to_db(source: str, release_version: str,
     supporting files are added to the database.
     Note that the files parameter needs to be provided as a dict, in which keys are
     file types and values are external IDs.
-    Throws an error if the transcript release for that source already exists in the
-    TranscriptRelease table.
     """
 
     # look up or create the source
@@ -375,19 +373,18 @@ def _add_transcript_release_info_to_db(source: str, release_version: str,
     )
     source.save()
     
-    # create the transcript release.
-    # Block multiple releases of the same source and ref genome from being created.
-    release = TranscriptRelease.objects.get_or_create(
-        source=source.id,
+    # create the transcript release, or just get it 
+    # (this could happen if you upload an old release of 1 source, alongside a new release
+    # of another source)
+    release, _ = TranscriptRelease.objects.get_or_create(
+        source=source,
         external_release_version=release_version,
         reference_genome=ref_genome
         )
+    release.save()
 
     # Create the files from the dictionary provided, and link them to releases
-    #TODO: Before creating the file, check that the file doesn't exist already and is linked to a 
-    # different release/different ref genome - this is very likely to be a user error
     for file_type, file_id in files.items():
-
         file, _ = TranscriptFile.objects.get_or_create(
             file_id=file_id,
             file_type=file_type
