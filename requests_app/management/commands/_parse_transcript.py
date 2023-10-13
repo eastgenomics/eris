@@ -394,6 +394,7 @@ def _add_transcript_release_info_to_db(source: str, release_version: str,
         )
         file_release.save()
 
+    return release
 
 def _get_or_create_gene_from_db(hgnc_id: str, hgnc_file_records: list[dict])\
     -> Gene:
@@ -418,8 +419,6 @@ def _get_or_create_gene_from_db(hgnc_id: str, hgnc_file_records: list[dict])\
             hgnc_id=hgnc_id
         )
         return gene
-
-
 
 # 'atomic' should ensure that any failure rolls back the entire attempt to seed 
 # transcripts - resetting the database to its start position
