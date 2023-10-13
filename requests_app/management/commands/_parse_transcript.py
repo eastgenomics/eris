@@ -87,18 +87,16 @@ def _sanity_check_cols_exist(df: pd.DataFrame, needed_cols: list, filename: str)
 def _prepare_mane_file(
     mane_file: str,
     hgnc_symbol_to_hgnc_id: dict[str, str],
-) -> dict:
+) -> list(dict):
     """
-    Read through MANE files and prepare
-    dict of hgnc id to mane transcript
-
-    Function inspiration from https://github.com/eastgenomics/g2t_ops/blob/main/g2t_ops/transcript_assigner.py#L36
+    Read through MANE files and prepare a list of dicts,
+    each dict containing a transcript, HGNC ID, and the MANE type.
 
     :param mane_file: mane file path
     :param hgnc_symbol_to_hgnc_id: dictionary of hgnc symbol to hgnc id
         to turn gene-id in mane to hgnc-id
 
-    :return: dataframe
+    :return: list of dictionaries - each dict is a filtered row from the dataframe
     """
     mane = pd.read_csv(mane_file)
 
@@ -299,42 +297,45 @@ def _transcript_assign_to_source(tx: str, hgnc_id: str, mane_data: list(dict), m
 
     tx_base = re.sub(r'\.[\d]+$', '', tx)
     
-    # Try to find hgnc id in the MANE file
+    # First, find the hgnc id in the MANE file data
     # Note that data in MANE can be Plus Clinical or Select
+    mane_filtered = [d for d in mane_data if d["HGNC ID"] == hgnc_id]
+    mane_filtered = list(set(mane_filtered))
 
-    hgnc_mane_df = mane_data.loc[mane_data["HGNC_ID"] == hgnc_id]
-    # TODO: try-excepts here
-    source = hgnc_mane_df["MANE TYPE"].iloc[0]
-    mane_tx = hgnc_mane_df["RefSeq StableID GRCh38 / GRCh37"].iloc[0]
-    mane_base = re.sub(r'\.[\d]+$', '', mane_tx)
-    
-    # compare transcript with the version
-    if tx == mane_tx:
-        clinical = True
-        if str(source).lower() == "mane select":
-            mane_select_data["clinical"] = True
-            mane_select_data["match_base"] = True
-            mane_select_data["match_version"] = True
-        elif str(source).lower() == "mane plus clinical":
-            mane_plus_clinical_data["clinical"] = True
-            mane_plus_clinical_data["match_base"] = True
-            mane_plus_clinical_data["match_version"] = True
-        return clinical, mane_select_data, mane_plus_clinical_data, \
-            hgmd_data, err
-    
-    # compare transcript without the version
-    if tx_base == mane_base:
-        clinical = True
-        if str(source).lower() == "mane select":
-            mane_select_data["clinical"] = True
-            mane_select_data["match_base"] = False
-            mane_select_data["match_version"] = True
-        elif str(source).lower() == "mane plus clinical":
-            mane_plus_clinical_data["clinical"] = True
-            mane_plus_clinical_data["match_base"] = False
-            mane_plus_clinical_data["match_version"] = True
-        return clinical, mane_select_data, mane_plus_clinical_data, \
-            hgmd_data, err
+    # A HGNC ID may have several transcripts in MANE
+    # So we need to loop over mane_filtered to see if one matches our target
+    for mane_tx_dict in mane_filtered:
+        source = mane_tx_dict["MANE TYPE"]
+        mane_tx = mane_tx_dict["RefSeq"]
+        mane_base = re.sub(r'\.[\d]+$', '', mane_tx)
+
+        # compare transcript with the version
+        if tx == mane_tx:
+            clinical = True
+            if str(source).lower() == "mane select":
+                mane_select_data["clinical"] = True
+                mane_select_data["match_base"] = True
+                mane_select_data["match_version"] = True
+            elif str(source).lower() == "mane plus clinical":
+                mane_plus_clinical_data["clinical"] = True
+                mane_plus_clinical_data["match_base"] = True
+                mane_plus_clinical_data["match_version"] = True
+            return clinical, mane_select_data, mane_plus_clinical_data, \
+                hgmd_data, err
+
+        # compare transcript without the version
+        if tx_base == mane_base:
+            clinical = True
+            if str(source).lower() == "mane select":
+                mane_select_data["clinical"] = True
+                mane_select_data["match_base"] = False
+                mane_select_data["match_version"] = True
+            elif str(source).lower() == "mane plus clinical":
+                mane_plus_clinical_data["clinical"] = True
+                mane_plus_clinical_data["match_base"] = False
+                mane_plus_clinical_data["match_version"] = True
+            return clinical, mane_select_data, mane_plus_clinical_data, \
+                hgmd_data, err
 
     # hgnc id for the transcript's gene is not in MANE - 
     # instead, see which transcript is linked to the gene in HGMD
