@@ -86,8 +86,7 @@ def _sanity_check_cols_exist(df: pd.DataFrame, needed_cols: list, filename: str)
 
 def _prepare_mane_file(
     mane_file: str,
-    hgnc_symbol_to_hgnc_id: dict[str, str],
-) -> list(dict):
+    hgnc_symbol_to_hgnc_id: dict[str, str]) -> list[dict]:
     """
     Read through MANE files and prepare a list of dicts,
     each dict containing a transcript, HGNC ID, and the MANE type.
@@ -107,7 +106,7 @@ def _prepare_mane_file(
         mane["MANE TYPE"].isin(["MANE SELECT", "MANE PLUS CLINICAL"])
     ]  # only mane select and mane plus clinical transcripts
 
-    filtered_mane["HGNC_ID"] = filtered_mane["Gene"].astype(str).map(hgnc_symbol_to_hgnc_id)
+    filtered_mane["HGNC ID"] = filtered_mane["Gene"].astype(str).map(hgnc_symbol_to_hgnc_id)
 
     # some renaming
     filtered_mane = filtered_mane.rename(columns={"RefSeq StableID GRCh38 / GRCh37": "RefSeq"})
@@ -277,17 +276,16 @@ def _get_clin_transcript_from_hgmd_files(hgnc_id, markname: dict, gene2refseq: d
 
     return hgmd_base, None
 
-def _transcript_assign_to_source(tx: str, hgnc_id: str, mane_data: list(dict), markname_hgmd: dict, 
+def _transcript_assign_to_source(tx: str, hgnc_id: str, mane_data: list[dict], markname_hgmd: dict, 
                                  gene2refseq_hgmd: dict) \
-                                    -> tuple[bool, str | None, bool, bool, str | None]:
+                                    -> tuple[dict, dict, dict, str | None]:
     """
     Carries out the logic for deciding whether a transcript is clinical, or non-clinical.
     Checks MANE first, then HGMD, to see if clinical status can be assigned
-    :return: clinical - boolean, True is clinical, False is non-clinical
-    :return: source, for a clinical transcript
-    :return: err - an error string, or None if no errors
+    :return: mane_select_data, containing info from MANE Select
+    :return: mane_plus_clinical_data, containing info from MANE Plus Clinical
+    :return: hgmd_data, containing info from HGMD
     """
-    #TODO: rewrite to handle the list-of-dict format of mane_data
     mane_select_data = {"clinical": None, "match_base": None,
                         "match_version": None}
     mane_plus_clinical_data = {"clinical": None, "match_base": None,
@@ -297,21 +295,18 @@ def _transcript_assign_to_source(tx: str, hgnc_id: str, mane_data: list(dict), m
 
     tx_base = re.sub(r'\.[\d]+$', '', tx)
     
-    # First, find the hgnc id in the MANE file data
+    # First, find the transcript in the MANE file data
     # Note that data in MANE can be Plus Clinical or Select
-    mane_filtered = [d for d in mane_data if d["HGNC ID"] == hgnc_id]
-    mane_filtered = list(set(mane_filtered))
-
-    # A HGNC ID may have several transcripts in MANE
-    # So we need to loop over mane_filtered to see if one matches our target
-    for mane_tx_dict in mane_filtered:
-        source = mane_tx_dict["MANE TYPE"]
-        mane_tx = mane_tx_dict["RefSeq"]
-        mane_base = re.sub(r'\.[\d]+$', '', mane_tx)
-
-        # compare transcript with the version
-        if tx == mane_tx:
-            clinical = True
+    mane_exact_match = [d for d in mane_data if d["RefSeq"] == tx]
+    mane_base_match = [d for d in mane_data if re.sub(r'\.[\d]+$', '', d["RefSeq"]) 
+                        == tx_base]
+    
+    if mane_exact_match:
+        if len(mane_exact_match) > 1:
+            raise ValueError(f"Transcript in MANE more than once: {tx}")
+        else:
+        # determine whether it's MANE Select or Plus Clinical and return everything
+            source = mane_exact_match[0]["MANE TYPE"]
             if str(source).lower() == "mane select":
                 mane_select_data["clinical"] = True
                 mane_select_data["match_base"] = True
@@ -320,22 +315,22 @@ def _transcript_assign_to_source(tx: str, hgnc_id: str, mane_data: list(dict), m
                 mane_plus_clinical_data["clinical"] = True
                 mane_plus_clinical_data["match_base"] = True
                 mane_plus_clinical_data["match_version"] = True
-            return clinical, mane_select_data, mane_plus_clinical_data, \
+            return mane_select_data, mane_plus_clinical_data, \
                 hgmd_data, err
 
-        # compare transcript without the version
-        if tx_base == mane_base:
-            clinical = True
-            if str(source).lower() == "mane select":
-                mane_select_data["clinical"] = True
-                mane_select_data["match_base"] = False
-                mane_select_data["match_version"] = True
-            elif str(source).lower() == "mane plus clinical":
-                mane_plus_clinical_data["clinical"] = True
-                mane_plus_clinical_data["match_base"] = False
-                mane_plus_clinical_data["match_version"] = True
-            return clinical, mane_select_data, mane_plus_clinical_data, \
-                hgmd_data, err
+    # fall through to here if no exact match - see if there's a versionless match instead
+    if mane_base_match:
+        source = mane_base_match[0]["MANE TYPE"]
+        if str(source).lower() == "mane select":
+            mane_select_data["clinical"] = True
+            mane_select_data["match_base"] = True
+            mane_select_data["match_version"] = False
+        elif str(source).lower() == "mane plus clinical":
+            mane_plus_clinical_data["clinical"] = True
+            mane_plus_clinical_data["match_base"] = True
+            mane_plus_clinical_data["match_version"] = False
+        return mane_select_data, mane_plus_clinical_data, \
+            hgmd_data, err
 
     # hgnc id for the transcript's gene is not in MANE - 
     # instead, see which transcript is linked to the gene in HGMD
@@ -350,6 +345,7 @@ def _transcript_assign_to_source(tx: str, hgnc_id: str, mane_data: list(dict), m
         hgmd_data["match_version"] = False
     
     return mane_select_data, mane_plus_clinical_data, hgmd_data, err
+
 
 def _add_transcript_release_info_to_db(source: str, release_version: str,
                                        ref_genome: str,
@@ -471,7 +467,8 @@ def seed_transcripts(
             # add the transcript to the Transcript table
             transcript = _add_transcript_to_db(gene, tx, reference_genome)
 
-            # link all the releases to the Transcript
+            # link all the releases to the Transcript,
+            # with the dictionaries containing match information
             releases_and_data_to_link = {mane_select_rel: mane_select_data,
                                          mane_plus_clinical_rel: mane_plus_clinical_data,
                                          hgmd_rel: hgmd_data}

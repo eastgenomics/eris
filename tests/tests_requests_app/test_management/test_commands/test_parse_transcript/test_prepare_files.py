@@ -1,45 +1,59 @@
 from django.test import TestCase
 
-from unittest.mock import patch
+from unittest import mock
 import pandas as pd
 
 
 from requests_app.management.commands._parse_transcript import _prepare_mane_file
 
 
-class TestBasicManeFile_RunsWithSomeFilter(TestCase):
+class TestBasicManeFile(TestCase):
     """
-    For a very basic dataframe, check we get the correct type of 
-    output dictionary.
+    Test that the MANE file prepares to the correct dict format
     """
-    def test_basic_mane_output(self):
+    def test_basic_parsing_filtering(self):
         """
-        Check basic parsing is carried out
-        Note the filtering of odd MANE types is tested, as is 
-        the discarding of unused cols
+        Test that the correct output format is made.
+        Also check that not-wanted MANE values (anything other than SELECT or PLUS CLINICAL)
+        are discarded
         """
-        mane_file = "/dev/null"
-        hgnc_symbol_to_hgnc_id = {"A1BG": "HGNC:5",
-                                "A1BG-AS1": "HGNC:37133",
-                                "A1CF": "HGNC:24086"}
-        with patch("pandas.read_csv") as mock_read_csv:
-            mock_read_csv.return_value = pd.DataFrame(
+        with mock.patch("pandas.read_csv") as mock_df:
+            mock_return = pd.DataFrame(
+                {"Gene": ["A1BG", "A1CF", "A2M"],
+                 "MANE TYPE": ["MANE SELECT", "MANE PLUS CLINICAL",
+                               "MANE SOME OTHER THING"],
+                 "Ensembl StableID GRCh38": ["test", "test", "test"],
+                 "RefSeq StableID GRCh38 / GRCh37": ["NM_130786.4", "NM_014576.4",
+                                                     "NM_000014.6"],
+                 "Ensembl StableID GRCh37 (Not MANE)": ["enst", "enst", "enst"],
+                 "5'UTR": ["n", "n", "n"],
+                 "CDS": ["y", "y", "y"],
+                 "3'UTR": ["n", "n", "n"]
+                 }
+                )
+            mock_df.return_value = mock_return
+
+            hgnc_ids = {"A1BG": "HGNC:1",
+                        "A1CF": "HGNC:2",
+                        "A2M": "HGNC:3"}
+            
+            mane_output = _prepare_mane_file("/dev/null", hgnc_ids)
+
+            assert len(mane_output) == 2
+            expected = [
                 {
-                    "Gene": pd.Series(["A1BG", "A1BG-AS1", "A1CF"]),
-                    "MANE TYPE": pd.Series(["MANE SELECT", "MANE PLUS CLINICAL", "MANE Unnecessary"]),
-                    "RefSeq StableID GRCh38 / GRCh37": pd.Series(["NM0001.1", "NM0030.1", "NM0050.1"])
-                }
-            )
-            result = _prepare_mane_file(mane_file, hgnc_symbol_to_hgnc_id)
-
-            expected = pd.DataFrame(
+                    "HGNC ID": "HGNC:1",
+                    "MANE TYPE": "MANE SELECT",
+                    "RefSeq": "NM_130786.4"
+                },
                 {
-                  "Gene": pd.Series(["A1BG", "A1BG-AS1"]),
-                  "MANE TYPE": pd.Series(["MANE SELECT", "MANE PLUS CLINICAL"]),
-                  "RefSeq StableID GRCh38 / GRCh37": pd.Series(["NM0001.1", "NM0030.1"]),
-                  "HGNC_ID": pd.Series(["HGNC:5", "HGNC:37133"])
+                    "HGNC ID": "HGNC:2",
+                    "MANE TYPE": "MANE PLUS CLINICAL",
+                    "RefSeq": "NM_014576.4"
                 }
-            )
-
-            pd.testing.assert_frame_equal(result, expected)
-
+            ]
+            self.maxDiff = None
+            # assertCountEqual lets the elements be in different orders -
+            # normal assert will throw errors if the keys in a dict are
+            # ordered differently
+            self.assertCountEqual(mane_output, expected)
