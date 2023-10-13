@@ -104,18 +104,19 @@ def _prepare_mane_file(
     _sanity_check_cols_exist(mane, needed_mane_cols, "MANE")
 
     filtered_mane = mane[
-        mane["MANE TYPE"] in ["MANE SELECT", "MANE PLUS CLINICAL"]
+        mane["MANE TYPE"].isin(["MANE SELECT", "MANE PLUS CLINICAL"])
     ]  # only mane select and mane plus clinical transcripts
 
     filtered_mane["HGNC ID"] = filtered_mane["Gene"].map(hgnc_symbol_to_hgnc_id)
 
-    return dict(
-        zip(filtered_mane["HGNC ID"], {
-            "type": filtered_mane["MANE TYPE"],
-            "refseq": filtered_mane["RefSeq StableID GRCh38 / GRCh37"]
-            }
-        )
-    )
+    # some renaming
+    filtered_mane = filtered_mane.rename(columns={"RefSeq StableID GRCh38 / GRCh37": "RefSeq"})
+    min_cols = filtered_mane[["HGNC ID", "RefSeq", "MANE TYPE"]]
+
+    dict = min_cols.to_dict("records")
+
+    return dict
+    
 
 def _prepare_gff_file(gff_file: str) -> dict[str, list]:
     """
@@ -276,7 +277,7 @@ def _get_clin_transcript_from_hgmd_files(hgnc_id, markname: dict, gene2refseq: d
 
     return hgmd_base, None
 
-def _transcript_assign_to_source(tx: str, hgnc_id: str, mane_data: dict, markname_hgmd: dict, 
+def _transcript_assign_to_source(tx: str, hgnc_id: str, mane_data: list(dict), markname_hgmd: dict, 
                                  gene2refseq_hgmd: dict) \
                                     -> tuple[bool, str | None, bool, bool, str | None]:
     """
@@ -286,6 +287,7 @@ def _transcript_assign_to_source(tx: str, hgnc_id: str, mane_data: dict, marknam
     :return: source, for a clinical transcript
     :return: err - an error string, or None if no errors
     """
+    #TODO: rewrite to handle the list-of-dict format of mane_data
     mane_select_data = {"clinical": None, "match_base": None,
                         "match_version": None}
     mane_plus_clinical_data = {"clinical": None, "match_base": None,
