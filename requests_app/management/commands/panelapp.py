@@ -16,7 +16,7 @@ class PanelClass:
         self.panel_source: str = None
         self.genes: list[dict] = []
         self.regions: list[dict] = []
-
+        self.types: list[dict] = []
         [setattr(self, key, a[key]) for key in a]
 
 
