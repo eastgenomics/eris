@@ -189,7 +189,6 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
 
     # for each panel region, populate the region attribute models
     for single_region in panel.regions:
-        # TODO: should we skip confidence < 3?
         confidence_instance, _ = Confidence.objects.get_or_create(
             confidence_level=single_region.get("confidence_level"),
         )
@@ -266,10 +265,36 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
         # TODO: backward deactivation for PanelRegion, with history logging
 
 
-@transaction.atomic
-def insert_data_into_db(panel: PanelClass, user: str) -> None:
+def _get_superpanel_status(panel_type: list[dict]):
     """
-    Insert data from a parsed JSON of panel records, into the database.
+    Parse out whether or not this is a Panel or SuperPanel,
+    based on the 'type' data field in the PanelApp API.
+    :return: boolean, True if a superpanel, False if not
+    """
+
+
+def _get_constituent_panels(superpanel: PanelClass) -> \
+    tuple[PanelClass, list[PanelClass]]:
+    """
+    SuperPanels have the data of their constituent panels muddled together
+    in the API 'genes' field. We need to unpick these to ensure that child 
+    panels are created first in the database, then linked to the parent 
+    SuperPanel.
+    Makes a PanelClass for the SuperPanel, and a list of 
+     PanelClasses for the child panels.
+    """
+
+
+def _insert_superpanel_into_db(superpanel: PanelClass, child_panels: \
+                               list[PanelClass], user: str):
+
+
+
+def _insert_data_into_db(panel: PanelClass, user: str) -> Panel:
+    #TODO: do I need to check for linked SuperPanels and run updates?
+    # Or does a separate function handle this?
+    """
+    Insert data from a parsed JSON a panel record, into the database.
     Controls creation and flagging of new and old CI-Panel links,
     where the Panel version has changed.
     Controls creation of genes and regions.
@@ -317,3 +342,33 @@ def insert_data_into_db(panel: PanelClass, user: str) -> None:
     # and populate region attribute models
     _insert_gene(panel, panel_instance, created)
     _insert_regions(panel, panel_instance)
+
+    return panel_instance
+
+
+def panel_insert_controller(panels: list[PanelClass], user: str):
+    """
+    Carries out coordination of panel creation - because if superpanels are involved, 
+    their component panels and links must be built.
+    """
+    # currently, only handle Panel/SuperPanel if the panel data is from PanelApp
+    for panel in panels:
+        #TODO: add SuperPanel handler
+        #TODO: add SuperPanel/Panel links
+        if panel.panel_source.lower == "panelapp":
+            is_superpanel: str = _get_superpanel_status(panel.type)
+        else:
+            is_superpanel = None
+
+        if is_superpanel:
+            # the JSON has a different format from normal panels
+            superpanel, child_panels = _get_constituent_panels(panel)
+
+            child_panel_ids = []
+            for child in child_panels:
+                child_panel_ids += _insert_data_into_db(child, user)
+            
+            _insert_superpanel_into_db(panel, child_panel_ids, user)
+            
+        else:
+            _insert_data_into_db(panel, user)
