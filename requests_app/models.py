@@ -236,6 +236,70 @@ class ClinicalIndicationPanel(models.Model):
         return str(self.id)
 
 
+class ClinicalIndicationSuperPanel(models.Model):
+    """
+    Defines an association between a clinical indication and a superpanel
+    and when that association is made
+
+    e.g. Normally when importing new Test Directory
+    a new association between Clinical Indication and new version of
+    Panel might be made
+    """
+
+    # metadata
+    config_source = models.TextField(
+        verbose_name="config source",
+        max_length=255,
+        null=True,
+    )
+
+    td_version = models.CharField(
+        verbose_name="test directory version",
+        max_length=255,
+        null=True,
+    )
+
+    # creation date
+    created = models.DateTimeField(
+        verbose_name="created",
+        auto_now_add=True,
+    )
+
+    last_updated = models.DateTimeField(
+        verbose_name="last updated",
+        null=True,
+        auto_now=True,
+    )
+
+    # foreign keys
+    clinical_indication = models.ForeignKey(
+        ClinicalIndication,
+        verbose_name="clinical indication id",
+        on_delete=models.PROTECT,
+    )  # required
+
+    panel = models.ForeignKey(
+        SuperPanel,
+        verbose_name="superpanel id",
+        on_delete=models.PROTECT,
+    )  # required
+
+    # active status
+    current = models.BooleanField(verbose_name="latest association")
+
+    pending = models.BooleanField(
+        verbose_name="pending review",
+        null=True,
+        default=False,
+    )
+
+    class Meta:
+        db_table = "clinical_indication_superpanel"
+
+    def __str__(self):
+        return str(self.id)
+
+
 class ClinicalIndicationPanelHistory(models.Model):
     # foreign key
     clinical_indication_panel = models.ForeignKey(
@@ -266,6 +330,39 @@ class ClinicalIndicationPanelHistory(models.Model):
 
     def __str__(self):
         return str(self.id)
+
+
+class ClinicalIndicationSuperPanelHistory(models.Model):
+    # foreign key
+    clinical_indication_superpanel = models.ForeignKey(
+        ClinicalIndicationSuperPanel,
+        on_delete=models.PROTECT,
+        verbose_name="clinical indication superpanel id",
+    )
+
+    # creation date
+    created = models.DateTimeField(
+        verbose_name="created",
+        auto_now_add=True,
+    )
+
+    note = models.CharField(
+        verbose_name="note",
+        max_length=255,
+    )
+
+    user = models.CharField(
+        verbose_name="user",
+        max_length=255,
+        null=True,
+    )
+
+    class Meta:
+        db_table = "clinical_indication_superpanel_history"
+
+    def __str__(self):
+        return str(self.id)
+
 
 
 class ClinicalIndicationTestMethodHistory(models.Model):

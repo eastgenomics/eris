@@ -3,6 +3,7 @@
 
 from requests_app.models import (
     Panel,
+    SuperPanel,
     ClinicalIndicationPanel,
     Gene,
     Confidence,
@@ -265,7 +266,7 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
         # TODO: backward deactivation for PanelRegion, with history logging
 
 
-def _insert_data_into_db(panel: PanelClass, user: str) -> None:
+def _insert_data_into_db(panel: PanelClass, user: str) -> Panel:
     """
     Insert data from a parsed JSON a panel record, into the database.
     Controls creation and flagging of new and old CI-Panel links,
@@ -319,18 +320,54 @@ def _insert_data_into_db(panel: PanelClass, user: str) -> None:
     _insert_gene(panel, panel_instance, created)
     _insert_regions(panel, panel_instance)
 
-    return panel_instance
+    return panel_instance, created
 
 
-def _insert_superpanel_into_db(superpanel: SuperPanelClass, user: str) \
-    -> None:
+def _insert_superpanel_into_db(superpanel: SuperPanelClass, child_panels: list[Panel], 
+                               user: str) -> None:
     """
     Insert data from a parsed SuperPanel.
     This function differs from the one for Panels because:
-    1. SuperPanels have more nesting.
-    2. SuperPanels need linking to their child-panels - which is an extra step.
+    1. SuperPanelClass has a different structure from PanelClass.
+    2. SuperPanels need linking to their child-panels.
     """
+    panel_external_id: str = superpanel.id
+    panel_name: str = superpanel.name
+    panel_version: str = superpanel.version
 
+    # if there's a change in the panel_name or panel_version,
+    # create a new record
+    superpanel, created = SuperPanel.objects.get_or_create(
+        external_id=panel_external_id,
+        panel_name=panel_name,
+        panel_version=sortable_version(panel_version),
+        defaults={
+            "panel_source": superpanel.panel_source,
+            "grch37": True,
+            "grch38": True,
+            "test_directory": False,
+        },
+    )
+    
+    if created:
+        # handle previous SuperPanel(s) with similar external_id.
+        # mark previous CI-Panel links as needing review!
+
+        for clinical_indication_panel in ClinicalIndicationPanel.objects.filter(
+            panel_id__external_id=panel_external_id,
+            current=True,
+        ):
+            flag_clinical_indication_panel_for_review(
+                clinical_indication_panel, "PanelApp"
+            )
+
+            clinical_indication_id = clinical_indication_panel.clinical_indication_id
+
+            provisionally_link_clinical_indication_to_panel(
+                superpanel.id, clinical_indication_id, "PanelApp"
+            )
+
+    return superpanel, created
 
 
 def panel_insert_controller(panels: list[PanelClass], superpanels: \
@@ -341,7 +378,12 @@ def panel_insert_controller(panels: list[PanelClass], superpanels: \
     """
     # currently, only handle Panel/SuperPanel if the panel data is from PanelApp
     for panel in panels:
-        _insert_data_into_db(panel, user)
+        panel_instance, panel_created = _insert_data_into_db(panel, user)
 
     for superpanel in superpanels:
-        _insert_superpanel_into_db(superpanel, user)
+        child_panels = []
+        for panel in superpanel.child_panels:
+            child_panel_instance, child_panel_created = \
+                _insert_data_into_db(superpanel, user)
+            child_panels += child_panel_instance
+        _insert_superpanel_into_db(superpanel, child_panels, user)

@@ -13,6 +13,8 @@ from requests_app.models import (
     Panel,
     ClinicalIndication,
     ClinicalIndicationPanel,
+    ClinicalIndicationSuperPanel,
+    ClinicalIndicationSuperPanelHistory,
     Gene,
     Confidence,
     Penetrance,
@@ -54,12 +56,16 @@ def _backward_deactivate(indications: list[dict], user: str) -> None:
 
 @transaction.atomic
 def flag_clinical_indication_panel_for_review(
-    clinical_indication_panel: ClinicalIndicationPanel, user: str
+    clinical_indication_panel: ClinicalIndicationPanel | ClinicalIndicationSuperPanel, 
+    is_superpanel: bool,
+    user: str
 ) -> None:
     """
     Controller function which takes a clinical indication/panel link, and flags them for manual review.
     This is useful when a new CI is added, e.g. from test directory, and the user might want to switch to
     using that for a panel instead.
+
+    Can be used for normal Panels or for SuperPanels.
 
     This function is normally called when there is a new ci-panel link when seeding thus
     the old ci-panel link will be flagged to be deactivated / ignored
@@ -71,11 +77,18 @@ def flag_clinical_indication_panel_for_review(
     # this function mainly deal with old ci-panel link so changing `current` here to False make sense
     clinical_indication_panel.save()
 
-    ClinicalIndicationPanelHistory.objects.create(
-        clinical_indication_panel_id=clinical_indication_panel.id,
-        note=History.flag_clinical_indication_panel("new clinical indication provided"),
-        user=user,
-    )
+    if is_superpanel:
+        ClinicalIndicationSuperPanelHistory.objects.create(
+            clinical_indication_superpanel_id=clinical_indication_panel.id,
+            note=History.flag_clinical_indication_panel("new clinical indication provided"),
+            user=user,
+        )
+    else:
+        ClinicalIndicationPanelHistory.objects.create(
+            clinical_indication_panel_id=clinical_indication_panel.id,
+            note=History.flag_clinical_indication_panel("new clinical indication provided"),
+            user=user,
+        )
 
 
 def provisionally_link_clinical_indication_to_panel(
@@ -385,6 +398,7 @@ def _make_provisional_test_method_change(
 
 @transaction.atomic
 def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
+    #TODO: need to link to SuperPanels too
     """This function insert TD data into DB
 
     e.g. command
