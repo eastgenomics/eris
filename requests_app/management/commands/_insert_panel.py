@@ -25,7 +25,7 @@ from ._insert_ci import (
     flag_clinical_indication_panel_for_review,
     provisionally_link_clinical_indication_to_panel,
 )
-from .panelapp import PanelClass
+from .panelapp import PanelClass, SuperPanelClass
 from django.db import transaction
 
 
@@ -265,34 +265,7 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
         # TODO: backward deactivation for PanelRegion, with history logging
 
 
-def _get_superpanel_status(panel_type: list[dict]):
-    """
-    Parse out whether or not this is a Panel or SuperPanel,
-    based on the 'type' data field in the PanelApp API.
-    :return: boolean, True if a superpanel, False if not
-    """
-
-
-def _get_constituent_panels(superpanel: PanelClass) -> \
-    tuple[PanelClass, list[PanelClass]]:
-    """
-    SuperPanels have the data of their constituent panels muddled together
-    in the API 'genes' field. We need to unpick these to ensure that child 
-    panels are created first in the database, then linked to the parent 
-    SuperPanel.
-    Makes a PanelClass for the SuperPanel, and a list of 
-     PanelClasses for the child panels.
-    """
-
-
-def _insert_superpanel_into_db(superpanel: PanelClass, child_panels: \
-                               list[PanelClass], user: str):
-
-
-
-def _insert_data_into_db(panel: PanelClass, user: str) -> Panel:
-    #TODO: do I need to check for linked SuperPanels and run updates?
-    # Or does a separate function handle this?
+def _insert_data_into_db(panel: PanelClass, user: str) -> None:
     """
     Insert data from a parsed JSON a panel record, into the database.
     Controls creation and flagging of new and old CI-Panel links,
@@ -323,6 +296,9 @@ def _insert_data_into_db(panel: PanelClass, user: str) -> Panel:
         # handle previous Panel(s) with similar external_id. Panel name and version aren't suited for this.
         # mark previous CI-Panel links as needing review!
 
+        #TODO: do I need to check for SuperPanels linked to previous Panels and run updates?
+        # Or does a separate function handle this?
+
         for clinical_indication_panel in ClinicalIndicationPanel.objects.filter(
             panel_id__external_id=panel_external_id,
             current=True,
@@ -346,29 +322,26 @@ def _insert_data_into_db(panel: PanelClass, user: str) -> Panel:
     return panel_instance
 
 
-def panel_insert_controller(panels: list[PanelClass], user: str):
+def _insert_superpanel_into_db(superpanel: SuperPanelClass, user: str) \
+    -> None:
+    """
+    Insert data from a parsed SuperPanel.
+    This function differs from the one for Panels because:
+    1. SuperPanels have more nesting.
+    2. SuperPanels need linking to their child-panels - which is an extra step.
+    """
+
+
+
+def panel_insert_controller(panels: list[PanelClass], superpanels: \
+                            list[SuperPanelClass], user: str):
     """
     Carries out coordination of panel creation - because if superpanels are involved, 
     their component panels and links must be built.
     """
     # currently, only handle Panel/SuperPanel if the panel data is from PanelApp
     for panel in panels:
-        #TODO: add SuperPanel handler
-        #TODO: add SuperPanel/Panel links
-        if panel.panel_source.lower == "panelapp":
-            is_superpanel: str = _get_superpanel_status(panel.type)
-        else:
-            is_superpanel = None
+        _insert_data_into_db(panel, user)
 
-        if is_superpanel:
-            # the JSON has a different format from normal panels
-            superpanel, child_panels = _get_constituent_panels(panel)
-
-            child_panel_ids = []
-            for child in child_panels:
-                child_panel_ids += _insert_data_into_db(child, user)
-            
-            _insert_superpanel_into_db(panel, child_panel_ids, user)
-            
-        else:
-            _insert_data_into_db(panel, user)
+    for superpanel in superpanels:
+        _insert_superpanel_into_db(superpanel, user)

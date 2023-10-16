@@ -1,11 +1,14 @@
 import requests
+import json
 
 from panel_requests.settings import PANELAPP_API_URL
 
 
 class PanelClass:
     """
-    Class for panel data. Greedy ingestion of all attributes from PanelApp API
+    Class for panel data. Default population is by greedy ingestion of all
+    attributes from PanelApp API. However, may also be populated by 
+    SuperPanelClass.
     """
 
     def __init__(self, **a):
@@ -18,6 +21,75 @@ class PanelClass:
         self.regions: list[dict] = []
         self.types: list[dict] = []
         [setattr(self, key, a[key]) for key in a]
+
+
+class SuperPanelClass:
+    """
+    Class for superpanel data, which ingests from PanelApp API.
+    Will contain PanelClass objects.
+    """
+
+    def __init__(self, **a):
+        # common default attributes
+        self.id: str = None
+        self.name: str = None
+        self.version: str = None
+        self.panel_source: str = None
+        self.genes: list[dict] = []
+        self.regions: list[dict] = []
+        self.types: list[dict] = []
+        [setattr(self, key, a[key]) for key in a]
+
+        self.child_panels = self.create_component_panels(self.genes, self.regions)
+
+    def create_component_panels(genes, regions):
+        """
+        Parse out component-panels from the API call.
+        In a normal panel, the genes and regions are nested under the panel's overall info.
+        But for superpanels, we find the panels by looking in 'panel' under each 
+        constituent gene or region, so we need to reorder everything in parsing.
+        """
+        component_panels = []
+
+        for gene in genes:
+            parent_panel = gene["panel"]
+            panel_id = parent_panel["id"]
+            # fetch this Panel if its in the panel-list already, otherwise, make it
+            component_panel = next((x for x in component_panels if x.id == panel_id), None)
+            if component_panel:
+                # append gene to the list associated with this panel
+                component_panel.genes.append(gene)
+            else:
+                # create panel and append gene info to it
+                component_panel = PanelClass()
+                component_panel.id = panel_id
+                component_panel.name = parent_panel["name"]
+                component_panel.version = parent_panel["version"]
+                # currently only use SuperPanelClass for PanelApp
+                component_panel.panel_source = "PanelApp"
+                # add this gene to the panel
+                component_panel.genes.append(gene)
+
+        for region in regions:
+            parent_panel = gene["region"]
+            panel_id = parent_panel["id"]
+            # fetch this Panel if its in the panel-list already, otherwise, make it
+            component_panel = next((x for x in component_panels if x.id == panel_id), None)
+            if component_panel:
+                # append gene to the list associated with this panel
+                component_panel.regions.append(region)
+            else:
+                # create panel and append region info to it
+                component_panel = PanelClass()
+                component_panel.id = panel_id
+                component_panel.name = parent_panel["name"]
+                component_panel.version = parent_panel["version"]
+                # currently only use SuperPanelClass for PanelApp
+                component_panel.panel_source = "PanelApp"
+                # add this region to the panel
+                component_panel.regions.append(region)
+
+        return component_panels
 
 
 def _get_all_panel(signed_off: bool = True) -> list[dict]:
@@ -50,14 +122,16 @@ def _get_all_panel(signed_off: bool = True) -> list[dict]:
     return all_panels
 
 
-def get_panel(panel_num: int, version: float = None) -> PanelClass:
+def get_panel(panel_num: int, version: float = None) -> \
+    PanelClass | SuperPanelClass:
     """
     Function to get individual panel and panel version
 
     :param panel_num: panel number
     :param version: panel version
 
-    :return: PanelClass object
+    :return: PanelClass object or SuperPanelClass
+    :return: is_superpanel - True if panel is a superpanel, False otherwise
     """
     if version:
         panel_url = f"{PANELAPP_API_URL}{panel_num}/?version={version}&format=json"
@@ -69,29 +143,41 @@ def get_panel(panel_num: int, version: float = None) -> PanelClass:
     if response.status_code != 200:
         return None
 
-    return PanelClass(**response.json())
+    data = json.loads(response)
+    for i in data["types"]:
+        if i["name"] == "Super Panel":
+            return SuperPanelClass(**response.json()), True
+
+    return PanelClass(**response.json()), False
 
 
-def fetch_all_panels() -> list[PanelClass]:
+def fetch_all_panels() -> tuple[list[PanelClass], list[SuperPanelClass]]:
     """
     Function to get all signed off panels
 
     :return: list of PanelClass objects
+    :return: list of SuperPanelClass objects
     """
 
     print("Fetching all PanelApp panels...")
 
     panels: list[PanelClass] = []
+    superpanels: list[SuperPanelClass] = []
 
     for panel in _get_all_panel():
         panel_id = panel["id"]
         panel_version = panel.get("version")
 
         # fetching specific signed-off version
-        panel_data = get_panel(panel_id, panel_version)
+        panel_data, is_superpanel = \
+            get_panel(panel_id, panel_version)
 
         if panel_data:
             panel_data.panel_source = "PanelApp"
+            if is_superpanel:
+                superpanels.append(panel_data)
+            else:
+                panels.append(panel_data)
             panels.append(panel_data)
 
-    return panels
+    return panels, superpanels
