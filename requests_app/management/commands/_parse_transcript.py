@@ -210,6 +210,14 @@ def _add_transcript_to_db(gene: Gene, transcript: str,
     tx.save()
     return tx
 
+def _transcript_categorisation_bulk_upload(data):
+    """
+    Call a bulk upload of transcripts, saving time
+    """
+    #TODO: work out how to map data onto bulk upload
+    objs = TranscriptReleaseTranscript.objects.bulk_create()
+
+
 def _add_transcript_categorisation_to_db(transcript: Transcript,
                                          release: TranscriptRelease,
                                          data: dict) -> None:
@@ -230,7 +238,6 @@ def _add_transcript_categorisation_to_db(transcript: Transcript,
         match_base=data["match_base"],
         default_clinical=data["clinical"]
         )
-    tx_link.save()
 
 def _get_clin_transcript_from_hgmd_files(hgnc_id, markname: dict, gene2refseq: dict) \
     -> tuple[str | None, str | None]:
@@ -501,6 +508,7 @@ def seed_transcripts(
             releases_and_data_to_link = {mane_select_rel: mane_select_data,
                                          mane_plus_clinical_rel: mane_plus_clinical_data,
                                          hgmd_rel: hgmd_data}
+            _transcript_categorisation_bulk_upload(data_to_link)
             for release, data in releases_and_data_to_link.items():
                 _add_transcript_categorisation_to_db(transcript, release, data)
 
