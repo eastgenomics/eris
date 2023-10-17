@@ -130,9 +130,17 @@ class PanelSuperPanel(models.Model):
     and a Panel could possibly be in multiple SuperPanels.
     Old links aren't deleted, but are marked Inactive
     """
-    panel = models.ForeignKey()
+    panel = models.ForeignKey(
+        Panel,
+        verbose_name="component panel",
+        on_delete=models.PROTECT
+    )
 
-    superpanel = models.ForeignKey()
+    superpanel = models.ForeignKey(
+        SuperPanel,
+        verbose_name="superpanel",
+        on_delete=models.PROTECT
+    )
 
     # active status
     active = models.BooleanField(verbose_name="latest association")
