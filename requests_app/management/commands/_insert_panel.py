@@ -369,7 +369,7 @@ def _insert_superpanel_into_db(superpanel: SuperPanelClass, child_panels: list[P
             current=True
         ):
             flag_clinical_indication_panel_for_review(
-                clinical_indication_superpanel, False, "PanelApp"
+                clinical_indication_superpanel, True, "PanelApp"
             )
 
             clinical_indication_id = clinical_indication_superpanel.clinical_indication_id

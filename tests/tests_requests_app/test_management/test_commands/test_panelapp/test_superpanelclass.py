@@ -1,0 +1,143 @@
+from django.test import TestCase
+import requests
+from unittest.mock import MagicMock
+import numpy as np
+import json
+
+
+from requests_app.management.commands.panelapp import \
+    SuperPanelClass
+
+
+def returns_example_superpanel():
+    """
+    Calls a known API endpoint for a superpanel
+    and returns response.json()
+    """
+    api_url="https://panelapp.genomicsengland.co.uk/api/v1/panels/"
+    panel_num="465"
+    version="19.155"
+    panel_url = f"{api_url}{panel_num}/?version={version}&format=json"
+    response = requests.get(panel_url)
+    return response.json()
+
+
+def mocked_requests_get_superpanel(filename):
+    class MockResponse:
+        def __init__(self):
+            self.json_data = json.load(open(filename))
+            self.status_code = 200
+
+        def json(self):
+            return self.json_data
+
+    mock = MockResponse()
+    return mock.json()
+
+
+class TestSuperPanelClass(TestCase):
+    """
+    Tests for superpanel parsing.
+    Trying out scenarios with multiple genes per panel, multiple regions per panel, 
+    and a more complex scenario, with multiple panels and regions for multiple panels.
+    """
+    def test_basic_values_parse(self):
+        """
+        Check that basic SuperPanel string values, such as ID, are parsed correctly
+        """ 
+        # mocked-out API call
+        json_response = mocked_requests_get_superpanel(
+            "testing_files/panelapp_api_mocks/superpanel_api_example_most_genes_removed.json"
+        )
+        superpanel = SuperPanelClass(**json_response)
+
+        assert superpanel.id == 465
+        assert superpanel.name == "Other rare neuromuscular disorders"
+        assert superpanel.version == "19.155"
+        assert superpanel.panel_source == None
+
+    def test_multiple_genes_one_panel(self):
+        """
+        Check that the SuperPanelClass correctly populates its list of child Panels,
+        when we're dealing with several genes from the same sub-panel.
+        EXPECT: 1 child Panel with multiple genes.
+        """
+        json_response = mocked_requests_get_superpanel(
+            "testing_files/panelapp_api_mocks/superpanel_api_example_most_genes_removed.json"
+        )
+        superpanel = SuperPanelClass(**json_response)
+
+        component_panels = superpanel.create_component_panels(superpanel.genes,
+                                                              superpanel.regions)
+        
+        # our test data contains only 2 genes, and these are both for the same panel
+        # there are no regions in the test data
+        assert len(component_panels) == 1
+        assert len(component_panels[0].genes) == 2
+
+        # constituent panels are a list of PanelClass objects
+        # and the data they store in 'genes' and 'regions' is a list-of-dicts
+        first_panel = component_panels[0]
+        assert first_panel.id == 66
+        assert first_panel.name == "Rhabdomyolysis and metabolic muscle disorders"
+        assert first_panel.version == "3.37"
+        assert first_panel.panel_source == "PanelApp"
+
+        first_panels_genes = component_panels[0].genes
+        assert first_panels_genes[0]["gene_data"]["hgnc_id"] == "HGNC:21497"
+        assert first_panels_genes[0]["gene_data"]["gene_name"] == "acyl-CoA dehydrogenase family member 9"
+
+    def test_multiple_regions_one_panel(self):
+        """
+        Check that the class correctly populates its list of child Panels,
+        when we're dealing with several regions from the same sub-panel.
+        EXPECT: 1 child Panel with multiple regions.
+        """
+        json_response = mocked_requests_get_superpanel(
+            "testing_files/panelapp_api_mocks/superpanel_api_example_most_regions_removed.json"
+        )
+        superpanel = SuperPanelClass(**json_response)
+
+        component_panels = superpanel.create_component_panels(superpanel.genes,
+                                                              superpanel.regions)
+        
+        # our test data contains only 2 regions, and these are both for the same panel
+        # the genes are removed from the test data so shouldn't affect anything
+        assert len(component_panels) == 1
+
+        assert len(component_panels[0].regions) == 2
+
+        # constituent panels are a list of PanelClass objects
+        # and the data they store in 'genes' and 'regions' is a list-of-dicts
+        first_panel = component_panels[0]
+        assert first_panel.id == 79
+        assert first_panel.name == "Paediatric motor neuronopathies"
+        assert first_panel.version == "3.4"
+        assert first_panel.panel_source == "PanelApp"
+
+        first_panels_regions = component_panels[0].regions
+        assert first_panels_regions[0]["entity_name"] == "ISCA-37404-Loss"
+        assert first_panels_regions[0]["verbose_name"] == \
+            "15q11q13 recurrent (PWS/AS) region (BP1-BP3, Class 1) Loss"
+        assert first_panels_regions[0]["type_of_variants"] =="cnv_loss"
+
+    def test_multiple_genes_multiple_panels(self):
+        """
+        A situation where some panels and genes are from the same panel.
+        EXPECT: panels and genes from the same panel should append correctly 
+        to the same, single PanelClass object.
+        """
+        #TODO: write
+        pass
+
+    def test_gene_occurs_in_more_than_one_panel(self):
+        #TODO: write
+        pass
+
+    def test_region_occurs_in_more_than_one_panel(self):
+        #TODO: write
+        pass
+
+    def test_region_and_gene_occurs_in_more_than_one_panel(self):
+        #TODO: write
+        pass

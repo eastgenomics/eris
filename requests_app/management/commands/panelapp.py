@@ -42,20 +42,20 @@ class SuperPanelClass:
 
         self.child_panels = self.create_component_panels(self.genes, self.regions)
 
-    def create_component_panels(genes, regions):
+    def create_component_panels(self, genes, regions):
         """
         Parse out component-panels from the API call.
         In a normal panel, the genes and regions are nested under the panel's overall info.
         But for superpanels, we find the panels by looking in 'panel' under each 
         constituent gene or region, so we need to reorder everything in parsing.
         """
-        component_panels = []
+        panels = []
 
         for gene in genes:
             parent_panel = gene["panel"]
             panel_id = parent_panel["id"]
             # fetch this Panel if its in the panel-list already, otherwise, make it
-            component_panel = next((x for x in component_panels if x.id == panel_id), None)
+            component_panel = next((x for x in panels if x.id == panel_id), None)
             if component_panel:
                 # append gene to the list associated with this panel
                 component_panel.genes.append(gene)
@@ -69,14 +69,16 @@ class SuperPanelClass:
                 component_panel.panel_source = "PanelApp"
                 # add this gene to the panel
                 component_panel.genes.append(gene)
+                panels.append(component_panel)
 
         for region in regions:
-            parent_panel = gene["region"]
-            panel_id = parent_panel["id"]
+            parent_panel = region["panel"]
+            panel_id = parent_panel["id"] 
+            #TODO: how does this handle region(s) duplicated from multiple panels
             # fetch this Panel if its in the panel-list already, otherwise, make it
-            component_panel = next((x for x in component_panels if x.id == panel_id), None)
+            component_panel = next((x for x in panels if x.id == panel_id), None)
             if component_panel:
-                # append gene to the list associated with this panel
+                # append region to the list associated with this panel
                 component_panel.regions.append(region)
             else:
                 # create panel and append region info to it
@@ -84,12 +86,13 @@ class SuperPanelClass:
                 component_panel.id = panel_id
                 component_panel.name = parent_panel["name"]
                 component_panel.version = parent_panel["version"]
+                
                 # currently only use SuperPanelClass for PanelApp
                 component_panel.panel_source = "PanelApp"
                 # add this region to the panel
                 component_panel.regions.append(region)
-
-        return component_panels
+                panels.append(component_panel)
+        return panels
 
 
 def _get_all_panel(signed_off: bool = True) -> list[dict]:
