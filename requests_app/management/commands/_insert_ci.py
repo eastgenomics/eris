@@ -327,7 +327,7 @@ def _make_panels_from_hgncs(
         if previous_ci_panels:  # in the case where there are old ci-panel
             for ci_panel in previous_ci_panels:
                 flag_clinical_indication_panel_for_review(
-                    ci_panel, td_source
+                    ci_panel, False, td_source
                 )  # flag for review
 
                 # linking old ci with new panel with pending = True
@@ -492,7 +492,7 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
             ):
                 # flag previous ci-panel link for review because a new ci is created
                 flag_clinical_indication_panel_for_review(
-                    clinical_indication_panel, td_source
+                    clinical_indication_panel, False, td_source
                 )
 
                 # linking new ci with old panel with pending = True

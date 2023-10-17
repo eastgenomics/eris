@@ -125,7 +125,7 @@ class TestFlagClinicalIndicationPanelForReview(TestCase):
         """
 
         flag_clinical_indication_panel_for_review(
-            self.first_clinical_indication_panel, "test"
+            self.first_clinical_indication_panel, False, "test"
         )
 
         self.first_clinical_indication_panel.refresh_from_db()

@@ -305,7 +305,7 @@ def _insert_data_into_db(panel: PanelClass, user: str) -> Panel:
             current=True,
         ):
             flag_clinical_indication_panel_for_review(
-                clinical_indication_panel, "PanelApp"
+                clinical_indication_panel, False, "PanelApp"
             )
 
             clinical_indication_id = clinical_indication_panel.clinical_indication_id
@@ -369,7 +369,7 @@ def _insert_superpanel_into_db(superpanel: SuperPanelClass, child_panels: list[P
             current=True
         ):
             flag_clinical_indication_panel_for_review(
-                clinical_indication_superpanel, "PanelApp"
+                clinical_indication_superpanel, False, "PanelApp"
             )
 
             clinical_indication_id = clinical_indication_superpanel.clinical_indication_id
