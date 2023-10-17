@@ -4,6 +4,8 @@
 from requests_app.models import (
     Panel,
     SuperPanel,
+    PanelSuperPanel,
+    ClinicalIndicationSuperPanel,
     ClinicalIndicationPanel,
     Gene,
     Confidence,
@@ -25,6 +27,7 @@ from .history import History
 from ._insert_ci import (
     flag_clinical_indication_panel_for_review,
     provisionally_link_clinical_indication_to_panel,
+    provisionally_link_clinical_indication_to_superpanel
 )
 from .panelapp import PanelClass, SuperPanelClass
 from django.db import transaction
@@ -297,9 +300,6 @@ def _insert_data_into_db(panel: PanelClass, user: str) -> Panel:
         # handle previous Panel(s) with similar external_id. Panel name and version aren't suited for this.
         # mark previous CI-Panel links as needing review!
 
-        #TODO: do I need to check for SuperPanels linked to previous Panels and run updates?
-        # Or does a separate function handle this?
-
         for clinical_indication_panel in ClinicalIndicationPanel.objects.filter(
             panel_id__external_id=panel_external_id,
             current=True,
@@ -340,6 +340,7 @@ def _insert_superpanel_into_db(superpanel: SuperPanelClass, child_panels: list[P
     superpanel, created = SuperPanel.objects.get_or_create(
         external_id=panel_external_id,
         panel_name=panel_name,
+        pending=True,
         panel_version=sortable_version(panel_version),
         defaults={
             "panel_source": superpanel.panel_source,
@@ -350,23 +351,44 @@ def _insert_superpanel_into_db(superpanel: SuperPanelClass, child_panels: list[P
     )
     
     if created:
-        # handle previous SuperPanel(s) with similar external_id.
-        # mark previous CI-Panel links as needing review!
+        # make provisional links 
+        for child in child_panels:
+            panel_link, panel_link_created = \
+                PanelSuperPanel.objects.get_or_create(
+                    panel=child,
+                    superpanel=superpanel,
+                    pending=True,
+                    active=True
+                )
 
-        for clinical_indication_panel in ClinicalIndicationPanel.objects.filter(
-            panel_id__external_id=panel_external_id,
-            current=True,
+        # if there are previous SuperPanel(s) with similar external_id, handle these
+        # mark previous CI-SuperPanel links as needing review
+        # mark previous Panel-SuperPanel links as needing review
+        for clinical_indication_superpanel in ClinicalIndicationSuperPanel.objects.filter(
+            superpanel_id__external_id=panel_external_id,
+            current=True
         ):
             flag_clinical_indication_panel_for_review(
-                clinical_indication_panel, "PanelApp"
+                clinical_indication_superpanel, "PanelApp"
             )
 
-            clinical_indication_id = clinical_indication_panel.clinical_indication_id
+            clinical_indication_id = clinical_indication_superpanel.clinical_indication_id
 
-            provisionally_link_clinical_indication_to_panel(
+            provisionally_link_clinical_indication_to_superpanel(
                 superpanel.id, clinical_indication_id, "PanelApp"
             )
 
+        for superpanel in SuperPanel.objects.filter(
+            superpanel__external_id=panel_external_id,
+            current=True
+        ):
+            # flag the old superpanel for review
+            superpanel.pending = True
+            superpanel.save()
+
+    #else:
+        #either the SuperPanel is either brand new, or it has altered the constituent panels WITHOUT
+        #changing SuperPanel name or version - this shouldn't happen
     return superpanel, created
 
 

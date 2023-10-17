@@ -122,6 +122,37 @@ def provisionally_link_clinical_indication_to_panel(
     return ci_panel_instance
 
 
+def provisionally_link_clinical_indication_to_superpanel(
+    superpanel_id: int,
+    clinical_indication_id: int,
+    user: str,
+) -> ClinicalIndicationSuperPanel:
+    """
+    Link a CI and superpanel, but set the 'pending' field to True,
+    so that it shows for manual review by a user.
+    Additionally, create a history record.
+    Intended for use when you are making 'best guesses' for links based on
+    previous CI-SuperPanel links.
+    """
+    ci_superpanel_instance, created = ClinicalIndicationSuperPanel.objects.update_or_create(
+        clinical_indication_id=clinical_indication_id,
+        superpanel_id=superpanel_id,
+        defaults={
+            "current": True,
+            "pending": True,
+        },
+    )
+
+    if created:
+        ClinicalIndicationSuperPanelHistory.objects.create(
+            clinical_indication_superpanel_id=ci_superpanel_instance.id,
+            note=History.auto_created_clinical_indication_panel(),
+            user=user,
+        )
+
+    return ci_superpanel_instance
+
+
 def _get_td_version(filename: str) -> str | None:
     """
     Get TD version from filename.

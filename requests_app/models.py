@@ -47,6 +47,7 @@ class Panel(models.Model):
         auto_now_add=True,
     )
 
+    # whether a panel is waiting for human review
     pending = models.BooleanField(
         verbose_name="pending activation",
         null=True,
@@ -108,6 +109,7 @@ class SuperPanel(models.Model):
         auto_now_add=True,
     )
 
+    # whether a panel is waiting for human review
     pending = models.BooleanField(
         verbose_name="pending activation",
         null=True,
@@ -126,10 +128,20 @@ class PanelSuperPanel(models.Model):
     Defines links between SuperPanels and their constituent Panels.
     Necessary because a SuperPanel can contain any number of panels, 
     and a Panel could possibly be in multiple SuperPanels.
+    Old links aren't deleted, but are marked Inactive
     """
     panel = models.ForeignKey()
 
     superpanel = models.ForeignKey()
+
+    # active status
+    active = models.BooleanField(verbose_name="latest association")
+
+    pending = models.BooleanField(
+        verbose_name="pending review",
+        null=True,
+        default=False,
+    )
 
     class Meta:
         db_table = "panel_superpanel"
