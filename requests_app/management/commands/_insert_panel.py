@@ -328,7 +328,7 @@ def _insert_superpanel_into_db(superpanel: SuperPanelClass, child_panels: list[P
                                user: str) -> None:
     """
     Insert data from a parsed SuperPanel.
-    This function differs from the one for Panels because:
+    This function differs slightly from the one for Panels because:
     1. SuperPanelClass has a different structure from PanelClass.
     2. SuperPanels need linking to their child-panels.
     """
@@ -341,7 +341,6 @@ def _insert_superpanel_into_db(superpanel: SuperPanelClass, child_panels: list[P
     superpanel, created = SuperPanel.objects.get_or_create(
         external_id=panel_external_id,
         panel_name=panel_name,
-        pending=True,
         panel_version=sortable_version(panel_version),
         defaults={
             "panel_source": superpanel.panel_source,
@@ -352,17 +351,15 @@ def _insert_superpanel_into_db(superpanel: SuperPanelClass, child_panels: list[P
     )
     
     if created:
-        # make provisional links 
+        # make links between the SuperPanel and its child panels
         for child in child_panels:
             panel_link, panel_link_created = \
                 PanelSuperPanel.objects.get_or_create(
                     panel=child,
-                    superpanel=superpanel,
-                    pending=True,
-                    active=True
+                    superpanel=superpanel
                 )
-
-        # if there are previous SuperPanel(s) with similar external_id, handle these
+            
+        # if there are previous SuperPanel(s) with similar external_id,
         # mark previous CI-SuperPanel links as needing review
         for clinical_indication_superpanel in ClinicalIndicationSuperPanel.objects.filter(
             superpanel__external_id=panel_external_id,
@@ -372,40 +369,32 @@ def _insert_superpanel_into_db(superpanel: SuperPanelClass, child_panels: list[P
                 clinical_indication_superpanel, "PanelApp"
             )
 
-            clinical_indication_id = clinical_indication_superpanel.clinical_indication_id
-
             provisionally_link_clinical_indication_to_superpanel(
-                superpanel, clinical_indication_id, "PanelApp"
+                superpanel,
+                clinical_indication_superpanel.clinical_indication,
+                "PanelApp"
             )
 
-        for superpanel in SuperPanel.objects.filter(
-            superpanel__external_id=panel_external_id,
-            current=True
-        ):
-            # flag the old superpanel for review
-            superpanel.pending = True
-            superpanel.save()
-
-    #else:
-        #either the SuperPanel is either brand new, or it has altered the constituent panels WITHOUT
-        #changing SuperPanel name or version - this shouldn't happen
+    # if the superpanel hasn't just been created: the SuperPanel is either brand new,
+    # or it has altered the constituent panels WITHOUT changing SuperPanel name or version - 
+    # this would only happen if there were issues at PanelApp
     return superpanel, created
 
 
 def panel_insert_controller(panels: list[PanelClass], superpanels: \
                             list[SuperPanelClass], user: str):
     """
-    Carries out coordination of panel creation - because if superpanels are involved, 
-    their component panels and links must be built.
+    Carries out coordination of panel creation - Panels and SuperPanels are
+    handled differently in the database.
     """
     # currently, only handle Panel/SuperPanel if the panel data is from PanelApp
     for panel in panels:
-        panel_instance, panel_created = _insert_panel_data_into_db(panel, user)
+        panel_instance, _ = _insert_panel_data_into_db(panel, user)
 
     for superpanel in superpanels:
         child_panels = []
         for panel in superpanel.child_panels:
-            child_panel_instance, child_panel_created = \
+            child_panel_instance, _ = \
                 _insert_panel_data_into_db(panel, user)
             child_panels += child_panel_instance
         _insert_superpanel_into_db(superpanel, child_panels, user)

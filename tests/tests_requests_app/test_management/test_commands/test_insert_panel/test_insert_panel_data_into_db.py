@@ -1,5 +1,5 @@
 """
-Tested scenario `insert_data_into_db_function`
+Tested scenario `insert_panel_data_into_db_function`
 - core function of inserting panel and their metadata
 - flag previous and current clinical indication-panel link for review if panel name or panel version change in PanelApp API
 - nothing change if panel remains the same in PanelApp API

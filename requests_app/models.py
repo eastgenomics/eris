@@ -128,7 +128,6 @@ class PanelSuperPanel(models.Model):
     Defines links between SuperPanels and their constituent Panels.
     Necessary because a SuperPanel can contain any number of panels, 
     and a Panel could possibly be in multiple SuperPanels.
-    Old links aren't deleted, but are marked Inactive
     """
     panel = models.ForeignKey(
         Panel,
@@ -140,15 +139,6 @@ class PanelSuperPanel(models.Model):
         SuperPanel,
         verbose_name="superpanel",
         on_delete=models.PROTECT
-    )
-
-    # active status
-    active = models.BooleanField(verbose_name="latest association")
-
-    pending = models.BooleanField(
-        verbose_name="pending review",
-        null=True,
-        default=False,
     )
 
     class Meta:
