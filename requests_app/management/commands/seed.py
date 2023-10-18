@@ -158,7 +158,6 @@ class Command(BaseCommand):
                         f"Getting panel id {panel_id} / panel version {panel_version}"
                     )
 
-                # TODO: handle superpanels
                 # parse data from requested current PanelApp panels
                 panel, superpanel = get_panel(panel_id, panel_version)
 

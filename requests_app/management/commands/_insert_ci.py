@@ -216,6 +216,31 @@ def _retrieve_panel_from_pa_id(ci_code: str, pa_id: str) -> Panel | None:
 
     return panel_instance
 
+def _retrieve_superpanel_from_pa_id(ci_code: str, pa_id: str) -> SuperPanel | None:
+    """
+    Retrieve a single SuperPanel record based on PA panel id.
+
+    :param: ci_code [str]: clinical indication code
+    :param: pa_id [str]: panelapp id
+
+    returns:
+        panel_instance [SuperPanel record]
+    """
+
+    # retrieve SuperPanel records directly created from PA panels with that external_id
+    # there might be multiple SuperPanel records with the same external_id
+    # but different versions / ids thus we order by version
+
+    panel_instance: SuperPanel = (
+        SuperPanel.objects.filter(external_id=pa_id).order_by("-panel_version").first()
+    )
+
+    if not panel_instance:
+        print(f"{ci_code}: No Panel record has panelapp ID {pa_id}")
+        return None
+
+    return panel_instance
+
 
 def _retrieve_unknown_metadata_records():
     """
@@ -536,6 +561,138 @@ def _update_ci_superpanel_tables_with_new_ci(r_code, td_source, td_version, ci_i
         new_clinical_indication_superpanel.config_source = config_source
         new_clinical_indication_superpanel.save()
 
+def _update_ci_panel_links(cip_instance, td_version, td_source,
+                           config_source):
+    """
+    If CI-Panel already exists and the link is the same,
+    just update the config source and td version (if different)
+    """
+    with transaction.atomic():
+        if sortable_version(td_version) >= sortable_version(
+            cip_instance.td_version
+        ):
+            # take a note of the change
+            ClinicalIndicationPanelHistory.objects.create(
+                clinical_indication_panel_id=cip_instance.id,
+                note=History.clinical_indication_panel_metadata_changed(
+                    "td_version",
+                    normalize_version(cip_instance.td_version),
+                    td_version,
+                ),
+                user=td_source,
+            )
+            cip_instance.td_version = sortable_version(td_version)
+
+        if cip_instance.config_source != config_source:
+            # take a note of the change
+            ClinicalIndicationPanelHistory.objects.create(
+                clinical_indication_panel_id=cip_instance.id,
+                note=History.clinical_indication_panel_metadata_changed(
+                    "config_source",
+                    cip_instance.config_source,
+                    config_source
+                ),
+                user=td_source,
+            )
+            cip_instance.config_source = config_source
+
+        cip_instance.save()
+
+def _update_ci_superpanel_links(cip_instance, td_version, td_source,
+                           config_source):
+    """
+    If CI-SuperPanel already exists and the link is the same,
+    just update the config source and td version (if different)
+    """
+    with transaction.atomic():
+        if sortable_version(td_version) >= sortable_version(
+            cip_instance.td_version
+        ):
+            # take a note of the change
+            ClinicalIndicationSuperPanelHistory.objects.create(
+                clinical_indication_panel_id=cip_instance.id,
+                note=History.clinical_indication_panel_metadata_changed(
+                    "td_version",
+                    normalize_version(cip_instance.td_version),
+                    td_version,
+                ),
+                user=td_source,
+            )
+            cip_instance.td_version = sortable_version(td_version)
+
+        if cip_instance.config_source != config_source:
+            # take a note of the change
+            ClinicalIndicationSuperPanelHistory.objects.create(
+                clinical_indication_panel_id=cip_instance.id,
+                note=History.clinical_indication_panel_metadata_changed(
+                    "config_source",
+                    cip_instance.config_source,
+                    config_source
+                ),
+                user=td_source,
+            )
+            cip_instance.config_source = config_source
+
+        cip_instance.save()
+
+def _attempt_ci_panel_creation(ci_instance, panel_record, td_version,
+                               td_source, config_source):
+    """
+    Gets-or-creates a ClinicalIndicationPanel entry.
+    If the entry is new, it will log history too.
+    """
+    (
+        cip_instance,
+        cip_created,
+    ) = ClinicalIndicationPanel.objects.get_or_create(
+        clinical_indication_id=ci_instance.id,
+        panel_id=panel_record.id,
+        defaults={
+            "current": True,
+            "td_version": sortable_version(td_version),
+            "config_source": config_source,
+        },
+    )
+
+    if cip_created:
+        # if CI-Panel record is created, create a history record
+        ClinicalIndicationPanelHistory.objects.create(
+            clinical_indication_panel_id=cip_instance.id,
+            note=History.clinical_indication_panel_created(),
+            user=td_source,
+        )
+
+    return cip_instance, cip_created
+
+def _attempt_ci_superpanel_creation(ci_instance, superpanel_record, td_version,
+                               td_source, config_source):
+    """
+    Gets-or-creates a ClinicalIndicationSuperPanel entry.
+    If the entry is new, it will log history too.
+    """
+    (
+        cip_instance,
+        cip_created,
+    ) = ClinicalIndicationSuperPanel.objects.get_or_create(
+        clinical_indication=ci_instance,
+        panel=superpanel_record,
+        defaults={
+            "current": True,
+            "td_version": sortable_version(td_version),
+            "config_source": config_source,
+        },
+    )
+
+    if cip_created:
+        # if CI-Panel record is created, create a history record
+        ClinicalIndicationSuperPanelHistory.objects.create(
+            clinical_indication_panel=cip_instance,
+            note=History.clinical_indication_panel_created(),
+            user=td_source,
+        )
+
+    return cip_instance, cip_created
+
 @transaction.atomic
 def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
     """This function insert TD data into DB
@@ -603,7 +760,6 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
                 )
 
         # link each CI record to the appropriate Panel records
-        #TODO: ensure SuperPanels added too
         hgnc_list: list[str] = []
 
         # attaching Panels to CI
@@ -623,69 +779,40 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
                     pa_id,
                 )
 
-                # if we import the same version of TD but with different config source
+                super_panel_record: SuperPanel = _retrieve_superpanel_from_pa_id(
+                    indication["code"],
+                    pa_id
+                )
+
+                # if we import the same version of TD but with different config source:
                 if panel_record:
-                    (
-                        cip_instance,
-                        cip_created,
-                    ) = ClinicalIndicationPanel.objects.get_or_create(
-                        clinical_indication_id=ci_instance.id,
-                        panel_id=panel_record.id,
-                        defaults={
-                            "current": True,
-                            "td_version": sortable_version(td_version),
-                            "config_source": json_data["config_source"],
-                        },
-                    )
+                    cip_instance, cip_created = \
+                        _attempt_ci_panel_creation(ci_instance, panel_record, td_version,
+                               td_source, json_data["config_source"])
+                    if not cip_created:
+                        _update_ci_panel_links(cip_instance, td_version, td_source,
+                           json_data["config_source"])
 
-                    if cip_created:
-                        # if CI-Panel record is created, create a history record
-                        ClinicalIndicationPanelHistory.objects.create(
-                            clinical_indication_panel_id=cip_instance.id,
-                            note=History.clinical_indication_panel_created(),
-                            user=td_source,
-                        )
-                    else:
-                        # if CI-Panel already exist and the link is the same
-                        # just update the config source and td version (if different)
-                        with transaction.atomic():
-                            if sortable_version(td_version) >= sortable_version(
-                                cip_instance.td_version
-                            ):
-                                # take a note of the change
-                                ClinicalIndicationPanelHistory.objects.create(
-                                    clinical_indication_panel_id=cip_instance.id,
-                                    note=History.clinical_indication_panel_metadata_changed(
-                                        "td_version",
-                                        normalize_version(cip_instance.td_version),
-                                        td_version,
-                                    ),
-                                    user=td_source,
-                                )
-                                cip_instance.td_version = sortable_version(td_version)
-
-                            if cip_instance.config_source != json_data["config_source"]:
-                                # take a note of the change
-                                ClinicalIndicationPanelHistory.objects.create(
-                                    clinical_indication_panel_id=cip_instance.id,
-                                    note=History.clinical_indication_panel_metadata_changed(
-                                        "config_source",
-                                        cip_instance.config_source,
-                                        json_data["config_source"],
-                                    ),
-                                    user=td_source,
-                                )
-                                cip_instance.config_source = json_data["config_source"]
-
-                            cip_instance.save()
-
-                else:
+                if super_panel_record:
+                    cip_instance, cip_created = \
+                        _attempt_ci_superpanel_creation(ci_instance, super_panel_record,
+                                                        td_version, td_source,
+                                                        json_data["config_source"])
+                    
+                    if not cip_created:
+                        _update_ci_superpanel_links(cip_instance, td_version, td_source,
+                           json_data["config_source"])
+                        
+                if not panel_record or super_panel_record:
                     # No panel record exist
                     # e.g. panel id 489 has been retired
                     print(
-                        f"{indication['code']}: No Panel record has panelapp ID {pa_id}"
+                        f"{indication['code']}: No Panel or SuperPanel record 
+                        has panelapp ID {pa_id}"
                     )
                     pass
+
+            #TODO: ensure SuperPanels added too
 
             # deal with change in clinical indication-panel interaction
             # e.g. clinical indication R1 changed from panel 1 to panel 2

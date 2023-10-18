@@ -151,7 +151,7 @@ def get_panel(panel_num: int, version: float = None) -> \
         if i["name"] == "Super Panel":
             return SuperPanelClass(**response.json()), True
 
-    return PanelClass(**response.json()), False
+    return PanelClass(**response.json()), False #TODO: check this return
 
 
 def fetch_all_panels() -> tuple[list[PanelClass], list[SuperPanelClass]]:
