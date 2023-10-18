@@ -443,10 +443,101 @@ def _make_provisional_test_method_change(
 
         ci_instance.save()
 
+def _fetch_latest_td_version() -> str:
+    """
+    Gets the highest test directory version currently in the database.
+    Searches the CI-Panel and CI-SuperPanel tables to get the highest 
+    number overall.
+    Returns the max number.
+    """
+    latest_td_version_in_panels: ClinicalIndicationPanel = (
+        ClinicalIndicationPanel.objects.filter(td_version__isnull=False)
+        .order_by("-td_version")
+        .first()
+    )
+
+    latest_td_version_in_superpanels: ClinicalIndicationSuperPanel = (
+        ClinicalIndicationSuperPanel.objects.filter(td_version__isnull=False)
+        .order_by("-td_version")
+        .first()
+    )
+
+    latest_td_version_in_db = max([latest_td_version_in_panels,
+                             latest_td_version_in_superpanels])
+    
+    return latest_td_version_in_db
+
+
+def _update_ci_panel_tables_with_new_ci(r_code, td_source, td_version, ci_instance,
+                               config_source):
+    """
+    New clinical indication - the old CI-panel and CI-superpanel entries with the
+    same R code, will be set to 'pending = True'. The new CI will be linked to 
+    those panels, again with 'pending = True' to make it "provisional".
+    """
+    for clinical_indication_panel in ClinicalIndicationPanel.objects.filter(
+        clinical_indication_id__r_code=r_code,
+        current=True,
+    ):
+        # flag previous ci-panel link for review because a new ci is created
+        flag_clinical_indication_panel_for_review(
+            clinical_indication_panel, td_source
+        )
+
+        # linking new ci with old panel with pending = True
+        # this might be duplicated down the line when panel is created
+        # but if old panel and new panel are the same, we expect that there
+        # will still be one ci-panel link instead of two being created
+        previous_panel_id = clinical_indication_panel.panel_id
+
+        new_clinical_indication_panel = (
+            provisionally_link_clinical_indication_to_panel(
+                previous_panel_id,
+                ci_instance.id,
+                td_source,
+            )
+        )
+
+        # fill in new clinical indication - panel link metadata
+        new_clinical_indication_panel.td_version = sortable_version(td_version)
+        new_clinical_indication_panel.config_source = config_source
+        new_clinical_indication_panel.save()
+
+def _update_ci_superpanel_tables_with_new_ci(r_code, td_source, td_version, ci_instance,
+                               config_source):
+    """
+    New clinical indication - the old CI-superpanel entries with the
+    same R code, will be set to 'pending = True'. The new CI will be linked to 
+    those panels, again with 'pending = True' to make it "provisional".
+    """
+    for clinical_indication_superpanel in ClinicalIndicationSuperPanel.objects.filter(
+        clinical_indication_id__r_code=r_code,
+        current=True,
+    ):
+        # flag previous ci-panel link for review because a new ci is created
+        flag_clinical_indication_superpanel_for_review(
+            clinical_indication_superpanel, td_source
+        )
+
+        # linking new ci with old panel with pending = True
+        # this might be duplicated down the line when panel is created
+        # but if old panel and new panel are the same, we expect that there
+        # will still be one ci-panel link instead of two being created
+        new_clinical_indication_superpanel = (
+            provisionally_link_clinical_indication_to_superpanel(
+                clinical_indication_superpanel,
+                ci_instance,
+                td_source,
+            )
+        )
+
+        # fill in new clinical indication - panel link metadata
+        new_clinical_indication_superpanel.td_version = sortable_version(td_version)
+        new_clinical_indication_superpanel.config_source = config_source
+        new_clinical_indication_superpanel.save()
 
 @transaction.atomic
 def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
-    #TODO: need to link to SuperPanels too
     """This function insert TD data into DB
 
     e.g. command
@@ -468,11 +559,7 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
     assert td_version, f"Cannot parse TD version {td_version}"
 
     # fetch latest TD version in database
-    latest_td_version_in_db: ClinicalIndicationPanel = (
-        ClinicalIndicationPanel.objects.filter(td_version__isnull=False)
-        .order_by("-td_version")
-        .first()
-    )
+    latest_td_version_in_db = _fetch_latest_td_version()
 
     if not latest_td_version_in_db or force:
         pass
@@ -483,7 +570,8 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
             latest_td_version_in_db.td_version
         ):
             raise Exception(
-                f"TD version {td_version} lower than one in db {normalize_version(latest_td_version_in_db.td_version)}. Abdandoning import."
+                f"TD version {td_version} lower than one in db {normalize_version(
+                    latest_td_version_in_db.td_version)}. Abdandoning import."
             )
 
     all_indication: list[dict] = json_data["indications"]
@@ -500,38 +588,11 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
         )
 
         if ci_created:
-            # New clinical indication - the old CI-panel entries with the same R code,
-            # will be set to 'pending = True'. The new CI will be linked to those panels,
-            # again with 'pending = True' to make it "provisional".
-            for clinical_indication_panel in ClinicalIndicationPanel.objects.filter(
-                clinical_indication_id__r_code=r_code,
-                current=True,
-            ):
-                # flag previous ci-panel link for review because a new ci is created
-                flag_clinical_indication_panel_for_review(
-                    clinical_indication_panel, td_source
-                )
-
-                # linking new ci with old panel with pending = True
-                # this might be duplicated down the line when panel is created
-                # but if old panel and new panel are the same, we expect that there
-                # will still be one ci-panel link instead of two being created
-                previous_panel_id = clinical_indication_panel.panel_id
-
-                new_clinical_indication_panel = (
-                    provisionally_link_clinical_indication_to_panel(
-                        previous_panel_id,
-                        ci_instance.id,
-                        td_source,
-                    )
-                )
-
-                # fill in new clinical indication - panel link metadata
-                new_clinical_indication_panel.td_version = sortable_version(td_version)
-                new_clinical_indication_panel.config_source = json_data["config_source"]
-
-                new_clinical_indication_panel.save()
-
+            _update_ci_panel_tables_with_new_ci(r_code, td_source, td_version, ci_instance,
+                               json_data["config_source"])
+            _update_ci_superpanel_tables_with_new_ci(r_code, td_source, td_version, ci_instance,
+                               json_data["config_source"])
+            
         else:
             # Check for change in test method
             if ci_instance.test_method != indication["test_method"]:
@@ -542,6 +603,7 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
                 )
 
         # link each CI record to the appropriate Panel records
+        #TODO: ensure SuperPanels added too
         hgnc_list: list[str] = []
 
         # attaching Panels to CI
