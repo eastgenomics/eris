@@ -294,13 +294,13 @@ class ClinicalIndicationSuperPanel(models.Model):
     # foreign keys
     clinical_indication = models.ForeignKey(
         ClinicalIndication,
-        verbose_name="clinical indication id",
+        verbose_name="clinical indication",
         on_delete=models.PROTECT,
     )  # required
 
-    panel = models.ForeignKey(
+    superpanel = models.ForeignKey(
         SuperPanel,
-        verbose_name="superpanel id",
+        verbose_name="superpanel",
         on_delete=models.PROTECT,
     )  # required
 

@@ -11,6 +11,7 @@ from .history import History
 
 from requests_app.models import (
     Panel,
+    SuperPanel,
     ClinicalIndication,
     ClinicalIndicationPanel,
     ClinicalIndicationSuperPanel,
@@ -56,16 +57,13 @@ def _backward_deactivate(indications: list[dict], user: str) -> None:
 
 @transaction.atomic
 def flag_clinical_indication_panel_for_review(
-    clinical_indication_panel: ClinicalIndicationPanel | ClinicalIndicationSuperPanel, 
-    is_superpanel: bool,
+    clinical_indication_panel: ClinicalIndicationPanel, 
     user: str
 ) -> None:
     """
     Controller function which takes a clinical indication/panel link, and flags them for manual review.
     This is useful when a new CI is added, e.g. from test directory, and the user might want to switch to
     using that for a panel instead.
-
-    Can be used for normal Panels or for SuperPanels.
 
     This function is normally called when there is a new ci-panel link when seeding thus
     the old ci-panel link will be flagged to be deactivated / ignored
@@ -77,18 +75,37 @@ def flag_clinical_indication_panel_for_review(
     # this function mainly deal with old ci-panel link so changing `current` here to False make sense
     clinical_indication_panel.save()
 
-    if is_superpanel:
-        ClinicalIndicationSuperPanelHistory.objects.create(
-            clinical_indication_superpanel_id=clinical_indication_panel.id,
-            note=History.flag_clinical_indication_panel("new clinical indication provided"),
-            user=user,
-        )
-    else:
-        ClinicalIndicationPanelHistory.objects.create(
-            clinical_indication_panel_id=clinical_indication_panel.id,
-            note=History.flag_clinical_indication_panel("new clinical indication provided"),
-            user=user,
-        )
+    ClinicalIndicationPanelHistory.objects.create(
+        clinical_indication_panel_id=clinical_indication_panel.id,
+        note=History.flag_clinical_indication_panel("new clinical indication provided"),
+        user=user,
+    )
+
+
+def flag_clinical_indication_superpanel_for_review(
+    clinical_indication_panel: ClinicalIndicationSuperPanel, 
+    user: str
+) -> None:
+    """
+    Controller function which takes a clinical indication/superpanel link, and flags them for manual review.
+    This is useful when a new CI is added, e.g. from test directory, and the user might want to switch to
+    using that for a superpanel instead.
+
+    This function is normally called when there is a new ci-superpanel link when seeding thus
+    the old ci-superpanel link will be flagged to be deactivated / ignored
+    while the new one will be created with pending `True`
+    """
+
+    clinical_indication_panel.pending = True
+    clinical_indication_panel.current = False
+    # this function mainly deal with old ci-panel link so changing `current` here to False make sense
+    clinical_indication_panel.save()
+
+    ClinicalIndicationSuperPanelHistory.objects.create(
+        clinical_indication_superpanel=clinical_indication_panel,
+        note=History.flag_clinical_indication_panel("new clinical indication provided"),
+        user=user,
+    )
 
 
 def provisionally_link_clinical_indication_to_panel(
@@ -123,8 +140,8 @@ def provisionally_link_clinical_indication_to_panel(
 
 
 def provisionally_link_clinical_indication_to_superpanel(
-    superpanel_id: int,
-    clinical_indication_id: int,
+    superpanel: SuperPanel,
+    clinical_indication: ClinicalIndication,
     user: str,
 ) -> ClinicalIndicationSuperPanel:
     """
@@ -135,8 +152,8 @@ def provisionally_link_clinical_indication_to_superpanel(
     previous CI-SuperPanel links.
     """
     ci_superpanel_instance, created = ClinicalIndicationSuperPanel.objects.update_or_create(
-        clinical_indication_id=clinical_indication_id,
-        superpanel_id=superpanel_id,
+        clinical_indication=clinical_indication,
+        superpanel=superpanel,
         defaults={
             "current": True,
             "pending": True,
@@ -145,7 +162,7 @@ def provisionally_link_clinical_indication_to_superpanel(
 
     if created:
         ClinicalIndicationSuperPanelHistory.objects.create(
-            clinical_indication_superpanel_id=ci_superpanel_instance.id,
+            clinical_indication_superpanel=ci_superpanel_instance,
             note=History.auto_created_clinical_indication_panel(),
             user=user,
         )
@@ -327,7 +344,7 @@ def _make_panels_from_hgncs(
         if previous_ci_panels:  # in the case where there are old ci-panel
             for ci_panel in previous_ci_panels:
                 flag_clinical_indication_panel_for_review(
-                    ci_panel, False, td_source
+                    ci_panel, td_source
                 )  # flag for review
 
                 # linking old ci with new panel with pending = True
@@ -492,7 +509,7 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
             ):
                 # flag previous ci-panel link for review because a new ci is created
                 flag_clinical_indication_panel_for_review(
-                    clinical_indication_panel, False, td_source
+                    clinical_indication_panel, td_source
                 )
 
                 # linking new ci with old panel with pending = True
