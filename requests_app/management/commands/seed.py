@@ -49,15 +49,17 @@ class Command(BaseCommand):
         for file_id in file_ids:
             if len(file_id) == 0:
                 missing_ids.append(file_id)
-            #TODO: regex for file-
-            matches = re.match(r'^file-[\w]+$', file_id)
+            # TODO: regex for file-
+            matches = re.match(r"^file-[\w]+$", file_id)
             if not matches:
                 missing_ids.append(file_id)
-        
+
         if missing_ids:
-            raise Exception(f"External file IDs {', '.join(missing_ids)} do not exist"
-                            " or are misformatted")
-        
+            raise Exception(
+                f"External file IDs {', '.join(missing_ids)} do not exist"
+                " or are misformatted"
+            )
+
         return True
 
     def add_arguments(self, parser) -> None:
@@ -118,12 +120,12 @@ class Command(BaseCommand):
         transcript.add_argument(
             "--mane_ext_id",
             type=str,
-            help="The file ID of the MANE .csv file. Will start with 'file-'"
+            help="The file ID of the MANE .csv file. Will start with 'file-'",
         )
         transcript.add_argument(
             "--mane_release",
             type=str,
-            help="The documented release version of the MANE file(s)"
+            help="The documented release version of the MANE file(s)",
         )
         transcript.add_argument(
             "--gff",
@@ -140,7 +142,7 @@ class Command(BaseCommand):
         transcript.add_argument(
             "--g2refseq_ext_id",
             type=str,
-            help="The file ID of the gene2refseq csv file. Will start with 'file-'"
+            help="The file ID of the gene2refseq csv file. Will start with 'file-'",
         )
         transcript.add_argument(
             "--markname",
@@ -151,12 +153,12 @@ class Command(BaseCommand):
         transcript.add_argument(
             "--markname_ext_id",
             type=str,
-            help="The file ID of the markname csv file. Will start with 'file-'"
+            help="The file ID of the markname csv file. Will start with 'file-'",
         )
         transcript.add_argument(
             "--hgmd_release_label",
             type=str,
-            help="The documented release version of the HGMD files"
+            help="The documented release version of the HGMD files",
         )
         transcript.add_argument(
             "--error",
@@ -236,8 +238,8 @@ class Command(BaseCommand):
             if not test_mode:
                 insert_test_directory_data(json_data, force)
 
-        # python manage.py seed transcript --hgnc <path> --mane <path> 
-        # --mane_ext_id <str> --mane_release <str> --gff <path> --g2refseq <path> 
+        # python manage.py seed transcript --hgnc <path> --mane <path>
+        # --mane_ext_id <str> --mane_release <str> --gff <path> --g2refseq <path>
         # --g2refseq_ext_id <str> --markname <path> --markname_ext_id <str>
         # --hgmd_release_label <str> --refgenome <ref_genome_version> --error
         elif command == "transcript":
@@ -282,13 +284,7 @@ class Command(BaseCommand):
                 ]
             )
 
-            self._validate_ext_ids(
-                [
-                    mane_ext_id,
-                    g2refseq_ext_id,
-                    markname_ext_id
-                ]
-            )
+            self._validate_ext_ids([mane_ext_id, g2refseq_ext_id, markname_ext_id])
 
             error_log = kwargs.get("error_log", False)
 
@@ -304,7 +300,7 @@ class Command(BaseCommand):
                 markname_ext_id,
                 hgmd_release_label,
                 ref_genome,
-                error_log
+                error_log,
             )
 
             print("Seed transcripts completed.")

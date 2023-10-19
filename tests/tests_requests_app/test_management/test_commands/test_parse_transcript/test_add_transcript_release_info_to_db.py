@@ -2,12 +2,19 @@ from django.test import TestCase
 
 import numpy as np
 
-from requests_app.models import TranscriptSource, TranscriptFile, TranscriptRelease, \
-    TranscriptReleaseTranscriptFile
-from requests_app.management.commands._parse_transcript import \
-    _add_transcript_release_info_to_db
-from tests.tests_requests_app.test_management.test_commands.test_insert_panel.test_insert_gene import \
-    len_check_wrapper, value_check_wrapper
+from requests_app.models import (
+    TranscriptSource,
+    TranscriptFile,
+    TranscriptRelease,
+    TranscriptReleaseTranscriptFile,
+)
+from requests_app.management.commands._parse_transcript import (
+    _add_transcript_release_info_to_db,
+)
+from tests.tests_requests_app.test_management.test_commands.test_insert_panel.test_insert_gene import (
+    len_check_wrapper,
+    value_check_wrapper,
+)
 
 
 class TestAddTranscriptRelease_FromScratch(TestCase):
@@ -16,6 +23,7 @@ class TestAddTranscriptRelease_FromScratch(TestCase):
     and supporting file IDs to the database.
     First test if it successfully adds new data to an entirely empty starting db.
     """
+
     def test_basic_add_transcript_release(self):
         """
         Add to an empty db
@@ -28,9 +36,8 @@ class TestAddTranscriptRelease_FromScratch(TestCase):
         ref_genome = "37"
         data = {"mane": "file-1357", "another_mane": "file-101010"}
 
-        _add_transcript_release_info_to_db(source, version, ref_genome,
-                                           data)
-        
+        _add_transcript_release_info_to_db(source, version, ref_genome, data)
+
         sources = TranscriptSource.objects.all()
         files = TranscriptFile.objects.all()
         releases = TranscriptRelease.objects.all()
@@ -53,12 +60,21 @@ class TestAddTranscriptRelease_FromScratch(TestCase):
         err += value_check_wrapper(source.source, "source name", "MANE Select")
         err += value_check_wrapper(file_1.file_id, "file ID 1", "file-1357")
         err += value_check_wrapper(file_2.file_id, "file ID 2", "file-101010")
-        err += value_check_wrapper(release.external_release_version, "release",
-                                   "v1.2.3")
-        err += value_check_wrapper(rel_file_link_1.transcript_release, "release-file link 1", release)
-        err += value_check_wrapper(rel_file_link_2.transcript_release, "release-file link 2", release)
-        err += value_check_wrapper(rel_file_link_1.transcript_file, "release-file link 1", file_1)
-        err += value_check_wrapper(rel_file_link_2.transcript_file, "release-file link 2", file_2)
+        err += value_check_wrapper(
+            release.external_release_version, "release", "v1.2.3"
+        )
+        err += value_check_wrapper(
+            rel_file_link_1.transcript_release, "release-file link 1", release
+        )
+        err += value_check_wrapper(
+            rel_file_link_2.transcript_release, "release-file link 2", release
+        )
+        err += value_check_wrapper(
+            rel_file_link_1.transcript_file, "release-file link 1", file_1
+        )
+        err += value_check_wrapper(
+            rel_file_link_2.transcript_file, "release-file link 2", file_2
+        )
 
         errors = "".join(err)
         assert not errors, errors
@@ -71,14 +87,11 @@ class TestAddTranscriptRelease_ErrorsOnVersionRepeats(TestCase):
     If a transcript release already exists in the DB for the source being
     processed, it should fetch instead of creating.
     """
+
     def setUp(self) -> None:
-        self.source = TranscriptSource.objects.create(
-            source="HGMD"
-        )
+        self.source = TranscriptSource.objects.create(source="HGMD")
         self.release = TranscriptRelease.objects.create(
-            source=self.source,
-            external_release_version="v1.0.5",
-            reference_genome="37"
+            source=self.source, external_release_version="v1.0.5", reference_genome="37"
         )
         pass
 
@@ -93,7 +106,6 @@ class TestAddTranscriptRelease_ErrorsOnVersionRepeats(TestCase):
         ref_genome = "37"
         data = {"mane": "file-1357", "another_mane": "file-101010"}
 
-        _add_transcript_release_info_to_db(source, version, ref_genome,
-                                           data)
+        _add_transcript_release_info_to_db(source, version, ref_genome, data)
         results = TranscriptRelease.objects.all()
         assert len(results) == 1

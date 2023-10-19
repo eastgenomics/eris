@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Panel(models.Model):
     """Defines a single internal panel"""
 
@@ -329,16 +330,15 @@ class TranscriptRelease(models.Model):
     for example, MANE release 1.0, or a specific HGMD dump
     """
 
-    source = models.ForeignKey(TranscriptSource,
-                               verbose_name="Transcript source id",
-                               on_delete=models.PROTECT,
-                               default=None)
-    
+    source = models.ForeignKey(
+        TranscriptSource,
+        verbose_name="Transcript source id",
+        on_delete=models.PROTECT,
+        default=None,
+    )
+
     external_release_version = models.CharField(
-        verbose_name="Transcript Release",
-        max_length=255,
-        null=True,
-        default=None
+        verbose_name="Transcript Release", max_length=255, null=True, default=None
     )
 
     created = models.DateTimeField(
@@ -356,30 +356,27 @@ class TranscriptRelease(models.Model):
     class Meta:
         db_table = "transcript_release"
         # stop people reusing the same release version
-        unique_together = ['source', 'external_release_version', 'reference_genome']
+        unique_together = ["source", "external_release_version", "reference_genome"]
 
     def __str__(self):
         return str(self.id)
-    
+
 
 class TranscriptFile(models.Model):
     """
     Files used to define a specific release of a transcript source -
     for example, MANE release 1.0
     """
-    
+
     file_id = models.CharField(
         verbose_name="File ID in external storage",
         max_length=255,
         null=True,
-        default=None
+        default=None,
     )
 
     file_type = models.CharField(
-        verbose_name="File type",
-        max_length=255,
-        null=True,
-        default=None
+        verbose_name="File type", max_length=255, null=True, default=None
     )
 
     class Meta:
@@ -393,15 +390,11 @@ class TranscriptReleaseTranscriptFile(models.Model):
     """Links transcript releases to the file(s) that characterise them"""
 
     transcript_release = models.ForeignKey(
-        TranscriptRelease,
-        verbose_name="Transcript release",
-        on_delete=models.PROTECT
+        TranscriptRelease, verbose_name="Transcript release", on_delete=models.PROTECT
     )
 
     transcript_file = models.ForeignKey(
-        TranscriptFile,
-        verbose_name="Transcript release",
-        on_delete=models.PROTECT
+        TranscriptFile, verbose_name="Transcript release", on_delete=models.PROTECT
     )
 
     class Meta:
@@ -436,15 +429,11 @@ class TranscriptReleaseTranscript(models.Model):
     """Defines the link between a single transcript and a single release"""
 
     transcript = models.ForeignKey(
-        Transcript,
-        verbose_name="Transcript",
-        on_delete=models.CASCADE
+        Transcript, verbose_name="Transcript", on_delete=models.CASCADE
     )
 
     release = models.ForeignKey(
-        TranscriptRelease,
-        verbose_name="Transcript release",
-        on_delete=models.CASCADE
+        TranscriptRelease, verbose_name="Transcript release", on_delete=models.CASCADE
     )
 
     # match_version=True means the transcript WITH VERSION matches the
@@ -475,7 +464,6 @@ class TranscriptReleaseTranscript(models.Model):
         verbose_name="created",
         auto_now_add=True,
     )
-
 
     class Meta:
         db_table = "transcript_release_link"
