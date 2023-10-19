@@ -172,6 +172,7 @@
                   <tr>
                     <th scope="col">HGNC ID</th>
                     <th scope="col">Gene Symbol</th>
+                    <th scope="col">Active</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -179,6 +180,11 @@
                     <tr>
                         <td><a href="{% url 'gene' pg.gene_id %}">{{ pg.gene_id__hgnc_id }}</a></td>
                         <td>{{ pg.gene_id__gene_symbol }}</td>
+                        {% if pg.active %}
+                        <td><span class="badge text-bg-success">Active</span></td>
+                        {% else %}
+                        <td><span class="badge text-bg-danger">Inactive</span></td>
+                        {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>

@@ -10,7 +10,7 @@
     </div>
     <div class="row my-2">
         <div class="col"> <!-- form -->
-            <form action="{% url 'history' %}" method="post">
+            <form action="{% url 'history' %}" method="post" id="historyForm">
                 {% csrf_token %}
                 <select class="form-select" aria-label="default select example" name="history selection">
                     {% if 'clinical indications' in selected %}
@@ -60,7 +60,9 @@
                     </label>
                 </div>
                 {% endif %}
-                <button type="submit" class="btn btn-primary btn-sm mt-2">Submit</button>
+                <button type="submit" class="btn btn-primary btn-sm mt-2">Submit
+                    <span class="spinner-border spinner-border-sm ml-2 visually-hidden" aria-hidden="true"></span>
+                </button>
             </form> <!-- end form -->
         </div>
     </div>
@@ -166,7 +168,14 @@
 {% block script %}
 <script>
     $(document).ready(function () {
+        // make table a DataTable (sortable and searchable)
         new DataTable('#historyTable');
+
+        // disable form submit button when form submitted, prevent double submission
+        $('#historyForm').submit(function() {
+            $(this).find('button[type="submit"]').prop('disabled', true);
+            $(this).find('button[type="submit"]').find('.visually-hidden').removeClass('visually-hidden');
+        });
     });
 </script>
 {% endblock %}

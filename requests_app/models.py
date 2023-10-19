@@ -534,6 +534,11 @@ class PanelGene(models.Model):
         default=False,
     )
 
+    # needed for backward deactivation because deletion of panel-gene link is probably not the best
+    active = models.BooleanField(
+        verbose_name="Active",
+    )
+
     class Meta:
         db_table = "panel_gene"
 

@@ -72,6 +72,9 @@ class TestBackwardDeactivation(TestCase):
         assert (
             ClinicalIndicationPanelHistory.objects.count() == 1
         )  # there should be one history recorded
+        assert (
+            self.first_clinical_indication_panel.current == False
+        )  # active status should be False
 
     def test_that_link_will_not_be_flagged_if_exist(self):
         """
@@ -90,6 +93,9 @@ class TestBackwardDeactivation(TestCase):
         self.first_clinical_indication_panel.refresh_from_db()
 
         assert self.first_clinical_indication_panel.pending == False
+        assert (
+            self.first_clinical_indication_panel.current == True
+        )  # link should still be active
 
 
 class TestFlagClinicalIndicationPanelForReview(TestCase):
