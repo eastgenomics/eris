@@ -190,6 +190,25 @@ def _get_td_version(filename: str) -> str | None:
         print(f"TD version not found in filename {filename}")
         return None
 
+def _check_td_version_valid(td_version, latest_db_version, force):
+    """
+    Compares the current TD upload's version to the latest in the 
+    database. Causes exceptions to raise if the current TD upload
+    is for an old version of the test directory, relative to what's
+    in Eris already.
+    """
+    if not latest_db_version or force:
+        pass
+    else:
+        # if currently imported TD version is lower than latest TD version in db
+        # then abort
+        if sortable_version(td_version) <= sortable_version(
+            latest_db_version.td_version
+        ):
+            raise Exception(
+                f"TD version {td_version} lower than one in db {normalize_version(
+                    latest_db_version.td_version)}. Abdandoning import."
+            )
 
 def _retrieve_panel_from_pa_id(ci_code: str, pa_id: str) -> Panel | None:
     """
@@ -571,7 +590,7 @@ def _update_ci_panel_links(cip_instance, td_version, td_source,
         if sortable_version(td_version) >= sortable_version(
             cip_instance.td_version
         ):
-            # take a note of the change
+            # take a note of the change in td version
             ClinicalIndicationPanelHistory.objects.create(
                 clinical_indication_panel_id=cip_instance.id,
                 note=History.clinical_indication_panel_metadata_changed(
@@ -584,7 +603,7 @@ def _update_ci_panel_links(cip_instance, td_version, td_source,
             cip_instance.td_version = sortable_version(td_version)
 
         if cip_instance.config_source != config_source:
-            # take a note of the change
+            # take a note of the change in config source
             ClinicalIndicationPanelHistory.objects.create(
                 clinical_indication_panel_id=cip_instance.id,
                 note=History.clinical_indication_panel_metadata_changed(
@@ -608,7 +627,7 @@ def _update_ci_superpanel_links(cip_instance, td_version, td_source,
         if sortable_version(td_version) >= sortable_version(
             cip_instance.td_version
         ):
-            # take a note of the change
+            # take a note of the change in test directory version
             ClinicalIndicationSuperPanelHistory.objects.create(
                 clinical_indication_panel_id=cip_instance.id,
                 note=History.clinical_indication_panel_metadata_changed(
@@ -621,7 +640,7 @@ def _update_ci_superpanel_links(cip_instance, td_version, td_source,
             cip_instance.td_version = sortable_version(td_version)
 
         if cip_instance.config_source != config_source:
-            # take a note of the change
+            # take a note of the change in config source
             ClinicalIndicationSuperPanelHistory.objects.create(
                 clinical_indication_panel_id=cip_instance.id,
                 note=History.clinical_indication_panel_metadata_changed(
@@ -693,6 +712,75 @@ def _attempt_ci_superpanel_creation(ci_instance, superpanel_record, td_version,
 
     return cip_instance, cip_created
 
+def _flag_panels_removed_from_test_directory(ci_instance, panels, td_source):
+    """
+    For a clinical indication, finds any pre-existing links to Panels and
+    checks that each Panel is still in the test directory.
+    If the Panel isn't in the test directory anymore, it sets it to Pending and logs
+    information in history tables.
+    """
+    ci_panels = ClinicalIndicationPanel.objects.filter(
+        clinical_indication_id__r_code=ci_instance.r_code,
+        current=True)
+
+    for cip in ci_panels:
+        associated_panel = Panel.objects.get(id=cip.panel_id)
+
+        # if for the clinical indication,
+        # the associated panel association is not in test directory
+        # flag for review
+        if (
+            associated_panel.external_id
+            and associated_panel.external_id not in panels
+        ):
+            with transaction.atomic():
+                cip.pending = True
+                cip.current = False
+                cip.save()
+
+                ClinicalIndicationPanelHistory.objects.create(
+                    clinical_indication_panel_id=cip.id,
+                    note=History.flag_clinical_indication_panel(
+                        "ClinicalIndicationPanel does not exist in TD"
+                    ),
+                    user=td_source,
+                )
+
+def _flag_superpanels_removed_from_test_directory(ci_instance, panels, td_source):
+    """
+    For a clinical indication, finds any pre-existing links to SuperPanels and
+    checks that each SuperPanel is still in the test directory.
+    If a SuperPanel isn't in the test directory anymore, it sets it to Pending and logs
+    information in history tables.
+    """
+    ci_superpanels = ClinicalIndicationSuperPanel.objects.filter(
+        clinical_indication__r_code=ci_instance.r_code,
+        current=True)
+
+    for cip in ci_superpanels:
+        # grab associated panel
+        associated_panel = SuperPanel.objects.get(id=cip.panel__pk)
+
+        # if for the clinical indication
+        # the associated panel association is not in test directory
+        # flag for review
+        if (
+            associated_panel.external_id
+            and associated_panel.external_id not in panels
+        ):
+            with transaction.atomic():
+                cip.pending = True
+                cip.current = False
+                cip.save()
+
+                ClinicalIndicationSuperPanelHistory.objects.create(
+                    clinical_indication_panel_id=cip.id,
+                    note=History.flag_clinical_indication_panel(
+                        "ClinicalIndicationSuperPanel does not exist in TD"
+                    ),
+                    user=td_source,
+                )
+
 @transaction.atomic
 def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
     """This function insert TD data into DB
@@ -715,21 +803,9 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
     td_version: str = _get_td_version(td_source)
     assert td_version, f"Cannot parse TD version {td_version}"
 
-    # fetch latest TD version in database
+    # check the test directory upload isn't for an older version
     latest_td_version_in_db = _fetch_latest_td_version()
-
-    if not latest_td_version_in_db or force:
-        pass
-    else:
-        # if currently imported TD version is lower than latest TD version in db
-        # then abort
-        if sortable_version(td_version) <= sortable_version(
-            latest_td_version_in_db.td_version
-        ):
-            raise Exception(
-                f"TD version {td_version} lower than one in db {normalize_version(
-                    latest_td_version_in_db.td_version)}. Abdandoning import."
-            )
+    _check_td_version_valid(td_version, latest_td_version_in_db, force)
 
     all_indication: list[dict] = json_data["indications"]
 
@@ -779,11 +855,6 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
                     pa_id,
                 )
 
-                super_panel_record: SuperPanel = _retrieve_superpanel_from_pa_id(
-                    indication["code"],
-                    pa_id
-                )
-
                 # if we import the same version of TD but with different config source:
                 if panel_record:
                     cip_instance, cip_created = \
@@ -792,6 +863,12 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
                     if not cip_created:
                         _update_ci_panel_links(cip_instance, td_version, td_source,
                            json_data["config_source"])
+                
+                # for PA panel ids, retrieve latest version matching SuperPanel records
+                super_panel_record: SuperPanel = _retrieve_superpanel_from_pa_id(
+                    indication["code"],
+                    pa_id
+                )
 
                 if super_panel_record:
                     cip_instance, cip_created = \
@@ -803,45 +880,20 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
                         _update_ci_superpanel_links(cip_instance, td_version, td_source,
                            json_data["config_source"])
                         
-                if not panel_record or super_panel_record:
-                    # No panel record exist
-                    # e.g. panel id 489 has been retired
-                    print(
-                        f"{indication['code']}: No Panel or SuperPanel record 
-                        has panelapp ID {pa_id}"
-                    )
-                    pass
-
-            #TODO: ensure SuperPanels added too
-
-            # deal with change in clinical indication-panel interaction
-            # e.g. clinical indication R1 changed from panel 1 to panel 2
-            for cip in ClinicalIndicationPanel.objects.filter(
-                clinical_indication_id__r_code=ci_instance.r_code,
-                current=True,
-            ):
-                # grab associated panel
-                associated_panel = Panel.objects.get(id=cip.panel_id)
-
-                # if for the clinical indication
-                # the associated panel association is not in test directory
-                # flag for review
-                if (
-                    associated_panel.external_id
-                    and associated_panel.external_id not in indication["panels"]
-                ):
-                    with transaction.atomic():
-                        cip.pending = True
-                        cip.current = False
-                        cip.save()
-
-                        ClinicalIndicationPanelHistory.objects.create(
-                            clinical_indication_panel_id=cip.id,
-                            note=History.flag_clinical_indication_panel(
-                                "ClinicalIndicationPanel does not exist in TD"
-                            ),
-                            user=td_source,
+                if not panel_record:
+                    if not super_panel_record:
+                        # No record exists of this panel/superpanel
+                        # e.g. panel id 489 has been retired
+                        print(
+                            f"{indication['code']}: No Panel or SuperPanel record 
+                            has panelapp ID {pa_id}"
                         )
+                        pass
+
+            # deal with change in clinical indication-panel/superpanel interaction
+            # e.g. clinical indication R1 changed from panel 1 to panel 2
+            _flag_panels_removed_from_test_directory(ci_instance, indication["panels"], td_source)
+            _flag_superpanels_removed_from_test_directory(ci_instance, indication["panels"], td_source)
 
         if hgnc_list:
             _make_panels_from_hgncs(json_data, ci_instance, hgnc_list)
