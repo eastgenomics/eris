@@ -159,17 +159,20 @@ class Command(BaseCommand):
                     )
 
                 # parse data from requested current PanelApp panels
-                panel, superpanel = get_panel(panel_id, panel_version)
+                panel_data, is_superpanel = get_panel(panel_id, panel_version)
 
-                if not panel or superpanel:
+                if not panel_data:
                     print(
                         f"Fetching panel id: {panel_id} version: {panel_version} failed"
                     )
                     raise ValueError("Panel specified does not exist")
-                panel.panel_source = "PanelApp"  # manual addition of source
+                panel_data.panel_source = "PanelApp"  # manual addition of source
 
-                panels = [panel]
-                superpanels = [superpanel]
+                if is_superpanel:
+                    superpanels = [panel_data]
+                else:
+                    panels = [panel_data]
+                
 
             if not test_mode:
                 # not printing amounts because there are some duplicates now,

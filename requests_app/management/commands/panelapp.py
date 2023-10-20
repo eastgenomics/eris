@@ -125,8 +125,23 @@ def _get_all_panel(signed_off: bool = True) -> list[dict]:
     return all_panels
 
 
+def _check_superpanel_status(response: requests.Response) -> bool:
+    """
+    From the response data for a PanelApp panel API request,
+    work out whether the panel is a standard panel or superpanel.
+    Returns True if superpanel, otherwise False.
+    """
+    is_superpanel = False
+    data = response.json()
+    for i in data["types"]:
+        if i["name"] == "Super Panel":
+            is_superpanel = True
+    
+    return is_superpanel
+
+
 def get_panel(panel_num: int, version: float = None) -> \
-    PanelClass | SuperPanelClass:
+    tuple[PanelClass | SuperPanelClass, bool]:
     """
     Function to get individual panel and panel version
 
@@ -146,12 +161,12 @@ def get_panel(panel_num: int, version: float = None) -> \
     if response.status_code != 200:
         return None
 
-    data = response.json()
-    for i in data["types"]:
-        if i["name"] == "Super Panel":
-            return SuperPanelClass(**response.json()), True
+    is_superpanel = _check_superpanel_status(response)
 
-    return PanelClass(**response.json()), False #TODO: check this return
+    if not is_superpanel:
+        return PanelClass(**response.json()), is_superpanel
+    else:
+        return SuperPanelClass(**response.json()), is_superpanel
 
 
 def fetch_all_panels() -> tuple[list[PanelClass], list[SuperPanelClass]]:
@@ -181,6 +196,5 @@ def fetch_all_panels() -> tuple[list[PanelClass], list[SuperPanelClass]]:
                 superpanels.append(panel_data)
             else:
                 panels.append(panel_data)
-            panels.append(panel_data)
 
     return panels, superpanels
