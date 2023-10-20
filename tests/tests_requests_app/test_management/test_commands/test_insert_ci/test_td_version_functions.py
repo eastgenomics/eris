@@ -17,6 +17,11 @@ from tests.tests_requests_app.test_management.test_commands.test_insert_panel.te
 
 
 class TestFetchLatestTdVersion_OlderPanel(TestCase):
+    """
+    Check that when the latest td version is in the Panel,
+    the data is correctly returned
+    EXPECT: ClinicalIndicationPanel's td version is returned as correct
+    """
     def setUp(self) -> None:
         self.ci = ClinicalIndication.objects.create(r_code="R100.1",
                            name="An illness",
@@ -52,12 +57,22 @@ class TestFetchLatestTdVersion_OlderPanel(TestCase):
         )
     
     def test_panel_older_than_superpanel(self):
+        """
+        Check that when the latest td version is in the Panel,
+        the data is correctly returned
+        EXPECT: ClinicalIndicationPanel's td version is returned as correct
+        """
         latest_td = _fetch_latest_td_version()
 
         assert latest_td == sortable_version("3")
 
 
 class TestFetchLatestTdVersion_OlderSuperPanel(TestCase):
+    """
+    Check that when the latest td version is in the SuperPanel,
+    the data is correctly returned
+    EXPECT: ClinicalIndicationSuperPanel's td version is returned as correct
+    """
     def setUp(self) -> None:
         self.ci = ClinicalIndication.objects.create(r_code="R100.1",
                            name="An illness",
@@ -93,12 +108,22 @@ class TestFetchLatestTdVersion_OlderSuperPanel(TestCase):
         )
     
     def test_superpanel_older_than_panel(self):
+        """
+        Check that when the latest td version is in the SuperPanel,
+        the data is correctly returned
+        EXPECT: ClinicalIndicationSuperPanel's td version is returned as correct
+        """
         latest_td = _fetch_latest_td_version()
 
         assert latest_td == sortable_version("4")
 
 
 class TestFetchLatestTdVersion_PanelOnly(TestCase):
+    """
+    Check that when there is no SuperPanel data in the db,
+    the td version in the panel-related data is correctly returned
+    EXPECT: ClinicalIndicationPanel's td version is returned as correct
+    """
     def setUp(self) -> None:
         self.ci = ClinicalIndication.objects.create(r_code="R100.1",
                            name="An illness",
@@ -120,12 +145,22 @@ class TestFetchLatestTdVersion_PanelOnly(TestCase):
         )
     
     def test_only_panel_exists(self):
+        """
+        Check that when there is no SuperPanel data in the db,
+        the td version in the panel-related data is correctly returned
+        EXPECT: ClinicalIndicationPanel's td version is returned as correct
+        """
         latest_td = _fetch_latest_td_version()
 
         assert latest_td == sortable_version("3")
 
 
 class TestFetchLatestTdVersion_SuperPanelOnly(TestCase):
+    """
+    Check that when there is no Panel data in the db,
+    the td version in the panel-related data is correctly returned
+    EXPECT: ClinicalIndicationSuperPanel's td version is returned as correct
+    """
     def setUp(self) -> None:
         self.ci = ClinicalIndication.objects.create(r_code="R100.1",
                            name="An illness",
@@ -147,12 +182,22 @@ class TestFetchLatestTdVersion_SuperPanelOnly(TestCase):
         )
     
     def test_only_panel_exists(self):
+        """
+        Check that when there is no Panel data in the db,
+        the td version in the panel-related data is correctly returned
+        EXPECT: ClinicalIndicationSuperPanel's td version is returned as correct
+        """
         latest_td = _fetch_latest_td_version()
 
         assert latest_td == sortable_version("3")
 
 
 class TestFetchLatestTdVersion_NoDataAvailable(TestCase):
+    """
+    Check that when there is no data in the db for panels or superpanels,
+    a None value is returned
+    EXPECT: td version returns as None
+    """
     def setUp(self) -> None:
         pass
     
