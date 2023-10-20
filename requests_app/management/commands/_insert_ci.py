@@ -819,7 +819,6 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
 
     # fetch TD version from filename
     td_version: str = _get_td_version(td_source)
-    print(td_version)
     assert td_version, f"Cannot parse TD version {td_version}"
 
     # check the test directory upload isn't for an older version
