@@ -504,9 +504,9 @@ def _fetch_latest_td_version() -> str:
     if not panels_latest_td and not superpanels_latest_td:
         db_latest_td = None
     elif not panels_latest_td:
-        db_latest_td = sortable_version(superpanels_latest_td)
+        db_latest_td = sortable_version(superpanels_latest_td.td_version)
     elif not superpanels_latest_td:
-        db_latest_td = sortable_version(panels_latest_td)
+        db_latest_td = sortable_version(panels_latest_td.td_version)
     else:
         db_latest_td = max([sortable_version(panels_latest_td.td_version),
                             sortable_version(superpanels_latest_td.td_version)])
@@ -803,6 +803,7 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
 
     # fetch TD version from filename
     td_version: str = _get_td_version(td_source)
+    print(td_version)
     assert td_version, f"Cannot parse TD version {td_version}"
 
     # check the test directory upload isn't for an older version

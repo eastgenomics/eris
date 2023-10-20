@@ -253,8 +253,6 @@ class Command(BaseCommand):
                 "Please resolve these through the review platform and try again."
             )
 
-        #TODO: work out how to assemble super_panel data, and output it 
-        # in a way which looks OK in a TSV
         ci_panels, relevant_panels = self._get_relevant_ci_panels()
         ci_superpanels, relevant_superpanels = self._get_relevant_ci_superpanels()
 
