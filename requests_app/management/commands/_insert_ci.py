@@ -203,28 +203,25 @@ def _check_td_version_valid(td_version, latest_db_version, force):
         # if currently imported TD version is lower than latest TD version in db
         # then abort
         if sortable_version(td_version) <= sortable_version(
-            latest_db_version.td_version
+            latest_db_version
         ):
             raise Exception(
-                f"TD version {td_version} lower than one in db "
-                f"{normalize_version(latest_db_version.td_version)}. Abdandoning import."
+                f"TD version {normalize_version(td_version)} is less than or the same as"
+                f" the version currently in the db, {normalize_version(latest_db_version)}."
+                f" Abdandoning import."
             )
 
 def _retrieve_panel_from_pa_id(ci_code: str, pa_id: str) -> Panel | None:
     """
     Retrieve a single Panel record based on PA panel id.
-
+    We order multiple Panel records by version and select the highest,
+     to account for multiple entries.
     :param: ci_code [str]: clinical indication code
     :param: pa_id [str]: panelapp id
 
     returns:
         panel_instance [Panel record]
     """
-
-    # retrieve Panel records directly created from PA panels with that external_id
-    # there might be multiple Panel records with the same external_id
-    # but different versions / ids thus we order by version
-
     panel_instance: Panel = (
         Panel.objects.filter(external_id=pa_id).order_by("-panel_version").first()
     )
@@ -238,24 +235,20 @@ def _retrieve_panel_from_pa_id(ci_code: str, pa_id: str) -> Panel | None:
 def _retrieve_superpanel_from_pa_id(ci_code: str, pa_id: str) -> SuperPanel | None:
     """
     Retrieve a single SuperPanel record based on PA panel id.
-
+    We order multiple SuperPanel records by version and select the highest,
+     to account for multiple entries.
     :param: ci_code [str]: clinical indication code
     :param: pa_id [str]: panelapp id
 
     returns:
         panel_instance [SuperPanel record]
     """
-
-    # retrieve SuperPanel records directly created from PA panels with that external_id
-    # there might be multiple SuperPanel records with the same external_id
-    # but different versions / ids thus we order by version
-
     panel_instance: SuperPanel = (
         SuperPanel.objects.filter(external_id=pa_id).order_by("-panel_version").first()
     )
 
     if not panel_instance:
-        print(f"{ci_code}: No Panel record has panelapp ID {pa_id}")
+        print(f"{ci_code}: No SuperPanel record has panelapp ID {pa_id}")
         return None
 
     return panel_instance
@@ -511,12 +504,12 @@ def _fetch_latest_td_version() -> str:
     if not panels_latest_td and not superpanels_latest_td:
         db_latest_td = None
     elif not panels_latest_td:
-        db_latest_td = superpanels_latest_td
+        db_latest_td = sortable_version(superpanels_latest_td)
     elif not superpanels_latest_td:
-        db_latest_td = panels_latest_td
+        db_latest_td = sortable_version(panels_latest_td)
     else:
-        db_latest_td = max([panels_latest_td,
-                             superpanels_latest_td])
+        db_latest_td = max([sortable_version(panels_latest_td.td_version),
+                            sortable_version(superpanels_latest_td.td_version)])
     
     return db_latest_td
 
