@@ -206,8 +206,8 @@ def _check_td_version_valid(td_version, latest_db_version, force):
             latest_db_version.td_version
         ):
             raise Exception(
-                f"TD version {td_version} lower than one in db {normalize_version(
-                    latest_db_version.td_version)}. Abdandoning import."
+                f"TD version {td_version} lower than one in db "
+                f"{normalize_version(latest_db_version.td_version)}. Abdandoning import."
             )
 
 def _retrieve_panel_from_pa_id(ci_code: str, pa_id: str) -> Panel | None:
@@ -885,8 +885,8 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
                         # No record exists of this panel/superpanel
                         # e.g. panel id 489 has been retired
                         print(
-                            f"{indication['code']}: No Panel or SuperPanel record 
-                            has panelapp ID {pa_id}"
+                            f"{indication['code']}: No Panel or SuperPanel record "
+                            f"has panelapp ID {pa_id}"
                         )
                         pass
 

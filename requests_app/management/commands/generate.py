@@ -3,6 +3,7 @@ python manage.py generate --help
 """
 from requests_app.models import (
     ClinicalIndicationPanel,
+    ClinicalIndicationSuperPanel,
     PanelGene,
     Transcript,
 )
@@ -76,6 +77,32 @@ class Command(BaseCommand):
             ci_panels[row["clinical_indication_id__r_code"]].append(row)
 
         return ci_panels, relevant_panels
+
+
+    def _get_relevant_ci_superpanels(self) -> tuple[dict[str, list], list]:
+        """
+        Retrieve relevant superpanels and CI-superpanels from the database
+        These will be output in the final file.
+        Returns CI superpanels and a list of relevant superpanels.
+        """
+        relevant_panels = set()
+
+        ci_panels = collections.defaultdict(list)
+
+        for row in ClinicalIndicationSuperPanel.objects.filter(
+            current=True, pending=False
+        ).values(
+            "clinical_indication_id__r_code",
+            "clinical_indication_id__name",
+            "superpanel__pk",
+            "superpanel__panel_name",
+            "superpanel__panel_version",
+        ):
+            relevant_panels.add(row["panel_id"])
+            ci_panels[row["clinical_indication___r_code"]].append(row)
+
+        return ci_panels, relevant_panels
+
 
     def _get_relevant_panel_genes(self, relevant_panels: list[int]) -> dict[int, str]:
         """
@@ -154,8 +181,18 @@ class Command(BaseCommand):
                 "Some ClinicalIndicationPanel table values require manual review. "
                 "Please resolve these through the review platform and try again."
             )
+        
+        # block generation of genepanel.tsv if ANY data is awaiting review (pending=True)
+        if ClinicalIndicationSuperPanel.objects.filter(pending=True).exists():
+            raise ValueError(
+                "Some ClinicalIndicationSuperPanel table values require manual review. "
+                "Please resolve these through the review platform and try again."
+            )
 
+        #TODO: work out how to assemble super_panel data, and output it 
+        # in a way which looks OK in a TSV
         ci_panels, relevant_panels = self._get_relevant_ci_panels()
+        ci_panels, relevant_panels = self._get_relevant_ci_superpanels()
         panel_genes = self._get_relevant_panel_genes(relevant_panels)
 
         results = self._format_output_data_genepanels(ci_panels, panel_genes, rnas)

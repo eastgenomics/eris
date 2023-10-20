@@ -146,7 +146,7 @@ def get_panel(panel_num: int, version: float = None) -> \
     if response.status_code != 200:
         return None
 
-    data = json.loads(response)
+    data = response.json()
     for i in data["types"]:
         if i["name"] == "Super Panel":
             return SuperPanelClass(**response.json()), True

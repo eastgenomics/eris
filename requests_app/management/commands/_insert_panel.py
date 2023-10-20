@@ -392,9 +392,9 @@ def panel_insert_controller(panels: list[PanelClass], superpanels: \
         panel_instance, _ = _insert_panel_data_into_db(panel, user)
 
     for superpanel in superpanels:
-        child_panels = []
+        child_panel_instances= []
         for panel in superpanel.child_panels:
             child_panel_instance, _ = \
                 _insert_panel_data_into_db(panel, user)
-            child_panels += child_panel_instance
-        _insert_superpanel_into_db(superpanel, child_panels, user)
+            child_panel_instances.append(child_panel_instance)
+        _insert_superpanel_into_db(superpanel, child_panel_instances, user)

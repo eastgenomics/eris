@@ -172,10 +172,12 @@ class Command(BaseCommand):
                 superpanels = [superpanel]
 
             if not test_mode:
-                print(f"Importing {len(panels)} panels into database...")
+                # not printing amounts because there are some duplicates now,
+                # due to how superpanels work
+                print(f"Importing panels into database...")
 
                 # insert panel data into database
-                panel_insert_controller(panels, superpanels)
+                panel_insert_controller(panels, superpanels, user)
 
                 print("Done.")
 
