@@ -494,22 +494,31 @@ def _fetch_latest_td_version() -> str:
     number overall.
     Returns the max number.
     """
-    latest_td_version_in_panels: ClinicalIndicationPanel = (
+    panels_latest_td: ClinicalIndicationPanel = (
         ClinicalIndicationPanel.objects.filter(td_version__isnull=False)
         .order_by("-td_version")
         .first()
     )
 
-    latest_td_version_in_superpanels: ClinicalIndicationSuperPanel = (
+    superpanels_latest_td: ClinicalIndicationSuperPanel = (
         ClinicalIndicationSuperPanel.objects.filter(td_version__isnull=False)
         .order_by("-td_version")
         .first()
     )
 
-    latest_td_version_in_db = max([latest_td_version_in_panels,
-                             latest_td_version_in_superpanels])
+    # get whichever version is highest, accounting for the fact that
+    # either or both could be None (which makes max error out)
+    if not panels_latest_td and not superpanels_latest_td:
+        db_latest_td = None
+    elif not panels_latest_td:
+        db_latest_td = superpanels_latest_td
+    elif not superpanels_latest_td:
+        db_latest_td = panels_latest_td
+    else:
+        db_latest_td = max([panels_latest_td,
+                             superpanels_latest_td])
     
-    return latest_td_version_in_db
+    return db_latest_td
 
 
 def _update_ci_panel_tables_with_new_ci(r_code, td_source, td_version, ci_instance,
@@ -555,7 +564,7 @@ def _update_ci_superpanel_tables_with_new_ci(r_code, td_source, td_version, ci_i
     those panels, again with 'pending = True' to make it "provisional".
     """
     for clinical_indication_superpanel in ClinicalIndicationSuperPanel.objects.filter(
-        clinical_indication_id__r_code=r_code,
+        clinical_indication__r_code=r_code,
         current=True,
     ):
         # flag previous ci-panel link for review because a new ci is created
@@ -629,7 +638,7 @@ def _update_ci_superpanel_links(cip_instance, td_version, td_source,
         ):
             # take a note of the change in test directory version
             ClinicalIndicationSuperPanelHistory.objects.create(
-                clinical_indication_panel_id=cip_instance.id,
+                clinical_indication_superpanel=cip_instance,
                 note=History.clinical_indication_panel_metadata_changed(
                     "td_version",
                     normalize_version(cip_instance.td_version),
@@ -642,7 +651,7 @@ def _update_ci_superpanel_links(cip_instance, td_version, td_source,
         if cip_instance.config_source != config_source:
             # take a note of the change in config source
             ClinicalIndicationSuperPanelHistory.objects.create(
-                clinical_indication_panel_id=cip_instance.id,
+                clinical_indication_superpanel=cip_instance,
                 note=History.clinical_indication_panel_metadata_changed(
                     "config_source",
                     cip_instance.config_source,
@@ -694,7 +703,7 @@ def _attempt_ci_superpanel_creation(ci_instance, superpanel_record, td_version,
         cip_created,
     ) = ClinicalIndicationSuperPanel.objects.get_or_create(
         clinical_indication=ci_instance,
-        panel=superpanel_record,
+        superpanel=superpanel_record,
         defaults={
             "current": True,
             "td_version": sortable_version(td_version),
@@ -705,7 +714,7 @@ def _attempt_ci_superpanel_creation(ci_instance, superpanel_record, td_version,
     if cip_created:
         # if CI-Panel record is created, create a history record
         ClinicalIndicationSuperPanelHistory.objects.create(
-            clinical_indication_panel=cip_instance,
+            clinical_indication_superpanel=cip_instance,
             note=History.clinical_indication_panel_created(),
             user=td_source,
         )
@@ -759,7 +768,7 @@ def _flag_superpanels_removed_from_test_directory(ci_instance, panels, td_source
 
     for cip in ci_superpanels:
         # grab associated panel
-        associated_panel = SuperPanel.objects.get(id=cip.panel__pk)
+        associated_panel = SuperPanel.objects.get(id=cip.superpanel_id)
 
         # if for the clinical indication
         # the associated panel association is not in test directory
@@ -774,7 +783,7 @@ def _flag_superpanels_removed_from_test_directory(ci_instance, panels, td_source
                 cip.save()
 
                 ClinicalIndicationSuperPanelHistory.objects.create(
-                    clinical_indication_panel_id=cip.id,
+                    clinical_indication_panel=cip,
                     note=History.flag_clinical_indication_panel(
                         "ClinicalIndicationSuperPanel does not exist in TD"
                     ),

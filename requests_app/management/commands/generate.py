@@ -4,6 +4,7 @@ python manage.py generate --help
 from requests_app.models import (
     ClinicalIndicationPanel,
     ClinicalIndicationSuperPanel,
+    PanelSuperPanel,
     PanelGene,
     Transcript,
 )
@@ -92,14 +93,14 @@ class Command(BaseCommand):
         for row in ClinicalIndicationSuperPanel.objects.filter(
             current=True, pending=False
         ).values(
-            "clinical_indication_id__r_code",
-            "clinical_indication_id__name",
+            "clinical_indication__r_code",
+            "clinical_indication__name",
             "superpanel__pk",
             "superpanel__panel_name",
             "superpanel__panel_version",
         ):
-            relevant_panels.add(row["panel_id"])
-            ci_panels[row["clinical_indication___r_code"]].append(row)
+            relevant_panels.add(row["superpanel__pk"])
+            ci_panels[row["clinical_indication__r_code"]].append(row)
 
         return ci_panels, relevant_panels
 
@@ -118,6 +119,31 @@ class Command(BaseCommand):
             panel_genes[row["panel_id"]].append(row["gene_id__hgnc_id"])
 
         return panel_genes
+
+    def _get_relevant_superpanel_genes(self, relevant_superpanels: list[int]) \
+        -> dict[int, str]:
+        """
+        Using a list of relevant superpanels,
+        first find the constituent panels,
+        then retrieve the genes from those panels from the PanelGene database.
+        Returns a dict where the key is the superpanel's ID and the values are 
+        lists of genes.
+        """
+        superpanel_genes = collections.defaultdict(list)
+
+        for superpanel_id in relevant_superpanels:
+
+            linked_panel_list = PanelSuperPanel.objects.filter(
+                superpanel__id=superpanel_id
+            )
+            for i in linked_panel_list:
+                genes = PanelGene.objects.filter(
+                    panel=i.panel
+                ).values("gene_id__hgnc_id", "panel_id")
+                for x in genes:
+                    superpanel_genes[superpanel_id].append(x["gene_id__hgnc_id"])
+
+        return superpanel_genes
 
     def _format_output_data_genepanels(
         self, ci_panels: dict[str, list], panel_genes: dict[int, str], rnas: set
@@ -148,6 +174,44 @@ class Command(BaseCommand):
                         [
                             f"{r_code}_{ci_name}",
                             f"{panel_dict['panel_id__panel_name']}_{panel_version}",
+                            hgnc,
+                        ]
+                    )
+        results = sorted(results, key=lambda x: [x[0], x[1], x[2]])
+        return results
+
+    def _format_output_data_genesuperpanels(
+        self, ci_panels: dict[str, list], panel_genes: dict[int, str], rnas: set
+    ) -> list[tuple[str, str, str]]:
+        """
+        Format a list of results ready for writing out to file.
+        Sort the results before returning them.
+        """
+        results = []
+        for r_code, panel_list in ci_panels.items():
+            # for each clinical indication
+            for panel_dict in panel_list:
+                print(panel_dict.keys())
+
+                # for each panel associated with that clinical indication
+                panel_id: str = panel_dict["superpanel__pk"]
+                ci_name: str = panel_dict["clinical_indication__name"]
+                
+                for hgnc in panel_genes[panel_id]:
+                    # for each gene associated with that panel
+                    if hgnc in HGNC_IDS_TO_OMIT or hgnc in rnas:
+                        continue
+
+                    # process the panel version
+                    panel_version: str = (
+                        normalize_version(panel_dict["superpanel__panel_version"])
+                        if panel_dict["superpanel__panel_version"]
+                        else "1.0"
+                    )
+                    results.append(
+                        [
+                            f"{r_code}_{ci_name}",
+                            f"{panel_dict['superpanel__panel_name']}_{panel_version}",
                             hgnc,
                         ]
                     )
@@ -192,10 +256,17 @@ class Command(BaseCommand):
         #TODO: work out how to assemble super_panel data, and output it 
         # in a way which looks OK in a TSV
         ci_panels, relevant_panels = self._get_relevant_ci_panels()
-        ci_panels, relevant_panels = self._get_relevant_ci_superpanels()
-        panel_genes = self._get_relevant_panel_genes(relevant_panels)
+        ci_superpanels, relevant_superpanels = self._get_relevant_ci_superpanels()
 
-        results = self._format_output_data_genepanels(ci_panels, panel_genes, rnas)
+        panel_genes = self._get_relevant_panel_genes(relevant_panels)
+        superpanel_genes = self._get_relevant_superpanel_genes(relevant_superpanels)
+
+        panel_results = self._format_output_data_genepanels(ci_panels, panel_genes, rnas)
+        superpanel_results = self._format_output_data_genesuperpanels(ci_superpanels,
+                                                                superpanel_genes,
+                                                                rnas)
+
+        results = panel_results + superpanel_results
 
         current_datetime = dt.datetime.today().strftime("%Y%m%d")
 
