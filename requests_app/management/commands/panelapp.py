@@ -7,7 +7,7 @@ from panel_requests.settings import PANELAPP_API_URL
 class PanelClass:
     """
     Class for panel data. Default population is by greedy ingestion of all
-    attributes from PanelApp API. However, may also be populated by 
+    attributes from PanelApp API. However, may also be populated by
     SuperPanelClass.
     """
 
@@ -40,22 +40,27 @@ class SuperPanelClass:
         self.types: list[dict] = []
         [setattr(self, key, a[key]) for key in a]
 
-        self.child_panels = self.create_component_panels(self.genes, self.regions)
+        self.child_panels = self.create_component_panels(self.genes,
+                                                         self.regions)
 
     def create_component_panels(self, genes, regions):
         """
         Parse out component-panels from the API call.
-        In a normal panel, the genes and regions are nested under the panel's overall info.
-        But for superpanels, we find the panels by looking in 'panel' under each 
-        constituent gene or region, so we need to reorder everything in parsing.
+        In a normal panel, the genes and regions are nested under the panel's
+        overall info.
+        But for superpanels, we find the panels by looking in 'panel' under
+        each constituent gene or region, so we need to reorder everything
+        in parsing.
         """
         panels = []
 
         for gene in genes:
             parent_panel = gene["panel"]
             panel_id = parent_panel["id"]
-            # fetch this Panel if its in the panel-list already, otherwise, make it
-            component_panel = next((x for x in panels if x.id == panel_id), None)
+            # fetch this Panel if its in the panel-list already, otherwise,
+            # make it
+            component_panel = next((x for x in panels if x.id == panel_id),
+                                   None)
             if component_panel:
                 # append gene to the list associated with this panel
                 component_panel.genes.append(gene)
@@ -74,9 +79,12 @@ class SuperPanelClass:
         for region in regions:
             parent_panel = region["panel"]
             panel_id = parent_panel["id"] 
-            #TODO: how does this handle region(s) duplicated from multiple panels
-            # fetch this Panel if its in the panel-list already, otherwise, make it
-            component_panel = next((x for x in panels if x.id == panel_id), None)
+            #TODO: how does this handle region(s) duplicated from multiple
+            # panels?
+            # fetch this Panel if its in the panel-list already, otherwise,
+            # make it
+            component_panel = next((x for x in panels if x.id == panel_id),
+                                   None)
             if component_panel:
                 # append region to the list associated with this panel
                 component_panel.regions.append(region)
@@ -86,7 +94,7 @@ class SuperPanelClass:
                 component_panel.id = panel_id
                 component_panel.name = parent_panel["name"]
                 component_panel.version = parent_panel["version"]
-                
+
                 # currently only use SuperPanelClass for PanelApp
                 component_panel.panel_source = "PanelApp"
                 # add this region to the panel
@@ -136,7 +144,7 @@ def _check_superpanel_status(response: requests.Response) -> bool:
     for i in data["types"]:
         if i["name"] == "Super Panel":
             is_superpanel = True
-    
+
     return is_superpanel
 
 

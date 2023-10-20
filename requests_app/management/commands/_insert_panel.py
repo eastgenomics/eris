@@ -316,8 +316,8 @@ def _insert_panel_data_into_db(panel: PanelClass, user: str) -> Panel:
     return panel_instance, created
 
 
-def _insert_superpanel_into_db(superpanel: SuperPanelClass, child_panels: list[Panel], 
-                               user: str) -> None:
+def _insert_superpanel_into_db(superpanel: SuperPanelClass, child_panels:\
+                               list[Panel], user: str) -> None:
     """
     Insert data from a parsed SuperPanel.
     This function differs slightly from the one for Panels because:
@@ -341,7 +341,7 @@ def _insert_superpanel_into_db(superpanel: SuperPanelClass, child_panels: list[P
             "test_directory": False,
         },
     )
-    
+
     if created:
         # make links between the SuperPanel and its child panels
         for child in child_panels:
@@ -353,10 +353,11 @@ def _insert_superpanel_into_db(superpanel: SuperPanelClass, child_panels: list[P
             
         # if there are previous SuperPanel(s) with similar external_id,
         # mark previous CI-SuperPanel links as needing review
-        for clinical_indication_superpanel in ClinicalIndicationSuperPanel.objects.filter(
-            superpanel__external_id=panel_external_id,
-            current=True
-        ):
+        for clinical_indication_superpanel in ClinicalIndicationSuperPanel.\
+            objects.filter(
+                superpanel__external_id=panel_external_id,
+                current=True
+                ):
             flag_clinical_indication_superpanel_for_review(
                 clinical_indication_superpanel, "PanelApp"
             )
@@ -367,9 +368,10 @@ def _insert_superpanel_into_db(superpanel: SuperPanelClass, child_panels: list[P
                 "PanelApp"
             )
 
-    # if the superpanel hasn't just been created: the SuperPanel is either brand new,
-    # or it has altered the constituent panels WITHOUT changing SuperPanel name or version - 
-    # this would only happen if there were issues at PanelApp
+    # if the superpanel hasn't just been created: the SuperPanel is either 
+    # brand new, or it has altered the constituent panels WITHOUT changing
+    # SuperPanel name or version - this would only happen if there were
+    # issues at PanelApp
     return superpanel, created
 
 
@@ -379,12 +381,13 @@ def panel_insert_controller(panels: list[PanelClass], superpanels: \
     Carries out coordination of panel creation - Panels and SuperPanels are
     handled differently in the database.
     """
-    # currently, only handle Panel/SuperPanel if the panel data is from PanelApp
+    # currently, only handle Panel/SuperPanel if the panel data is from 
+    # PanelApp
     for panel in panels:
         panel_instance, _ = _insert_panel_data_into_db(panel, user)
 
     for superpanel in superpanels:
-        child_panel_instances= []
+        child_panel_instances = []
         for panel in superpanel.child_panels:
             child_panel_instance, _ = \
                 _insert_panel_data_into_db(panel, user)

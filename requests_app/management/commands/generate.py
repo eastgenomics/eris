@@ -79,7 +79,6 @@ class Command(BaseCommand):
 
         return ci_panels, relevant_panels
 
-
     def _get_relevant_ci_superpanels(self) -> tuple[dict[str, list], list]:
         """
         Retrieve relevant superpanels and CI-superpanels from the database
@@ -126,7 +125,7 @@ class Command(BaseCommand):
         Using a list of relevant superpanels,
         first find the constituent panels,
         then retrieve the genes from those panels from the PanelGene database.
-        Returns a dict where the key is the superpanel's ID and the values are 
+        Returns a dict where the key is the superpanel's ID and the values are
         lists of genes.
         """
         superpanel_genes = collections.defaultdict(list)
@@ -141,7 +140,8 @@ class Command(BaseCommand):
                     panel=i.panel
                 ).values("gene_id__hgnc_id", "panel_id")
                 for x in genes:
-                    superpanel_genes[superpanel_id].append(x["gene_id__hgnc_id"])
+                    superpanel_genes[superpanel_id].append(
+                        x["gene_id__hgnc_id"])
 
         return superpanel_genes
 
@@ -181,7 +181,8 @@ class Command(BaseCommand):
         return results
 
     def _format_output_data_genesuperpanels(
-        self, ci_panels: dict[str, list], panel_genes: dict[int, str], rnas: set
+        self, ci_panels: dict[str, list], panel_genes: dict[int, str],
+        rnas: set
     ) -> list[tuple[str, str, str]]:
         """
         Format a list of results ready for writing out to file.
@@ -196,7 +197,7 @@ class Command(BaseCommand):
                 # for each panel associated with that clinical indication
                 panel_id: str = panel_dict["superpanel__pk"]
                 ci_name: str = panel_dict["clinical_indication__name"]
-                
+
                 for hgnc in panel_genes[panel_id]:
                     # for each gene associated with that panel
                     if hgnc in HGNC_IDS_TO_OMIT or hgnc in rnas:
@@ -204,14 +205,16 @@ class Command(BaseCommand):
 
                     # process the panel version
                     panel_version: str = (
-                        normalize_version(panel_dict["superpanel__panel_version"])
+                        normalize_version(panel_dict
+                                          ["superpanel__panel_version"])
                         if panel_dict["superpanel__panel_version"]
                         else "1.0"
                     )
                     results.append(
                         [
                             f"{r_code}_{ci_name}",
-                            f"{panel_dict['superpanel__panel_name']}_{panel_version}",
+                            f"{panel_dict['superpanel__panel_name']}_"
+                            f"{panel_version}",
                             hgnc,
                         ]
                     )
@@ -245,24 +248,30 @@ class Command(BaseCommand):
                 "Some ClinicalIndicationPanel table values require manual review. "
                 "Please resolve these through the review platform and try again."
             )
-        
-        # block generation of genepanel.tsv if ANY data is awaiting review (pending=True)
+
+        # block generation of genepanel.tsv if ANY data is awaiting review
+        # (pending=True)
         if ClinicalIndicationSuperPanel.objects.filter(pending=True).exists():
             raise ValueError(
-                "Some ClinicalIndicationSuperPanel table values require manual review. "
-                "Please resolve these through the review platform and try again."
+                "Some ClinicalIndicationSuperPanel table values require "
+                "manual review. Please resolve these through the review "
+                "platform and try again."
             )
 
         ci_panels, relevant_panels = self._get_relevant_ci_panels()
-        ci_superpanels, relevant_superpanels = self._get_relevant_ci_superpanels()
+        ci_superpanels, relevant_superpanels = \
+            self._get_relevant_ci_superpanels()
 
         panel_genes = self._get_relevant_panel_genes(relevant_panels)
-        superpanel_genes = self._get_relevant_superpanel_genes(relevant_superpanels)
+        superpanel_genes = self._get_relevant_superpanel_genes(
+            relevant_superpanels)
 
-        panel_results = self._format_output_data_genepanels(ci_panels, panel_genes, rnas)
-        superpanel_results = self._format_output_data_genesuperpanels(ci_superpanels,
-                                                                superpanel_genes,
-                                                                rnas)
+        panel_results = self._format_output_data_genepanels(ci_panels,\
+                                                            panel_genes, rnas)
+        superpanel_results = self._format_output_data_genesuperpanels(
+            ci_superpanels,
+            superpanel_genes,
+            rnas)
 
         results = panel_results + superpanel_results
 

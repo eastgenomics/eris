@@ -72,7 +72,8 @@ class SuperPanel(models.Model):
     )
 
     # metadata
-    panel_name = models.CharField(verbose_name="Superpanel Name", max_length=255)
+    panel_name = models.CharField(verbose_name="Superpanel Name",
+                                  max_length=255)
 
     panel_source = models.CharField(
         verbose_name="superpanel source",
@@ -126,7 +127,7 @@ class SuperPanel(models.Model):
 class PanelSuperPanel(models.Model):
     """
     Defines links between SuperPanels and their constituent Panels.
-    Necessary because a SuperPanel can contain any number of panels, 
+    Necessary because a SuperPanel can contain any number of panels,
     and a Panel could possibly be in multiple SuperPanels.
     """
     panel = models.ForeignKey(
