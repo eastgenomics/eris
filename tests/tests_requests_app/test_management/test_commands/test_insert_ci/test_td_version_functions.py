@@ -205,3 +205,6 @@ class TestFetchLatestTdVersion_NoDataAvailable(TestCase):
         latest_td = _fetch_latest_td_version()
 
         assert latest_td == None
+
+
+#TODO: test '_check_td_version_valid' if concerned

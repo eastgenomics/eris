@@ -190,7 +190,8 @@ def _get_td_version(filename: str) -> str | None:
         print(f"TD version not found in filename {filename}")
         return None
 
-def _check_td_version_valid(td_version, latest_db_version, force):
+def _check_td_version_valid(td_version: str, latest_db_version: str,
+                             force: bool) -> None:
     """
     Compares the current TD upload's version to the latest in the 
     database. Causes exceptions to raise if the current TD upload
@@ -254,7 +255,8 @@ def _retrieve_superpanel_from_pa_id(ci_code: str, pa_id: str) -> SuperPanel | No
     return panel_instance
 
 
-def _retrieve_unknown_metadata_records():
+def _retrieve_unknown_metadata_records() -> \
+    tuple[Confidence, ModeOfInheritance, ModeOfPathogenicity, Penetrance]:
     """
     Retrieve additional metadata records for PanelGene records
 
@@ -514,8 +516,9 @@ def _fetch_latest_td_version() -> str:
     return db_latest_td
 
 
-def _update_ci_panel_tables_with_new_ci(r_code, td_source, td_version, ci_instance,
-                               config_source):
+def _update_ci_panel_tables_with_new_ci(
+        r_code: str, td_source: str, td_version: str, ci_instance: 
+        ClinicalIndication, config_source: str) -> None:
     """
     New clinical indication - the old CI-panel and CI-superpanel entries with the
     same R code, will be set to 'pending = True'. The new CI will be linked to 
@@ -549,8 +552,9 @@ def _update_ci_panel_tables_with_new_ci(r_code, td_source, td_version, ci_instan
         new_clinical_indication_panel.config_source = config_source
         new_clinical_indication_panel.save()
 
-def _update_ci_superpanel_tables_with_new_ci(r_code, td_source, td_version, ci_instance,
-                               config_source):
+def _update_ci_superpanel_tables_with_new_ci(
+        r_code: str, td_source: str, td_version: str, ci_instance:
+        ClinicalIndication, config_source: str) -> None:
     """
     New clinical indication - the old CI-superpanel entries with the
     same R code, will be set to 'pending = True'. The new CI will be linked to 
@@ -582,8 +586,8 @@ def _update_ci_superpanel_tables_with_new_ci(r_code, td_source, td_version, ci_i
         new_clinical_indication_superpanel.config_source = config_source
         new_clinical_indication_superpanel.save()
 
-def _update_ci_panel_links(cip_instance, td_version, td_source,
-                           config_source):
+def _update_ci_panel_links(cip_instance: ClinicalIndicationPanel, td_version:
+                           str, td_source: str, config_source: str) -> None:
     """
     If CI-Panel already exists and the link is the same,
     just update the config source and td version (if different)
@@ -619,8 +623,9 @@ def _update_ci_panel_links(cip_instance, td_version, td_source,
 
         cip_instance.save()
 
-def _update_ci_superpanel_links(cip_instance, td_version, td_source,
-                           config_source):
+def _update_ci_superpanel_links(cip_instance: ClinicalIndicationSuperPanel,
+                                td_version: str, td_source: str,
+                                config_source: str) -> None:
     """
     If CI-SuperPanel already exists and the link is the same,
     just update the config source and td version (if different)
@@ -656,8 +661,12 @@ def _update_ci_superpanel_links(cip_instance, td_version, td_source,
 
         cip_instance.save()
 
-def _attempt_ci_panel_creation(ci_instance, panel_record, td_version,
-                               td_source, config_source):
+def _attempt_ci_panel_creation(ci_instance: ClinicalIndication, panel_record:
+                               Panel, td_version: str, td_source: str,
+                               config_source: str) -> \
+                                tuple[
+                                   ClinicalIndicationPanel, bool
+                                   ]:
     """
     Gets-or-creates a ClinicalIndicationPanel entry.
     If the entry is new, it will log history too.
@@ -685,8 +694,11 @@ def _attempt_ci_panel_creation(ci_instance, panel_record, td_version,
 
     return cip_instance, cip_created
 
-def _attempt_ci_superpanel_creation(ci_instance, superpanel_record, td_version,
-                               td_source, config_source):
+def _attempt_ci_superpanel_creation(ci_instance: ClinicalIndication,
+                                    superpanel_record: SuperPanel, td_version:
+                                    str, td_source: str, config_source:
+                                    str) -> tuple[ClinicalIndicationSuperPanel,
+                                                  bool]:
     """
     Gets-or-creates a ClinicalIndicationSuperPanel entry.
     If the entry is new, it will log history too.
@@ -714,7 +726,9 @@ def _attempt_ci_superpanel_creation(ci_instance, superpanel_record, td_version,
 
     return cip_instance, cip_created
 
-def _flag_panels_removed_from_test_directory(ci_instance, panels, td_source):
+def _flag_panels_removed_from_test_directory(ci_instance: ClinicalIndication,
+                                             panels: list, td_source: str) \
+                                                -> None:
     """
     For a clinical indication, finds any pre-existing links to Panels and
     checks that each Panel is still in the test directory.
@@ -748,7 +762,9 @@ def _flag_panels_removed_from_test_directory(ci_instance, panels, td_source):
                     user=td_source,
                 )
 
-def _flag_superpanels_removed_from_test_directory(ci_instance, panels, td_source):
+def _flag_superpanels_removed_from_test_directory(ci_instance: ClinicalIndication,
+                                                  panels: list, td_source: str) \
+                                                    -> None:
     """
     For a clinical indication, finds any pre-existing links to SuperPanels and
     checks that each SuperPanel is still in the test directory.
