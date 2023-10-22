@@ -247,13 +247,13 @@ class Command(BaseCommand):
             This seeding requires the following files and strings:
             1. hgnc dump - with HGNC ID, Approved Symbol, Previous Symbols, Alias Symbols
             2. MANE file csv (http://tark.ensembl.org/web/mane_GRCh37_list/)
-            3. MANE file csv - the external ID
+            3. MANE file csv - the external ID (DNAnexus file ID)
             4. MANE release version
             5. parsed gff file on DNAnexus (project-Fkb6Gkj433GVVvj73J7x8KbV:file-GF611Z8433Gk7gZ47gypK7ZZ)
             6. gene2refseq table from HGMD database
-            7. gene2refseq table - the external ID
+            7. gene2refseq table - the external ID (DNAnexus file ID)
             8. markname table from HGMD database
-            9. markname table from HGMD database - the external ID
+            9. markname table from HGMD database - the external ID (DNAnexus file ID)
             10. hgmd release label - in-house label assigned to this version of the data dump
             11. reference genome - e.g. 37/38
             """
