@@ -166,7 +166,7 @@ class Command(BaseCommand):
                         f"Fetching panel id: {panel_id} version: {panel_version} failed"
                     )
                     raise ValueError("Panel specified does not exist")
-                panel_data.panel_source = "PanelApp" #manual addition of source
+                panel_data.panel_source = "PanelApp"  # manual addition of source
 
                 if is_superpanel:
                     superpanels = [panel_data]

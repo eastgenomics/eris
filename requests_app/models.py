@@ -66,14 +66,14 @@ class SuperPanel(models.Model):
     Defines Superpanels - these are panels made of child panels added together.
     Otherwise very similar to Panels.
     """
+
     # this is the PanelApp Panel id itself
     external_id = models.CharField(
         verbose_name="external panel id", max_length=255, null=True
     )
 
     # metadata
-    panel_name = models.CharField(verbose_name="Superpanel Name",
-                                  max_length=255)
+    panel_name = models.CharField(verbose_name="Superpanel Name", max_length=255)
 
     panel_source = models.CharField(
         verbose_name="superpanel source",
@@ -130,16 +130,13 @@ class PanelSuperPanel(models.Model):
     Necessary because a SuperPanel can contain any number of panels,
     and a Panel could possibly be in multiple SuperPanels.
     """
+
     panel = models.ForeignKey(
-        Panel,
-        verbose_name="component panel",
-        on_delete=models.PROTECT
+        Panel, verbose_name="component panel", on_delete=models.PROTECT
     )
 
     superpanel = models.ForeignKey(
-        SuperPanel,
-        verbose_name="superpanel",
-        on_delete=models.PROTECT
+        SuperPanel, verbose_name="superpanel", on_delete=models.PROTECT
     )
 
     class Meta:
@@ -373,7 +370,6 @@ class ClinicalIndicationSuperPanelHistory(models.Model):
 
     def __str__(self):
         return str(self.id)
-
 
 
 class ClinicalIndicationTestMethodHistory(models.Model):

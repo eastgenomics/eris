@@ -103,7 +103,6 @@ class Command(BaseCommand):
 
         return ci_panels, relevant_panels
 
-
     def _get_relevant_panel_genes(self, relevant_panels: list[int]) -> dict[int, str]:
         """
         Using a list of relevant panels,
@@ -119,8 +118,9 @@ class Command(BaseCommand):
 
         return panel_genes
 
-    def _get_relevant_superpanel_genes(self, relevant_superpanels: list[int]) \
-        -> dict[int, str]:
+    def _get_relevant_superpanel_genes(
+        self, relevant_superpanels: list[int]
+    ) -> dict[int, str]:
         """
         Using a list of relevant superpanels,
         first find the constituent panels,
@@ -131,17 +131,15 @@ class Command(BaseCommand):
         superpanel_genes = collections.defaultdict(list)
 
         for superpanel_id in relevant_superpanels:
-
             linked_panel_list = PanelSuperPanel.objects.filter(
                 superpanel__id=superpanel_id
             )
             for i in linked_panel_list:
-                genes = PanelGene.objects.filter(
-                    panel=i.panel
-                ).values("gene_id__hgnc_id", "panel_id")
+                genes = PanelGene.objects.filter(panel=i.panel).values(
+                    "gene_id__hgnc_id", "panel_id"
+                )
                 for x in genes:
-                    superpanel_genes[superpanel_id].append(
-                        x["gene_id__hgnc_id"])
+                    superpanel_genes[superpanel_id].append(x["gene_id__hgnc_id"])
 
         return superpanel_genes
 
@@ -181,8 +179,7 @@ class Command(BaseCommand):
         return results
 
     def _format_output_data_genesuperpanels(
-        self, ci_panels: dict[str, list], panel_genes: dict[int, str],
-        rnas: set
+        self, ci_panels: dict[str, list], panel_genes: dict[int, str], rnas: set
     ) -> list[tuple[str, str, str]]:
         """
         Format a list of results ready for writing out to file.
@@ -205,8 +202,7 @@ class Command(BaseCommand):
 
                     # process the panel version
                     panel_version: str = (
-                        normalize_version(panel_dict
-                                          ["superpanel__panel_version"])
+                        normalize_version(panel_dict["superpanel__panel_version"])
                         if panel_dict["superpanel__panel_version"]
                         else "1.0"
                     )
@@ -259,19 +255,17 @@ class Command(BaseCommand):
             )
 
         ci_panels, relevant_panels = self._get_relevant_ci_panels()
-        ci_superpanels, relevant_superpanels = \
-            self._get_relevant_ci_superpanels()
+        ci_superpanels, relevant_superpanels = self._get_relevant_ci_superpanels()
 
         panel_genes = self._get_relevant_panel_genes(relevant_panels)
-        superpanel_genes = self._get_relevant_superpanel_genes(
-            relevant_superpanels)
+        superpanel_genes = self._get_relevant_superpanel_genes(relevant_superpanels)
 
-        panel_results = self._format_output_data_genepanels(ci_panels,\
-                                                            panel_genes, rnas)
+        panel_results = self._format_output_data_genepanels(
+            ci_panels, panel_genes, rnas
+        )
         superpanel_results = self._format_output_data_genesuperpanels(
-            ci_superpanels,
-            superpanel_genes,
-            rnas)
+            ci_superpanels, superpanel_genes, rnas
+        )
 
         results = panel_results + superpanel_results
 

@@ -12,7 +12,7 @@ from requests_app.models import Gene, Transcript
 def _update_existing_gene_metadata_in_db(
     hgnc_id_to_approved_symbol,
     hgnc_id_to_alias_symbols,
-    ) -> None:
+) -> None:
     """
     Function to update gene metadata in db using hgnc dump prepared dictionaries
 
@@ -28,9 +28,10 @@ def _update_existing_gene_metadata_in_db(
                 gene.gene_symbol = hgnc_id_to_approved_symbol[gene.hgnc_id]
 
         # if hgnc id in dictionary, and alias symbols are not all pd.nan
-        if gene.hgnc_id in hgnc_id_to_alias_symbols and not pd.isna(
-            hgnc_id_to_alias_symbols[gene.hgnc_id]
-        ).all():
+        if (
+            gene.hgnc_id in hgnc_id_to_alias_symbols
+            and not pd.isna(hgnc_id_to_alias_symbols[gene.hgnc_id]).all()
+        ):
             gene.alias_symbols = ",".join(hgnc_id_to_alias_symbols[gene.hgnc_id])
 
         gene.save()
@@ -43,14 +44,14 @@ def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
     2. hgnc id to approved symbol
     4. hgnc id to alias symbols
 
-    Finally, update any metadata for existing genes in the Eris database - 
+    Finally, update any metadata for existing genes in the Eris database -
     if this has changed since the last HGNC upload.
 
     :param hgnc_file: hgnc file path
     :return: gene symbol to hgnc id dict
     """
     hgnc: pd.DataFrame = pd.read_csv(hgnc_file, delimiter="\t")
-    
+
     needed_cols = ["HGNC ID", "Approved symbol", "Alias symbols"]
     _sanity_check_cols_exist(hgnc, needed_cols, "HGNC dump")
 
@@ -68,19 +69,23 @@ def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
     return hgnc_symbol_to_hgnc_id
 
 
-def _sanity_check_cols_exist(df: pd.DataFrame, needed_cols: list, filename: str) -> None:
+def _sanity_check_cols_exist(
+    df: pd.DataFrame, needed_cols: list, filename: str
+) -> None:
     """
     Check for expected columns in a DataFrame.
     Collects together errors and asserts them all at once, if there's more than one issue.
     :param: df - a Pandas Dataframe
     :param: needed_cols - a list of column names to check for
     :param: filename - a reference to use for the file being checked
-    :return: None 
+    :return: None
     """
     errors = []
     for x_col in needed_cols:
         if not x_col in df.columns:
-            errors.append(f"Missing column {x_col} from {filename} file - please check the file")
+            errors.append(
+                f"Missing column {x_col} from {filename} file - please check the file"
+            )
 
     errors = "; ".join(errors)
     assert not errors, errors
@@ -155,9 +160,9 @@ def _prepare_gff_file(gff_file: str) -> dict[str, list]:
 def _prepare_gene2refseq_file(g2refseq_file: str) -> dict:
     """
     Reads through gene2refseq file (from HGMD database)
-    and generates a dict mapping of HGMD ID to a list which can contain [refcore, refversion], 
+    and generates a dict mapping of HGMD ID to a list which can contain [refcore, refversion],
     e.g. 'id': [["NM_100", "2"]]
-    
+
     :param g2refseq_file: gene2refseq file path
 
     :return: dictionary of hgmd id to list of not "tuple" [refcore, refversion]
@@ -196,8 +201,9 @@ def _prepare_markname_file(markname_file: str) -> dict:
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
 
 
-def _add_gene_and_transcript_to_db(hgnc_id: str, transcripts: list, 
-                                   reference_genome: str, source: str | None) -> None:
+def _add_gene_and_transcript_to_db(
+    hgnc_id: str, transcripts: list, reference_genome: str, source: str | None
+) -> None:
     """
     Add each gene to the database, with any transcripts associated with it.
     Source will often be something like "HGMD", but may be None for non-clinical transcripts
@@ -213,8 +219,9 @@ def _add_gene_and_transcript_to_db(hgnc_id: str, transcripts: list,
         )
 
 
-def _get_clin_transcript_from_hgmd_files(hgnc_id, markname: dict, gene2refseq: dict) \
-    -> tuple[str | None, str | None]:
+def _get_clin_transcript_from_hgmd_files(
+    hgnc_id, markname: dict, gene2refseq: dict
+) -> tuple[str | None, str | None]:
     """
     Fetch the transcript linked to a particular gene in HGMD.
     First, need to find the gene's ID in the 'markname' table's file,
@@ -240,7 +247,7 @@ def _get_clin_transcript_from_hgmd_files(hgnc_id, markname: dict, gene2refseq: d
     # get the gene-id from markname table
     markname_gene_id = markname[short_hgnc_id][0]
 
-    # Throw errors if the HGNC ID is None or pd.nan, if the gene ID from 
+    # Throw errors if the HGNC ID is None or pd.nan, if the gene ID from
     # markname isn't in gene2refseq, or if a gene has multiple entries in the HGMD database (list with lists),
     # because assessment of clinical/non-clinical won't be possible.
     if not markname_gene_id or pd.isna(markname_gene_id):
@@ -252,7 +259,7 @@ def _get_clin_transcript_from_hgmd_files(hgnc_id, markname: dict, gene2refseq: d
     if markname_gene_id not in gene2refseq:
         err = f"{hgnc_id} with gene id {markname_gene_id} not in gene2refseq table"
         return None, err
-    
+
     if len(gene2refseq[markname_gene_id]) > 1:
         joined_entries = [i[0] for i in gene2refseq[markname_gene_id]]
         err = f'{hgnc_id} has more than one transcript in the HGMD database: {",".join(joined_entries)}'
@@ -264,9 +271,14 @@ def _get_clin_transcript_from_hgmd_files(hgnc_id, markname: dict, gene2refseq: d
     return hgmd_base, None
 
 
-def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict, 
-                         mane_data: dict, markname_hgmd: dict, gene2refseq_hgmd: dict) \
-                            -> tuple[bool, str, str | None]:
+def _transcript_assigner(
+    tx: str,
+    hgnc_id: str,
+    gene_clinical_transcript: dict,
+    mane_data: dict,
+    markname_hgmd: dict,
+    gene2refseq_hgmd: dict,
+) -> tuple[bool, str, str | None]:
     """
     Carries out the logic for deciding whether a transcript is clinical, or non-clinical.
     Checks MANE first, then HGMD, to see if clinical status can be assigned
@@ -278,8 +290,8 @@ def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict,
     source = None
     err = None
 
-    tx_base = re.sub(r'\.[\d]+$', '', tx)
-    
+    tx_base = re.sub(r"\.[\d]+$", "", tx)
+
     # if hgnc id already have a clinical transcript
     # any following transcripts will be non-clinical by default
     if hgnc_id in gene_clinical_transcript:
@@ -287,12 +299,12 @@ def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict,
         # any remaining transcripts will be NON-clinical
         clinical = False
         return clinical, source, err
-    
+
     # if hgnc id in mane file
     if hgnc_id in mane_data:
         # MANE transcript search
         mane_tx = mane_data[hgnc_id]
-        mane_base = re.sub(r'\.[\d]+$', '', mane_tx)
+        mane_base = re.sub(r"\.[\d]+$", "", mane_tx)
 
         # compare transcript without the version
         if tx_base == mane_base:
@@ -300,15 +312,17 @@ def _transcript_assigner(tx: str, hgnc_id: str, gene_clinical_transcript: dict,
             source = "MANE"
             return clinical, source, err
 
-    # hgnc id for the transcript's gene is not in MANE - 
+    # hgnc id for the transcript's gene is not in MANE -
     # instead, see which transcript is linked to the gene in HGMD
-    hgmd_transcript_base, err = _get_clin_transcript_from_hgmd_files(hgnc_id, markname_hgmd, gene2refseq_hgmd)
-    
+    hgmd_transcript_base, err = _get_clin_transcript_from_hgmd_files(
+        hgnc_id, markname_hgmd, gene2refseq_hgmd
+    )
+
     # does the HGMD transcript match the one we're currently looping through?
     if tx_base == hgmd_transcript_base:
         clinical = True
         source = "HGMD"
-    
+
     return clinical, source, err
 
 
@@ -345,7 +359,6 @@ def seed_transcripts(
     gene2refseq_hgmd = _prepare_gene2refseq_file(g2refseq_filepath)
     markname_hgmd = _prepare_markname_file(markname_filepath)
 
-
     # two dict for clinical and non-clinical tx assigment
     gene_clinical_transcript: dict[str, str] = {}
     gene_non_clinical_transcripts: dict[str, list] = collections.defaultdict(list)
@@ -359,9 +372,14 @@ def seed_transcripts(
         # get deduplicated transcripts
         transcripts = set(transcripts)
         for tx in transcripts:
-            clin, tx_source, err = \
-                _transcript_assigner(tx, hgnc_id, gene_clinical_transcript, 
-                         mane_data, markname_hgmd, gene2refseq_hgmd)
+            clin, tx_source, err = _transcript_assigner(
+                tx,
+                hgnc_id,
+                gene_clinical_transcript,
+                mane_data,
+                markname_hgmd,
+                gene2refseq_hgmd,
+            )
             if clin:
                 gene_clinical_transcript[hgnc_id] = [tx, tx_source]
             else:
@@ -373,7 +391,7 @@ def seed_transcripts(
     for hgnc_id, transcript_source in gene_clinical_transcript.items():
         transcript, source = transcript_source
         # make transcript into a list, because the transcript-adder is set up for a list
-        transcript = [transcript] 
+        transcript = [transcript]
         _add_gene_and_transcript_to_db(hgnc_id, transcript, reference_genome, source)
 
     for hgnc_id, transcripts in gene_non_clinical_transcripts.items():
@@ -385,5 +403,3 @@ def seed_transcripts(
         with open(error_log, "w") as f:
             for row in all_errors:
                 f.write(f"{row}\n")
-
-

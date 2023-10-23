@@ -28,7 +28,7 @@ from ._insert_ci import (
     flag_clinical_indication_panel_for_review,
     flag_clinical_indication_superpanel_for_review,
     provisionally_link_clinical_indication_to_panel,
-    provisionally_link_clinical_indication_to_superpanel
+    provisionally_link_clinical_indication_to_superpanel,
 )
 from .panelapp import PanelClass, SuperPanelClass
 from django.db import transaction
@@ -316,8 +316,9 @@ def _insert_panel_data_into_db(panel: PanelClass, user: str) -> Panel:
     return panel_instance, created
 
 
-def _insert_superpanel_into_db(superpanel: SuperPanelClass, child_panels:\
-                               list[Panel], user: str) -> None:
+def _insert_superpanel_into_db(
+    superpanel: SuperPanelClass, child_panels: list[Panel], user: str
+) -> None:
     """
     Insert data from a parsed SuperPanel.
     This function differs slightly from the one for Panels because:
@@ -345,19 +346,17 @@ def _insert_superpanel_into_db(superpanel: SuperPanelClass, child_panels:\
     if created:
         # make links between the SuperPanel and its child panels
         for child in child_panels:
-            panel_link, panel_link_created = \
-                PanelSuperPanel.objects.get_or_create(
-                    panel=child,
-                    superpanel=superpanel
-                )
-            
+            panel_link, panel_link_created = PanelSuperPanel.objects.get_or_create(
+                panel=child, superpanel=superpanel
+            )
+
         # if there are previous SuperPanel(s) with similar external_id,
         # mark previous CI-SuperPanel links as needing review
-        for clinical_indication_superpanel in ClinicalIndicationSuperPanel.\
-            objects.filter(
-                superpanel__external_id=panel_external_id,
-                current=True
-                ):
+        for (
+            clinical_indication_superpanel
+        ) in ClinicalIndicationSuperPanel.objects.filter(
+            superpanel__external_id=panel_external_id, current=True
+        ):
             flag_clinical_indication_superpanel_for_review(
                 clinical_indication_superpanel, "PanelApp"
             )
@@ -365,23 +364,24 @@ def _insert_superpanel_into_db(superpanel: SuperPanelClass, child_panels:\
             provisionally_link_clinical_indication_to_superpanel(
                 superpanel,
                 clinical_indication_superpanel.clinical_indication,
-                "PanelApp"
+                "PanelApp",
             )
 
-    # if the superpanel hasn't just been created: the SuperPanel is either 
+    # if the superpanel hasn't just been created: the SuperPanel is either
     # brand new, or it has altered the constituent panels WITHOUT changing
     # SuperPanel name or version - this would only happen if there were
     # issues at PanelApp
     return superpanel, created
 
 
-def panel_insert_controller(panels: list[PanelClass], superpanels: \
-                            list[SuperPanelClass], user: str):
+def panel_insert_controller(
+    panels: list[PanelClass], superpanels: list[SuperPanelClass], user: str
+):
     """
     Carries out coordination of panel creation - Panels and SuperPanels are
     handled differently in the database.
     """
-    # currently, only handle Panel/SuperPanel if the panel data is from 
+    # currently, only handle Panel/SuperPanel if the panel data is from
     # PanelApp
     for panel in panels:
         panel_instance, _ = _insert_panel_data_into_db(panel, user)
@@ -389,7 +389,6 @@ def panel_insert_controller(panels: list[PanelClass], superpanels: \
     for superpanel in superpanels:
         child_panel_instances = []
         for panel in superpanel.child_panels:
-            child_panel_instance, _ = \
-                _insert_panel_data_into_db(panel, user)
+            child_panel_instance, _ = _insert_panel_data_into_db(panel, user)
             child_panel_instances.append(child_panel_instance)
         _insert_superpanel_into_db(superpanel, child_panel_instances, user)

@@ -40,8 +40,7 @@ class SuperPanelClass:
         self.types: list[dict] = []
         [setattr(self, key, a[key]) for key in a]
 
-        self.child_panels = self.create_component_panels(self.genes,
-                                                         self.regions)
+        self.child_panels = self.create_component_panels(self.genes, self.regions)
 
     def create_component_panels(self, genes, regions):
         """
@@ -59,8 +58,7 @@ class SuperPanelClass:
             panel_id = parent_panel["id"]
             # fetch this Panel if its in the panel-list already, otherwise,
             # make it
-            component_panel = next((x for x in panels if x.id == panel_id),
-                                   None)
+            component_panel = next((x for x in panels if x.id == panel_id), None)
             if component_panel:
                 # append gene to the list associated with this panel
                 component_panel.genes.append(gene)
@@ -78,13 +76,12 @@ class SuperPanelClass:
 
         for region in regions:
             parent_panel = region["panel"]
-            panel_id = parent_panel["id"] 
-            #TODO: how does this handle region(s) duplicated from multiple
+            panel_id = parent_panel["id"]
+            # TODO: how does this handle region(s) duplicated from multiple
             # panels?
             # fetch this Panel if its in the panel-list already, otherwise,
             # make it
-            component_panel = next((x for x in panels if x.id == panel_id),
-                                   None)
+            component_panel = next((x for x in panels if x.id == panel_id), None)
             if component_panel:
                 # append region to the list associated with this panel
                 component_panel.regions.append(region)
@@ -148,8 +145,9 @@ def _check_superpanel_status(response: requests.Response) -> bool:
     return is_superpanel
 
 
-def get_panel(panel_num: int, version: float = None) -> \
-    tuple[PanelClass | SuperPanelClass, bool]:
+def get_panel(
+    panel_num: int, version: float = None
+) -> tuple[PanelClass | SuperPanelClass, bool]:
     """
     Function to get individual panel and panel version
 
@@ -195,8 +193,7 @@ def fetch_all_panels() -> tuple[list[PanelClass], list[SuperPanelClass]]:
         panel_version = panel.get("version")
 
         # fetching specific signed-off version
-        panel_data, is_superpanel = \
-            get_panel(panel_id, panel_version)
+        panel_data, is_superpanel = get_panel(panel_id, panel_version)
 
         if panel_data:
             panel_data.panel_source = "PanelApp"

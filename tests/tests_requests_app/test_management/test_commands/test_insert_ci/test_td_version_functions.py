@@ -6,7 +6,7 @@ from requests_app.models import (
     SuperPanel,
     ClinicalIndication,
     ClinicalIndicationPanel,
-    ClinicalIndicationSuperPanel
+    ClinicalIndicationSuperPanel,
 )
 from requests_app.management.commands._insert_ci import _fetch_latest_td_version
 from requests_app.management.commands.utils import sortable_version
@@ -22,22 +22,18 @@ class TestFetchLatestTdVersion_OlderPanel(TestCase):
     the data is correctly returned
     EXPECT: ClinicalIndicationPanel's td version is returned as correct
     """
-    def setUp(self) -> None:
-        self.ci = ClinicalIndication.objects.create(r_code="R100.1",
-                           name="An illness",
-                           test_method="NGS"
-                           )
 
-        self.panel = Panel.objects.create(
-            external_id=500,
-            panel_source="PanelApp",
-            panel_version=6
+    def setUp(self) -> None:
+        self.ci = ClinicalIndication.objects.create(
+            r_code="R100.1", name="An illness", test_method="NGS"
         )
 
-        self.superpanel= SuperPanel.objects.create(
-            external_id=500,
-            panel_source="PanelApp",
-            panel_version=6
+        self.panel = Panel.objects.create(
+            external_id=500, panel_source="PanelApp", panel_version=6
+        )
+
+        self.superpanel = SuperPanel.objects.create(
+            external_id=500, panel_source="PanelApp", panel_version=6
         )
 
         self.ci_panel = ClinicalIndicationPanel.objects.create(
@@ -45,7 +41,7 @@ class TestFetchLatestTdVersion_OlderPanel(TestCase):
             td_version="3",
             clinical_indication=self.ci,
             panel=self.panel,
-            current=True
+            current=True,
         )
 
         self.ci_superpanel = ClinicalIndicationSuperPanel.objects.create(
@@ -53,9 +49,9 @@ class TestFetchLatestTdVersion_OlderPanel(TestCase):
             td_version="2",
             clinical_indication=self.ci,
             superpanel=self.superpanel,
-            current=True
+            current=True,
         )
-    
+
     def test_panel_older_than_superpanel(self):
         """
         Check that when the latest td version is in the Panel,
@@ -73,22 +69,18 @@ class TestFetchLatestTdVersion_OlderSuperPanel(TestCase):
     the data is correctly returned
     EXPECT: ClinicalIndicationSuperPanel's td version is returned as correct
     """
-    def setUp(self) -> None:
-        self.ci = ClinicalIndication.objects.create(r_code="R100.1",
-                           name="An illness",
-                           test_method="NGS"
-                           )
 
-        self.panel = Panel.objects.create(
-            external_id=500,
-            panel_source="PanelApp",
-            panel_version=6
+    def setUp(self) -> None:
+        self.ci = ClinicalIndication.objects.create(
+            r_code="R100.1", name="An illness", test_method="NGS"
         )
 
-        self.superpanel= SuperPanel.objects.create(
-            external_id=500,
-            panel_source="PanelApp",
-            panel_version=6
+        self.panel = Panel.objects.create(
+            external_id=500, panel_source="PanelApp", panel_version=6
+        )
+
+        self.superpanel = SuperPanel.objects.create(
+            external_id=500, panel_source="PanelApp", panel_version=6
         )
 
         self.ci_panel = ClinicalIndicationPanel.objects.create(
@@ -96,7 +88,7 @@ class TestFetchLatestTdVersion_OlderSuperPanel(TestCase):
             td_version="3",
             clinical_indication=self.ci,
             panel=self.panel,
-            current=True
+            current=True,
         )
 
         self.ci_superpanel = ClinicalIndicationSuperPanel.objects.create(
@@ -104,9 +96,9 @@ class TestFetchLatestTdVersion_OlderSuperPanel(TestCase):
             td_version="4",
             clinical_indication=self.ci,
             superpanel=self.superpanel,
-            current=True
+            current=True,
         )
-    
+
     def test_superpanel_older_than_panel(self):
         """
         Check that when the latest td version is in the SuperPanel,
@@ -124,16 +116,14 @@ class TestFetchLatestTdVersion_PanelOnly(TestCase):
     the td version in the panel-related data is correctly returned
     EXPECT: ClinicalIndicationPanel's td version is returned as correct
     """
+
     def setUp(self) -> None:
-        self.ci = ClinicalIndication.objects.create(r_code="R100.1",
-                           name="An illness",
-                           test_method="NGS"
-                           )
+        self.ci = ClinicalIndication.objects.create(
+            r_code="R100.1", name="An illness", test_method="NGS"
+        )
 
         self.panel = Panel.objects.create(
-            external_id=500,
-            panel_source="PanelApp",
-            panel_version=6
+            external_id=500, panel_source="PanelApp", panel_version=6
         )
 
         self.ci_panel = ClinicalIndicationPanel.objects.create(
@@ -141,9 +131,9 @@ class TestFetchLatestTdVersion_PanelOnly(TestCase):
             td_version="3",
             clinical_indication=self.ci,
             panel=self.panel,
-            current=True
+            current=True,
         )
-    
+
     def test_only_panel_exists(self):
         """
         Check that when there is no SuperPanel data in the db,
@@ -161,16 +151,14 @@ class TestFetchLatestTdVersion_SuperPanelOnly(TestCase):
     the td version in the panel-related data is correctly returned
     EXPECT: ClinicalIndicationSuperPanel's td version is returned as correct
     """
+
     def setUp(self) -> None:
-        self.ci = ClinicalIndication.objects.create(r_code="R100.1",
-                           name="An illness",
-                           test_method="NGS"
-                           )
+        self.ci = ClinicalIndication.objects.create(
+            r_code="R100.1", name="An illness", test_method="NGS"
+        )
 
         self.panel = SuperPanel.objects.create(
-            external_id=500,
-            panel_source="PanelApp",
-            panel_version=6
+            external_id=500, panel_source="PanelApp", panel_version=6
         )
 
         self.ci_panel = ClinicalIndicationSuperPanel.objects.create(
@@ -178,9 +166,9 @@ class TestFetchLatestTdVersion_SuperPanelOnly(TestCase):
             td_version="3",
             clinical_indication=self.ci,
             superpanel=self.panel,
-            current=True
+            current=True,
         )
-    
+
     def test_only_panel_exists(self):
         """
         Check that when there is no Panel data in the db,
@@ -198,13 +186,14 @@ class TestFetchLatestTdVersion_NoDataAvailable(TestCase):
     a None value is returned
     EXPECT: td version returns as None
     """
+
     def setUp(self) -> None:
         pass
-    
+
     def test_only_panel_exists(self):
         latest_td = _fetch_latest_td_version()
 
         assert latest_td == None
 
 
-#TODO: test '_check_td_version_valid' if concerned
+# TODO: test '_check_td_version_valid' if concerned
