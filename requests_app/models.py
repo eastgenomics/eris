@@ -1,6 +1,20 @@
 from django.db import models
 
 
+class ReferenceGenome(models.Model):
+    """Defines the reference genome builds"""
+
+    ref_genome = models.CharField(
+        verbose_name="reference genome build", max_length=255, null=False
+    )
+
+    class Meta:
+        db_table = "reference_genome"
+
+    def __str__(self):
+        return str(self.id)
+
+
 class Panel(models.Model):
     """Defines a single internal panel"""
 
@@ -22,10 +36,6 @@ class Panel(models.Model):
         max_length=255,
         null=True,
     )
-
-    # reference genome
-    grch37 = models.BooleanField(verbose_name="grch37", default=True)
-    grch38 = models.BooleanField(verbose_name="grch38", default=True)
 
     # whether panel is created from test directory
     test_directory = models.BooleanField(
@@ -316,11 +326,8 @@ class Transcript(models.Model):
 
     gene = models.ForeignKey(Gene, verbose_name="Gene id", on_delete=models.PROTECT)
 
-    reference_genome = models.CharField(
-        verbose_name="Reference Genome",
-        max_length=255,
-        null=True,
-        default=None,
+    reference_genome = models.ForeignKey(
+        ReferenceGenome, verbose_name="Reference genome"
     )
 
     class Meta:
@@ -482,7 +489,7 @@ class VariantType(models.Model):
         return str(self.id)
 
 
-class Region(models.Model):
+class Region(models.Model):  # TODO: work out how to split out by transcript
     """Defines a single region (CNV)"""
 
     name = models.CharField(verbose_name="Region name", max_length=255)
