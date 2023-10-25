@@ -508,10 +508,10 @@ def seed_transcripts(
     tx_starting = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"Start adding transcripts: {tx_starting}")
     for hgnc_id, transcripts in gff.items():
+        gene = Gene.objects.get(hgnc_id=hgnc_id)
         # get deduplicated transcripts
         transcripts = set(transcripts)
         for tx in transcripts:
-            gene = Gene.objects.get(hgnc_id=hgnc_id)
             # get information about how the transcript matches against MANE and HGMD
             mane_select_data, mane_plus_clinical_data, hgmd_data, err = \
                 _transcript_assign_to_source(tx, hgnc_id, mane_data, markname_hgmd, gene2refseq_hgmd)
