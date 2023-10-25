@@ -23,13 +23,12 @@ def _update_existing_gene_metadata_symbol_in_db(
     :param hgnc_id_to_approved_symbol: dictionary of hgnc id to approved symbol
     """
 
-    hgnc_id_list = [{i.hgnc_id: [i.gene_symbol, i.alias_symbols]} for i in Gene.objects.all()]
+    hgnc_id_list = [{i.hgnc_id: i.gene_symbol} for i in Gene.objects.all()]
 
     gene_symbol_updates = []
 
     for gene_info in hgnc_id_list:
-        for hgnc_id, other_gene_info in gene_info.items():
-            gene_symbol = other_gene_info[0]
+        for hgnc_id, gene_symbol in gene_info.items():
             # if gene symbol in db differ from approved symbol in hgnc
             if hgnc_id in hgnc_id_to_approved_symbol:
                 if gene_symbol != hgnc_id_to_approved_symbol[hgnc_id]:
@@ -55,14 +54,13 @@ def _update_existing_gene_metadata_aliases_in_db(
     :param hgnc_id_to_alias_symbols: dictionary of hgnc id to alias symbols
     """
 
-    hgnc_id_list = [{i.hgnc_id: [i.gene_symbol, i.alias_symbols]} for i in Gene.objects.all()]
+    hgnc_id_list = [{i.hgnc_id: i.alias_symbols} for i in Gene.objects.all()]
 
     gene_alias_updates = []
 
     for gene_info in hgnc_id_list:
-        for hgnc_id, other_gene_info in gene_info.items():
+        for hgnc_id, alias_symbols in gene_info.items():
             # if hgnc id in dictionary, and alias symbols are not all pd.nan
-            alias_symbols = other_gene_info[1]
             if hgnc_id in hgnc_id_to_alias_symbols and not pd.isna(
                 hgnc_id_to_alias_symbols[hgnc_id]
             ).all():
@@ -268,7 +266,6 @@ def _add_transcript_categorisation_to_db(transcript: Transcript,
     This function stores that search information, along with the transcript-release
     link.
     """
-    print("add transcript cat to db")
     TranscriptReleaseTranscript.objects.bulk_create(
         [
             TranscriptReleaseTranscript(transcript=transcript,
@@ -504,7 +501,6 @@ def seed_transcripts(
     :param markname_filepath: markname file path
     :param write_error_log: write error log or not
     """
-    print("top of function")
     # take today datetime
     current_datetime = dt.datetime.today().strftime("%Y%m%d")
 
@@ -518,8 +514,6 @@ def seed_transcripts(
     gene2refseq_hgmd = _prepare_gene2refseq_file(g2refseq_filepath)
     markname_hgmd = _prepare_markname_file(markname_filepath)
 
-    print("files prep complete")
-
     # set up the transcript release by adding it, any data sources, and and
     # supporting files to the database. Throw errors for repeated versions.
     mane_select_rel = _add_transcript_release_info_to_db(
@@ -532,18 +526,14 @@ def seed_transcripts(
         {"hgmd_g2refseq": g2refseq_ext_id,
          "hgmd_markname": markname_ext_id})
 
-    print("transcript releases done")
-
     # for record purpose (just in case)
     all_errors: list[str] = []
 
     # decide whether a transcript is clinical or not
     # add all this information to the database
-    print("about to loop")
     for hgnc_id, transcripts in gff.items():
         gene = _update_or_create_gene_from_db(hgnc_id, hgnc_with_info)
         # get deduplicated transcripts
-        print("done with gene updating")
         transcripts = set(transcripts)
         for tx in transcripts:
             # get information about how the transcript matches against MANE and HGMD
@@ -553,7 +543,6 @@ def seed_transcripts(
                 all_errors.append(err)
 
             # add the transcript to the Transcript table
-            print("_add_transcript_to_db")
             transcript = _add_transcript_to_db(gene, tx, reference_genome)
 
             # link all the releases to the Transcript,
@@ -561,7 +550,6 @@ def seed_transcripts(
             releases_and_data_to_link = {mane_select_rel: mane_select_data,
                                          mane_plus_clinical_rel: mane_plus_clinical_data,
                                          hgmd_rel: hgmd_data}
-            print("add categorisation")
             _add_transcript_categorisation_to_db(transcript, releases_and_data_to_link)
 
     # write error log for those interested to see
