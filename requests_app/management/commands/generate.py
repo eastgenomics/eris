@@ -55,11 +55,15 @@ class Command(BaseCommand):
 
         return True
 
-    def _get_relevant_ci_panels(self) -> tuple[dict[str, list], list]:
+    def _get_relevant_ci_panels(self) -> tuple[dict[str, list], set]:
         """
         Retrieve relevant panels and CI-panels from the database
         These will be output in the final file.
         Returns CI panels and a list of relevant panels.
+
+        :return: ci_panels, a dict containing R codes as keys, with lists
+        of clinical indication-panel information provided as keys
+        :return: relevant_panels [set], a set of relevant panel IDs
         """
         relevant_panels = set()
 
@@ -84,6 +88,10 @@ class Command(BaseCommand):
         Retrieve relevant superpanels and CI-superpanels from the database
         These will be output in the final file.
         Returns CI superpanels and a list of relevant superpanels.
+        
+        :return: ci_superpanels, a dict containing R codes as keys, with lists
+        of clinical indication-superpanel information provided as keys
+        :return: relevant_panels [set], a set of relevant superpanel IDs
         """
         relevant_panels = set()
 
@@ -107,6 +115,11 @@ class Command(BaseCommand):
         """
         Using a list of relevant panels,
         retrieve the genes from those panels from the PanelGene database.
+
+        :param: relevant_panels [list[int]], a set of IDs of Panel objects
+        which will be used to retrieve those panels' genes from the db
+        :returns: panel_genes, a dict containing panel ID as keys and
+        gene information in the values
         """
         panel_genes = collections.defaultdict(list)
 
@@ -127,6 +140,11 @@ class Command(BaseCommand):
         then retrieve the genes from those panels from the PanelGene database.
         Returns a dict where the key is the superpanel's ID and the values are
         lists of genes.
+
+        :param: relevant_panels [list[int]], a set of IDs of SuperPanel objects
+        which will be used to retrieve constituent panels' genes from the db
+        :returns: superpanel_genes, a dict containing superpanel ID as keys, and
+        gene information for the child-panels in the values
         """
         superpanel_genes = collections.defaultdict(list)
 
@@ -149,6 +167,13 @@ class Command(BaseCommand):
         """
         Format a list of results ready for writing out to file.
         Sort the results before returning them.
+
+        :param: ci_panels, a dict linking clinical indications to panels
+        :param: panel_genes, a dict linking genes to panel IDs
+        :param: rnas, a set of RNAs parsed from HGNC information
+
+        :return: a list-of-lists. Each sublist contains a clinical indication,
+        panel name, and panel version
         """
         results = []
         for r_code, panel_list in ci_panels.items():
@@ -184,6 +209,13 @@ class Command(BaseCommand):
         """
         Format a list of results ready for writing out to file.
         Sort the results before returning them.
+
+        :param: ci_panels, a dict linking clinical indications to superpanels
+        :param: panel_genes, a dict linking genes to superpanel IDs
+        :param: rnas, a set of RNAs parsed from HGNC information
+
+        :return: a list-of-lists. Each sublist contains a clinical indication,
+        superpanel name, and superpanel version
         """
         results = []
         for r_code, panel_list in ci_panels.items():
