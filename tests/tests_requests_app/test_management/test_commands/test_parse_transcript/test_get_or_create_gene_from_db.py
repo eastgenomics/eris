@@ -4,9 +4,10 @@ from unittest import mock
 import pandas as pd
 
 
-from requests_app.management.commands._parse_transcript import _update_or_create_gene_from_db
+from requests_app.management.commands._parse_transcript import _add_new_genes_to_db
 from requests_app.models import Gene
 
+#TODO: change these tests
 class TestGetOrCreate_AlreadyExistsIdentical(TestCase):
     """
     A test built because I didn't understand the behaviour of get_or_create/
@@ -23,7 +24,7 @@ class TestGetOrCreate_AlreadyExistsIdentical(TestCase):
     def test_adding_identical_gene(self):
         input_hgnc = "HGNC:10257"
         matches = [{'HGNC ID': 'HGNC:10257', 'Approved symbol': 'ROR2', 'Alias symbols': None}]
-        result = _update_or_create_gene_from_db(input_hgnc, matches)
+        result = _add_new_genes_to_db(input_hgnc, matches)
         assert result == self.gene
 
 
@@ -42,7 +43,7 @@ class TestGetOrCreate_AlreadyExistsSlightlyDifferent(TestCase):
     def test_adding_identical_gene(self):
         input_hgnc = "HGNC:10257"
         matches = [{'HGNC ID': 'HGNC:10257', 'Approved symbol': "TEST", 'Alias symbols': "TEST, ALIAS"}]
-        _ = _update_or_create_gene_from_db(input_hgnc, matches)
+        _ = _add_new_genes_to_db(input_hgnc, matches)
         
         # check the entry updates in db
         results = Gene.objects.all()

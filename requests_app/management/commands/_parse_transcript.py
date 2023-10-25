@@ -39,8 +39,7 @@ def _update_existing_gene_metadata_symbol_in_db(
 
     now = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"Start gene symbol bulk update: {now}")
-    with transaction.atomic():
-        Gene.objects.bulk_update(gene_symbol_updates, ['gene_symbol'])
+    Gene.objects.bulk_update(gene_symbol_updates, ['gene_symbol'])
 
 def _update_existing_gene_metadata_aliases_in_db(
     hgnc_id_to_alias_symbols,
@@ -72,9 +71,54 @@ def _update_existing_gene_metadata_aliases_in_db(
 
     now = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"Start gene alias bulk update: {now}")
-    with transaction.atomic():
-        Gene.objects.bulk_update(gene_alias_updates, ['alias_symbols'])
+    Gene.objects.bulk_update(gene_alias_updates, ['alias_symbols'])
 
+def _add_new_genes_to_db(approved_symbols, alias_symbols)\
+    -> None:
+    """
+    If a gene exists in the HGNC file, but does NOT exist in the db, make it.
+    Throw an error if the gene is in the HGNC data more than once.
+
+    To speed up the function, we utilise looping over lists-of-dictionaries,
+    and bulk updates.
+    
+    """
+    genes_to_create = []
+
+    # all hgncs already in db
+    already_exist = [i.hgnc_id for i in Gene.objects.all()]
+    print(len(already_exist))
+
+    # get all possible HGNC IDs
+    all_hgnc_in_approved = list(set(approved_symbols.keys()))
+    all_hgnc_in_alias = list(set(alias_symbols.keys()))
+    hgncs = all_hgnc_in_alias + all_hgnc_in_approved
+    hgncs_not_in_db =  list(set(hgncs) - set(already_exist))
+
+    for hgnc_id in hgncs_not_in_db:
+        # get approved symbols
+        matches = approved_symbols[hgnc_id]
+        if matches:
+            symbol_match = matches
+        else:
+            symbol_match = None
+
+        # get aliases
+        matches = alias_symbols[hgnc_id]
+        if len(matches) > 0:
+            alias_match = matches[0]
+        else:
+            alias_match = None
+        
+        new_gene = Gene(hgnc_id=hgnc_id,
+                        gene_symbol=symbol_match,
+                        alias_symbols=alias_match
+                        )
+        genes_to_create.append(new_gene)
+
+    now = datetime.datetime.now().strftime("%H:%M:%S")
+    print(f"Start gene bulk create: {now}")
+    Gene.objects.bulk_create(genes_to_create)
 
 def _prepare_hgnc_file(hgnc_file: str) -> tuple[dict[str, str], list[dict]]:
     """
@@ -102,13 +146,17 @@ def _prepare_hgnc_file(hgnc_file: str) -> tuple[dict[str, str], list[dict]]:
     hgnc_id_to_alias_symbols = (
         hgnc.groupby("HGNC ID")["Alias symbols"].apply(list).to_dict()
     )
-
-    _update_existing_gene_metadata_symbol_in_db(
-        hgnc_id_to_approved_symbol
-    )
-    _update_existing_gene_metadata_aliases_in_db(
-        hgnc_id_to_alias_symbols
-    )
+    with transaction.atomic():
+        _update_existing_gene_metadata_symbol_in_db(
+            hgnc_id_to_approved_symbol
+        )
+        _update_existing_gene_metadata_aliases_in_db(
+            hgnc_id_to_alias_symbols
+        )
+    with transaction.atomic():
+        _add_new_genes_to_db(
+            hgnc_id_to_approved_symbol, hgnc_id_to_alias_symbols
+        )
 
     all_together = hgnc[needed_cols]
     all_together = all_together.to_dict("records")
@@ -442,7 +490,6 @@ def _add_transcript_release_info_to_db(source: str, release_version: str,
 
     return release
 
-
 # 'atomic' should ensure that any failure rolls back the entire attempt to seed 
 # transcripts - resetting the database to its start position
 @transaction.atomic
@@ -529,7 +576,7 @@ def seed_transcripts(
             _add_transcript_categorisation_to_db(transcript, releases_and_data_to_link)
 
     tx_ending = datetime.datetime.now().strftime("%H:%M:%S")
-    print(f"Finished adding transcripts to db: {tx_starting}")
+    print(f"Finished adding transcripts to db: {tx_ending}")
 
     # write error log for those interested to see
     if write_error_log:
