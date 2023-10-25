@@ -88,7 +88,7 @@ class Command(BaseCommand):
         Retrieve relevant superpanels and CI-superpanels from the database
         These will be output in the final file.
         Returns CI superpanels and a list of relevant superpanels.
-        
+
         :return: ci_superpanels, a dict containing R codes as keys, with lists
         of clinical indication-superpanel information provided as keys
         :return: relevant_panels [set], a set of relevant superpanel IDs

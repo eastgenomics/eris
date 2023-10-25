@@ -67,7 +67,7 @@ def flag_clinical_indication_panel_for_review(
     This function is normally called when there is a new ci-panel link when seeding thus
     the old ci-panel link will be flagged to be deactivated / ignored
     while the new one will be created with pending `True`
-    
+
     :param: clinical_indication_panel [ClinicalIndicationPanel] which needs to be flagged for manual
     review, usually because something has changed in the test directory
     :param: user [str] - currently a string, may one day be a User object if we get
@@ -223,7 +223,7 @@ def _check_td_version_valid(
     database. Causes exceptions to raise if the current TD upload
     is for an old version of the test directory, relative to what's
     in Eris already. If everything is fine, does nothing.
-    
+
     :param: td_version [str], the TD version parsed from the user-uploaded
     test directory file
     :param: latest_db_version [str], the latest TD version found in the
@@ -611,7 +611,7 @@ def _update_ci_superpanel_tables_with_new_ci(
     New clinical indication - the old CI-superpanel entries with the
     same R code, will be set to 'pending = True'. The new CI will be linked to
     those panels, again with 'pending = True' to make it "provisional".
-    
+
     :param: r_code [str], the R code of the new clinical indication
     :param: td_source [str], the test directory's source
     :param: td_version [str], the test directory's version
@@ -747,7 +747,7 @@ def _attempt_ci_panel_creation(
     Gets-or-creates a ClinicalIndicationPanel entry.
     If the entry is new, it will log history too.
 
-    :param: ci_instance [ClinicalIndication], a clinical indication which 
+    :param: ci_instance [ClinicalIndication], a clinical indication which
     needs linking to a panel
     :param: panel_record [Panel], a panel which needs linking to a clinical
     indication
@@ -793,7 +793,7 @@ def _attempt_ci_superpanel_creation(
     Gets-or-creates a ClinicalIndicationSuperPanel entry.
     If the entry is new, it will log history too.
 
-    :param: ci_instance [ClinicalIndication], a clinical indication which 
+    :param: ci_instance [ClinicalIndication], a clinical indication which
     needs linking to a panel
     :param: panel_record [Panel], a panel which needs linking to a clinical
     indication
