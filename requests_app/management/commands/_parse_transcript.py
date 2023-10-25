@@ -11,19 +11,16 @@ from requests_app.models import Gene, Transcript, TranscriptRelease, \
         TranscriptReleaseTranscriptFile
 
 
-def _update_existing_gene_metadata_in_db(
+def _update_existing_gene_metadata_symbol_in_db(
     hgnc_id_to_approved_symbol,
-    hgnc_id_to_alias_symbols,
     ) -> None:
     """
     Function to update gene metadata in db using hgnc dump prepared dictionaries
     Updates approved symbol if that has changed.
-    Updates alias symbols if those have changed.
     To speed up the function, we utilise looping over lists-of-dictionaries,
     and bulk updates.
     
     :param hgnc_id_to_approved_symbol: dictionary of hgnc id to approved symbol
-    :param hgnc_id_to_alias_symbols: dictionary of hgnc id to alias symbols
     """
 
     hgnc_id_list = [{i.hgnc_id: [i.gene_symbol, i.alias_symbols]} for i in Gene.objects.all()]
@@ -43,8 +40,22 @@ def _update_existing_gene_metadata_in_db(
 
     now = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"Start gene symbol bulk update: {now}")
-    Gene.objects.bulk_update(gene_symbol_updates, ['gene_symbol'])
+    with transaction.atomic():
+        Gene.objects.bulk_update(gene_symbol_updates, ['gene_symbol'])
 
+def _update_existing_gene_metadata_aliases_in_db(
+    hgnc_id_to_alias_symbols,
+    ) -> None:
+    """
+    Function to update gene metadata in db using hgnc dump prepared dictionaries
+    Updates alias symbols if those have changed.
+    To speed up the function, we utilise looping over lists-of-dictionaries,
+    and bulk updates.
+    
+    :param hgnc_id_to_alias_symbols: dictionary of hgnc id to alias symbols
+    """
+
+    hgnc_id_list = [{i.hgnc_id: [i.gene_symbol, i.alias_symbols]} for i in Gene.objects.all()]
 
     gene_alias_updates = []
 
@@ -63,7 +74,9 @@ def _update_existing_gene_metadata_in_db(
 
     now = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"Start gene alias bulk update: {now}")
-    Gene.objects.bulk_update(gene_alias_updates, ['alias_symbols'])
+    with transaction.atomic():
+        Gene.objects.bulk_update(gene_alias_updates, ['alias_symbols'])
+
 
 def _prepare_hgnc_file(hgnc_file: str) -> tuple[dict[str, str], list[dict]]:
     """
@@ -80,7 +93,6 @@ def _prepare_hgnc_file(hgnc_file: str) -> tuple[dict[str, str], list[dict]]:
     :return: a list of dicts, each dict contains symbol AND alias AND hgnd_id
     """
     hgnc: pd.DataFrame = pd.read_csv(hgnc_file, delimiter="\t")
-    hgnc = hgnc.replace(np.nan, None)
 
     needed_cols = ["HGNC ID", "Approved symbol", "Alias symbols"]
     _sanity_check_cols_exist(hgnc, needed_cols, "HGNC dump")
@@ -93,8 +105,11 @@ def _prepare_hgnc_file(hgnc_file: str) -> tuple[dict[str, str], list[dict]]:
         hgnc.groupby("HGNC ID")["Alias symbols"].apply(list).to_dict()
     )
 
-    _update_existing_gene_metadata_in_db(
-        hgnc_id_to_approved_symbol, hgnc_id_to_alias_symbols
+    _update_existing_gene_metadata_symbol_in_db(
+        hgnc_id_to_approved_symbol
+    )
+    _update_existing_gene_metadata_aliases_in_db(
+        hgnc_id_to_alias_symbols
     )
 
     all_together = hgnc[needed_cols]
@@ -242,7 +257,7 @@ def _add_transcript_to_db(gene: Gene, transcript: str,
     return tx
 
 def _add_transcript_categorisation_to_db(transcript: Transcript,
-                                         data) -> None:
+                                         data: dict) -> None:
     """
     Each transcript has been searched for in different transcript release files,
     to work out whether its a default clinical transcript or not.
