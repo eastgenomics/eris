@@ -442,32 +442,6 @@ def _add_transcript_release_info_to_db(source: str, release_version: str,
 
     return release
 
-def _update_or_create_gene_from_db(hgnc_id: str, hgnc_file_records: list[dict])\
-    -> Gene:
-    """
-    If a gene exists in the db, fetch its record and update it from newest source
-    Otherwise, fill in its details
-    Throw an error if the gene is in the HGNC data more than once
-    """
-    matches = [i for i in hgnc_file_records if i["HGNC ID"] == hgnc_id]
-    if len(matches) > 1:
-        raise ValueError("HGNC ID appears twice in HGNC file")
-    elif len(matches) == 1:
-        match = matches[0]
-        gene, _ = Gene.objects.update_or_create(
-            hgnc_id=hgnc_id,
-            defaults={"gene_symbol": match["Approved symbol"],
-                      "alias_symbols": match["Alias symbols"]}
-        )
-        return gene
-    else:
-        # we don't know the symbol or alias IDs
-        gene, _ = Gene.objects.update_or_create(
-            hgnc_id=hgnc_id,
-            defaults={"gene_symbol": None,
-                      "alias_symbols": None}
-        )
-        return gene
 
 # 'atomic' should ensure that any failure rolls back the entire attempt to seed 
 # transcripts - resetting the database to its start position
@@ -531,11 +505,13 @@ def seed_transcripts(
 
     # decide whether a transcript is clinical or not
     # add all this information to the database
+    tx_starting = datetime.datetime.now().strftime("%H:%M:%S")
+    print(f"Start adding transcripts: {tx_starting}")
     for hgnc_id, transcripts in gff.items():
-        gene = _update_or_create_gene_from_db(hgnc_id, hgnc_with_info)
         # get deduplicated transcripts
         transcripts = set(transcripts)
         for tx in transcripts:
+            gene = Gene.objects.get(hgnc_id=hgnc_id)
             # get information about how the transcript matches against MANE and HGMD
             mane_select_data, mane_plus_clinical_data, hgmd_data, err = \
                 _transcript_assign_to_source(tx, hgnc_id, mane_data, markname_hgmd, gene2refseq_hgmd)
@@ -551,6 +527,9 @@ def seed_transcripts(
                                          mane_plus_clinical_rel: mane_plus_clinical_data,
                                          hgmd_rel: hgmd_data}
             _add_transcript_categorisation_to_db(transcript, releases_and_data_to_link)
+
+    tx_ending = datetime.datetime.now().strftime("%H:%M:%S")
+    print(f"Finished adding transcripts to db: {tx_starting}")
 
     # write error log for those interested to see
     if write_error_log:
