@@ -268,6 +268,9 @@ def _insert_panel_data_into_db(panel: PanelClass, user: str) -> Panel:
     Controls creation and flagging of new and old CI-Panel links,
     where the Panel version has changed.
     Controls creation of genes and regions.
+
+    :param: panel [PanelClass], parsed panel input from the API
+    :param: user [str], the user initiating this change
     """
     panel_external_id: str = panel.id
     panel_name: str = panel.name
@@ -324,6 +327,12 @@ def _insert_superpanel_into_db(
     This function differs slightly from the one for Panels because:
     1. SuperPanelClass has a different structure from PanelClass.
     2. SuperPanels need linking to their child-panels.
+
+    :param: superpanel [SuperPanelClass], parsed panel input from the API
+    :param: child_panels [list[Panel]], the 'child' panels which make up
+    the SuperPanel. These are already added to the db, so they're a list
+    of database objects.
+    :param: user [str], the user initiating this
     """
     panel_external_id: str = superpanel.id
     panel_name: str = superpanel.name
@@ -380,6 +389,11 @@ def panel_insert_controller(
     """
     Carries out coordination of panel creation - Panels and SuperPanels are
     handled differently in the database.
+
+    :param: panels [list[PanelClass]], a list of parsed panel input from the API
+    :param: superpanels [list[SuperPanel]], a list of parsed superpanel
+    input from the API
+    :param: user [str], the user initiating this
     """
     # currently, only handle Panel/SuperPanel if the panel data is from
     # PanelApp
