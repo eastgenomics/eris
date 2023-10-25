@@ -1,8 +1,10 @@
 import datetime as dt
 import pandas as pd
 import re
+import numpy as np
 from django.db import transaction
 pd.options.mode.chained_assignment = None  # default='warn'
+import datetime
 
 from requests_app.models import Gene, Transcript, TranscriptRelease, \
     TranscriptSource, TranscriptFile, TranscriptReleaseTranscript, \
@@ -15,25 +17,53 @@ def _update_existing_gene_metadata_in_db(
     ) -> None:
     """
     Function to update gene metadata in db using hgnc dump prepared dictionaries
-
+    Updates approved symbol if that has changed.
+    Updates alias symbols if those have changed.
+    To speed up the function, we utilise looping over lists-of-dictionaries,
+    and bulk updates.
+    
     :param hgnc_id_to_approved_symbol: dictionary of hgnc id to approved symbol
     :param hgnc_id_to_alias_symbols: dictionary of hgnc id to alias symbols
     """
 
-    # updating gene symbols data in db using hgnc dump
-    for gene in Gene.objects.all():
-        if gene.hgnc_id in hgnc_id_to_approved_symbol:
+    hgnc_id_list = [{i.hgnc_id: [i.gene_symbol, i.alias_symbols]} for i in Gene.objects.all()]
+
+    gene_symbol_updates = []
+
+    for gene_info in hgnc_id_list:
+        for hgnc_id, other_gene_info in gene_info.items():
+            gene_symbol = other_gene_info[0]
             # if gene symbol in db differ from approved symbol in hgnc
-            if gene.gene_symbol != hgnc_id_to_approved_symbol[gene.hgnc_id]:
-                gene.gene_symbol = hgnc_id_to_approved_symbol[gene.hgnc_id]
+            if hgnc_id in hgnc_id_to_approved_symbol:
+                if gene_symbol != hgnc_id_to_approved_symbol[hgnc_id]:
+                    gene = Gene.objects.get(hgnc_id=hgnc_id)
+                    gene.gene_symbol = hgnc_id_to_approved_symbol[hgnc_id]
+                    gene_symbol_updates.append(gene)
 
-        # if hgnc id in dictionary, and alias symbols are not all pd.nan
-        if gene.hgnc_id in hgnc_id_to_alias_symbols and not pd.isna(
-            hgnc_id_to_alias_symbols[gene.hgnc_id]
-        ).all():
-            gene.alias_symbols = ",".join(hgnc_id_to_alias_symbols[gene.hgnc_id])
 
-        gene.save()
+    now = datetime.datetime.now().strftime("%H:%M:%S")
+    print(f"Start gene symbol bulk update: {now}")
+    Gene.objects.bulk_update(gene_symbol_updates, ['gene_symbol'])
+
+
+    gene_alias_updates = []
+
+    for gene_info in hgnc_id_list:
+        for hgnc_id, other_gene_info in gene_info.items():
+            # if hgnc id in dictionary, and alias symbols are not all pd.nan
+            alias_symbols = other_gene_info[1]
+            if hgnc_id in hgnc_id_to_alias_symbols and not pd.isna(
+                hgnc_id_to_alias_symbols[hgnc_id]
+            ).all():
+                joined_new_alias_symbols = ",".join(hgnc_id_to_alias_symbols[hgnc_id])
+                if alias_symbols != joined_new_alias_symbols:
+                    gene = Gene.objects.get(hgnc_id=hgnc_id)
+                    gene.alias_symbols = joined_new_alias_symbols
+                    gene_alias_updates.append(gene)
+
+    now = datetime.datetime.now().strftime("%H:%M:%S")
+    print(f"Start gene alias bulk update: {now}")
+    Gene.objects.bulk_update(gene_alias_updates, ['alias_symbols'])
 
 def _prepare_hgnc_file(hgnc_file: str) -> tuple[dict[str, str], list[dict]]:
     """
@@ -50,7 +80,8 @@ def _prepare_hgnc_file(hgnc_file: str) -> tuple[dict[str, str], list[dict]]:
     :return: a list of dicts, each dict contains symbol AND alias AND hgnd_id
     """
     hgnc: pd.DataFrame = pd.read_csv(hgnc_file, delimiter="\t")
-    
+    hgnc = hgnc.replace(np.nan, None)
+
     needed_cols = ["HGNC ID", "Approved symbol", "Alias symbols"]
     _sanity_check_cols_exist(hgnc, needed_cols, "HGNC dump")
 
@@ -210,17 +241,8 @@ def _add_transcript_to_db(gene: Gene, transcript: str,
     tx.save()
     return tx
 
-def _transcript_categorisation_bulk_upload(data):
-    """
-    Call a bulk upload of transcripts, saving time
-    """
-    #TODO: work out how to map data onto bulk upload
-    objs = TranscriptReleaseTranscript.objects.bulk_create()
-
-
 def _add_transcript_categorisation_to_db(transcript: Transcript,
-                                         release: TranscriptRelease,
-                                         data: dict) -> None:
+                                         data) -> None:
     """
     Each transcript has been searched for in different transcript release files,
     to work out whether its a default clinical transcript or not.
@@ -231,13 +253,18 @@ def _add_transcript_categorisation_to_db(transcript: Transcript,
     This function stores that search information, along with the transcript-release
     link.
     """
-    tx_link, _ = TranscriptReleaseTranscript.objects.get_or_create(
-        transcript=transcript,
-        release=release,
-        match_version=data["match_version"],
-        match_base=data["match_base"],
-        default_clinical=data["clinical"]
-        )
+    print("add transcript cat to db")
+    TranscriptReleaseTranscript.objects.bulk_create(
+        [
+            TranscriptReleaseTranscript(transcript=transcript,
+                                        release=release,
+                                        match_version=data["match_version"],
+                                        match_base=data["match_base"],
+                                        default_clinical=data["clinical"]) 
+                                        for release, data in data.items()
+                                        ],
+                                        ignore_conflicts=True
+    )
 
 def _get_clin_transcript_from_hgmd_files(hgnc_id, markname: dict, gene2refseq: dict) \
     -> tuple[str | None, str | None]:
@@ -403,10 +430,10 @@ def _add_transcript_release_info_to_db(source: str, release_version: str,
 
     return release
 
-def _get_or_create_gene_from_db(hgnc_id: str, hgnc_file_records: list[dict])\
+def _update_or_create_gene_from_db(hgnc_id: str, hgnc_file_records: list[dict])\
     -> Gene:
     """
-    If a gene exists in the db, fetch its record
+    If a gene exists in the db, fetch its record and update it from newest source
     Otherwise, fill in its details
     Throw an error if the gene is in the HGNC data more than once
     """
@@ -414,16 +441,19 @@ def _get_or_create_gene_from_db(hgnc_id: str, hgnc_file_records: list[dict])\
     if len(matches) > 1:
         raise ValueError("HGNC ID appears twice in HGNC file")
     elif len(matches) == 1:
-        gene, _ = Gene.objects.get_or_create(
+        match = matches[0]
+        gene, _ = Gene.objects.update_or_create(
             hgnc_id=hgnc_id,
-            gene_symbol=matches[0]["Approved symbol"],
-            alias_symbols=matches[0]["Alias symbols"]
+            defaults={"gene_symbol": match["Approved symbol"],
+                      "alias_symbols": match["Alias symbols"]}
         )
         return gene
     else:
         # we don't know the symbol or alias IDs
-        gene, _ = Gene.objects.get_or_create(
-            hgnc_id=hgnc_id
+        gene, _ = Gene.objects.update_or_create(
+            hgnc_id=hgnc_id,
+            defaults={"gene_symbol": None,
+                      "alias_symbols": None}
         )
         return gene
 
@@ -459,6 +489,7 @@ def seed_transcripts(
     :param markname_filepath: markname file path
     :param write_error_log: write error log or not
     """
+    print("top of function")
     # take today datetime
     current_datetime = dt.datetime.today().strftime("%Y%m%d")
 
@@ -472,6 +503,8 @@ def seed_transcripts(
     gene2refseq_hgmd = _prepare_gene2refseq_file(g2refseq_filepath)
     markname_hgmd = _prepare_markname_file(markname_filepath)
 
+    print("files prep complete")
+
     # set up the transcript release by adding it, any data sources, and and
     # supporting files to the database. Throw errors for repeated versions.
     mane_select_rel = _add_transcript_release_info_to_db(
@@ -484,14 +517,18 @@ def seed_transcripts(
         {"hgmd_g2refseq": g2refseq_ext_id,
          "hgmd_markname": markname_ext_id})
 
+    print("transcript releases done")
+
     # for record purpose (just in case)
     all_errors: list[str] = []
 
     # decide whether a transcript is clinical or not
     # add all this information to the database
+    print("about to loop")
     for hgnc_id, transcripts in gff.items():
-        gene = _get_or_create_gene_from_db(hgnc_id, hgnc_with_info)
+        gene = _update_or_create_gene_from_db(hgnc_id, hgnc_with_info)
         # get deduplicated transcripts
+        print("done with gene updating")
         transcripts = set(transcripts)
         for tx in transcripts:
             # get information about how the transcript matches against MANE and HGMD
@@ -501,6 +538,7 @@ def seed_transcripts(
                 all_errors.append(err)
 
             # add the transcript to the Transcript table
+            print("_add_transcript_to_db")
             transcript = _add_transcript_to_db(gene, tx, reference_genome)
 
             # link all the releases to the Transcript,
@@ -508,9 +546,8 @@ def seed_transcripts(
             releases_and_data_to_link = {mane_select_rel: mane_select_data,
                                          mane_plus_clinical_rel: mane_plus_clinical_data,
                                          hgmd_rel: hgmd_data}
-            _transcript_categorisation_bulk_upload(data_to_link)
-            for release, data in releases_and_data_to_link.items():
-                _add_transcript_categorisation_to_db(transcript, release, data)
+            print("add categorisation")
+            _add_transcript_categorisation_to_db(transcript, releases_and_data_to_link)
 
     # write error log for those interested to see
     if write_error_log:

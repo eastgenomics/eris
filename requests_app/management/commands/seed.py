@@ -49,7 +49,6 @@ class Command(BaseCommand):
         for file_id in file_ids:
             if len(file_id) == 0:
                 missing_ids.append(file_id)
-            #TODO: regex for file-
             matches = re.match(r'^file-[\w]+$', file_id)
             if not matches:
                 missing_ids.append(file_id)

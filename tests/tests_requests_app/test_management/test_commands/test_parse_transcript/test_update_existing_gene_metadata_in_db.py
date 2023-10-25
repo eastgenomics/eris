@@ -7,6 +7,7 @@ from requests_app.management.commands._parse_transcript import \
     _update_existing_gene_metadata_in_db
 
 
+#TODO: test None values, we are getting lock-ups https://github.com/ESSolutions/django-mssql-backend/issues/88
 class TestUpdateExistingGene(TestCase):
     """
     Test various cases on _update_existing_gene_metadata_in_db

@@ -299,6 +299,7 @@ class Gene(models.Model):
 
     class Meta:
         db_table = "gene"
+        unique_together = ("hgnc_id", "gene_symbol", "alias_symbols")
 
     def __str__(self):
         return str(self.id)
