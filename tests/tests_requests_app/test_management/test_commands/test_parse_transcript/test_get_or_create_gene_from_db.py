@@ -2,52 +2,28 @@ from django.test import TestCase
 
 from unittest import mock
 import pandas as pd
-
+from django.db import transaction
 
 from requests_app.management.commands._parse_transcript import _add_new_genes_to_db
 from requests_app.models import Gene
 
-#TODO: change these tests
-class TestGetOrCreate_AlreadyExistsIdentical(TestCase):
+class TestGetOrCreate_CreateNew(TestCase):
     """
-    A test built because I didn't understand the behaviour of get_or_create/
-    update_or_create.
-    Emulates a case where a gene/transcript are entered twice, 
-    exactly the same
-    EXPECT: single entry in the database for the gene
+    Just emulates straightforward entry of new genes
+    EXPECT: single entry in the database for each gene
     """
     def setUp(self) -> None:
-        self.gene = Gene.objects.create(hgnc_id="HGNC:10257",
-                                        gene_symbol="ROR2",
-                                        alias_symbols=None)
+        pass
         
     def test_adding_identical_gene(self):
-        input_hgnc = "HGNC:10257"
-        matches = [{'HGNC ID': 'HGNC:10257', 'Approved symbol': 'ROR2', 'Alias symbols': None}]
-        result = _add_new_genes_to_db(input_hgnc, matches)
-        assert result == self.gene
+        approved_symbols = {"HGNC:10257": "ROR2", "HGNC:TEST": "TEST_SYMBOL"}
+        alias_symbols = {"HGNC:10257": None, "HGNC:TEST": "TEST, ALIAS"}
 
+        _add_new_genes_to_db(approved_symbols, alias_symbols)
 
-class TestGetOrCreate_AlreadyExistsSlightlyDifferent(TestCase):
-    """
-    A test built because I didn't understand the behaviour of get_or_create/
-    update_or_create.
-    Emulates a case where a gene/transcript are entered twice, 
-    once with less info, a second time with more info
-    """
-    def setUp(self) -> None:
-        self.gene = Gene.objects.create(hgnc_id="HGNC:10257",
-                                        gene_symbol=None,
-                                        alias_symbols=None)
-        
-    def test_adding_identical_gene(self):
-        input_hgnc = "HGNC:10257"
-        matches = [{'HGNC ID': 'HGNC:10257', 'Approved symbol': "TEST", 'Alias symbols': "TEST, ALIAS"}]
-        _ = _add_new_genes_to_db(input_hgnc, matches)
-        
-        # check the entry updates in db
-        results = Gene.objects.all()
-        assert len(results) == 1
-        assert results[0].hgnc_id == "HGNC:10257"
-        assert results[0].gene_symbol == "TEST"
-        assert results[0].alias_symbols == "TEST, ALIAS"
+        post_run_genes = Gene.objects.all()
+        assert len(post_run_genes) == 2
+        assert post_run_genes[0].gene_symbol == "ROR2"
+        assert post_run_genes[1].gene_symbol == "TEST_SYMBOL"
+        assert post_run_genes[0].alias_symbols == None
+        assert post_run_genes[1].alias_symbols == "TEST, ALIAS"

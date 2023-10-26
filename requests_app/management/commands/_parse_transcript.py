@@ -73,8 +73,9 @@ def _update_existing_gene_metadata_aliases_in_db(
     print(f"Start gene alias bulk update: {now}")
     Gene.objects.bulk_update(gene_alias_updates, ['alias_symbols'])
 
-def _add_new_genes_to_db(approved_symbols, alias_symbols)\
-    -> None:
+def _add_new_genes_to_db(approved_symbols: dict[str: str],
+                         alias_symbols: dict[str: list])\
+                            -> None:
     """
     If a gene exists in the HGNC file, but does NOT exist in the db, make it.
     Throw an error if the gene is in the HGNC data more than once.
@@ -82,6 +83,8 @@ def _add_new_genes_to_db(approved_symbols, alias_symbols)\
     To speed up the function, we utilise looping over lists-of-dictionaries,
     and bulk updates.
     
+    :param approved_symbols: dictionary of hgnc id to approved symbols
+    :param alias_symbols: dictionary of hgnc id to alias symbols
     """
     genes_to_create = []
 
@@ -104,8 +107,8 @@ def _add_new_genes_to_db(approved_symbols, alias_symbols)\
 
         # get aliases
         matches = alias_symbols[hgnc_id]
-        if len(matches) > 0:
-            alias_match = matches[0]
+        if matches:
+            alias_match = matches
         else:
             alias_match = None
         
