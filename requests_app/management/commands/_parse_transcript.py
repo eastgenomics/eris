@@ -301,7 +301,8 @@ def _add_transcript_to_db(gene: Gene, transcript: str,
     return tx
 
 def _add_transcript_categorisation_to_db(transcript: Transcript,
-                                         data: dict) -> None:
+                                         data: dict[TranscriptRelease: 
+                                                    dict[str: bool]]) -> None:
     """
     Each transcript has been searched for in different transcript release files,
     to work out whether its a default clinical transcript or not.
@@ -311,6 +312,13 @@ def _add_transcript_categorisation_to_db(transcript: Transcript,
     and 'HGMD'.
     This function stores that search information, along with the transcript-release
     link.
+
+    :param: the Transcript object
+    :param: a dictionary containing TranscriptRelease objects (generally 1 for MANE Select,
+    1 for MANE Plus Clinical and 1 for HGMD), each of which has a dictionary as its key.
+    The nested dictionary contains the keys 'match_version', 'match_base' and 'clinical'
+    which tells you whether the tx was found in the release (True/False) or not looked
+    for (None).
     """
     TranscriptReleaseTranscript.objects.bulk_create(
         [

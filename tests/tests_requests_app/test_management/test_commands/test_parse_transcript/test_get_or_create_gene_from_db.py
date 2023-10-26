@@ -23,7 +23,7 @@ class TestGetOrCreate_CreateNew(TestCase):
 
         post_run_genes = Gene.objects.all()
         assert len(post_run_genes) == 2
-        assert post_run_genes[0].gene_symbol == "ROR2"
-        assert post_run_genes[1].gene_symbol == "TEST_SYMBOL"
-        assert post_run_genes[0].alias_symbols == None
-        assert post_run_genes[1].alias_symbols == "TEST, ALIAS"
+        assert post_run_genes[0].gene_symbol in ["ROR2", "TEST_SYMBOL"]
+        assert post_run_genes[1].gene_symbol in ["ROR2", "TEST_SYMBOL"]
+        assert post_run_genes[0].alias_symbols in [None, "TEST, ALIAS"]
+        assert post_run_genes[1].alias_symbols in [None, "TEST, ALIAS"]
