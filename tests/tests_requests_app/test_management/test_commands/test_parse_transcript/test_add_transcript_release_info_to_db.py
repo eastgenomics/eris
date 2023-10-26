@@ -80,12 +80,13 @@ class TestAddTranscriptRelease_FromScratch(TestCase):
         assert not errors, errors
 
 
-class TestAddTranscriptRelease_ErrorsOnVersionRepeats(TestCase):
+class TestAddTranscriptRelease_ErrorsOnVersionRepeatsWithDifferentFiles(TestCase):
     """
     _add_transcript_release_info_to_db adds transcript sources, releases,
     and supporting file IDs to the database.
-    If a transcript release already exists in the DB for the source being
-    processed, it should fetch instead of creating.
+    CASE: An identical transcript release already exists in the DB, but no files are linked
+    EXPECT: The old db copy of the release is fetched, and because the new files 'don't match'
+    the old missing ones, an error is raised.
     """
 
     def setUp(self) -> None:
@@ -93,19 +94,58 @@ class TestAddTranscriptRelease_ErrorsOnVersionRepeats(TestCase):
         self.release = TranscriptRelease.objects.create(
             source=self.source, external_release_version="v1.0.5", reference_genome="37"
         )
-        pass
 
     def test_external_release_version_fetched(self):
         """
         Add to a db with a perfectly-matching release already in it.
-        Expect: get instead of create - even though the 'created' datetime
-        will be different
+        Expect: get instead of create -
         """
         source = "HGMD"
         version = "v1.0.5"
         ref_genome = "37"
         data = {"mane": "file-1357", "another_mane": "file-101010"}
 
-        _add_transcript_release_info_to_db(source, version, ref_genome, data)
-        results = TranscriptRelease.objects.all()
-        assert len(results) == 1
+        with self.assertRaises(ValueError) as msg:
+            _add_transcript_release_info_to_db(source, version, ref_genome, data)
+        self.assertEqual(
+            "Transcript release 7 v1.0.5 already exists in db, but the uploaded file is not in the db. Please review.",
+            str(msg.exception),
+        )
+
+
+class TestAddTranscriptRelease_SameFilesNoProblem(TestCase):
+    """
+    _add_transcript_release_info_to_db adds transcript sources, releases,
+    and supporting file IDs to the database.
+    CASE: An identical transcript release already exists in the DB, and the files linked
+    are the same too.
+    EXPECT: The old db copy of the release is fetched, and because the new files have the
+    same IDs as the old one, there isn't an error.
+    """
+
+    def setUp(self) -> None:
+        self.source = TranscriptSource.objects.create(source="HGMD")
+        self.release = TranscriptRelease.objects.create(
+            source=self.source, external_release_version="v1.0.5", reference_genome="37"
+        )
+        self.file_one = TranscriptFile.objects.create(file_id="123", file_type="test")
+        self.li = TranscriptReleaseTranscriptFile.objects.create(
+            transcript_release=self.release, transcript_file=self.file_one
+        )
+
+    def test_external_release_version_fetched(self):
+        """
+        Add to a db with a perfectly-matching release AND file already in it.
+        Expect: get instead of create - the release is returned without issue.
+        """
+        source = "HGMD"
+        version = "v1.0.5"
+        ref_genome = "37"
+        data = {"test": "123"}
+
+        result = _add_transcript_release_info_to_db(source, version, ref_genome, data)
+        self.assertEqual(result, self.release)
+
+        files = TranscriptFile.objects.all()
+        assert len(files) == 1
+        self.assertEqual(files[0], self.file_one)

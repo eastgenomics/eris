@@ -515,6 +515,8 @@ def _add_transcript_release_info_to_db(
     supporting files are added to the database.
     Note that the files parameter needs to be provided as a dict, in which keys are
     file types and values are external IDs.
+    Errors will be raised if the release is already in the database AND its linked
+    file IDs are different from what the user tried to input.
 
     :param: source, the name of a source of transcript information (e.g. MANE Select)
     :param: release_version, the version of the transcript release as entered by user
@@ -530,24 +532,58 @@ def _add_transcript_release_info_to_db(
     # create the transcript release, or just get it
     # (this could happen if you upload an old release of 1 source, alongside a new release
     # of another source)
-    release, _ = TranscriptRelease.objects.get_or_create(
+    release, release_created = TranscriptRelease.objects.get_or_create(
         source=source,
         external_release_version=release_version,
         reference_genome=ref_genome,
     )
-    release.save()
 
-    # Create the files from the dictionary provided, and link them to releases
-    for file_type, file_id in files.items():
-        file, _ = TranscriptFile.objects.get_or_create(
-            file_id=file_id, file_type=file_type
-        )
-        file.save()
+    if release_created:
+        # Create the files from the dictionary provided, and link them to releases
+        for file_type, file_id in files.items():
+            file, _ = TranscriptFile.objects.get_or_create(
+                file_id=file_id, file_type=file_type
+            )
 
-        file_release, _ = TranscriptReleaseTranscriptFile.objects.get_or_create(
-            transcript_release=release, transcript_file=file
-        )
-        file_release.save()
+            file_release, _ = TranscriptReleaseTranscriptFile.objects.get_or_create(
+                transcript_release=release, transcript_file=file
+            )
+
+    else:
+        # if the release exists already, trigger an error if we are trying to link
+        # new files to the existing release. If files are unchanged, do nothing
+        for file_type, file_id in files.items():
+            existing_file = TranscriptFile.objects.filter(file_id=file_id)
+            if not existing_file:
+                raise ValueError(
+                    f"Transcript release {source} {release_version} "
+                    f"already exists in db, but the uploaded file is not "
+                    f"in the db. Please review."
+                )
+            else:
+                for file in existing_file:
+                    links = TranscriptReleaseTranscriptFile.objects.filter(
+                        transcript_file=file
+                    )
+                    for x in links:
+                        if x.transcript_release != release:
+                            raise ValueError(
+                                f"Transcript file {file.file_id} "
+                                f"already exists in db, but with a different transcript: "
+                                f"{x.transcript_release}. Please review."
+                            )
+
+        # TODO: check we aren't uploading fewer files than we should be for the release
+        # all_links_for_release = \
+        #     TranscriptReleaseTranscriptFile.objects.filter(transcript_release=release)
+        # for i in all_links_for_release:
+        #     print("TST")
+        #     print(i)
+        #     result = TranscriptFile.objects.get(pk=i.transcript_file)
+        #     if result.file_id not in files.values():
+        #         raise ValueError(f"Transcript file {result.file_id} "
+        #                          f"is linked to the release in the db, but wasn't uploaded. "
+        #                          f"Please review.")
 
     return release
 
