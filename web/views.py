@@ -1452,9 +1452,9 @@ def genepanel(request):
         ci_panels[row["clinical_indication_id__r_code"]].append(row)
 
     # fetch all relevant genes for the relevant panels
-    for row in PanelGene.objects.filter(panel_id__in=relevant_panels, active=True).values(
-        "gene_id__hgnc_id", "gene_id", "panel_id"
-    ):
+    for row in PanelGene.objects.filter(
+        panel_id__in=relevant_panels, active=True
+    ).values("gene_id__hgnc_id", "gene_id", "panel_id"):
         panel_genes[row["panel_id"]].append((row["gene_id__hgnc_id"], row["gene_id"]))
 
     list_of_genepanel: list[Genepanel] = []
