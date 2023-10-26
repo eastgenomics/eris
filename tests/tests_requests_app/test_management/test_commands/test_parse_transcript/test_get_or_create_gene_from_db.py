@@ -7,14 +7,16 @@ from django.db import transaction
 from requests_app.management.commands._parse_transcript import _add_new_genes_to_db
 from requests_app.models import Gene
 
+
 class TestGetOrCreate_CreateNew(TestCase):
     """
     Just emulates straightforward entry of new genes
     EXPECT: single entry in the database for each gene
     """
+
     def setUp(self) -> None:
         pass
-        
+
     def test_adding_identical_gene(self):
         approved_symbols = {"HGNC:10257": "ROR2", "HGNC:TEST": "TEST_SYMBOL"}
         alias_symbols = {"HGNC:10257": None, "HGNC:TEST": "TEST, ALIAS"}

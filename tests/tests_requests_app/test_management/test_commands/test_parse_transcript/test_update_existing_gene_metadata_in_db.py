@@ -3,46 +3,37 @@ import numpy as np
 
 from requests_app.models import Gene
 
-from requests_app.management.commands._parse_transcript import \
-    _update_existing_gene_metadata_symbol_in_db,\
-        _update_existing_gene_metadata_aliases_in_db
+from requests_app.management.commands._parse_transcript import (
+    _update_existing_gene_metadata_symbol_in_db,
+    _update_existing_gene_metadata_aliases_in_db,
+)
 
 
-#TODO: test None values, we are getting lock-ups https://github.com/ESSolutions/django-mssql-backend/issues/88
 class TestUpdateExistingGeneSymbol(TestCase):
     """
     Test various cases on _update_existing_gene_metadata_symbol_in_db
     """
+
     def setUp(self) -> None:
         # Populate the Gene test database with some easy examples
         self.FAM234A = Gene.objects.create(
             hgnc_id="14163",
             gene_symbol="FAM234A",
-            alias_symbols="DKFZP761D0211,FLJ32603"
+            alias_symbols="DKFZP761D0211,FLJ32603",
         )
 
         Gene.objects.create(
-            hgnc_id="12713",
-            gene_symbol="VPS41",
-            alias_symbols="HVSP41"
+            hgnc_id="12713", gene_symbol="VPS41", alias_symbols="HVSP41"
         )
 
-        Gene.objects.create(
-            hgnc_id="50000",
-            gene_symbol="YFP1",
-            alias_symbols="ABC"
-        )
+        Gene.objects.create(hgnc_id="50000", gene_symbol="YFP1", alias_symbols="ABC")
 
         Gene.objects.create(
-            hgnc_id="51000",
-            gene_symbol="YFP2",
-            alias_symbols="ABCD,EFGH"
+            hgnc_id="51000", gene_symbol="YFP2", alias_symbols="ABCD,EFGH"
         )
 
         self.gene_blank = Gene.objects.create(
-            hgnc_id="50",
-            gene_symbol=None,
-            alias_symbols=None
+            hgnc_id="50", gene_symbol=None, alias_symbols=None
         )
 
     def test_no_changes(self):
@@ -63,7 +54,7 @@ class TestUpdateExistingGeneSymbol(TestCase):
         Test case: the approved name has changed for a gene, since last update
         """
         made_up_approved_name = "FAM234A_test"
-        test_hgnc_approved = {"14163": made_up_approved_name} 
+        test_hgnc_approved = {"14163": made_up_approved_name}
         _update_existing_gene_metadata_symbol_in_db(test_hgnc_approved)
 
         # check that the entry for 14163 in the Gene test datatable is updated
@@ -79,8 +70,10 @@ class TestUpdateExistingGeneSymbol(TestCase):
         made_up_approved_name = "FAM234A_test"
         made_up_approved_name_two = "test_nonsense"
 
-        test_hgnc_approved = {"14163": made_up_approved_name, 
-                              "12713": made_up_approved_name_two}
+        test_hgnc_approved = {
+            "14163": made_up_approved_name,
+            "12713": made_up_approved_name_two,
+        }
         _update_existing_gene_metadata_symbol_in_db(test_hgnc_approved)
 
         # check that the entry for 14163 in the Gene test datatable is updated
@@ -97,43 +90,34 @@ class TestUpdateExistingAliasSymbol(TestCase):
     """
     Test various cases on _update_existing_gene_metadata_aliases_in_db
     """
+
     def setUp(self) -> None:
         # Populate the Gene test database with some easy examples
         self.FAM234A = Gene.objects.create(
             hgnc_id="14163",
             gene_symbol="FAM234A",
-            alias_symbols="DKFZP761D0211,FLJ32603"
+            alias_symbols="DKFZP761D0211,FLJ32603",
         )
 
         Gene.objects.create(
-            hgnc_id="12713",
-            gene_symbol="VPS41",
-            alias_symbols="HVSP41"
+            hgnc_id="12713", gene_symbol="VPS41", alias_symbols="HVSP41"
         )
 
-        Gene.objects.create(
-            hgnc_id="50000",
-            gene_symbol="YFP1",
-            alias_symbols="ABC"
-        )
+        Gene.objects.create(hgnc_id="50000", gene_symbol="YFP1", alias_symbols="ABC")
 
         Gene.objects.create(
-            hgnc_id="51000",
-            gene_symbol="YFP2",
-            alias_symbols="ABCD,EFGH"
+            hgnc_id="51000", gene_symbol="YFP2", alias_symbols="ABCD,EFGH"
         )
 
         self.gene_blank = Gene.objects.create(
-            hgnc_id="50",
-            gene_symbol=None,
-            alias_symbols=None
+            hgnc_id="50", gene_symbol=None, alias_symbols=None
         )
 
     def test_no_changes(self):
         """
         A gene is unchanged
         """
-        test_aliases = {"14163": ["DKFZP761D0211", "FLJ32603"]}        
+        test_aliases = {"14163": ["DKFZP761D0211", "FLJ32603"]}
         _update_existing_gene_metadata_aliases_in_db(test_aliases)
 
         # check that the entry isn't changed from how it was at set-up
@@ -173,7 +157,7 @@ class TestUpdateExistingAliasSymbol(TestCase):
         gene_db = Gene.objects.filter(hgnc_id="14163")
         assert len(gene_db) == 1
         assert gene_db[0].alias_symbols == self.FAM234A.alias_symbols
-    
+
     def test_alias_list_empty(self):
         """
         Test case: the alias name has changed for a gene, since last update
@@ -189,4 +173,3 @@ class TestUpdateExistingAliasSymbol(TestCase):
         gene_db = Gene.objects.filter(hgnc_id="14163")
         assert len(gene_db) == 1
         assert gene_db[0].alias_symbols == self.FAM234A.alias_symbols
-

@@ -1551,14 +1551,16 @@ def genetotranscript(request):
                     transcript = row["transcript"]
                     source = row.get("source")
 
-                    data = "\t".join([hgnc_id, transcript, 'clinical' if source else 'non-clinical'])
+                    data = "\t".join(
+                        [hgnc_id, transcript, "clinical" if source else "non-clinical"]
+                    )
                     f.write(f"{data}\n")
 
         except Exception as e:
-             return render(
+            return render(
                 request,
                 "web/info/gene2transcript.html",
-                {"transcripts": transcripts, 'error': e},
+                {"transcripts": transcripts, "error": e},
             )
 
         success = True
@@ -1566,5 +1568,5 @@ def genetotranscript(request):
     return render(
         request,
         "web/info/gene2transcript.html",
-        {"transcripts": transcripts, 'success': success},
+        {"transcripts": transcripts, "success": success},
     )
