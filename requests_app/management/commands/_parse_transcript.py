@@ -8,7 +8,7 @@ import datetime
 
 from requests_app.models import Gene, Transcript, TranscriptRelease, \
     TranscriptSource, TranscriptFile, TranscriptReleaseTranscript, \
-        TranscriptReleaseTranscriptFile
+        TranscriptReleaseTranscriptFile, PanelGene
 
 
 def _update_existing_gene_metadata_symbol_in_db(
@@ -87,7 +87,6 @@ def _add_new_genes_to_db(approved_symbols, alias_symbols)\
 
     # all hgncs already in db
     already_exist = [i.hgnc_id for i in Gene.objects.all()]
-    print(len(already_exist))
 
     # get all possible HGNC IDs
     all_hgnc_in_approved = list(set(approved_symbols.keys()))
@@ -120,7 +119,7 @@ def _add_new_genes_to_db(approved_symbols, alias_symbols)\
     print(f"Start gene bulk create: {now}")
     Gene.objects.bulk_create(genes_to_create)
 
-def _prepare_hgnc_file(hgnc_file: str) -> tuple[dict[str, str], list[dict]]:
+def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
     """
     Read hgnc file, sanity-check it, and prepare four dictionaries:
     1. gene symbol to hgnc id
@@ -132,7 +131,6 @@ def _prepare_hgnc_file(hgnc_file: str) -> tuple[dict[str, str], list[dict]]:
 
     :param hgnc_file: hgnc file path
     :return: gene symbol to hgnc id dict
-    :return: a list of dicts, each dict contains symbol AND alias AND hgnd_id
     """
     hgnc: pd.DataFrame = pd.read_csv(hgnc_file, delimiter="\t")
 
@@ -158,10 +156,7 @@ def _prepare_hgnc_file(hgnc_file: str) -> tuple[dict[str, str], list[dict]]:
             hgnc_id_to_approved_symbol, hgnc_id_to_alias_symbols
         )
 
-    all_together = hgnc[needed_cols]
-    all_together = all_together.to_dict("records")
-
-    return hgnc_symbol_to_hgnc_id, all_together
+    return hgnc_symbol_to_hgnc_id
 
 def _sanity_check_cols_exist(df: pd.DataFrame, needed_cols: list, filename: str) -> None:
     """
@@ -404,7 +399,15 @@ def _transcript_assign_to_source(tx: str, hgnc_id: str, mane_data: list[dict], m
     
     if mane_exact_match:
         if len(mane_exact_match) > 1:
-            raise ValueError(f"Transcript in MANE more than once: {tx}")
+            # check if we really need this transcript, because there's Panel-Gene
+            # it's relevant to. If yes, throw an error, otherwise, just skip it
+            rel_panels = PanelGene.objects.filter(gene__hgnc_id=hgnc_id)
+            if len(rel_panels) != 0:
+                raise ValueError(f"Transcript in MANE more than once: {tx}")
+            else:
+                err=f"Transcript in MANE more than once, can't resolve: {tx}"
+                return mane_select_data, mane_plus_clinical_data, \
+                hgmd_data, err
         else:
         # determine whether it's MANE Select or Plus Clinical and return everything
             source = mane_exact_match[0]["MANE TYPE"]
@@ -421,6 +424,14 @@ def _transcript_assign_to_source(tx: str, hgnc_id: str, mane_data: list[dict], m
 
     # fall through to here if no exact match - see if there's a versionless match instead
     if mane_base_match:
+        if len(mane_base_match) > 1:
+            rel_panels = PanelGene.objects.filter(gene__hgnc_id=hgnc_id)
+            if len(rel_panels) != 0:
+                raise ValueError(f"Versionless ranscript in MANE more than once: {tx}")
+            else:
+                err=f"Versionless transcript in MANE more than once, can't resolve: {tx}"
+                return mane_select_data, mane_plus_clinical_data, \
+                hgmd_data, err
         source = mane_base_match[0]["MANE TYPE"]
         if str(source).lower() == "mane select":
             mane_select_data["clinical"] = True
@@ -529,7 +540,7 @@ def seed_transcripts(
     error_log: str = f"{current_datetime}_transcript_error.txt"
 
     # files preparation
-    hgnc_symbol_to_hgnc_id, hgnc_with_info = _prepare_hgnc_file(hgnc_filepath)
+    hgnc_symbol_to_hgnc_id = _prepare_hgnc_file(hgnc_filepath)
     mane_data = _prepare_mane_file(mane_filepath, hgnc_symbol_to_hgnc_id)
     gff = _prepare_gff_file(gff_filepath)
     gene2refseq_hgmd = _prepare_gene2refseq_file(g2refseq_filepath)
