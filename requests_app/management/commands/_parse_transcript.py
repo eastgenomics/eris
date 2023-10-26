@@ -12,7 +12,7 @@ from requests_app.models import Gene, Transcript, TranscriptRelease, \
 
 
 def _update_existing_gene_metadata_symbol_in_db(
-    hgnc_id_to_approved_symbol,
+    hgnc_id_to_approved_symbol: dict[str: str],
     ) -> None:
     """
     Function to update gene metadata in db using hgnc dump prepared dictionaries
@@ -42,7 +42,7 @@ def _update_existing_gene_metadata_symbol_in_db(
     Gene.objects.bulk_update(gene_symbol_updates, ['gene_symbol'])
 
 def _update_existing_gene_metadata_aliases_in_db(
-    hgnc_id_to_alias_symbols,
+    hgnc_id_to_alias_symbols: dict[str: str],
     ) -> None:
     """
     Function to update gene metadata in db using hgnc dump prepared dictionaries
@@ -270,7 +270,7 @@ def _prepare_gene2refseq_file(g2refseq_file: str) -> dict:
     # return dictionary of hgmd id to list of [refcore, refversion]
     return df.groupby("hgmdID")["core_plus_version"].apply(list).to_dict()
 
-def _prepare_markname_file(markname_file: str) -> dict:
+def _prepare_markname_file(markname_file: str) -> dict[str: list]:
     """
     Reads through markname file (from HGMD database)
     and generates a dict mapping of hgnc id to list of gene id
@@ -291,6 +291,10 @@ def _add_transcript_to_db(gene: Gene, transcript: str,
                           ref_genome: str) -> None:
     """
     Add each transcript to the database, with its gene.
+
+    :param: gene, a Gene in need to linking to a transcript
+    :param: transcript, the name of a transcript to add to the db
+    :param: the reference genome of this version of the transcript
     """
     tx, _ = Transcript.objects.get_or_create(
         transcript=transcript,
@@ -332,13 +336,17 @@ def _add_transcript_categorisation_to_db(transcript: Transcript,
                                         ignore_conflicts=True
     )
 
-def _get_clin_transcript_from_hgmd_files(hgnc_id, markname: dict, gene2refseq: dict) \
-    -> tuple[str | None, str | None]:
+def _get_clin_transcript_from_hgmd_files(hgnc_id: str, markname: dict, 
+                                         gene2refseq: dict) \
+                                            -> tuple[str | None, str | None]:
     """
     Fetch the transcript linked to a particular gene in HGMD.
     First, need to find the gene's ID in the 'markname' table's file,
     then use the ID to find the gene's entries in the 'gene2refseq' table's file.
     Catch various error scenarios too.
+    :param: hgnc_id of a gene
+    :param: markname, a dictionary of information from a HGMD markname file
+    :param: gene2refseq, a dict of information from a HGMD gene2refseq file
     :return: transcript linked to the gene in HGMD
     :return: error message if any
     """
@@ -389,6 +397,13 @@ def _transcript_assign_to_source(tx: str, hgnc_id: str, mane_data: list[dict], m
     """
     Carries out the logic for deciding whether a transcript is clinical, or non-clinical.
     Checks MANE first, then HGMD, to see if clinical status can be assigned
+    
+    :param: tx, the string name of a transcript to look for in sources
+    :param: hgnc_id of a gene linked to the above transcript
+    :param: mane_data, information extracted from a MANE file as a list of dicts
+    :param: markname_hgmd, information extracted from HGMD's markname file as a dict
+    :param: gene2refseq_hgmd, information extracted from HGMD's gene2refseq file as a dict
+
     :return: mane_select_data, containing info from MANE Select
     :return: mane_plus_clinical_data, containing info from MANE Plus Clinical
     :return: hgmd_data, containing info from HGMD
@@ -478,6 +493,12 @@ def _add_transcript_release_info_to_db(source: str, release_version: str,
     supporting files are added to the database.
     Note that the files parameter needs to be provided as a dict, in which keys are
     file types and values are external IDs.
+
+    :param: source, the name of a source of transcript information (e.g. MANE Select)
+    :param: release_version, the version of the transcript release as entered by user
+    :param: ref_genome, the reference genome used for this transcript release
+    :param: files, a dictionary of files used to define the contents of each release.
+    For example, a HGMD release might be defined by a markname and a gene2refseq file
     """
 
     # look up or create the source

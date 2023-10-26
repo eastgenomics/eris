@@ -14,7 +14,7 @@ class TestAddTranscriptRelease_FromScratch(TestCase):
     """
     _add_transcript_release_info_to_db adds transcript sources, releases,
     and supporting file IDs to the database.
-    First test if it successfully adds new data to an entirely empty starting db.
+    First test checks if it successfully adds new data to an entirely empty starting db.
     """
     def test_basic_add_transcript_release(self):
         """
