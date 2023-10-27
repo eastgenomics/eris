@@ -119,6 +119,19 @@ python manage.py generate g2t --output <output pathway>
 
 Unit tests are stored in the 'tests' directory, and can be run through 'manage.py':
 ```
-python manage.py test tests
+python manage.py test
 ```
 Database-dependent tests use Django's unit testing library (based on unittest) to make, populate and tear down a temporary database based on models.py. Note that the test database will be named by prepending 'test_' to the value of the NAMEs in DATABASES.
+
+If you want to generate a coverage report, run:
+```
+coverage run --source="." manage.py test
+```
+You can view a coverage overview with:
+```
+coverage report
+```
+Or for a more-detailed, per-line breakdown of coverage, use:
+```
+coverage html
+```
