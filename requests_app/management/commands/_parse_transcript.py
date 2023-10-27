@@ -526,14 +526,13 @@ def _add_transcript_release_info_to_db(
     """
 
     # look up or create the source
-    source, _ = TranscriptSource.objects.get_or_create(source=source)
-    source.save()
+    source_instance, _ = TranscriptSource.objects.get_or_create(source=source)
 
     # create the transcript release, or just get it
     # (this could happen if you upload an old release of 1 source, alongside a new release
     # of another source)
     release, release_created = TranscriptRelease.objects.get_or_create(
-        source=source,
+        source=source_instance,
         external_release_version=release_version,
         reference_genome=ref_genome,
     )
@@ -572,18 +571,19 @@ def _add_transcript_release_info_to_db(
                                 f"already exists in db, but with a different transcript: "
                                 f"{x.transcript_release}. Please review."
                             )
-
-        # TODO: check we aren't uploading fewer files than we should be for the release
-        # all_links_for_release = \
-        #     TranscriptReleaseTranscriptFile.objects.filter(transcript_release=release)
-        # for i in all_links_for_release:
-        #     print("TST")
-        #     print(i)
-        #     result = TranscriptFile.objects.get(pk=i.transcript_file)
-        #     if result.file_id not in files.values():
-        #         raise ValueError(f"Transcript file {result.file_id} "
-        #                          f"is linked to the release in the db, but wasn't uploaded. "
-        #                          f"Please review.")
+        # check we don't have files in the database for this release, that the user
+        # ISN'T currently adding
+        all_links_for_release = TranscriptReleaseTranscriptFile.objects.filter(
+            transcript_release=release
+        )
+        for i in all_links_for_release:
+            result = i.transcript_file.file_id
+            if result not in files.values():
+                raise ValueError(
+                    f"Transcript file {result} "
+                    f"is linked to the release in the db, but wasn't uploaded. "
+                    f"Please review."
+                )
 
     return release
 
