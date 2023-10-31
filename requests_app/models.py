@@ -47,6 +47,7 @@ class Panel(models.Model):
         auto_now_add=True,
     )
 
+    # whether a panel is waiting for human review
     pending = models.BooleanField(
         verbose_name="pending activation",
         null=True,
@@ -55,6 +56,91 @@ class Panel(models.Model):
 
     class Meta:
         db_table = "panel"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class SuperPanel(models.Model):
+    """
+    Defines Superpanels - these are panels made of child panels added together.
+    Otherwise very similar to Panels.
+    """
+
+    # this is the PanelApp Panel id itself
+    external_id = models.CharField(
+        verbose_name="external panel id", max_length=255, null=True
+    )
+
+    # metadata
+    panel_name = models.CharField(verbose_name="Superpanel Name", max_length=255)
+
+    panel_source = models.CharField(
+        verbose_name="superpanel source",
+        max_length=255,
+    )
+
+    panel_version = models.CharField(
+        verbose_name="superpanel version",
+        max_length=255,
+        null=True,
+    )
+
+    # reference genome
+    grch37 = models.BooleanField(verbose_name="grch37", default=True)
+    grch38 = models.BooleanField(verbose_name="grch38", default=True)
+
+    # whether panel is created from test directory
+    test_directory = models.BooleanField(
+        verbose_name="created from test directory",
+        null=True,
+        default=False,
+    )
+
+    # whether panel is customized
+    custom = models.BooleanField(
+        verbose_name="custom superpanel",
+        null=True,
+        default=False,
+    )
+
+    # creation date
+    created = models.DateTimeField(
+        verbose_name="created",
+        auto_now_add=True,
+    )
+
+    # whether a panel is waiting for human review
+    pending = models.BooleanField(
+        verbose_name="pending activation",
+        null=True,
+        default=False,
+    )
+
+    class Meta:
+        db_table = "superpanel"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class PanelSuperPanel(models.Model):
+    """
+    Defines links between SuperPanels and their constituent Panels.
+    Necessary because a SuperPanel can contain any number of panels,
+    and a Panel could possibly be in multiple SuperPanels.
+    """
+
+    panel = models.ForeignKey(
+        Panel, verbose_name="component panel", on_delete=models.PROTECT
+    )
+
+    superpanel = models.ForeignKey(
+        SuperPanel, verbose_name="superpanel", on_delete=models.PROTECT
+    )
+
+    class Meta:
+        db_table = "panel_superpanel"
 
     def __str__(self):
         return str(self.id)
@@ -158,6 +244,70 @@ class ClinicalIndicationPanel(models.Model):
         return str(self.id)
 
 
+class ClinicalIndicationSuperPanel(models.Model):
+    """
+    Defines an association between a clinical indication and a superpanel
+    and when that association is made
+
+    e.g. Normally when importing new Test Directory
+    a new association between Clinical Indication and new version of
+    Panel might be made
+    """
+
+    # metadata
+    config_source = models.TextField(
+        verbose_name="config source",
+        max_length=255,
+        null=True,
+    )
+
+    td_version = models.CharField(
+        verbose_name="test directory version",
+        max_length=255,
+        null=True,
+    )
+
+    # creation date
+    created = models.DateTimeField(
+        verbose_name="created",
+        auto_now_add=True,
+    )
+
+    last_updated = models.DateTimeField(
+        verbose_name="last updated",
+        null=True,
+        auto_now=True,
+    )
+
+    # foreign keys
+    clinical_indication = models.ForeignKey(
+        ClinicalIndication,
+        verbose_name="clinical indication",
+        on_delete=models.PROTECT,
+    )  # required
+
+    superpanel = models.ForeignKey(
+        SuperPanel,
+        verbose_name="superpanel",
+        on_delete=models.PROTECT,
+    )  # required
+
+    # active status
+    current = models.BooleanField(verbose_name="latest association")
+
+    pending = models.BooleanField(
+        verbose_name="pending review",
+        null=True,
+        default=False,
+    )
+
+    class Meta:
+        db_table = "clinical_indication_superpanel"
+
+    def __str__(self):
+        return str(self.id)
+
+
 class ClinicalIndicationPanelHistory(models.Model):
     # foreign key
     clinical_indication_panel = models.ForeignKey(
@@ -185,6 +335,38 @@ class ClinicalIndicationPanelHistory(models.Model):
 
     class Meta:
         db_table = "clinical_indication_panel_history"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class ClinicalIndicationSuperPanelHistory(models.Model):
+    # foreign key
+    clinical_indication_superpanel = models.ForeignKey(
+        ClinicalIndicationSuperPanel,
+        on_delete=models.PROTECT,
+        verbose_name="clinical indication superpanel id",
+    )
+
+    # creation date
+    created = models.DateTimeField(
+        verbose_name="created",
+        auto_now_add=True,
+    )
+
+    note = models.CharField(
+        verbose_name="note",
+        max_length=255,
+    )
+
+    user = models.CharField(
+        verbose_name="user",
+        max_length=255,
+        null=True,
+    )
+
+    class Meta:
+        db_table = "clinical_indication_superpanel_history"
 
     def __str__(self):
         return str(self.id)

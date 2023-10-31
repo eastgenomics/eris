@@ -3,6 +3,9 @@
 
 from requests_app.models import (
     Panel,
+    SuperPanel,
+    PanelSuperPanel,
+    ClinicalIndicationSuperPanel,
     ClinicalIndicationPanel,
     Gene,
     Confidence,
@@ -23,9 +26,11 @@ from .utils import sortable_version
 from .history import History
 from ._insert_ci import (
     flag_clinical_indication_panel_for_review,
+    flag_clinical_indication_superpanel_for_review,
     provisionally_link_clinical_indication_to_panel,
+    provisionally_link_clinical_indication_to_superpanel,
 )
-from .panelapp import PanelClass
+from .panelapp import PanelClass, SuperPanelClass
 from django.db import transaction
 
 
@@ -57,14 +62,6 @@ def _insert_gene(
                 f"For panel {str(panel.name)}, skipping gene without HGNC ID: {str(gene_data['gene_name'])}"
             )
             continue
-
-        # NOTE: PanelApp API returns some really stupid genes and confidence levels attached to super panel
-        # e.g. panel external id 465 "Other rare neuromuscular disorders"
-        # it returns 3 of the same gene FLNC with the same hgnc-id HGNC:3756
-        # 2 with confidence level 3 and one with confidence level 2
-        # which make no sense at all. On their website, they only showed the two with confidence level 3 (both have same hgnc id)
-
-        # TODO: need a logic to deal with super panel showing duplicate genes but with different confidence level
 
         # there is only confidence level 0 1 2 3
         # and we only fetch confidence level 3
@@ -189,7 +186,6 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
 
     # for each panel region, populate the region attribute models
     for single_region in panel.regions:
-        # TODO: should we skip confidence < 3?
         confidence_instance, _ = Confidence.objects.get_or_create(
             confidence_level=single_region.get("confidence_level"),
         )
@@ -266,13 +262,15 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
         # TODO: backward deactivation for PanelRegion, with history logging
 
 
-@transaction.atomic
-def insert_data_into_db(panel: PanelClass, user: str) -> None:
+def _insert_panel_data_into_db(panel: PanelClass, user: str) -> Panel:
     """
-    Insert data from a parsed JSON of panel records, into the database.
+    Insert data from a parsed JSON a panel record, into the database.
     Controls creation and flagging of new and old CI-Panel links,
     where the Panel version has changed.
     Controls creation of genes and regions.
+
+    :param: panel [PanelClass], parsed panel input from the API
+    :param: user [str], the user initiating this change
     """
     panel_external_id: str = panel.id
     panel_name: str = panel.name
@@ -317,3 +315,94 @@ def insert_data_into_db(panel: PanelClass, user: str) -> None:
     # and populate region attribute models
     _insert_gene(panel, panel_instance, created)
     _insert_regions(panel, panel_instance)
+
+    return panel_instance, created
+
+
+def _insert_superpanel_into_db(
+    superpanel: SuperPanelClass, child_panels: list[Panel], user: str
+) -> None:
+    """
+    Insert data from a parsed SuperPanel.
+    This function differs slightly from the one for Panels because:
+    1. SuperPanelClass has a different structure from PanelClass.
+    2. SuperPanels need linking to their child-panels.
+
+    :param: superpanel [SuperPanelClass], parsed panel input from the API
+    :param: child_panels [list[Panel]], the 'child' panels which make up
+    the SuperPanel. These are already added to the db, so they're a list
+    of database objects.
+    :param: user [str], the user initiating this
+    """
+    panel_external_id: str = superpanel.id
+    panel_name: str = superpanel.name
+    panel_version: str = superpanel.version
+
+    # if there's a change in the panel_name or panel_version,
+    # create a new record
+    superpanel, created = SuperPanel.objects.get_or_create(
+        external_id=panel_external_id,
+        panel_name=panel_name,
+        panel_version=sortable_version(panel_version),
+        defaults={
+            "panel_source": superpanel.panel_source,
+            "grch37": True,
+            "grch38": True,
+            "test_directory": False,
+        },
+    )
+
+    if created:
+        # make links between the SuperPanel and its child panels
+        for child in child_panels:
+            panel_link, panel_link_created = PanelSuperPanel.objects.get_or_create(
+                panel=child, superpanel=superpanel
+            )
+
+        # if there are previous SuperPanel(s) with similar external_id,
+        # mark previous CI-SuperPanel links as needing review
+        for (
+            clinical_indication_superpanel
+        ) in ClinicalIndicationSuperPanel.objects.filter(
+            superpanel__external_id=panel_external_id, current=True
+        ):
+            flag_clinical_indication_superpanel_for_review(
+                clinical_indication_superpanel, "PanelApp"
+            )
+
+            provisionally_link_clinical_indication_to_superpanel(
+                superpanel,
+                clinical_indication_superpanel.clinical_indication,
+                "PanelApp",
+            )
+
+    # if the superpanel hasn't just been created: the SuperPanel is either
+    # brand new, or it has altered the constituent panels WITHOUT changing
+    # SuperPanel name or version - this would only happen if there were
+    # issues at PanelApp
+    return superpanel, created
+
+
+def panel_insert_controller(
+    panels: list[PanelClass], superpanels: list[SuperPanelClass], user: str
+):
+    """
+    Carries out coordination of panel creation - Panels and SuperPanels are
+    handled differently in the database.
+
+    :param: panels [list[PanelClass]], a list of parsed panel input from the API
+    :param: superpanels [list[SuperPanel]], a list of parsed superpanel
+    input from the API
+    :param: user [str], the user initiating this
+    """
+    # currently, only handle Panel/SuperPanel if the panel data is from
+    # PanelApp
+    for panel in panels:
+        panel_instance, _ = _insert_panel_data_into_db(panel, user)
+
+    for superpanel in superpanels:
+        child_panel_instances = []
+        for panel in superpanel.child_panels:
+            child_panel_instance, _ = _insert_panel_data_into_db(panel, user)
+            child_panel_instances.append(child_panel_instance)
+        _insert_superpanel_into_db(superpanel, child_panel_instances, user)

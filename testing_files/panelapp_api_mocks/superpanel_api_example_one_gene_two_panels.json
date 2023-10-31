@@ -1,0 +1,223 @@
+{
+    "id": 465,
+    "hash_id": null,
+    "name": "Other rare neuromuscular disorders",
+    "disease_group": "",
+    "disease_sub_group": "",
+    "status": "public",
+    "version": "19.156",
+    "version_created": "2023-10-16T16:58:09.745398Z",
+    "relevant_disorders": [
+      "Neuromuscular disorders",
+      "R381"
+    ],
+    "stats": {
+      "number_of_genes": 453,
+      "number_of_strs": 7,
+      "number_of_regions": 8
+    },
+    "genes": [
+    {
+    "gene_data": {
+      "alias": [
+        "ABP-280",
+        "ABPL"
+      ],
+      "biotype": "protein_coding",
+      "hgnc_id": "HGNC:3756",
+      "gene_name": "filamin C",
+      "omim_gene": [
+        "102565"
+      ],
+      "alias_name": [
+        "actin binding protein 280",
+        "gamma filamin"
+      ],
+      "gene_symbol": "FLNC",
+      "hgnc_symbol": "FLNC",
+      "hgnc_release": "2017-11-03T00:00:00",
+      "ensembl_genes": {
+        "GRch37": {
+          "82": {
+            "location": "7:128470431-128499328",
+            "ensembl_id": "ENSG00000128591"
+          }
+        },
+        "GRch38": {
+          "90": {
+            "location": "7:128830377-128859274",
+            "ensembl_id": "ENSG00000128591"
+          }
+        }
+      },
+      "hgnc_date_symbol_changed": "1993-08-24"
+    },
+    "entity_type": "gene",
+    "entity_name": "FLNC",
+    "confidence_level": "2",
+    "penetrance": "Complete",
+    "mode_of_pathogenicity": "",
+    "publications": [
+      "29858533"
+    ],
+    "evidence": [
+      "NHS GMS",
+      "Expert Review",
+      "Expert Review Amber",
+      "Radboud University Medical Center, Nijmegen"
+    ],
+    "phenotypes": [
+      "Myopathy, distal, 4, OMIM:614065",
+      "Myopathy, myofibrillar, 5, OMIM:609524"
+    ],
+    "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown",
+    "tags": [],
+    "panel": {
+      "id": 225,
+      "hash_id": "553f94b6bb5a1616e5ed459a",
+      "name": "Congenital myopathy",
+      "disease_group": "Neurology and neurodevelopmental disorders",
+      "disease_sub_group": "Neuromuscular disorders",
+      "status": "public",
+      "version": "4.31",
+      "version_created": "2023-10-16T16:58:04.766187Z",
+      "relevant_disorders": [
+        "R81"
+      ],
+      "stats": {
+        "number_of_genes": 123,
+        "number_of_strs": 2,
+        "number_of_regions": 3
+      },
+      "types": [
+        {
+          "name": "Rare Disease 100K",
+          "slug": "rare-disease-100k",
+          "description": "Rare Disease 100K"
+        },
+        {
+          "name": "GMS Rare Disease",
+          "slug": "gms-rare-disease",
+          "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+        },
+        {
+          "name": "Component Of Super Panel",
+          "slug": "component-of-super-panel",
+          "description": "This panel is a component of a Super Panel"
+        },
+        {
+          "name": "GMS signed-off",
+          "slug": "gms-signed-off",
+          "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+        }
+      ]
+    },
+    "transcript": null
+    },
+    {
+    "gene_data": {
+      "alias": [
+        "ABP-280",
+        "ABPL"
+      ],
+      "biotype": "protein_coding",
+      "hgnc_id": "HGNC:3756",
+      "gene_name": "filamin C",
+      "omim_gene": [
+        "102565"
+      ],
+      "alias_name": [
+        "actin binding protein 280",
+        "gamma filamin"
+      ],
+      "gene_symbol": "FLNC",
+      "hgnc_symbol": "FLNC",
+      "hgnc_release": "2017-11-03T00:00:00",
+      "ensembl_genes": {
+        "GRch37": {
+          "82": {
+            "location": "7:128470431-128499328",
+            "ensembl_id": "ENSG00000128591"
+          }
+        },
+        "GRch38": {
+          "90": {
+            "location": "7:128830377-128859274",
+            "ensembl_id": "ENSG00000128591"
+          }
+        }
+      },
+      "hgnc_date_symbol_changed": "1993-08-24"
+    },
+    "entity_type": "gene",
+    "entity_name": "FLNC",
+    "confidence_level": "3",
+    "penetrance": "Complete",
+    "mode_of_pathogenicity": "",
+    "publications": [
+      "15929027",
+      "17412757",
+      "19050726",
+      "22806379"
+    ],
+    "evidence": [
+      "Expert Review Green",
+      "Literature",
+      "Emory Genetics Laboratory"
+    ],
+    "phenotypes": [
+      "Myopathy, distal, 4, OMIM:614065",
+      "Distal myopathy with posterior leg and anterior hand involvement, MONDO:0013550",
+      "Myopathy, myofibrillar, 5, OMIM:609524",
+      "Myopathy, myofibrillar, 5, MONDO:0012289"
+    ],
+    "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
+    "tags": [],
+    "panel": {
+      "id": 185,
+      "hash_id": "55b7a65322c1fc05fc7a1869",
+      "name": "Limb girdle muscular dystrophies, myofibrillar myopathies and distal myopathies",
+      "disease_group": "Neurology and neurodevelopmental disorders",
+      "disease_sub_group": "Neuromuscular disorders",
+      "status": "public",
+      "version": "4.22",
+      "version_created": "2023-08-22T16:30:38.039837Z",
+      "relevant_disorders": [
+        "Limb girdle muscular dystrophy",
+        "R82"
+      ],
+      "stats": {
+        "number_of_genes": 96,
+        "number_of_strs": 0,
+        "number_of_regions": 0
+      },
+      "types": [
+        {
+          "name": "Rare Disease 100K",
+          "slug": "rare-disease-100k",
+          "description": "Rare Disease 100K"
+        },
+        {
+          "name": "Component Of Super Panel",
+          "slug": "component-of-super-panel",
+          "description": "This panel is a component of a Super Panel"
+        },
+        {
+          "name": "GMS signed-off",
+          "slug": "gms-signed-off",
+          "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+        },
+        {
+          "name": "GMS Rare Disease",
+          "slug": "gms-rare-disease",
+          "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+        }
+      ]
+    },
+    "transcript": null
+    }
+    ],
+    "regions": [
+    ]
+  }
+  

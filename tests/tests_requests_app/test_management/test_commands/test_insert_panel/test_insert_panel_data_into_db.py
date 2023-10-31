@@ -1,5 +1,5 @@
 """
-Tested scenario `insert_data_into_db_function`
+Tested scenario `insert_panel_data_into_db_function`
 - core function of inserting panel and their metadata
 - flag previous and current clinical indication-panel link for review if panel name or panel version change in PanelApp API
 - nothing change if panel remains the same in PanelApp API
@@ -18,7 +18,7 @@ from requests_app.models import (
     PanelRegion,
 )
 from requests_app.management.commands.utils import sortable_version
-from requests_app.management.commands._insert_panel import insert_data_into_db
+from requests_app.management.commands._insert_panel import _insert_panel_data_into_db
 
 from .test_insert_gene import len_check_wrapper, value_check_wrapper
 
@@ -89,7 +89,7 @@ class TestInsertDataIntoDB(TestCase):
             ],
         )
 
-        insert_data_into_db(mock_api, "PanelApp")
+        _insert_panel_data_into_db(mock_api, "PanelApp")
 
         errors += len_check_wrapper(
             ClinicalIndicationPanel.objects.all(), "clinical indication-panel", 1
@@ -162,7 +162,7 @@ class TestInsertDataIntoDB(TestCase):
             regions=[],
         )
 
-        insert_data_into_db(mock_api, "PanelApp")
+        _insert_panel_data_into_db(mock_api, "PanelApp")
 
         errors += len_check_wrapper(
             ClinicalIndicationPanel.objects.all(), "clinical indication-panel", 2
@@ -226,7 +226,7 @@ class TestInsertDataIntoDB(TestCase):
             regions=[],
         )
 
-        insert_data_into_db(mock_api, "PanelApp")
+        _insert_panel_data_into_db(mock_api, "PanelApp")
 
         errors += len_check_wrapper(
             ClinicalIndicationPanel.objects.all(), "ClinicalIndicationPanel", 2
@@ -290,7 +290,7 @@ class TestInsertDataIntoDB(TestCase):
             regions=[],
         )
 
-        insert_data_into_db(mock_api, "PanelApp")
+        _insert_panel_data_into_db(mock_api, "PanelApp")
 
         errors += len_check_wrapper(
             Panel.objects.all(), "panel", 1

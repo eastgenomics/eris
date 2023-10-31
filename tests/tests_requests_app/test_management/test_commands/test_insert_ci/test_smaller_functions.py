@@ -13,15 +13,20 @@ from django.test import TestCase
 from requests_app.models import (
     ClinicalIndication,
     Panel,
+    SuperPanel,
     ClinicalIndicationPanel,
+    ClinicalIndicationSuperPanel,
     ClinicalIndicationPanelHistory,
+    ClinicalIndicationSuperPanelHistory,
     ClinicalIndicationTestMethodHistory,
 )
 from requests_app.management.commands.utils import sortable_version
 from requests_app.management.commands._insert_ci import (
     _backward_deactivate,
     flag_clinical_indication_panel_for_review,
+    flag_clinical_indication_superpanel_for_review,
     provisionally_link_clinical_indication_to_panel,
+    provisionally_link_clinical_indication_to_superpanel,
     _get_td_version,
     _retrieve_panel_from_pa_id,
     _retrieve_unknown_metadata_records,
@@ -99,6 +104,10 @@ class TestBackwardDeactivation(TestCase):
 
 
 class TestFlagClinicalIndicationPanelForReview(TestCase):
+    """
+    Tests that flagging Clinical Indication - Panel links works correctly
+    """
+
     def setUp(self) -> None:
         self.first_clinical_indication = ClinicalIndication.objects.create(
             r_code="R123", name="Test CI", test_method="Test method"
@@ -135,6 +144,53 @@ class TestFlagClinicalIndicationPanelForReview(TestCase):
 
         assert (
             ClinicalIndicationPanelHistory.objects.count() == 1
+        )  # one history recorded
+
+
+class TestFlagClinicalIndicationSuperpanelForReview(TestCase):
+    """
+    Tests that flagging Clinical Indication - SuperPanel links works correctly
+    """
+
+    def setUp(self) -> None:
+        self.first_clinical_indication = ClinicalIndication.objects.create(
+            r_code="R123", name="Test CI", test_method="Test method"
+        )
+
+        self.first_superpanel = SuperPanel.objects.create(
+            external_id=123,
+            panel_name="Test panel",
+            panel_version=sortable_version("1.15"),
+        )
+
+        self.first_clinical_indication_superpanel = (
+            ClinicalIndicationSuperPanel.objects.create(
+                config_source=None,
+                td_version=None,
+                clinical_indication=self.first_clinical_indication,
+                superpanel=self.first_superpanel,
+                current=True,
+            )
+        )
+
+    def test_that_link_will_be_flagged_and_history_recorded(self):
+        """
+        test that given a clinical indication-superpanel link, the link will be
+        flagged for review and current set to False
+        and history recorded in ClinicalIndicationSuperPanelHistory
+        """
+
+        flag_clinical_indication_superpanel_for_review(
+            self.first_clinical_indication_superpanel, "test"
+        )
+
+        self.first_clinical_indication_superpanel.refresh_from_db()
+
+        assert self.first_clinical_indication_superpanel.pending
+        assert not self.first_clinical_indication_superpanel.current
+
+        assert (
+            ClinicalIndicationSuperPanelHistory.objects.count() == 1
         )  # one history recorded
 
 
@@ -203,6 +259,83 @@ class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
         new_link = ClinicalIndicationPanel.objects.last()
 
         assert new_link.pending == True  # new link should be flagged for review
+
+
+class TestProvisionallyLinkClinicalIndicationToSuperPanel(TestCase):
+    def setUp(self) -> None:
+        self.first_clinical_indication = ClinicalIndication.objects.create(
+            r_code="R123", name="Test CI", test_method="Test method"
+        )
+
+        self.second_clinical_indication = ClinicalIndication.objects.create(
+            r_code="R123", name="Test CI 2", test_method="Test method"
+        )
+
+        self.first_superpanel = SuperPanel.objects.create(
+            external_id=123,
+            panel_name="Test panel",
+            panel_version=sortable_version("1.15"),
+        )
+
+        self.first_clinical_indication_superpanel = (
+            ClinicalIndicationSuperPanel.objects.create(
+                config_source=None,
+                td_version=None,
+                clinical_indication=self.first_clinical_indication,
+                superpanel=self.first_superpanel,
+                current=True,
+                pending=False,
+            )
+        )
+
+    def test_that_existing_superpanel_link_is_flagged(self):
+        """
+        `provisionally_link_clinical_indication_to_superpanel` links a panel
+        to a clinical indication to create a clinical indication-superpanel
+        link
+
+        - the general output is that the link will be created but also flagged for
+        review (expect `pending` to be True)
+        - we expect this behaviour for both new or existing clinical
+        indication-superpanel link
+
+        below we test for an existing link
+        example:
+            superpanel 123 is already linked to clinical indication R123 as we setup
+            above (with `pending` set to False)
+            we expect the `pending` to turn True after calling
+            `provisionally_link_clinical_indication_to_superpanel` on it
+        """
+
+        provisionally_link_clinical_indication_to_superpanel(
+            self.first_superpanel, self.first_clinical_indication, "test"
+        )  # this is an existing link in db
+
+        self.first_clinical_indication_superpanel.refresh_from_db()
+
+        assert self.first_clinical_indication_superpanel.pending
+
+    def test_that_new_link_is_flagged(self):
+        """
+        we test for a new link (not existing in db) -
+        self.second_clinical_indication is not linked to self.first_superpanel
+        in setup
+        `provisionally_link_clinical_indication_to_panel` should create the
+        link and flag it for review
+        """
+        provisionally_link_clinical_indication_to_superpanel(
+            self.first_superpanel,
+            self.second_clinical_indication,
+            "test",
+        )
+
+        # one new link created
+        assert ClinicalIndicationSuperPanel.objects.count() == 2
+
+        new_link = ClinicalIndicationSuperPanel.objects.last()
+
+        # new link should be flagged for review
+        assert new_link.pending
 
 
 class TestGetTDVersion(TestCase):
