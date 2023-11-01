@@ -494,6 +494,9 @@ def _transcript_assign_to_source(
             mane_plus_clinical_data["clinical"] = True
             mane_plus_clinical_data["match_base"] = True
             mane_plus_clinical_data["match_version"] = False
+        else:
+            raise ValueError("MANE Type does not match MANE Select or MANE Plus Clinical"
+                                " - check how mane_data has been set up")
         return mane_select_data, mane_plus_clinical_data, hgmd_data, err
 
     # hgnc id for the transcript's gene is not in MANE -
@@ -618,12 +621,17 @@ def seed_transcripts(
     transcript releases, to work out whether or not its a clinical transcript.
     Finally, each transcript is linked to the releases, allowing the user to
     see what information was used in decision-making.
-    :param hgnc_filepath: hgnc file path
+    :param hgnc_filepath: hgnc file path for gene IDs with current, past, and alias symbols
     :param mane_filepath: mane file path for transcripts
-    :param mane_ftp_filepath: mane file path for FTP file - known MANE version, but GRCh38
+    :param mane_ext_id: mane file's ID in DNAnexus or other external platform
+    :param mane_release: the mane release (e.g. v1) corresponding to the file in mane_filepath and mane_ext_id
     :param gff_filepath: gff file path
     :param g2refseq_filepath: gene2refseq file path
+    :param g2refseq_ext_id: gene2refseq file's ID in DNAnexus or other external platform
     :param markname_filepath: markname file path
+    :param markname_ext_id: markname file's ID in DNAnexus or other external platform
+    :param hgmd_release: the hgmd release (e.g. v2) corresponding to the files in markname_filepath/markname_ext_id and gene2refseq_filepath/gene2refseq_ext_id
+    :param reference_genome: the reference genome build, e.g. 37, 38
     :param write_error_log: write error log or not
     """
     # take today datetime
