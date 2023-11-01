@@ -96,10 +96,6 @@ class SuperPanel(models.Model):
         null=True,
     )
 
-    # reference genome
-    grch37 = models.BooleanField(verbose_name="grch37", default=True)
-    grch38 = models.BooleanField(verbose_name="grch38", default=True)
-
     # whether panel is created from test directory
     test_directory = models.BooleanField(
         verbose_name="created from test directory",
