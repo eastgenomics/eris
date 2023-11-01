@@ -537,6 +537,7 @@ def _add_transcript_release_info_to_db(
     :param: files, a dictionary of files used to define the contents of each release.
     For example, a HGMD release might be defined by a markname and a gene2refseq file
     """
+    errors = []
 
     # look up or create the source
     source_instance, _ = TranscriptSource.objects.get_or_create(source=source)
@@ -567,9 +568,9 @@ def _add_transcript_release_info_to_db(
         for file_type, file_id in files.items():
             existing_file = TranscriptFile.objects.filter(file_id=file_id)
             if not existing_file:
-                raise ValueError(
+                errors.append(
                     f"Transcript release {source} {release_version} "
-                    f"already exists in db, but the uploaded file is not "
+                    f"already exists in db, but the uploaded file {file_id} is not "
                     f"in the db. Please review."
                 )
             else:
@@ -579,7 +580,7 @@ def _add_transcript_release_info_to_db(
                     )
                     for x in links:
                         if x.transcript_release != release:
-                            raise ValueError(
+                            errors.append(
                                 f"Transcript file {file.file_id} "
                                 f"already exists in db, but with a different transcript: "
                                 f"{x.transcript_release}. Please review."
@@ -592,11 +593,15 @@ def _add_transcript_release_info_to_db(
         for i in all_links_for_release:
             result = i.transcript_file.file_id
             if result not in files.values():
-                raise ValueError(
+                errors.append(
                     f"Transcript file {result} "
                     f"is linked to the release in the db, but wasn't uploaded. "
                     f"Please review."
                 )
+
+    if errors:
+        msg = " ".join(errors)
+        raise ValueError(msg)
 
     return release
 

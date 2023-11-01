@@ -100,6 +100,8 @@ class TestAddTranscriptRelease_ErrorsOnVersionRepeatsWithDifferentFiles(TestCase
         Case: Add to a db with a perfectly-matching release already in it.
         Expect: the old files don't match the newly-uploaded ones - raise an error
         """
+        self.maxDiff = None
+
         source = "HGMD"
         version = "v1.0.5"
         ref_genome = "37"
@@ -108,7 +110,9 @@ class TestAddTranscriptRelease_ErrorsOnVersionRepeatsWithDifferentFiles(TestCase
         with self.assertRaises(ValueError) as msg:
             _add_transcript_release_info_to_db(source, version, ref_genome, data)
         self.assertEqual(
-            "Transcript release HGMD v1.0.5 already exists in db, but the uploaded file is not in the db. Please review.",
+            "Transcript release HGMD v1.0.5 already exists in db, but the uploaded file file-1357 is"
+                  " not in the db. Please review. Transcript release HGMD v1.0.5 already exists in db, "
+                    "but the uploaded file file-101010 is not in the db. Please review.",
             str(msg.exception),
         )
 
