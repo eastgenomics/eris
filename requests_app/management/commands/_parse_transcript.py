@@ -88,7 +88,6 @@ def _add_new_genes_to_db(
 ) -> None:
     """
     If a gene exists in the HGNC file, but does NOT exist in the db, make it.
-    Throw an error if the gene is in the HGNC data more than once.
 
     To speed up the function, we utilise looping over lists-of-dictionaries,
     and bulk updates.

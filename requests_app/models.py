@@ -552,7 +552,7 @@ class TranscriptFile(models.Model):
     """
 
     file_id = models.CharField(
-        verbose_name="File ID in external storage",
+        verbose_name="File ID in external storage (DNAnexus)",
         max_length=255,
         null=True,
         default=None,

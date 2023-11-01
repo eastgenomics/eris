@@ -68,7 +68,7 @@ The arguments for this command are:
 ### 3. Seed transcript
 
 Adds transcripts to the database for either GRCh37 or GRCh38. 
-MANE and HGMD files are used to assign transcripts as 'default' clinical or non-clinical for each gene - though this can be over-ridden for specific panels, where a non-default transcript is more clinically appropriate. 
+MANE and HGMD files are used to assign transcripts as 'default' clinical or non-clinical for each gene - though this can be over-ridden for specific panels, where a non-default transcript is more clinically appropriate. The MANE file for GRCh37 is a CSV file downloaded from Transcript Archive http://tark.ensembl.org/web/mane_GRCh37_list/) and the HGMD files are CSV files of the 'markname' and 'g2refseq' tables, generated when the HGMD database is dumped.
 MANE and HGMD files should be version-controlled locally, with file IDs for every file, a release version for MANE, and a release version for HGMD. These are provided as string arguments during transcript seeding. Then, each transcript will be linked to the MANE/HGMD releases which informed the 'clinical/non-clinical' decision.
 
 ```
