@@ -302,8 +302,7 @@ def _prepare_markname_file(markname_file: str) -> dict[str:list]:
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
 
 
-def _add_transcript_to_db(gene: Gene, transcript: str, ref_genome: str) \
-    -> Transcript:
+def _add_transcript_to_db(gene: Gene, transcript: str, ref_genome: str) -> Transcript:
     """
     Add each transcript to the database, with its gene.
 
@@ -431,6 +430,7 @@ def _transcript_assign_to_source(
     :return: mane_select_data, containing info from MANE Select
     :return: mane_plus_clinical_data, containing info from MANE Plus Clinical
     :return: hgmd_data, containing info from HGMD
+    :return: err, error message if any
     """
     mane_select_data = {"clinical": None, "match_base": None, "match_version": None}
     mane_plus_clinical_data = {
@@ -472,8 +472,10 @@ def _transcript_assign_to_source(
                 mane_plus_clinical_data["match_base"] = True
                 mane_plus_clinical_data["match_version"] = True
             else:
-                raise ValueError("MANE Type does not match MANE Select or MANE Plus Clinical"
-                                 " - check how mane_data has been set up")
+                raise ValueError(
+                    "MANE Type does not match MANE Select or MANE Plus Clinical"
+                    " - check how mane_data has been set up"
+                )
             return mane_select_data, mane_plus_clinical_data, hgmd_data, err
 
     # fall through to here if no exact match - see if there's a versionless match instead
@@ -495,8 +497,10 @@ def _transcript_assign_to_source(
             mane_plus_clinical_data["match_base"] = True
             mane_plus_clinical_data["match_version"] = False
         else:
-            raise ValueError("MANE Type does not match MANE Select or MANE Plus Clinical"
-                                " - check how mane_data has been set up")
+            raise ValueError(
+                "MANE Type does not match MANE Select or MANE Plus Clinical"
+                " - check how mane_data has been set up"
+            )
         return mane_select_data, mane_plus_clinical_data, hgmd_data, err
 
     # hgnc id for the transcript's gene is not in MANE -
@@ -647,7 +651,7 @@ def seed_transcripts(
     gene2refseq_hgmd = _prepare_gene2refseq_file(g2refseq_filepath)
     markname_hgmd = _prepare_markname_file(markname_filepath)
 
-    # set up the transcript release by adding it, any data sources, and and
+    # set up the transcript release by adding it, any data sources, and any
     # supporting files to the database. Throw errors for repeated versions.
     mane_select_rel = _add_transcript_release_info_to_db(
         "MANE Select", mane_release, reference_genome, {"mane": mane_ext_id}
@@ -702,8 +706,7 @@ def seed_transcripts(
     print(f"Finished adding transcripts to db: {tx_ending}")
 
     # write error log for those interested to see
-    if write_error_log:
+    if write_error_log and all_errors:
         print(f"Writing error log to {error_log}")
         with open(error_log, "w") as f:
-            for row in all_errors:
-                f.write(f"{row}\n")
+            f.write("\n".join(all_errors))

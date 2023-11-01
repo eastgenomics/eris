@@ -42,24 +42,17 @@ class Command(BaseCommand):
 
         return True
 
-    def _validate_ext_ids(self, file_ids: list[str]) -> bool:
-        """Validate that the external file ids are in the correct format"""
-        missing_ids: list[str] = []
-
-        for file_id in file_ids:
-            if len(file_id) == 0:
-                missing_ids.append(file_id)
-            matches = re.match(r"^file-[\w]+$", file_id)
-            if not matches:
-                missing_ids.append(file_id)
+    def _validate_ext_ids(self, file_ids: list[str]) -> None:
+        """
+        Validate that the external file ids are in the correct format
+        :param: file_ids, a list of file ID strings
+        """
+        missing_ids: [id for id in file_ids if not re.match(r"^file-[\w]+$", id)]
 
         if missing_ids:
             raise Exception(
-                f"External file IDs {', '.join(missing_ids)} do not exist"
-                " or are misformatted"
+                f"External file IDs {', '.join(missing_ids)} are misformatted"
             )
-
-        return True
 
     def add_arguments(self, parser) -> None:
         """Define the source of the data to import."""
@@ -119,7 +112,7 @@ class Command(BaseCommand):
         transcript.add_argument(
             "--mane_ext_id",
             type=str,
-            help="The file ID of the MANE .csv file. Will start with 'file-'",
+            help="The DNAnexus file ID of the MANE .csv file. Will start with 'file-'",
         )
         transcript.add_argument(
             "--mane_release",

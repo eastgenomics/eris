@@ -122,7 +122,7 @@ def _get_all_panel(signed_off: bool = True) -> list[dict]:
 
         if response.status_code != 200:
             print(
-                f"Aborting because API returned a non-200 exit code: {response.status_code}"
+                f"Aborting because API returned a non-200 exit code: {response.status_code} {response.reason}"
             )
             exit(1)
 
