@@ -219,9 +219,9 @@ def _prepare_mane_file(
     )
     min_cols = filtered_mane[["HGNC ID", "RefSeq", "MANE TYPE"]]
 
-    dict = min_cols.to_dict("records")
+    result_dict = min_cols.to_dict("records")
 
-    return dict
+    return result_dict
 
 
 def _prepare_gff_file(gff_file: str) -> dict[str, list]:
@@ -302,13 +302,16 @@ def _prepare_markname_file(markname_file: str) -> dict[str:list]:
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
 
 
-def _add_transcript_to_db(gene: Gene, transcript: str, ref_genome: str) -> None:
+def _add_transcript_to_db(gene: Gene, transcript: str, ref_genome: str) \
+    -> Transcript:
     """
     Add each transcript to the database, with its gene.
 
     :param: gene, a Gene in need to linking to a transcript
     :param: transcript, the name of a transcript to add to the db
     :param: the reference genome of this version of the transcript
+
+    :returns: Transcript instance, for the transcript added to the db
     """
     tx, _ = Transcript.objects.get_or_create(
         transcript=transcript, gene=gene, reference_genome=ref_genome
@@ -468,6 +471,9 @@ def _transcript_assign_to_source(
                 mane_plus_clinical_data["clinical"] = True
                 mane_plus_clinical_data["match_base"] = True
                 mane_plus_clinical_data["match_version"] = True
+            else:
+                raise ValueError("MANE Type does not match MANE Select or MANE Plus Clinical"
+                                 " - check how mane_data has been set up")
             return mane_select_data, mane_plus_clinical_data, hgmd_data, err
 
     # fall through to here if no exact match - see if there's a versionless match instead
