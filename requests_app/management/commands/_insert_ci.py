@@ -11,8 +11,11 @@ from .history import History
 
 from requests_app.models import (
     Panel,
+    SuperPanel,
     ClinicalIndication,
     ClinicalIndicationPanel,
+    ClinicalIndicationSuperPanel,
+    ClinicalIndicationSuperPanelHistory,
     Gene,
     Confidence,
     Penetrance,
@@ -64,6 +67,11 @@ def flag_clinical_indication_panel_for_review(
     This function is normally called when there is a new ci-panel link when seeding thus
     the old ci-panel link will be flagged to be deactivated / ignored
     while the new one will be created with pending `True`
+
+    :param: clinical_indication_panel [ClinicalIndicationPanel] which needs to be flagged for manual
+    review, usually because something has changed in the test directory
+    :param: user [str] - currently a string, may one day be a User object if we get
+    direct user access up and running
     """
 
     clinical_indication_panel.pending = True
@@ -73,6 +81,37 @@ def flag_clinical_indication_panel_for_review(
 
     ClinicalIndicationPanelHistory.objects.create(
         clinical_indication_panel_id=clinical_indication_panel.id,
+        note=History.flag_clinical_indication_panel("new clinical indication provided"),
+        user=user,
+    )
+
+
+def flag_clinical_indication_superpanel_for_review(
+    clinical_indication_panel: ClinicalIndicationSuperPanel, user: str
+) -> None:
+    """
+    Controller function which takes a clinical indication/superpanel link, and flags them for manual review.
+    This is useful when a new CI is added, e.g. from test directory, and the user might want to switch to
+    using that for a superpanel instead.
+
+    This function is normally called when there is a new ci-superpanel link when seeding thus
+    the old ci-superpanel link will be flagged to be deactivated / ignored
+    while the new one will be created with pending `True`
+
+    :param: clinical_indication_superpanel [ClinicalIndicationSuperPanel] which needs to
+    be flagged for manual review, usually because something has changed in the test
+    directory
+    :param: user [str] - currently a string, may one day be a User object if we get
+    direct user access up and running
+    """
+
+    clinical_indication_panel.pending = True
+    clinical_indication_panel.current = False
+    # this function mainly deal with old ci-panel link so changing `current` here to False make sense
+    clinical_indication_panel.save()
+
+    ClinicalIndicationSuperPanelHistory.objects.create(
+        clinical_indication_superpanel=clinical_indication_panel,
         note=History.flag_clinical_indication_panel("new clinical indication provided"),
         user=user,
     )
@@ -89,6 +128,12 @@ def provisionally_link_clinical_indication_to_panel(
     Additionally, create a history record.
     Intended for use when you are making 'best guesses' for links based on
     previous CI-Panel links.
+
+    :param: panel_id [int], the ID for a Panel which needs linking to
+    a relevant clinical indication
+    :param: clinical_indication_id [int], the ID for a ClinicalIndication
+    which needs linking to its panel
+    :param: user [str], currently a string, may one day be a User object
     """
     ci_panel_instance, created = ClinicalIndicationPanel.objects.update_or_create(
         clinical_indication_id=clinical_indication_id,
@@ -107,6 +152,46 @@ def provisionally_link_clinical_indication_to_panel(
         )
 
     return ci_panel_instance
+
+
+def provisionally_link_clinical_indication_to_superpanel(
+    superpanel: SuperPanel,
+    clinical_indication: ClinicalIndication,
+    user: str,
+) -> ClinicalIndicationSuperPanel:
+    """
+    Link a CI and superpanel, but set the 'pending' field to True,
+    so that it shows for manual review by a user.
+    Additionally, create a history record.
+    Intended for use when you are making 'best guesses' for links based on
+    previous CI-SuperPanel links.
+
+    :param: superpanel [SuperPanel], a SuperPanel which needs linking to
+    a relevant clinical indication
+    :param: clinical_indication [ClinicalIndication], a ClinicalIndication which
+    needs linking to its panel
+    :param: user [str], the user initiating the action
+    """
+    (
+        ci_superpanel_instance,
+        created,
+    ) = ClinicalIndicationSuperPanel.objects.update_or_create(
+        clinical_indication=clinical_indication,
+        superpanel=superpanel,
+        defaults={
+            "current": True,
+            "pending": True,
+        },
+    )
+
+    if created:
+        ClinicalIndicationSuperPanelHistory.objects.create(
+            clinical_indication_superpanel=ci_superpanel_instance,
+            note=History.auto_created_clinical_indication_panel(),
+            user=user,
+        )
+
+    return ci_superpanel_instance
 
 
 def _get_td_version(filename: str) -> str | None:
@@ -130,21 +215,46 @@ def _get_td_version(filename: str) -> str | None:
         return None
 
 
+def _check_td_version_valid(
+    td_version: str, latest_db_version: str, force: bool
+) -> None:
+    """
+    Compares the current TD upload's version to the latest in the
+    database. Causes exceptions to raise if the current TD upload
+    is for an old version of the test directory, relative to what's
+    in Eris already. If everything is fine, does nothing.
+
+    :param: td_version [str], the TD version parsed from the user-uploaded
+    test directory file
+    :param: latest_db_version [str], the latest TD version found in the
+    Eris database
+    :param: force [bool], an option which lets you force the upload of
+    older test directory versions, even if it's already in Eris
+    """
+    if not latest_db_version or force:
+        pass
+    else:
+        # if currently imported TD version is lower than latest TD version in db
+        # then abort
+        if sortable_version(td_version) <= sortable_version(latest_db_version):
+            raise Exception(
+                f"TD version {normalize_version(td_version)} is less than or the same as"
+                f" the version currently in the db, {normalize_version(latest_db_version)}."
+                f" Abdandoning import."
+            )
+
+
 def _retrieve_panel_from_pa_id(ci_code: str, pa_id: str) -> Panel | None:
     """
     Retrieve a single Panel record based on PA panel id.
-
+    We order multiple Panel records by version and select the highest,
+     to account for multiple entries.
     :param: ci_code [str]: clinical indication code
     :param: pa_id [str]: panelapp id
 
     returns:
-        panel_instance [Panel record]
+        panel_instance [Panel record] or None if a panel isn't found
     """
-
-    # retrieve Panel records directly created from PA panels with that external_id
-    # there might be multiple Panel records with the same external_id
-    # but different versions / ids thus we order by version
-
     panel_instance: Panel = (
         Panel.objects.filter(external_id=pa_id).order_by("-panel_version").first()
     )
@@ -156,11 +266,35 @@ def _retrieve_panel_from_pa_id(ci_code: str, pa_id: str) -> Panel | None:
     return panel_instance
 
 
-def _retrieve_unknown_metadata_records():
+def _retrieve_superpanel_from_pa_id(ci_code: str, pa_id: str) -> SuperPanel | None:
+    """
+    Retrieve a single SuperPanel record based on PA panel id.
+    We order multiple SuperPanel records by version and select the highest,
+     to account for multiple entries.
+    :param: ci_code [str]: clinical indication code
+    :param: pa_id [str]: panelapp id
+
+    returns:
+        panel_instance [SuperPanel record] or None if a SuperPanel isn't found
+    """
+    panel_instance: SuperPanel = (
+        SuperPanel.objects.filter(external_id=pa_id).order_by("-panel_version").first()
+    )
+
+    if not panel_instance:
+        print(f"{ci_code}: No SuperPanel record has panelapp ID {pa_id}")
+        return None
+
+    return panel_instance
+
+
+def _retrieve_unknown_metadata_records() -> (
+    tuple[Confidence, ModeOfInheritance, ModeOfPathogenicity, Penetrance]
+):
     """
     Retrieve additional metadata records for PanelGene records
 
-    returns:
+    :returns:
         conf [Confidence record]
         moi [ModeOfInheritance record]
         mop [ModeOfPathogenicity record]
@@ -186,11 +320,10 @@ def _make_panels_from_hgncs(
     """
     Make Panel records from a list of HGNC ids.
 
-    args:
-        current [bool]: is this the current TD version
-        source [str]: source of data (variable from TD.json)
-        ci [ClinicalIndication record]: the CI record to link to
-        hgnc_list [list]: list of HGNC ids
+    :param: current [bool], whether or not this is the current TD version
+    :param: source [str], source of data (variable from TD.json)
+    :param: ci [ClinicalIndication record], the CI record to link to
+    :param: hgnc_list [list], list of HGNC ids
 
     """
 
@@ -357,10 +490,9 @@ def _make_provisional_test_method_change(
     set the clinical indication record to `pending` = True,
     and log this in the history table.
 
-    args:
-        ci_instance [ClinicalIndication record]: the CI record to link to
-        new_test_method [str]: new test method
-        user [str]: # TODO: will need some thought on this
+    :param: ci_instance [ClinicalIndication record], the CI record to link to
+    :param: new_test_method [str], new test method
+    :param: user [str], the user initiating the action
 
     return: None
     """
@@ -381,6 +513,399 @@ def _make_provisional_test_method_change(
         ci_instance.test_method = new_test_method
 
         ci_instance.save()
+
+
+def _fetch_latest_td_version() -> str:
+    """
+    Gets the highest test directory version currently in the database.
+    Searches the CI-Panel and CI-SuperPanel tables to get the highest
+    number overall.
+    Returns the max number.
+
+    :returns: db_latest_td [str], the maximum test directory version in
+    the database
+    """
+    panels_latest_td: ClinicalIndicationPanel = (
+        ClinicalIndicationPanel.objects.filter(td_version__isnull=False)
+        .order_by("-td_version")
+        .first()
+    )
+
+    superpanels_latest_td: ClinicalIndicationSuperPanel = (
+        ClinicalIndicationSuperPanel.objects.filter(td_version__isnull=False)
+        .order_by("-td_version")
+        .first()
+    )
+
+    # get whichever version is highest, accounting for the fact that
+    # either or both could be None (which makes max error out)
+    if not panels_latest_td and not superpanels_latest_td:
+        db_latest_td = None
+    elif not panels_latest_td:
+        db_latest_td = sortable_version(superpanels_latest_td.td_version)
+    elif not superpanels_latest_td:
+        db_latest_td = sortable_version(panels_latest_td.td_version)
+    else:
+        db_latest_td = max(
+            [
+                sortable_version(panels_latest_td.td_version),
+                sortable_version(superpanels_latest_td.td_version),
+            ]
+        )
+
+    return db_latest_td
+
+
+def _update_ci_panel_tables_with_new_ci(
+    r_code: str,
+    td_source: str,
+    td_version: str,
+    ci_instance: ClinicalIndication,
+    config_source: str,
+) -> None:
+    """
+    New clinical indication - the old CI-panel entries with the
+    same R code, will be set to 'pending = True'. The new CI will be linked to
+    those panels, again with 'pending = True' to make it "provisional".
+
+    :param: r_code [str], the R code of the new clinical indication
+    :param: td_source [str], the test directory's source
+    :param: td_version [str], the test directory's version
+    :param: ci_instance [ClinicalIndication], the new ClinicalIndication object
+    in the database which may need linking to some panels
+    :param: config_source [str], source metadata for the CI-panel link
+    """
+    for clinical_indication_panel in ClinicalIndicationPanel.objects.filter(
+        clinical_indication_id__r_code=r_code,
+        current=True,
+    ):
+        # flag previous ci-panel link for review because a new ci is created
+        flag_clinical_indication_panel_for_review(clinical_indication_panel, td_source)
+
+        # linking new ci with old panel with pending = True
+        # this might be duplicated down the line when panel is created
+        # but if old panel and new panel are the same, we expect that there
+        # will still be one ci-panel link instead of two being created
+        previous_panel_id = clinical_indication_panel.panel_id
+
+        new_clinical_indication_panel = provisionally_link_clinical_indication_to_panel(
+            previous_panel_id,
+            ci_instance.id,
+            td_source,
+        )
+
+        # fill in new clinical indication - panel link metadata
+        new_clinical_indication_panel.td_version = sortable_version(td_version)
+        new_clinical_indication_panel.config_source = config_source
+        new_clinical_indication_panel.save()
+
+
+def _update_ci_superpanel_tables_with_new_ci(
+    r_code: str,
+    td_source: str,
+    td_version: str,
+    ci_instance: ClinicalIndication,
+    config_source: str,
+) -> None:
+    """
+    New clinical indication - the old CI-superpanel entries with the
+    same R code, will be set to 'pending = True'. The new CI will be linked to
+    those panels, again with 'pending = True' to make it "provisional".
+
+    :param: r_code [str], the R code of the new clinical indication
+    :param: td_source [str], the test directory's source
+    :param: td_version [str], the test directory's version
+    :param: ci_instance [ClinicalIndication], the new ClinicalIndication object
+    in the database which may need linking to some superpanels
+    :param: config_source [str], source metadata for the CI-superpanel link
+    """
+    for clinical_indication_superpanel in ClinicalIndicationSuperPanel.objects.filter(
+        clinical_indication__r_code=r_code,
+        current=True,
+    ):
+        # flag previous ci-panel link for review because a new ci is created
+        flag_clinical_indication_superpanel_for_review(
+            clinical_indication_superpanel, td_source
+        )
+
+        # linking new ci with old panel with pending = True
+        # this might be duplicated down the line when panel is created
+        # but if old panel and new panel are the same, we expect that there
+        # will still be one ci-panel link instead of two being created
+        new_clinical_indication_superpanel = (
+            provisionally_link_clinical_indication_to_superpanel(
+                clinical_indication_superpanel,
+                ci_instance,
+                td_source,
+            )
+        )
+
+        # fill in new clinical indication - panel link metadata
+        new_clinical_indication_superpanel.td_version = sortable_version(td_version)
+        new_clinical_indication_superpanel.config_source = config_source
+        new_clinical_indication_superpanel.save()
+
+
+def _update_ci_panel_links(
+    cip_instance: ClinicalIndicationPanel,
+    td_version: str,
+    td_source: str,
+    config_source: str,
+) -> None:
+    """
+    When getting information from a new test directory source,
+    and a CI-Panel already exists and the link is the same,
+    just update the config source and td version (if different)
+
+    :param: cip_instance [ClinicalIndicationPanel], a CI-Panel instance
+    which may need td version or config source updating
+    :param: td_version [str], the TD version in the current user-added source
+    :param: td_source [str], the source of current test directory information
+    :param: config_source [str], other information from a JSON
+    """
+    with transaction.atomic():
+        if sortable_version(td_version) >= sortable_version(cip_instance.td_version):
+            # take a note of the change in td version
+            ClinicalIndicationPanelHistory.objects.create(
+                clinical_indication_panel_id=cip_instance.id,
+                note=History.clinical_indication_panel_metadata_changed(
+                    "td_version",
+                    normalize_version(cip_instance.td_version),
+                    td_version,
+                ),
+                user=td_source,
+            )
+            cip_instance.td_version = sortable_version(td_version)
+
+        if cip_instance.config_source != config_source:
+            # take a note of the change in config source
+            ClinicalIndicationPanelHistory.objects.create(
+                clinical_indication_panel_id=cip_instance.id,
+                note=History.clinical_indication_panel_metadata_changed(
+                    "config_source", cip_instance.config_source, config_source
+                ),
+                user=td_source,
+            )
+            cip_instance.config_source = config_source
+
+        cip_instance.save()
+
+
+def _update_ci_superpanel_links(
+    cip_instance: ClinicalIndicationSuperPanel,
+    td_version: str,
+    td_source: str,
+    config_source: str,
+) -> None:
+    """
+    When getting information from a new test directory source,
+    if CI-SuperPanel already exists and the link is the same,
+    just update the config source and td version (if different)
+
+    :param: cip_instance [ClinicalIndicationSuperPanel], a CI-SuperPanel instance
+    which may need td version or config source updating
+    :param: td_version [str], the TD version in the current user-added source
+    :param: td_source [str], the source of current test directory information
+    :param: config_source [str], other information from a JSON
+    """
+    with transaction.atomic():
+        if sortable_version(td_version) >= sortable_version(cip_instance.td_version):
+            # take a note of the change in test directory version
+            ClinicalIndicationSuperPanelHistory.objects.create(
+                clinical_indication_superpanel=cip_instance,
+                note=History.clinical_indication_panel_metadata_changed(
+                    "td_version",
+                    normalize_version(cip_instance.td_version),
+                    td_version,
+                ),
+                user=td_source,
+            )
+            cip_instance.td_version = sortable_version(td_version)
+
+        if cip_instance.config_source != config_source:
+            # take a note of the change in config source
+            ClinicalIndicationSuperPanelHistory.objects.create(
+                clinical_indication_superpanel=cip_instance,
+                note=History.clinical_indication_panel_metadata_changed(
+                    "config_source", cip_instance.config_source, config_source
+                ),
+                user=td_source,
+            )
+            cip_instance.config_source = config_source
+
+        cip_instance.save()
+
+
+def _attempt_ci_panel_creation(
+    ci_instance: ClinicalIndication,
+    panel_record: Panel,
+    td_version: str,
+    td_source: str,
+    config_source: str,
+) -> tuple[ClinicalIndicationPanel, bool]:
+    """
+    Gets-or-creates a ClinicalIndicationPanel entry.
+    If the entry is new, it will log history too.
+
+    :param: ci_instance [ClinicalIndication], a clinical indication which
+    needs linking to a panel
+    :param: panel_record [Panel], a panel which needs linking to a clinical
+    indication
+    :param: td_version [str], the TD version in the current user-added source
+    :param: td_source [str], the source of current test directory information
+    :param: config_source [str], other information from a JSON
+
+    :return: a tuple containing the created or fetched ClinicalIndicationPanel
+    instance, plus a bool for if it was created or not
+    """
+    (
+        cip_instance,
+        cip_created,
+    ) = ClinicalIndicationPanel.objects.get_or_create(
+        clinical_indication_id=ci_instance.id,
+        panel_id=panel_record.id,
+        defaults={
+            "current": True,
+            "td_version": sortable_version(td_version),
+            "config_source": config_source,
+        },
+    )
+
+    if cip_created:
+        # if CI-Panel record is created, create a history record
+        ClinicalIndicationPanelHistory.objects.create(
+            clinical_indication_panel_id=cip_instance.id,
+            note=History.clinical_indication_panel_created(),
+            user=td_source,
+        )
+
+    return cip_instance, cip_created
+
+
+def _attempt_ci_superpanel_creation(
+    ci_instance: ClinicalIndication,
+    superpanel_record: SuperPanel,
+    td_version: str,
+    td_source: str,
+    config_source: str,
+) -> tuple[ClinicalIndicationSuperPanel, bool]:
+    """
+    Gets-or-creates a ClinicalIndicationSuperPanel entry.
+    If the entry is new, it will log history too.
+
+    :param: ci_instance [ClinicalIndication], a clinical indication which
+    needs linking to a panel
+    :param: panel_record [Panel], a panel which needs linking to a clinical
+    indication
+    :param: td_version [str], the TD version in the current user-added source
+    :param: td_source [str], the source of current test directory information
+    :param: config_source [str], other information from a JSON
+
+    :return: a tuple containing the created or fetched ClinicalIndicationSuperPanel
+    instance, plus a bool for if it was created or not
+    """
+    (
+        cip_instance,
+        cip_created,
+    ) = ClinicalIndicationSuperPanel.objects.get_or_create(
+        clinical_indication=ci_instance,
+        superpanel=superpanel_record,
+        defaults={
+            "current": True,
+            "td_version": sortable_version(td_version),
+            "config_source": config_source,
+        },
+    )
+
+    if cip_created:
+        # if CI-Panel record is created, create a history record
+        ClinicalIndicationSuperPanelHistory.objects.create(
+            clinical_indication_superpanel=cip_instance,
+            note=History.clinical_indication_panel_created(),
+            user=td_source,
+        )
+
+    return cip_instance, cip_created
+
+
+def _flag_panels_removed_from_test_directory(
+    ci_instance: ClinicalIndication, panels: list, td_source: str
+) -> None:
+    """
+    For a clinical indication, finds any pre-existing links to Panels and
+    checks that each Panel is still in the test directory.
+    If the Panel isn't in the test directory anymore, it sets it to Pending and logs
+    information in history tables.
+
+    :param: ci_instance, a ClinicalIndication which needs its pre-existing links
+    to be found and flagged
+    :param: panels, a list of relevant panels taken from the TD json or other data source
+    :param: td_source, the source of test directory information
+    """
+    ci_panels = ClinicalIndicationPanel.objects.filter(
+        clinical_indication_id__r_code=ci_instance.r_code, current=True
+    )
+
+    for cip in ci_panels:
+        associated_panel = Panel.objects.get(id=cip.panel_id)
+
+        # if for the clinical indication,
+        # the associated panel association is not in test directory
+        # flag for review
+        if associated_panel.external_id and associated_panel.external_id not in panels:
+            with transaction.atomic():
+                cip.pending = True
+                cip.current = False
+                cip.save()
+
+                ClinicalIndicationPanelHistory.objects.create(
+                    clinical_indication_panel_id=cip.id,
+                    note=History.flag_clinical_indication_panel(
+                        "ClinicalIndicationPanel does not exist in TD"
+                    ),
+                    user=td_source,
+                )
+
+
+def _flag_superpanels_removed_from_test_directory(
+    ci_instance: ClinicalIndication, panels: list, td_source: str
+) -> None:
+    """
+    For a clinical indication, finds any pre-existing links to SuperPanels and
+    checks that each SuperPanel is still in the test directory.
+    If a SuperPanel isn't in the test directory anymore, it sets it to Pending and logs
+    information in history tables.
+
+    :param: ci_instance, a ClinicalIndication which needs its pre-existing links
+    to be found and flagged
+    :param: superpanels, a list of relevant panels taken from the TD json or other
+    data source
+    :param: td_source, the source of test directory information
+    """
+    ci_superpanels = ClinicalIndicationSuperPanel.objects.filter(
+        clinical_indication__r_code=ci_instance.r_code, current=True
+    )
+
+    for cip in ci_superpanels:
+        # grab associated panel
+        associated_panel = SuperPanel.objects.get(id=cip.superpanel_id)
+
+        # if for the clinical indication
+        # the associated panel association is not in test directory
+        # flag for review
+        if associated_panel.external_id and associated_panel.external_id not in panels:
+            with transaction.atomic():
+                cip.pending = True
+                cip.current = False
+                cip.save()
+
+                ClinicalIndicationSuperPanelHistory.objects.create(
+                    clinical_indication_panel=cip,
+                    note=History.flag_clinical_indication_panel(
+                        "ClinicalIndicationSuperPanel does not exist in TD"
+                    ),
+                    user=td_source,
+                )
 
 
 @transaction.atomic
@@ -405,24 +930,9 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
     td_version: str = _get_td_version(td_source)
     assert td_version, f"Cannot parse TD version {td_version}"
 
-    # fetch latest TD version in database
-    latest_td_version_in_db: ClinicalIndicationPanel = (
-        ClinicalIndicationPanel.objects.filter(td_version__isnull=False)
-        .order_by("-td_version")
-        .first()
-    )
-
-    if not latest_td_version_in_db or force:
-        pass
-    else:
-        # if currently imported TD version is lower than latest TD version in db
-        # then abort
-        if sortable_version(td_version) <= sortable_version(
-            latest_td_version_in_db.td_version
-        ):
-            raise Exception(
-                f"TD version {td_version} lower than one in db {normalize_version(latest_td_version_in_db.td_version)}. Abdandoning import."
-            )
+    # check the test directory upload isn't for an older version
+    latest_td_version_in_db = _fetch_latest_td_version()
+    _check_td_version_valid(td_version, latest_td_version_in_db, force)
 
     all_indication: list[dict] = json_data["indications"]
 
@@ -438,37 +948,12 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
         )
 
         if ci_created:
-            # New clinical indication - the old CI-panel entries with the same R code,
-            # will be set to 'pending = True'. The new CI will be linked to those panels,
-            # again with 'pending = True' to make it "provisional".
-            for clinical_indication_panel in ClinicalIndicationPanel.objects.filter(
-                clinical_indication_id__r_code=r_code,
-                current=True,
-            ):
-                # flag previous ci-panel link for review because a new ci is created
-                flag_clinical_indication_panel_for_review(
-                    clinical_indication_panel, td_source
-                )
-
-                # linking new ci with old panel with pending = True
-                # this might be duplicated down the line when panel is created
-                # but if old panel and new panel are the same, we expect that there
-                # will still be one ci-panel link instead of two being created
-                previous_panel_id = clinical_indication_panel.panel_id
-
-                new_clinical_indication_panel = (
-                    provisionally_link_clinical_indication_to_panel(
-                        previous_panel_id,
-                        ci_instance.id,
-                        td_source,
-                    )
-                )
-
-                # fill in new clinical indication - panel link metadata
-                new_clinical_indication_panel.td_version = sortable_version(td_version)
-                new_clinical_indication_panel.config_source = json_data["config_source"]
-
-                new_clinical_indication_panel.save()
+            _update_ci_panel_tables_with_new_ci(
+                r_code, td_source, td_version, ci_instance, json_data["config_source"]
+            )
+            _update_ci_superpanel_tables_with_new_ci(
+                r_code, td_source, td_version, ci_instance, json_data["config_source"]
+            )
 
         else:
             # Check for change in test method
@@ -499,98 +984,63 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
                     pa_id,
                 )
 
-                # if we import the same version of TD but with different config source
+                # if we import the same version of TD but with different config source:
                 if panel_record:
-                    (
-                        cip_instance,
-                        cip_created,
-                    ) = ClinicalIndicationPanel.objects.get_or_create(
-                        clinical_indication_id=ci_instance.id,
-                        panel_id=panel_record.id,
-                        defaults={
-                            "current": True,
-                            "td_version": sortable_version(td_version),
-                            "config_source": json_data["config_source"],
-                        },
+                    cip_instance, cip_created = _attempt_ci_panel_creation(
+                        ci_instance,
+                        panel_record,
+                        td_version,
+                        td_source,
+                        json_data["config_source"],
                     )
-
-                    if cip_created:
-                        # if CI-Panel record is created, create a history record
-                        ClinicalIndicationPanelHistory.objects.create(
-                            clinical_indication_panel_id=cip_instance.id,
-                            note=History.clinical_indication_panel_created(),
-                            user=td_source,
+                    if not cip_created:
+                        _update_ci_panel_links(
+                            cip_instance,
+                            td_version,
+                            td_source,
+                            json_data["config_source"],
                         )
-                    else:
-                        # if CI-Panel already exist and the link is the same
-                        # just update the config source and td version (if different)
-                        with transaction.atomic():
-                            if sortable_version(td_version) >= sortable_version(
-                                cip_instance.td_version
-                            ):
-                                # take a note of the change
-                                ClinicalIndicationPanelHistory.objects.create(
-                                    clinical_indication_panel_id=cip_instance.id,
-                                    note=History.clinical_indication_panel_metadata_changed(
-                                        "td_version",
-                                        normalize_version(cip_instance.td_version),
-                                        td_version,
-                                    ),
-                                    user=td_source,
-                                )
-                                cip_instance.td_version = sortable_version(td_version)
 
-                            if cip_instance.config_source != json_data["config_source"]:
-                                # take a note of the change
-                                ClinicalIndicationPanelHistory.objects.create(
-                                    clinical_indication_panel_id=cip_instance.id,
-                                    note=History.clinical_indication_panel_metadata_changed(
-                                        "config_source",
-                                        cip_instance.config_source,
-                                        json_data["config_source"],
-                                    ),
-                                    user=td_source,
-                                )
-                                cip_instance.config_source = json_data["config_source"]
+                # for PA panel ids, retrieve latest version matching SuperPanel records
+                super_panel_record: SuperPanel = _retrieve_superpanel_from_pa_id(
+                    indication["code"], pa_id
+                )
 
-                            cip_instance.save()
-
-                else:
-                    # No panel record exist
-                    # e.g. panel id 489 has been retired
-                    print(
-                        f"{indication['code']}: No Panel record has panelapp ID {pa_id}"
+                if super_panel_record:
+                    cip_instance, cip_created = _attempt_ci_superpanel_creation(
+                        ci_instance,
+                        super_panel_record,
+                        td_version,
+                        td_source,
+                        json_data["config_source"],
                     )
-                    pass
 
-            # deal with change in clinical indication-panel interaction
+                    if not cip_created:
+                        _update_ci_superpanel_links(
+                            cip_instance,
+                            td_version,
+                            td_source,
+                            json_data["config_source"],
+                        )
+
+                if not panel_record:
+                    if not super_panel_record:
+                        # No record exists of this panel/superpanel
+                        # e.g. panel id 489 has been retired
+                        print(
+                            f"{indication['code']}: No Panel or SuperPanel record "
+                            f"has panelapp ID {pa_id}"
+                        )
+                        pass
+
+            # deal with change in clinical indication-panel/superpanel interaction
             # e.g. clinical indication R1 changed from panel 1 to panel 2
-            for cip in ClinicalIndicationPanel.objects.filter(
-                clinical_indication_id__r_code=ci_instance.r_code,
-                current=True,
-            ):
-                # grab associated panel
-                associated_panel = Panel.objects.get(id=cip.panel_id)
-
-                # if for the clinical indication
-                # the associated panel association is not in test directory
-                # flag for review
-                if (
-                    associated_panel.external_id
-                    and associated_panel.external_id not in indication["panels"]
-                ):
-                    with transaction.atomic():
-                        cip.pending = True
-                        cip.current = False
-                        cip.save()
-
-                        ClinicalIndicationPanelHistory.objects.create(
-                            clinical_indication_panel_id=cip.id,
-                            note=History.flag_clinical_indication_panel(
-                                "ClinicalIndicationPanel does not exist in TD"
-                            ),
-                            user=td_source,
-                        )
+            _flag_panels_removed_from_test_directory(
+                ci_instance, indication["panels"], td_source
+            )
+            _flag_superpanels_removed_from_test_directory(
+                ci_instance, indication["panels"], td_source
+            )
 
         if hgnc_list:
             _make_panels_from_hgncs(json_data, ci_instance, hgnc_list)
