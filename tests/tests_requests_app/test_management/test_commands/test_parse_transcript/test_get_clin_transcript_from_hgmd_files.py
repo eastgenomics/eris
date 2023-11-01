@@ -141,6 +141,3 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
 
         assert not result
         assert test_error == expected_err
-
-
-# For passing states, see the tests for the parent function, _transcript_assigner

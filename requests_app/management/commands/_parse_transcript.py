@@ -398,7 +398,6 @@ def _get_clin_transcript_from_hgmd_files(
         err = f"{hgnc_id} with gene id {markname_gene_id} not in gene2refseq table"
         return None, err
 
-
     if len(gene2refseq[markname_gene_id]) > 1:
         joined_entries = [i[0] for i in gene2refseq[markname_gene_id]]
         err = f'{hgnc_id} has more than one transcript in the HGMD database: {",".join(joined_entries)}'

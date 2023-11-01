@@ -12,7 +12,6 @@ class TestSanityCheckColsExist(TestCase):
     We mostly use the MANE file set-up here.
     """
 
-
     hgnc_cols = ["HGNC ID", "Approved symbol", "Alias symbols"]
     hgnc_name = "HGNC dump"
     mane_cols = ["Gene", "MANE TYPE", "RefSeq StableID GRCh38 / GRCh37"]
@@ -38,11 +37,7 @@ class TestSanityCheckColsExist(TestCase):
         test_mane = pd.DataFrame(
             {"MANE TYPE": [], "RefSeq StableID GRCh38 / GRCh37": []}
         )
-        with self.assertRaisesRegex(
-            AssertionError, "Missing column Gene from MANE file - please check the file"
-        ):
-            {"MANE TYPE": [], "RefSeq StableID GRCh38 / GRCh37": []}
-        
+
         with self.assertRaisesRegex(
             AssertionError, "Missing column Gene from MANE file - please check the file"
         ):

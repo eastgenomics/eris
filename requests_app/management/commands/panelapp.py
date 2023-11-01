@@ -121,7 +121,9 @@ def _get_all_panel(signed_off: bool = True) -> list[dict]:
         response = requests.get(panelapp_url)
 
         if response.status_code != 200:
-            print(f"Aborting because API returned a non-200 exit code: {response.status_code}")
+            print(
+                f"Aborting because API returned a non-200 exit code: {response.status_code}"
+            )
             exit(1)
 
         data = response.json()
@@ -166,7 +168,9 @@ def get_panel(
     response = requests.get(panel_url)
 
     if response.status_code != 200:
-        print(f"Aborting because API returned a non-200 exit code: {response.status_code}")
+        print(
+            f"Aborting because API returned a non-200 exit code: {response.status_code}"
+        )
         exit(1)
 
     is_superpanel = _check_superpanel_status(response)
@@ -196,7 +200,7 @@ def fetch_all_panels() -> tuple[list[PanelClass], list[SuperPanelClass]]:
 
         # fetching specific signed-off version
         panel_data, is_superpanel = get_panel(panel_id, panel_version)
-        
+
         if panel_data:
             panel_data.panel_source = "PanelApp"
             if is_superpanel:
