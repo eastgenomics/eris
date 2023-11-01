@@ -14,6 +14,7 @@ class TestUpdateExistingGeneSymbol(TestCase):
     Test various cases on _update_existing_gene_metadata_symbol_in_db
     """
 
+
     def setUp(self) -> None:
         # Populate the Gene test database with some easy examples
         self.FAM234A = Gene.objects.create(

@@ -6,7 +6,7 @@ import os
 import json
 import re
 
-from ._insert_panel import insert_data_into_db
+from ._insert_panel import panel_insert_controller
 from ._parse_transcript import seed_transcripts
 from ._insert_ci import insert_test_directory_data
 from .panelapp import get_panel, PanelClass, fetch_all_panels
@@ -189,8 +189,7 @@ class Command(BaseCommand):
             panel_version: str = kwargs.get("version")
 
             if panel_id == "all":
-                panels: list[PanelClass] = fetch_all_panels()
-
+                panels, superpanels = fetch_all_panels()
             else:
                 if not panel_id:
                     raise ValueError("Please specify panel id")
@@ -203,23 +202,27 @@ class Command(BaseCommand):
                     )
 
                 # parse data from requested current PanelApp panels
-                panel = get_panel(panel_id, panel_version)
+                panel_data, is_superpanel = get_panel(panel_id, panel_version)
 
-                if not panel:
+                if not panel_data:
                     print(
                         f"Fetching panel id: {panel_id} version: {panel_version} failed"
                     )
                     raise ValueError("Panel specified does not exist")
-                panel.panel_source = "PanelApp"  # manual addition of source
+                panel_data.panel_source = "PanelApp"  # manual addition of source
 
-                panels = [panel]
+                if is_superpanel:
+                    superpanels = [panel_data]
+                else:
+                    panels = [panel_data]
 
             if not test_mode:
-                print(f"Importing {len(panels)} panels into database...")
+                # not printing amounts because there are some duplicates now,
+                # due to how superpanels work
+                print(f"Importing panels into database...")
 
                 # insert panel data into database
-                for panel in panels:
-                    insert_data_into_db(panel, user)
+                panel_insert_controller(panels, superpanels, user)
 
                 print("Done.")
 
