@@ -107,14 +107,13 @@ class TestAddTranscriptRelease_ErrorsOnVersionRepeatsWithDifferentFiles(TestCase
         ref_genome = "37"
         data = {"mane": "file-1357", "another_mane": "file-101010"}
 
-        with self.assertRaises(ValueError) as msg:
+        with self.assertRaisesRegex(
+            ValueError,
+                "Transcript release HGMD v1.0.5 already exists in db, but the uploaded file file-1357 is"
+            " not in the db. Please review. Transcript release HGMD v1.0.5 already exists in db, "
+            "but the uploaded file file-101010 is not in the db. Please review."
+        ):
             _add_transcript_release_info_to_db(source, version, ref_genome, data)
-        self.assertEqual(
-            "Transcript release HGMD v1.0.5 already exists in db, but the uploaded file file-1357 is"
-                  " not in the db. Please review. Transcript release HGMD v1.0.5 already exists in db, "
-                    "but the uploaded file file-101010 is not in the db. Please review.",
-            str(msg.exception),
-        )
 
 
 class TestAddTranscriptRelease_SameFilesNoProblem(TestCase):
@@ -189,9 +188,8 @@ class TestAddTranscriptRelease_CheckNotMissingFiles(TestCase):
         ref_genome = "37"
         data = {"mane": "123"}
 
-        with self.assertRaises(ValueError) as msg:
+        with self.assertRaisesRegex(
+            ValueError,
+            "Transcript file 456 is linked to the release in the db, but wasn't uploaded. Please review."
+        ):
             _add_transcript_release_info_to_db(source, version, ref_genome, data)
-        self.assertEqual(
-            "Transcript file 456 is linked to the release in the db, but wasn't uploaded. Please review.",
-            str(msg.exception),
-        )
