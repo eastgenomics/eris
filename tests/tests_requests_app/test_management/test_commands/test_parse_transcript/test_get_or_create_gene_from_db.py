@@ -1,8 +1,9 @@
 from django.test import TestCase
 
 from requests_app.management.commands._parse_transcript import _add_new_genes_to_db
-from tests.tests_requests_app.test_management.test_commands.test_insert_ci.test_insert_test_directory_data \
-import len_check_wrapper
+from tests.tests_requests_app.test_management.test_commands.test_insert_ci.test_insert_test_directory_data import (
+    len_check_wrapper,
+)
 from requests_app.models import Gene
 
 
@@ -30,10 +31,13 @@ class TestGetOrCreate_CreateNew(TestCase):
         poss_aliases = [None, "TEST, ALIAS"]
         for i in range(0, 2, 1):
             if not post_run_genes[i].gene_symbol in poss_symbols:
-                errors.append(f"Post run gene {post_run_genes[i].gene_symbol} not in {poss_symbols}")
+                errors.append(
+                    f"Post run gene {post_run_genes[i].gene_symbol} not in {poss_symbols}"
+                )
             if not post_run_genes[i].alias_symbols in poss_aliases:
-                errors.append(f"Post run gene {post_run_genes[i].alias_symbols} not in {poss_aliases}")
+                errors.append(
+                    f"Post run gene {post_run_genes[i].alias_symbols} not in {poss_aliases}"
+                )
 
-        errors = ";".join(errors)
-        assert not errors, errors 
-        
+        errors = "; ".join(errors)
+        assert not errors, errors

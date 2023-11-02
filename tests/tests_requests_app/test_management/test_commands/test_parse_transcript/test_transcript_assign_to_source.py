@@ -33,9 +33,12 @@ class TestTranscriptAssigner_TxAbsent(TestCase):
 
         no_results = {"clinical": None, "match_base": None, "match_version": None}
 
-        self.assertDictEqual(mane_select_data, no_results)
-        self.assertDictEqual(mane_plus_clinical_data, no_results)
-        self.assertDictEqual(hgmd_data, no_results)
+        with self.subTest():
+            self.assertDictEqual(mane_select_data, no_results)
+        with self.subTest():
+            self.assertDictEqual(mane_plus_clinical_data, no_results)
+        with self.subTest():
+            self.assertDictEqual(hgmd_data, no_results)
 
 
 class TestTranscriptAssigner_InMane(TestCase):
@@ -86,9 +89,12 @@ class TestTranscriptAssigner_InMane(TestCase):
             "match_version": None,
         }
 
-        self.assertDictEqual(mane_select_data, mane_select_expected)
-        self.assertDictEqual(mane_plus_clinical_data, mane_plus_clinical_expected)
-        self.assertDictEqual(hgmd_data, hgmd_data_expected)
+        with self.subTest():
+            self.assertDictEqual(mane_select_data, mane_select_expected)
+        with self.subTest():
+            self.assertDictEqual(mane_plus_clinical_data, mane_plus_clinical_expected)
+        with self.subTest():
+            self.assertDictEqual(hgmd_data, hgmd_data_expected)
 
     def test_mane_plus_versionless_match(self):
         """
@@ -126,9 +132,12 @@ class TestTranscriptAssigner_InMane(TestCase):
         }
         no_data = {"clinical": None, "match_base": None, "match_version": None}
 
-        self.assertDictEqual(mane_select_data, no_data)
-        self.assertDictEqual(mane_plus_clinical_data, mane_plus_clinical_expected)
-        self.assertDictEqual(hgmd_data, no_data)
+        with self.subTest():
+            self.assertDictEqual(mane_select_data, no_data)
+        with self.subTest():
+            self.assertDictEqual(mane_plus_clinical_data, mane_plus_clinical_expected)
+        with self.subTest():
+            self.assertDictEqual(hgmd_data, no_data)
 
     def test_mane_select_versioned_match(self):
         """
@@ -170,10 +179,12 @@ class TestTranscriptAssigner_InMane(TestCase):
             "match_base": None,
             "match_version": None,
         }
-
-        self.assertDictEqual(mane_select_data, mane_select_expected)
-        self.assertDictEqual(mane_plus_clinical_data, mane_plus_clinical_expected)
-        self.assertDictEqual(hgmd_data, hgmd_data_expected)
+        with self.subTest():
+            self.assertDictEqual(mane_select_data, mane_select_expected)
+        with self.subTest():
+            self.assertDictEqual(mane_plus_clinical_data, mane_plus_clinical_expected)
+        with self.subTest():
+            self.assertDictEqual(hgmd_data, hgmd_data_expected)
 
     def test_mane_plus_versionless_match(self):
         """
@@ -210,10 +221,12 @@ class TestTranscriptAssigner_InMane(TestCase):
             "match_version": True,
         }
         no_data = {"clinical": None, "match_base": None, "match_version": None}
-
-        self.assertDictEqual(mane_select_data, no_data)
-        self.assertDictEqual(mane_plus_clinical_data, mane_plus_clinical_expected)
-        self.assertDictEqual(hgmd_data, no_data)
+        with self.subTest():
+            self.assertDictEqual(mane_select_data, no_data)
+        with self.subTest():
+            self.assertDictEqual(mane_plus_clinical_data, mane_plus_clinical_expected)
+        with self.subTest():
+            self.assertDictEqual(hgmd_data, no_data)
 
 
 class TestTranscriptAssigner_InHgmd(TestCase):
@@ -248,9 +261,12 @@ class TestTranscriptAssigner_InHgmd(TestCase):
         hgmd_expected = {"clinical": True, "match_base": True, "match_version": False}
         no_data = {"clinical": None, "match_base": None, "match_version": None}
 
-        self.assertDictEqual(mane_select_data, no_data)
-        self.assertDictEqual(mane_plus_clinical_data, no_data)
-        self.assertDictEqual(hgmd_data, hgmd_expected)
+        with self.subTest():
+            self.assertDictEqual(mane_select_data, no_data)
+        with self.subTest():
+            self.assertDictEqual(mane_plus_clinical_data, no_data)
+        with self.subTest():
+            self.assertDictEqual(hgmd_data, hgmd_expected)
 
     def test_gene_transcript_not_in_hgmd(self):
         """
@@ -276,6 +292,9 @@ class TestTranscriptAssigner_InHgmd(TestCase):
         # expected values
         no_data = {"clinical": None, "match_base": None, "match_version": None}
 
-        self.assertDictEqual(mane_select_data, no_data)
-        self.assertDictEqual(mane_plus_clinical_data, no_data)
-        self.assertDictEqual(hgmd_data, no_data)
+        with self.subTest():
+            self.assertDictEqual(mane_select_data, no_data)
+        with self.subTest():
+            self.assertDictEqual(mane_plus_clinical_data, no_data)
+        with self.subTest():
+            self.assertDictEqual(hgmd_data, no_data)

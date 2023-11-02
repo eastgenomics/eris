@@ -109,9 +109,9 @@ class TestAddTranscriptRelease_ErrorsOnVersionRepeatsWithDifferentFiles(TestCase
 
         with self.assertRaisesRegex(
             ValueError,
-                "Transcript release HGMD v1.0.5 already exists in db, but the uploaded file file-1357 is"
+            "Transcript release HGMD v1.0.5 already exists in db, but the uploaded file file-1357 is"
             " not in the db. Please review. Transcript release HGMD v1.0.5 already exists in db, "
-            "but the uploaded file file-101010 is not in the db. Please review."
+            "but the uploaded file file-101010 is not in the db. Please review.",
         ):
             _add_transcript_release_info_to_db(source, version, ref_genome, data)
 
@@ -190,6 +190,6 @@ class TestAddTranscriptRelease_CheckNotMissingFiles(TestCase):
 
         with self.assertRaisesRegex(
             ValueError,
-            "Transcript file 456 is linked to the release in the db, but wasn't uploaded. Please review."
+            "Transcript file 456 is linked to the release in the db, but wasn't uploaded. Please review.",
         ):
             _add_transcript_release_info_to_db(source, version, ref_genome, data)
