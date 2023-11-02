@@ -47,7 +47,7 @@ class Command(BaseCommand):
         Validate that the external file ids are in the correct format
         :param: file_ids, a list of file ID strings
         """
-        missing_ids: [id for id in file_ids if not re.match(r"^file-[\w]+$", id)]
+        missing_ids = [id for id in file_ids if not re.match(r"^file-[\w]+$", id)]
 
         if missing_ids:
             raise Exception(
