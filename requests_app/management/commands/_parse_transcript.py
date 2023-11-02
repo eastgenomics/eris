@@ -159,7 +159,6 @@ def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
     with transaction.atomic():
         _update_existing_gene_metadata_symbol_in_db(hgnc_id_to_approved_symbol)
         _update_existing_gene_metadata_aliases_in_db(hgnc_id_to_alias_symbols)
-    with transaction.atomic():
         _add_new_genes_to_db(hgnc_id_to_approved_symbol, hgnc_id_to_alias_symbols)
 
     return hgnc_symbol_to_hgnc_id

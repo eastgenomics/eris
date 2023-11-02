@@ -240,7 +240,7 @@ def _check_td_version_valid(
             raise Exception(
                 f"TD version {normalize_version(td_version)} is less than or the same as"
                 f" the version currently in the db, {normalize_version(latest_db_version)}."
-                f" Abdandoning import."
+                f" Abandoning import."
             )
 
 
@@ -260,7 +260,6 @@ def _retrieve_panel_from_pa_id(ci_code: str, pa_id: str) -> Panel | None:
     )
 
     if not panel_instance:
-        print(f"{ci_code}: No Panel record has panelapp ID {pa_id}")
         return None
 
     return panel_instance
@@ -282,7 +281,6 @@ def _retrieve_superpanel_from_pa_id(ci_code: str, pa_id: str) -> SuperPanel | No
     )
 
     if not panel_instance:
-        print(f"{ci_code}: No SuperPanel record has panelapp ID {pa_id}")
         return None
 
     return panel_instance
