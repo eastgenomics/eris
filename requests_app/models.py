@@ -482,6 +482,106 @@ class Gene(models.Model):
 
     class Meta:
         db_table = "gene"
+        unique_together = ("hgnc_id", "gene_symbol", "alias_symbols")
+
+    def __str__(self):
+        return str(self.id)
+
+
+class TranscriptSource(models.Model):
+    """
+    Defines a particular source AND category of transcript information,
+    e.g. MANE Select, MANE Plus Clinical, HGMD
+    """
+
+    source = models.CharField(
+        verbose_name="Transcript Source",
+        max_length=255,
+        default=None,
+    )
+
+    class Meta:
+        db_table = "transcript_source"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class TranscriptRelease(models.Model):
+    """
+    Defines a specific release of a transcript source with metadata -
+    for example, MANE release 1.0, or a specific HGMD dump
+    """
+
+    source = models.ForeignKey(
+        TranscriptSource,
+        verbose_name="Transcript source id",
+        on_delete=models.PROTECT,
+        default=None,
+    )
+
+    external_release_version = models.CharField(
+        verbose_name="Transcript Release", max_length=255, null=True, default=None
+    )
+
+    created = models.DateTimeField(
+        verbose_name="created",
+        auto_now_add=True,
+    )
+
+    reference_genome = models.CharField(
+        verbose_name="Reference Genome",
+        max_length=255,
+        null=True,
+        default=None,
+    )
+
+    class Meta:
+        db_table = "transcript_release"
+        # stop people reusing the same release version
+        unique_together = ["source", "external_release_version", "reference_genome"]
+
+    def __str__(self):
+        return str(self.id)
+
+
+class TranscriptFile(models.Model):
+    """
+    Files used to define a specific release of a transcript source -
+    for example, MANE release 1.0
+    """
+
+    file_id = models.CharField(
+        verbose_name="File ID in external storage (DNAnexus)",
+        max_length=255,
+        null=True,
+        default=None,
+    )
+
+    file_type = models.CharField(
+        verbose_name="File type", max_length=255, null=True, default=None
+    )
+
+    class Meta:
+        db_table = "transcript_file"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class TranscriptReleaseTranscriptFile(models.Model):
+    """Links transcript releases to the file(s) that characterise them"""
+
+    transcript_release = models.ForeignKey(
+        TranscriptRelease, verbose_name="Transcript release", on_delete=models.PROTECT
+    )
+
+    transcript_file = models.ForeignKey(
+        TranscriptFile, verbose_name="Transcript release", on_delete=models.PROTECT
+    )
+
+    class Meta:
+        db_table = "transcript_release_transcript_file"
 
     def __str__(self):
         return str(self.id)
@@ -491,10 +591,6 @@ class Transcript(models.Model):
     """Defines a single transcript by RefSeq ID"""
 
     transcript = models.CharField(verbose_name="Transcript", max_length=255, null=True)
-
-    source = models.CharField(
-        verbose_name="MANE or HGMD", max_length=255, null=True, default=None
-    )
 
     gene = models.ForeignKey(Gene, verbose_name="Gene id", on_delete=models.PROTECT)
 
@@ -507,6 +603,53 @@ class Transcript(models.Model):
 
     class Meta:
         db_table = "transcript"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class TranscriptReleaseTranscript(models.Model):
+    """Defines the link between a single transcript and a single release"""
+
+    transcript = models.ForeignKey(
+        Transcript, verbose_name="Transcript", on_delete=models.CASCADE
+    )
+
+    release = models.ForeignKey(
+        TranscriptRelease, verbose_name="Transcript release", on_delete=models.CASCADE
+    )
+
+    # match_version=True means the transcript WITH VERSION matches the
+    # transcript in the release
+    # if its False, that means only the base accession without version matches
+    # None means it wasn't assessed
+    match_version = models.BooleanField(
+        verbose_name="Transcript matches version?",
+        null=True,
+        default=None,
+    )
+
+    match_base = models.BooleanField(
+        verbose_name="Transcript matches accession base?",
+        null=True,
+        default=None,
+    )
+
+    default_clinical = models.BooleanField(
+        verbose_name="Is the transcript clinical?",
+        null=True,
+        default=False,
+    )
+
+    # 'created' is here so that we can fetch the most up-to-date record,
+    # if a transcript is looked up in a release more than once
+    created = models.DateTimeField(
+        verbose_name="created",
+        auto_now_add=True,
+    )
+
+    class Meta:
+        db_table = "transcript_release_link"
 
     def __str__(self):
         return str(self.id)

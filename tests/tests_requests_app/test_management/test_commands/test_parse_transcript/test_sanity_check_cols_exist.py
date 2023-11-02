@@ -20,21 +20,34 @@ class TestSanityCheckColsExist(TestCase):
     gene2refseq_name = "gene2refseq"
 
     def test_passing_case(self):
+        """
+        Test that a dataframe which contains all the correct column names,
+        correctly passes the sanity-checker.
+        """
         test_mane = pd.DataFrame(
             {"Gene": [], "MANE TYPE": [], "RefSeq StableID GRCh38 / GRCh37": []}
         )
         assert not _sanity_check_cols_exist(test_mane, self.mane_cols, self.mane_name)
 
     def test_mane_missing_gene(self):
+        """
+        Test that a dataframe which misses the Gene column name,
+        raises an AssertionError wtih the sanity-checker.
+        """
         test_mane = pd.DataFrame(
             {"MANE TYPE": [], "RefSeq StableID GRCh38 / GRCh37": []}
         )
+
         with self.assertRaisesRegex(
             AssertionError, "Missing column Gene from MANE file - please check the file"
         ):
             _sanity_check_cols_exist(test_mane, self.mane_cols, self.mane_name)
 
     def test_mane_missing_mane_type(self):
+        """
+        Test that a dataframe which misses the MANE TYPE column name,
+        raises an AssertionError with the sanity-checker.
+        """
         test_mane = pd.DataFrame({"Gene": [], "RefSeq StableID GRCh38 / GRCh37": []})
         with self.assertRaisesRegex(
             AssertionError,
@@ -43,6 +56,10 @@ class TestSanityCheckColsExist(TestCase):
             _sanity_check_cols_exist(test_mane, self.mane_cols, self.mane_name)
 
     def test_mane_missing_refseq(self):
+        """
+        Test that a dataframe which misses the RefSeq column name,
+        raises an AssertionError with the sanity-checker.
+        """
         test_mane = pd.DataFrame({"Gene": [], "MANE TYPE": []})
         with self.assertRaisesRegex(
             AssertionError,
@@ -51,6 +68,11 @@ class TestSanityCheckColsExist(TestCase):
             _sanity_check_cols_exist(test_mane, self.mane_cols, self.mane_name)
 
     def test_mane_missing_several(self):
+        """
+        Test that a dataframe which misses several column names,
+        raises an AssertionError with the sanity-checker.
+        Every missing column should be printed in the output error message.
+        """
         test_mane = pd.DataFrame({"Gene": []})
         with self.assertRaisesRegex(
             AssertionError,
