@@ -16,7 +16,7 @@ from requests_app.models import (
     TranscriptReleaseTranscript,
     TranscriptReleaseTranscriptFile,
     PanelGene,
-    ReferenceGenome
+    ReferenceGenome,
 )
 
 
@@ -302,8 +302,9 @@ def _prepare_markname_file(markname_file: str) -> dict[str:list]:
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
 
 
-def _add_transcript_to_db(gene: Gene, transcript: str, \
-                          ref_genome: ReferenceGenome) -> Transcript:
+def _add_transcript_to_db(
+    gene: Gene, transcript: str, ref_genome: ReferenceGenome
+) -> Transcript:
     """
     Add each transcript to the database, with its gene.
 
@@ -623,9 +624,11 @@ def _parse_reference_genome(ref_genome: str) -> str:
     elif ref_genome.lower() in permitted_grch38:
         return "GRCh38"
     else:
-        raise ValueError(f"Please provide a valid reference genome,"
-                         f" such as {'; '.join(permitted_grch37)} or "
-                         f"{'; '.join(permitted_grch38)} - you provided {ref_genome}")
+        raise ValueError(
+            f"Please provide a valid reference genome,"
+            f" such as {'; '.join(permitted_grch37)} or "
+            f"{'; '.join(permitted_grch38)} - you provided {ref_genome}"
+        )
 
 
 # 'atomic' should ensure that any failure rolls back the entire attempt to seed
@@ -675,7 +678,7 @@ def seed_transcripts(
     reference_genome_str = _parse_reference_genome(reference_genome)
     reference_genome, _ = ReferenceGenome.get_or_create(
         reference_genome=reference_genome_str
-        )
+    )
 
     # files preparation
     hgnc_symbol_to_hgnc_id = _prepare_hgnc_file(hgnc_filepath)
