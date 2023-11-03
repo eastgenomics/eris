@@ -1663,6 +1663,9 @@ def genetotranscript(request):
                     data = "\t".join(
                         [hgnc_id, transcript, "clinical" if source else "non-clinical"]
                     )
+                    data = "\t".join(
+                        [hgnc_id, transcript, "clinical" if source else "non-clinical"]
+                    )
                     f.write(f"{data}\n")
 
         except Exception as e:

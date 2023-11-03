@@ -4,6 +4,7 @@ python manage.py seed --help
 
 import os
 import json
+import re
 
 from ._insert_panel import panel_insert_controller
 from ._parse_transcript import seed_transcripts
@@ -40,6 +41,18 @@ class Command(BaseCommand):
             raise Exception(f"Files {', '.join(missing_files)} do not exist")
 
         return True
+
+    def _validate_ext_ids(self, file_ids: list[str]) -> None:
+        """
+        Validate that the external file ids are in the correct format
+        :param: file_ids, a list of file ID strings
+        """
+        missing_ids = [id for id in file_ids if not re.match(r"^file-[\w]+$", id)]
+
+        if missing_ids:
+            raise Exception(
+                f"External file IDs {', '.join(missing_ids)} are misformatted"
+            )
 
     def add_arguments(self, parser) -> None:
         """Define the source of the data to import."""
@@ -97,6 +110,16 @@ class Command(BaseCommand):
             default="testing_files/mane_grch37.csv",
         )
         transcript.add_argument(
+            "--mane_ext_id",
+            type=str,
+            help="The DNAnexus file ID of the MANE .csv file. Will start with 'file-'",
+        )
+        transcript.add_argument(
+            "--mane_release",
+            type=str,
+            help="The documented release version of the MANE file(s)",
+        )
+        transcript.add_argument(
             "--gff",
             type=str,
             help="Path to parsed gff .tsv file",
@@ -109,20 +132,33 @@ class Command(BaseCommand):
             default="testing_files/gene2refseq_202306131409.csv",
         )
         transcript.add_argument(
+            "--g2refseq_ext_id",
+            type=str,
+            help="The file ID of the gene2refseq csv file. Will start with 'file-'",
+        )
+        transcript.add_argument(
             "--markname",
             type=str,
             help="Path to markname csv file",
             default="testing_files/markname_202306131409.csv",
         )
-
+        transcript.add_argument(
+            "--markname_ext_id",
+            type=str,
+            help="The file ID of the markname csv file. Will start with 'file-'",
+        )
+        transcript.add_argument(
+            "--hgmd_release_label",
+            type=str,
+            help="The documented release version of the HGMD files",
+        )
         transcript.add_argument(
             "--error",
             action="store_true",
             help="write error log for transcript seeding",
         )
-
         transcript.add_argument(
-            "refgenome",
+            "--refgenome",
             type=str,
             help="Reference Genome",
         )
@@ -197,18 +233,24 @@ class Command(BaseCommand):
             if not test_mode:
                 insert_test_directory_data(json_data, force)
 
-        # python manage.py seed transcript --hgnc <path> --mane <path> --gff <path> --g2refseq <path> --markname <path> --refgenome <ref_genome_version> --error
+        # python manage.py seed transcript --hgnc <path> --mane <path>
+        # --mane_ext_id <str> --mane_release <str> --gff <path> --g2refseq <path>
+        # --g2refseq_ext_id <str> --markname <path> --markname_ext_id <str>
+        # --hgmd_release_label <str> --refgenome <ref_genome_version> --error
         elif command == "transcript":
             """
-            This seeding requires the following files:
+            This seeding requires the following files and strings:
             1. hgnc dump - with HGNC ID, Approved Symbol, Previous Symbols, Alias Symbols
-            2. MANE file grch37 csv (http://tark.ensembl.org/web/mane_GRCh37_list/)
-            3. parsed gff file on DNAnexus (project-Fkb6Gkj433GVVvj73J7x8KbV:file-GF611Z8433Gk7gZ47gypK7ZZ)
-            4. gene2refseq table from HGMD database
-            5. markname table from HGMD database
-
-            And a string argument:
-            6. reference genome - e.g. 37/38
+            2. MANE file csv (http://tark.ensembl.org/web/mane_GRCh37_list/)
+            3. MANE file csv - the external ID
+            4. MANE release version
+            5. parsed gff file on DNAnexus (project-Fkb6Gkj433GVVvj73J7x8KbV:file-GF611Z8433Gk7gZ47gypK7ZZ)
+            6. gene2refseq table from HGMD database
+            7. gene2refseq table - the external ID
+            8. markname table from HGMD database
+            9. markname table from HGMD database - the external ID
+            10. hgmd release label - in-house label assigned to this version of the data dump
+            11. reference genome - e.g. 37/38
             """
 
             # fetch input reference genome - case sensitive
@@ -218,9 +260,14 @@ class Command(BaseCommand):
 
             hgnc_file = kwargs.get("hgnc")
             mane_file = kwargs.get("mane")
+            mane_ext_id = kwargs.get("mane_ext_id")
+            mane_release = kwargs.get("mane_release")
             gff_file = kwargs.get("gff")
             g2refseq_file = kwargs.get("g2refseq")
+            g2refseq_ext_id = kwargs.get("g2refseq_ext_id")
             markname_file = kwargs.get("markname")
+            markname_ext_id = kwargs.get("markname_ext_id")
+            hgmd_release_label = kwargs.get("hgmd_release_label")
 
             self._validate_file_exist(
                 [
@@ -232,14 +279,21 @@ class Command(BaseCommand):
                 ]
             )
 
+            self._validate_ext_ids([mane_ext_id, g2refseq_ext_id, markname_ext_id])
+
             error_log = kwargs.get("error_log", False)
 
             seed_transcripts(
                 hgnc_file,
                 mane_file,
+                mane_ext_id,
+                mane_release,
                 gff_file,
                 g2refseq_file,
+                g2refseq_ext_id,
                 markname_file,
+                markname_ext_id,
+                hgmd_release_label,
                 ref_genome,
                 error_log,
             )
