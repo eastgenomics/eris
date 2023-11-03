@@ -284,8 +284,6 @@ def _insert_panel_data_into_db(panel: PanelClass, user: str) -> Panel:
         panel_version=sortable_version(panel_version),
         defaults={
             "panel_source": panel.panel_source,
-            "grch37": True,
-            "grch38": True,
             "test_directory": False,
         },
     )
@@ -346,8 +344,6 @@ def _insert_superpanel_into_db(
         panel_version=sortable_version(panel_version),
         defaults={
             "panel_source": superpanel.panel_source,
-            "grch37": True,
-            "grch38": True,
             "test_directory": False,
         },
     )

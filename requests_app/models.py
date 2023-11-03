@@ -601,7 +601,7 @@ class Transcript(models.Model):
     gene = models.ForeignKey(Gene, verbose_name="Gene id", on_delete=models.PROTECT)
 
     reference_genome = models.ForeignKey(
-        ReferenceGenome, verbose_name="Reference genome"
+        ReferenceGenome, verbose_name="Reference genome",  on_delete=models.PROTECT
     )
 
     class Meta:

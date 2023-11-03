@@ -16,6 +16,7 @@ from requests_app.models import (
     TranscriptReleaseTranscript,
     TranscriptReleaseTranscriptFile,
     PanelGene,
+    ReferenceGenome
 )
 
 
@@ -301,13 +302,14 @@ def _prepare_markname_file(markname_file: str) -> dict[str:list]:
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
 
 
-def _add_transcript_to_db(gene: Gene, transcript: str, ref_genome: str) -> Transcript:
+def _add_transcript_to_db(gene: Gene, transcript: str, \
+                          ref_genome: ReferenceGenome) -> Transcript:
     """
     Add each transcript to the database, with its gene.
 
     :param: gene, a Gene in need to linking to a transcript
     :param: transcript, the name of a transcript to add to the db
-    :param: the reference genome of this version of the transcript
+    :param: ref_genome, the ReferenceGenome of this version of the transcript
 
     :returns: Transcript instance, for the transcript added to the db
     """
@@ -520,7 +522,7 @@ def _transcript_assign_to_source(
 
 
 def _add_transcript_release_info_to_db(
-    source: str, release_version: str, ref_genome: str, files: dict
+    source: str, release_version: str, ref_genome: ReferenceGenome, files: dict
 ) -> None:
     """
     For each transcript release, make sure the source, release, and
@@ -532,7 +534,7 @@ def _add_transcript_release_info_to_db(
 
     :param: source, the name of a source of transcript information (e.g. MANE Select)
     :param: release_version, the version of the transcript release as entered by user
-    :param: ref_genome, the reference genome used for this transcript release
+    :param: ref_genome, the ReferenceGenome used for this transcript release
     :param: files, a dictionary of files used to define the contents of each release.
     For example, a HGMD release might be defined by a markname and a gene2refseq file
     """
@@ -605,6 +607,27 @@ def _add_transcript_release_info_to_db(
     return release
 
 
+def _parse_reference_genome(ref_genome: str) -> str:
+    """
+    Convert reference genome into a standardised string.
+    Throws error if this doesn't work.
+
+    :param: reference genome string as provided by the user
+    :param: reference genome string, post-normalisation
+    """
+    permitted_grch37 = ["hg19", "37", "grch37"]
+    permitted_grch38 = ["hg38", "38", "grch38"]
+
+    if ref_genome.lower() in permitted_grch37:
+        return "GRCh37"
+    elif ref_genome.lower() in permitted_grch38:
+        return "GRCh38"
+    else:
+        raise ValueError(f"Please provide a valid reference genome,"
+                         f" such as {'; '.join(permitted_grch37)} or "
+                         f"{'; '.join(permitted_grch38)} - you provided {ref_genome}")
+
+
 # 'atomic' should ensure that any failure rolls back the entire attempt to seed
 # transcripts - resetting the database to its start position
 @transaction.atomic
@@ -647,6 +670,12 @@ def seed_transcripts(
 
     # prepare error log filename
     error_log: str = f"{current_datetime}_transcript_error.txt"
+
+    # check reference genome makes sense, fetch it
+    reference_genome_str = _parse_reference_genome(reference_genome)
+    reference_genome, _ = ReferenceGenome.get_or_create(
+        reference_genome=reference_genome_str
+        )
 
     # files preparation
     hgnc_symbol_to_hgnc_id = _prepare_hgnc_file(hgnc_filepath)
