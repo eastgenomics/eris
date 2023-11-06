@@ -7,6 +7,7 @@ from requests_app.models import (
     TranscriptFile,
     TranscriptRelease,
     TranscriptReleaseTranscriptFile,
+    ReferenceGenome
 )
 from requests_app.management.commands._parse_transcript import (
     _add_transcript_release_info_to_db,
@@ -33,7 +34,8 @@ class TestAddTranscriptRelease_FromScratch(TestCase):
 
         source = "MANE Select"
         version = "v1.2.3"
-        ref_genome = "37"
+        ref_genome = ReferenceGenome.objects.create(reference_genome="GRCh37")
+
         data = {"mane": "file-1357", "another_mane": "file-101010"}
 
         _add_transcript_release_info_to_db(source, version, ref_genome, data)
@@ -90,9 +92,10 @@ class TestAddTranscriptRelease_ErrorsOnVersionRepeatsWithDifferentFiles(TestCase
     """
 
     def setUp(self) -> None:
+        self.reference_genome = ReferenceGenome.objects.create(reference_genome="GRCh37")
         self.source = TranscriptSource.objects.create(source="HGMD")
         self.release = TranscriptRelease.objects.create(
-            source=self.source, external_release_version="v1.0.5", reference_genome="37"
+            source=self.source, external_release_version="v1.0.5", reference_genome=self.reference_genome
         )
 
     def test_non_matching_files_throw_errors(self):
@@ -104,7 +107,7 @@ class TestAddTranscriptRelease_ErrorsOnVersionRepeatsWithDifferentFiles(TestCase
 
         source = "HGMD"
         version = "v1.0.5"
-        ref_genome = "37"
+        ref_genome = self.reference_genome
         data = {"mane": "file-1357", "another_mane": "file-101010"}
 
         with self.assertRaisesRegex(
@@ -127,9 +130,11 @@ class TestAddTranscriptRelease_SameFilesNoProblem(TestCase):
     """
 
     def setUp(self) -> None:
+        self.reference_genome = ReferenceGenome.objects.create(reference_genome="GRCh37")
         self.source = TranscriptSource.objects.create(source="HGMD")
         self.release = TranscriptRelease.objects.create(
-            source=self.source, external_release_version="v1.0.5", reference_genome="37"
+            source=self.source, external_release_version="v1.0.5",
+            reference_genome=self.reference_genome
         )
         self.file_one = TranscriptFile.objects.create(file_id="123", file_type="test")
         self.li = TranscriptReleaseTranscriptFile.objects.create(
@@ -143,7 +148,7 @@ class TestAddTranscriptRelease_SameFilesNoProblem(TestCase):
         """
         source = "HGMD"
         version = "v1.0.5"
-        ref_genome = "37"
+        ref_genome = self.reference_genome
         data = {"test": "123"}
 
         result = _add_transcript_release_info_to_db(source, version, ref_genome, data)
@@ -165,9 +170,11 @@ class TestAddTranscriptRelease_CheckNotMissingFiles(TestCase):
     """
 
     def setUp(self) -> None:
+        self.reference_genome = ReferenceGenome.objects.create(reference_genome="GRCh37")
         self.source = TranscriptSource.objects.create(source="HGMD")
         self.release = TranscriptRelease.objects.create(
-            source=self.source, external_release_version="v1.0.5", reference_genome="37"
+            source=self.source, external_release_version="v1.0.5",
+            reference_genome=self.reference_genome
         )
         self.file_one = TranscriptFile.objects.create(file_id="123", file_type="test")
         self.link_1 = TranscriptReleaseTranscriptFile.objects.create(
@@ -185,7 +192,7 @@ class TestAddTranscriptRelease_CheckNotMissingFiles(TestCase):
         """
         source = "HGMD"
         version = "v1.0.5"
-        ref_genome = "37"
+        ref_genome = self.reference_genome
         data = {"mane": "123"}
 
         with self.assertRaisesRegex(

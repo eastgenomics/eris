@@ -26,7 +26,7 @@ class TestTranscriptAdded_FromScratch(TestCase):
         plus = TranscriptSource.objects.create(source="MANE Plus Clinical")
         hgmd = TranscriptSource.objects.create(source="HGMD")
 
-        ref_genome = ReferenceGenome.objects.create(ref_genome="GRCh37")
+        ref_genome = ReferenceGenome.objects.create(reference_genome="GRCh37")
 
         self.tx = Transcript.objects.create(
             transcript="NM001.4", gene=gene, reference_genome=ref_genome
@@ -105,7 +105,7 @@ class TestTranscriptAdded_PreexistingReleases(TestCase):
         plus = TranscriptSource.objects.create(source="MANE Plus Clinical")
         hgmd = TranscriptSource.objects.create(source="HGMD")
 
-        ref_genome = ReferenceGenome.objects.create(ref_genome="GRCh37")
+        ref_genome = ReferenceGenome.objects.create(reference_genome="GRCh37")
 
         self.tx = Transcript.objects.create(
             transcript="NM001.4", gene=gene, reference_genome=ref_genome
