@@ -19,7 +19,7 @@ from requests_app.models import (
     PanelGene,
     HgncRelease,
     GeneHgncRelease,
-    GeneHgncReleaseHistory
+    GeneHgncReleaseHistory,
     ReferenceGenome,
 )
 
