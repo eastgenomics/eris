@@ -90,7 +90,7 @@ The arguments are as follows:
 - `markname`: path to markname table from the HGMD database, in csv format
 - `markname_ext_id`: external file ID for versioned HGMD markname table
 - `hgmd_release_label`: the release version of HGMD, associated with both markname and g2refseq
-- `refgenome`: reference genome e.g. 37 or GRCh37 or GRCh38
+- `refgenome`: reference genome. Permitted values are: 37/GRCh37/hg19 or 38/GRCh38/hg38
 
 *HGMD database source can be found on DNAnexus (project-Fz4Q15Q42Z9YjYk110b3vGYQ:file-Fz4Q46842Z9z2Q6ZBjy7jVPY)
 
