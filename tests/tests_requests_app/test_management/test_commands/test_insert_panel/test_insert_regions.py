@@ -14,6 +14,7 @@ from requests_app.models import (
     Haploinsufficiency,
     RequiredOverlap,
     Triplosensitivity,
+    ReferenceGenome
 )
 
 from requests_app.management.commands._insert_panel import _insert_regions
@@ -148,14 +149,15 @@ class TestInsertRegions_PreexistingRegion(TestCase):
 
         self.triplosensitivity = Triplosensitivity.objects.create(triplosensitivity="")
 
+        self.reference_genome = ReferenceGenome.objects.create(reference_genome="GRCh38")
+
         self.first_region = Region.objects.create(
             name="ISCA-37406-Loss",
             verbose_name="16p13.3 region (includes CREBBP) Loss",
             chrom="16",
-            start_37=None,
-            end_37=None,
-            start_38=3725055,
-            end_38=3880120,
+            reference_genome=self.reference_genome,
+            start=3725055,
+            end=3880120,
             moi=self.moi,
             mop_id=self.mop.id,
             vartype=self.variant_type,
@@ -276,14 +278,15 @@ class TestInsertRegions_PreexistingLink(TestCase):
 
         self.triplosensitivity = Triplosensitivity.objects.create(triplosensitivity="")
 
+        self.reference_genome = ReferenceGenome.objects.create("GRCh38")
+
         self.first_region = Region.objects.create(
             name="ISCA-37406-Loss",
             verbose_name="16p13.3 region (includes CREBBP) Loss",
             chrom="16",
-            start_37=None,
-            end_37=None,
-            start_38=3725055,
-            end_38=3880120,
+            reference_genome=self.reference_genome,
+            start=3725055,
+            end=3880120,
             moi=self.moi,
             mop_id=self.mop.id,
             vartype=self.variant_type,
