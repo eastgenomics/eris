@@ -822,13 +822,9 @@ class Region(models.Model):  # TODO: work out how to split out by transcript
         on_delete=models.PROTECT,
     )
 
-    start = models.CharField(
-        verbose_name="Region start", max_length=255, null=True
-    )
-    
-    end = models.CharField(
-        verbose_name="Region end", max_length=255, null=True
-    )
+    start = models.CharField(verbose_name="Region start", max_length=255, null=True)
+
+    end = models.CharField(verbose_name="Region end", max_length=255, null=True)
 
     type = models.CharField(verbose_name="Region type", max_length=255)
 

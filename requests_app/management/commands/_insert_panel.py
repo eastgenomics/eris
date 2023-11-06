@@ -20,7 +20,7 @@ from requests_app.models import (
     Region,
     PanelGeneHistory,
     PanelRegion,
-    ReferenceGenome
+    ReferenceGenome,
 )
 
 from .utils import sortable_version
@@ -188,7 +188,6 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
 
     # for each panel region, populate the region attribute models
     for single_region in panel.regions:
-            
         confidence_instance, _ = Confidence.objects.get_or_create(
             confidence_level=single_region.get("confidence_level"),
         )
@@ -231,12 +230,8 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
                 verbose_name=single_region.get("verbose_name"),
                 chrom=single_region.get("chromosome"),
                 reference_genome=ref_grch37,
-                start=(
-                    single_region.get("grch37_coordinates")[0]
-                ),
-                end=(
-                    single_region.get("grch37_coordinates")[1]
-                ),
+                start=(single_region.get("grch37_coordinates")[0]),
+                end=(single_region.get("grch37_coordinates")[1]),
                 type=single_region.get("entity_type"),
                 confidence_id=confidence_instance.id,
                 moi_id=moi_instance.id,
@@ -246,7 +241,7 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
                 triplo_id=triplo_instance.id,
                 overlap_id=overlap_instance.id,
                 vartype_id=vartype_instance.id,
-            )   
+            )
 
             PanelRegion.objects.get_or_create(
                 panel_id=panel_instance.id,
