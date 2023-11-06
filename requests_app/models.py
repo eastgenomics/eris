@@ -4,7 +4,7 @@ from django.db import models
 class ReferenceGenome(models.Model):
     """Defines the reference genome builds"""
 
-    ref_genome = models.CharField(
+    reference_genome = models.CharField(
         verbose_name="reference genome build", max_length=255, null=False
     )
 
@@ -535,11 +535,8 @@ class TranscriptRelease(models.Model):
         auto_now_add=True,
     )
 
-    reference_genome = models.CharField(
-        verbose_name="Reference Genome",
-        max_length=255,
-        null=True,
-        default=None,
+    reference_genome = models.ForeignKey(
+        ReferenceGenome, verbose_name="Reference genome", on_delete=models.PROTECT
     )
 
     class Meta:
@@ -583,7 +580,7 @@ class TranscriptReleaseTranscriptFile(models.Model):
     )
 
     transcript_file = models.ForeignKey(
-        TranscriptFile, verbose_name="Transcript release", on_delete=models.PROTECT
+        TranscriptFile, verbose_name="Transcript file", on_delete=models.PROTECT
     )
 
     class Meta:
@@ -606,6 +603,7 @@ class Transcript(models.Model):
 
     class Meta:
         db_table = "transcript"
+        unique_together = ("transcript", "gene", "reference_genome")
 
     def __str__(self):
         return str(self.id)
