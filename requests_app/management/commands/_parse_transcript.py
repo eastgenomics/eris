@@ -676,8 +676,8 @@ def seed_transcripts(
 
     # check reference genome makes sense, fetch it
     reference_genome_str = _parse_reference_genome(reference_genome)
-    reference_genome, _ = ReferenceGenome.get_or_create(
-        reference_genome=reference_genome_str
+    reference_genome, _ = ReferenceGenome.objects.get_or_create(
+        ref_genome=reference_genome_str
     )
 
     # files preparation
