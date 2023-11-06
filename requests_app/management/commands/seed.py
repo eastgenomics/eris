@@ -233,7 +233,7 @@ class Command(BaseCommand):
             if not test_mode:
                 insert_test_directory_data(json_data, force)
 
-        # python manage.py seed transcript --hgnc <path> --mane <path>
+        # python manage.py seed transcript --hgnc <path> --hgnc_release <str> --mane <path>
         # --mane_ext_id <str> --mane_release <str> --gff <path> --g2refseq <path>
         # --g2refseq_ext_id <str> --markname <path> --markname_ext_id <str>
         # --hgmd_release_label <str> --refgenome <ref_genome_version> --error
@@ -241,6 +241,7 @@ class Command(BaseCommand):
             """
             This seeding requires the following files and strings:
             1. hgnc dump - with HGNC ID, Approved Symbol, Previous Symbols, Alias Symbols
+            2. hgnc release - the in-house release version assigned to the HGNC file
             2. MANE file csv (http://tark.ensembl.org/web/mane_GRCh37_list/)
             3. MANE file csv - the external ID
             4. MANE release version
@@ -259,6 +260,7 @@ class Command(BaseCommand):
             print("Seeding transcripts")
 
             hgnc_file = kwargs.get("hgnc")
+            hgnc_release = kwargs.get("hgnc_release")
             mane_file = kwargs.get("mane")
             mane_ext_id = kwargs.get("mane_ext_id")
             mane_release = kwargs.get("mane_release")
@@ -285,6 +287,7 @@ class Command(BaseCommand):
 
             seed_transcripts(
                 hgnc_file,
+                hgnc_release,
                 mane_file,
                 mane_ext_id,
                 mane_release,

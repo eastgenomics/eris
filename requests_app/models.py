@@ -488,6 +488,88 @@ class Gene(models.Model):
         return str(self.id)
 
 
+class HgncRelease(models.Model):
+    """
+    Defines a particular release of HGNC, the source of gene IDs, symbols, and aliases
+    """
+
+    hgnc_release = models.CharField(
+        verbose_name="Hgnc Release",
+        max_length=255,
+    )
+
+    class Meta:
+        db_table = "hgnc_release"
+
+    def __str__(self):
+        return str(self.id)
+    
+
+class GeneHgncRelease(models.Model):
+    """
+    Links Genes to HGNC releases if:
+    - the release is where the Gene was first assigned its Symbol
+    - the Gene's Symbol changed in the release
+    - The Gene's Alias changed in the release
+    """
+    gene = models.ForeignKey(
+        Gene,
+        verbose_name="Gene",
+        on_delete=models.PROTECT,
+        default=None,
+    )
+
+    hgnc_release = models.ForeignKey(
+        Gene,
+        verbose_name="Gene",
+        on_delete=models.PROTECT,
+        default=None,
+    )
+
+    class Meta:
+        db_table = "gene_hgncrelease"
+        unique_together = ["gene", "hgnc_release"]
+
+    def __str__(self):
+        return str(self.id)
+   
+
+class GeneHgncReleaseHistory(models.Model):
+    """
+    Details changes to the links between Genes and particular HGNC releases, if:
+    - the release is where the Gene was first assigned its Symbol
+    - the Gene's Symbol changed in the release
+    - The Gene's Alias changed in the release
+    """
+    gene_hgnc_release = models.ForeignKey(
+        GeneHgncRelease,
+        verbose_name="Gene-HGNC Release Link",
+        on_delete=models.PROTECT,
+        default=None,
+    )
+
+    created = models.DateTimeField(
+        verbose_name="created",
+        auto_now_add=True,
+    )
+
+    note = models.CharField(
+        verbose_name="Note",
+        max_length=255,
+    )
+
+    user = models.CharField(
+        verbose_name="user",
+        max_length=255,
+        null=True,
+    )
+
+    class Meta:
+        db_table = "gene_hgncrelease_history"
+
+    def __str__(self):
+        return str(self.id)
+
 class TranscriptSource(models.Model):
     """
     Defines a particular source AND category of transcript information,

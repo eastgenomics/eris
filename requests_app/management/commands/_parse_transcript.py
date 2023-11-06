@@ -7,6 +7,7 @@ from django.db import transaction
 pd.options.mode.chained_assignment = None  # default='warn'
 import datetime
 
+from .history import History
 from requests_app.models import (
     Gene,
     Transcript,
@@ -16,11 +17,16 @@ from requests_app.models import (
     TranscriptReleaseTranscript,
     TranscriptReleaseTranscriptFile,
     PanelGene,
+    HgncRelease,
+    GeneHgncRelease,
+    GeneHgncReleaseHistory
 )
 
 
 def _update_existing_gene_metadata_symbol_in_db(
     hgnc_id_to_approved_symbol: dict[str:str],
+    hgnc_release: HgncRelease,
+    user: str
 ) -> None:
     """
     Function to update gene metadata in db using hgnc dump prepared dictionaries
@@ -29,28 +35,49 @@ def _update_existing_gene_metadata_symbol_in_db(
     and bulk updates.
 
     :param hgnc_id_to_approved_symbol: dictionary of hgnc id to approved symbol
+    :param hgnc_release: the HgncRelease for the currently-uploaded HGNC file
+    :param user: currently a string to describe the user
     """
 
-    hgnc_id_list = [{i.hgnc_id: i.gene_symbol} for i in Gene.objects.all()]
+    every_db_gene = [{i.hgnc_id: i.gene_symbol} for i in Gene.objects.all()]
 
     gene_symbol_updates = []
+    gene_hgnc_release_new = []
 
-    for gene_info in hgnc_id_list:
+    for gene_info in every_db_gene:
         for hgnc_id, gene_symbol in gene_info.items():
             # if gene symbol in db differ from approved symbol in hgnc
             if hgnc_id in hgnc_id_to_approved_symbol:
                 if gene_symbol != hgnc_id_to_approved_symbol[hgnc_id]:
+                    # queue up the Gene object to be updated
                     gene = Gene.objects.get(hgnc_id=hgnc_id)
                     gene.gene_symbol = hgnc_id_to_approved_symbol[hgnc_id]
                     gene_symbol_updates.append(gene)
 
+                    # queue up the changed Gene object to be linked to the current HgncRelease
+                    gene_hgnc_release = GeneHgncRelease(
+                        gene=Gene,
+                        hgnc_release=hgnc_release
+                    )
+                    gene_hgnc_release_new.append(gene_hgnc_release)
+
+
     now = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"Start gene symbol bulk update: {now}")
     Gene.objects.bulk_update(gene_symbol_updates, ["gene_symbol"])
+    gene_hgnc_created = GeneHgncRelease.objects.bulk_create(gene_hgnc_release, ignore_conflicts=True)
+    
+    # bulk create history entries for the changes?
+    #TODO: check that we get PIDs back for FAILED rows as well as CREATED rows?
+    for i in gene_hgnc_created:
+        GeneHgncReleaseHistory(gene_hgnc_release=i,
+                               note=History.gene_hgnc_release_approved_symbol_change,
+                               user=user)
 
 
 def _update_existing_gene_metadata_aliases_in_db(
     hgnc_id_to_alias_symbols: dict[str:str],
+    hgnc_release: HgncRelease
 ) -> None:
     """
     Function to update gene metadata in db using hgnc dump prepared dictionaries
@@ -64,6 +91,7 @@ def _update_existing_gene_metadata_aliases_in_db(
     hgnc_id_list = [{i.hgnc_id: i.alias_symbols} for i in Gene.objects.all()]
 
     gene_alias_updates = []
+    gene_hgnc_release_new = []
 
     for gene_info in hgnc_id_list:
         for hgnc_id, alias_symbols in gene_info.items():
@@ -77,10 +105,17 @@ def _update_existing_gene_metadata_aliases_in_db(
                     gene = Gene.objects.get(hgnc_id=hgnc_id)
                     gene.alias_symbols = joined_new_alias_symbols
                     gene_alias_updates.append(gene)
+                    # queue up the changed Gene object to be linked to the current HgncRelease
+                    gene_hgnc_release = GeneHgncRelease.objects.create(
+                        gene=Gene,
+                        hgnc_release=hgnc_release
+                    )
+                    gene_hgnc_release_new.append(gene_hgnc_release)
 
     now = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"Start gene alias bulk update: {now}")
     Gene.objects.bulk_update(gene_alias_updates, ["alias_symbols"])
+    geen_hgnc_created = GeneHgncRelease.objects.bulk_create(gene_hgnc_release, ignore_conflicts=True)
 
 
 def _add_new_genes_to_db(
@@ -131,17 +166,22 @@ def _add_new_genes_to_db(
     Gene.objects.bulk_create(genes_to_create)
 
 
-def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
+def _prepare_hgnc_file(hgnc_file: str, hgnc_version: str, user: str) -> dict[str, str]:
     """
     Read hgnc file, sanity-check it, and prepare four dictionaries:
     1. gene symbol to hgnc id
     2. hgnc id to approved symbol
     4. hgnc id to alias symbols
 
+    Create a HGNC release version if applicable
+
     Finally, update any metadata for existing genes in the Eris database -
     if this has changed since the last HGNC upload.
 
     :param hgnc_file: hgnc file path
+    :param hgnc_version: a string describing the in-house-assigned release version of 
+    the HGNC file
+    :param user: str, the user's name
     :return: gene symbol to hgnc id dict
     """
     hgnc: pd.DataFrame = pd.read_csv(hgnc_file, delimiter="\t")
@@ -156,10 +196,16 @@ def _prepare_hgnc_file(hgnc_file: str) -> dict[str, str]:
     hgnc_id_to_alias_symbols = (
         hgnc.groupby("HGNC ID")["Alias symbols"].apply(list).to_dict()
     )
+
+    # create HGNC release
+    hgnc_release, _ = HgncRelease.objects.create(hgnc_release=hgnc_version)
+
     with transaction.atomic():
-        _update_existing_gene_metadata_symbol_in_db(hgnc_id_to_approved_symbol)
-        _update_existing_gene_metadata_aliases_in_db(hgnc_id_to_alias_symbols)
-        _add_new_genes_to_db(hgnc_id_to_approved_symbol, hgnc_id_to_alias_symbols)
+
+        _update_existing_gene_metadata_symbol_in_db(hgnc_id_to_approved_symbol, hgnc_release,
+                                                    user)
+        _update_existing_gene_metadata_aliases_in_db(hgnc_id_to_alias_symbols, hgnc_release)
+        _add_new_genes_to_db(hgnc_id_to_approved_symbol, hgnc_id_to_alias_symbols, hgnc_release)
 
     return hgnc_symbol_to_hgnc_id
 
@@ -610,6 +656,7 @@ def _add_transcript_release_info_to_db(
 @transaction.atomic
 def seed_transcripts(
     hgnc_filepath: str,
+    hgnc_release: str,
     mane_filepath: str,
     mane_ext_id: str,
     mane_release: str,
@@ -648,8 +695,11 @@ def seed_transcripts(
     # prepare error log filename
     error_log: str = f"{current_datetime}_transcript_error.txt"
 
+    # user - replace this with something sensible one day
+    user = "transcripts_test_user"
+
     # files preparation
-    hgnc_symbol_to_hgnc_id = _prepare_hgnc_file(hgnc_filepath)
+    hgnc_symbol_to_hgnc_id = _prepare_hgnc_file(hgnc_filepath, hgnc_release, user)
     mane_data = _prepare_mane_file(mane_filepath, hgnc_symbol_to_hgnc_id)
     gff = _prepare_gff_file(gff_filepath)
     gene2refseq_hgmd = _prepare_gene2refseq_file(g2refseq_filepath)
