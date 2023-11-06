@@ -82,7 +82,7 @@ class TestInsertDataIntoDB(TestCase):
                     "entity_name": "test region",
                     "verbose_name": "detailed test region",
                     "chromosome": 1,
-                    "grch37_coordinates": (None, None),
+                    "grch37_coordinates": None,
                     "grch38_coordinates": (1, 2),
                     "entity_type": "test entity type",
                 }

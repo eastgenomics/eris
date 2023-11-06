@@ -14,6 +14,7 @@ from requests_app.models import (
     Haploinsufficiency,
     RequiredOverlap,
     Triplosensitivity,
+    ReferenceGenome,
 )
 
 from requests_app.management.commands._insert_panel import _insert_regions
@@ -114,6 +115,122 @@ class TestInsertRegions_NewRegion(TestCase):
         errors = "".join(errors)
         assert not errors, errors
 
+    def test_new_panel_linked_to_multiple_regions(self):
+        """
+        CASE: Multiple regions are added, and each region has coordinates for GRCh37 AND
+        GRCh38.
+        EXPECT: 4 Regions objects are created - because there are 2 regions, each with 2 ref genomes
+        """
+        errors = []
+
+        # make one of the test inputs for the function
+        test_panel = PanelClass(
+            id="162",
+            name="Severe microcephaly",
+            version="4.31",
+            panel_source="PanelApp",
+            genes=[],
+            regions=[
+                {
+                    "gene_data": None,
+                    "entity_type": "region",
+                    "entity_name": "ISCA-37390-Loss",
+                    "verbose_name": "5p15 terminal (Cri du chat syndrome) region Loss",
+                    "confidence_level": "3",
+                    "penetrance": None,
+                    "mode_of_pathogenicity": None,
+                    "haploinsufficiency_score": "3",
+                    "triplosensitivity_score": "",
+                    "required_overlap_percentage": 60,
+                    "type_of_variants": "cnv_loss",
+                    "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown",
+                    "chromosome": "5",
+                    "grch37_coordinates": [100, 200],
+                    "grch38_coordinates": [37695, 11347150],
+                },
+                {
+                    "gene_data": None,
+                    "entity_type": "region",
+                    "entity_name": "ISCA-37406-Loss",
+                    "verbose_name": "16p13.3 region (includes CREBBP) Loss",
+                    "confidence_level": "3",
+                    "penetrance": None,
+                    "mode_of_pathogenicity": None,
+                    "haploinsufficiency_score": "3",
+                    "triplosensitivity_score": "",
+                    "required_overlap_percentage": 60,
+                    "type_of_variants": "cnv_loss",
+                    "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown",
+                    "chromosome": "16",
+                    "grch37_coordinates": [400, 500],
+                    "grch38_coordinates": [3725055, 3880120],
+                },
+            ],
+        )
+
+        _insert_regions(test_panel, self.first_panel)
+
+        # check that both regions have been added to the database
+        # they will each have 2 db entries, due to different coordinates
+        regions = Region.objects.all()
+        errors += len_check_wrapper(regions, "regions", 4)
+        errors += value_check_wrapper(regions[0].name, "region name", "ISCA-37390-Loss")
+        errors += value_check_wrapper(regions[1].name, "region name", "ISCA-37390-Loss")
+        errors += value_check_wrapper(regions[2].name, "region name", "ISCA-37406-Loss")
+        errors += value_check_wrapper(regions[3].name, "region name", "ISCA-37406-Loss")
+
+        # check that all regions are linked to the correct panel
+        panel_regions = PanelRegion.objects.all()
+        errors += len_check_wrapper(panel_regions, "panel regions", 4)
+        first_panel_37_regions = panel_regions[0]
+        first_panel_38_regions = panel_regions[1]
+        second_panel_37_regions = panel_regions[2]
+        second_panel_38_regions = panel_regions[3]
+
+        errors += value_check_wrapper(
+            first_panel_37_regions.panel,
+            "first panel-region panel (ref 37)",
+            self.first_panel,
+        )
+        errors += value_check_wrapper(
+            first_panel_37_regions.region,
+            "first panel-region region (ref 37)",
+            regions[0],
+        )
+        errors += value_check_wrapper(
+            first_panel_38_regions.panel,
+            "first panel-region panel (ref 38)",
+            self.first_panel,
+        )
+        errors += value_check_wrapper(
+            first_panel_38_regions.region,
+            "first panel-region region  (ref 38)",
+            regions[1],
+        )
+        errors += value_check_wrapper(
+            second_panel_37_regions.panel,
+            "second panel-region panel (ref 37)",
+            self.first_panel,
+        )
+        errors += value_check_wrapper(
+            second_panel_37_regions.region,
+            "second panel-region region (ref 37)",
+            regions[2],
+        )
+        errors += value_check_wrapper(
+            second_panel_38_regions.panel,
+            "second panel-region panel (ref 38)",
+            self.first_panel,
+        )
+        errors += value_check_wrapper(
+            second_panel_38_regions.region,
+            "second panel-region region  (ref 38)",
+            regions[3],
+        )
+
+        errors = "".join(errors)
+        assert not errors, errors
+
 
 class TestInsertRegions_PreexistingRegion(TestCase):
     def setUp(self) -> None:
@@ -148,14 +265,17 @@ class TestInsertRegions_PreexistingRegion(TestCase):
 
         self.triplosensitivity = Triplosensitivity.objects.create(triplosensitivity="")
 
+        self.reference_genome = ReferenceGenome.objects.create(
+            reference_genome="GRCh38"
+        )
+
         self.first_region = Region.objects.create(
             name="ISCA-37406-Loss",
             verbose_name="16p13.3 region (includes CREBBP) Loss",
             chrom="16",
-            start_37=None,
-            end_37=None,
-            start_38=3725055,
-            end_38=3880120,
+            reference_genome=self.reference_genome,
+            start=3725055,
+            end=3880120,
             moi=self.moi,
             mop_id=self.mop.id,
             vartype=self.variant_type,
@@ -276,14 +396,17 @@ class TestInsertRegions_PreexistingLink(TestCase):
 
         self.triplosensitivity = Triplosensitivity.objects.create(triplosensitivity="")
 
+        self.reference_genome = ReferenceGenome.objects.create(
+            reference_genome="GRCh38"
+        )
+
         self.first_region = Region.objects.create(
             name="ISCA-37406-Loss",
             verbose_name="16p13.3 region (includes CREBBP) Loss",
             chrom="16",
-            start_37=None,
-            end_37=None,
-            start_38=3725055,
-            end_38=3880120,
+            reference_genome=self.reference_genome,
+            start=3725055,
+            end=3880120,
             moi=self.moi,
             mop_id=self.mop.id,
             vartype=self.variant_type,

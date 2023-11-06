@@ -6,6 +6,7 @@ from requests_app.models import (
     TranscriptSource,
     Gene,
     TranscriptReleaseTranscript,
+    ReferenceGenome,
 )
 from tests.tests_requests_app.test_management.test_commands.test_insert_panel.test_insert_gene import (
     len_check_wrapper,
@@ -25,20 +26,26 @@ class TestTranscriptAdded_FromScratch(TestCase):
         plus = TranscriptSource.objects.create(source="MANE Plus Clinical")
         hgmd = TranscriptSource.objects.create(source="HGMD")
 
+        ref_genome = ReferenceGenome.objects.create(reference_genome="GRCh37")
+
         self.tx = Transcript.objects.create(
-            transcript="NM001.4", gene=gene, reference_genome="37"
+            transcript="NM001.4", gene=gene, reference_genome=ref_genome
         )
 
         self.select_release = TranscriptRelease.objects.create(
-            source=select, external_release_version="version_3", reference_genome="37"
+            source=select,
+            external_release_version="version_3",
+            reference_genome=ref_genome,
         )
 
         self.plus_release = TranscriptRelease.objects.create(
-            source=plus, external_release_version="version_3", reference_genome="37"
+            source=plus,
+            external_release_version="version_3",
+            reference_genome=ref_genome,
         )
 
         self.hgmd_release = TranscriptRelease.objects.create(
-            source=hgmd, external_release_version="v2", reference_genome="37"
+            source=hgmd, external_release_version="v2", reference_genome=ref_genome
         )
 
     def test_new_transcript(self):
@@ -98,32 +105,42 @@ class TestTranscriptAdded_PreexistingReleases(TestCase):
         plus = TranscriptSource.objects.create(source="MANE Plus Clinical")
         hgmd = TranscriptSource.objects.create(source="HGMD")
 
+        ref_genome = ReferenceGenome.objects.create(reference_genome="GRCh37")
+
         self.tx = Transcript.objects.create(
-            transcript="NM001.4", gene=gene, reference_genome="37"
+            transcript="NM001.4", gene=gene, reference_genome=ref_genome
         )
 
         self.select_old = TranscriptRelease.objects.create(
-            source=select, external_release_version="version_3", reference_genome="37"
+            source=select,
+            external_release_version="version_3",
+            reference_genome=ref_genome,
         )
 
         self.plus_old = TranscriptRelease.objects.create(
-            source=plus, external_release_version="version_3", reference_genome="37"
+            source=plus,
+            external_release_version="version_3",
+            reference_genome=ref_genome,
         )
 
         self.hgmd_old = TranscriptRelease.objects.create(
-            source=hgmd, external_release_version="v2", reference_genome="37"
+            source=hgmd, external_release_version="v2", reference_genome=ref_genome
         )
 
         self.select_new = TranscriptRelease.objects.create(
-            source=select, external_release_version="version_4", reference_genome="37"
+            source=select,
+            external_release_version="version_4",
+            reference_genome=ref_genome,
         )
 
         self.plus_new = TranscriptRelease.objects.create(
-            source=plus, external_release_version="version_4", reference_genome="37"
+            source=plus,
+            external_release_version="version_4",
+            reference_genome=ref_genome,
         )
 
         self.hgmd_new = TranscriptRelease.objects.create(
-            source=hgmd, external_release_version="v3", reference_genome="37"
+            source=hgmd, external_release_version="v3", reference_genome=ref_genome
         )
 
         self.select_old_link = TranscriptReleaseTranscript.objects.create(

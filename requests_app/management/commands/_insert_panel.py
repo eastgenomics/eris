@@ -20,6 +20,7 @@ from requests_app.models import (
     Region,
     PanelGeneHistory,
     PanelRegion,
+    ReferenceGenome,
 )
 
 from .utils import sortable_version
@@ -179,6 +180,7 @@ def _insert_gene(
 def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
     """
     Function to insert region component of Panel into database.
+    A separate Region is made for each reference genome
 
     :param panel: PanelClass object
     :param panel_instance: Panel object
@@ -218,47 +220,60 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
             triplosensitivity=single_region.get("triplosensitivity_score"),
         )
 
-        # attach Region record to Panel record
-        region_instance, _ = Region.objects.get_or_create(
-            name=single_region.get("entity_name"),
-            verbose_name=single_region.get("verbose_name"),
-            chrom=single_region.get("chromosome"),
-            start_37=(
-                single_region.get("grch37_coordinates")[0]
-                if single_region.get("grch37_coordinates")
-                else None
-            ),
-            end_37=(
-                single_region.get("grch37_coordinates")[1]
-                if single_region.get("grch37_coordinates")
-                else None
-            ),
-            start_38=(
-                single_region.get("grch38_coordinates")[0]
-                if single_region.get("grch38_coordinates")
-                else None
-            ),
-            end_38=(
-                single_region.get("grch38_coordinates")[1]
-                if single_region.get("grch38_coordinates")
-                else None
-            ),
-            type=single_region.get("entity_type"),
-            confidence_id=confidence_instance.id,
-            moi_id=moi_instance.id,
-            mop_id=mop_instance.id,
-            penetrance_id=penetrance_instance.id,
-            haplo_id=haplo_instance.id,
-            triplo_id=triplo_instance.id,
-            overlap_id=overlap_instance.id,
-            vartype_id=vartype_instance.id,
-        )
+        ref_grch37, _ = ReferenceGenome.objects.get_or_create(reference_genome="GRCh37")
+        ref_grch38, _ = ReferenceGenome.objects.get_or_create(reference_genome="GRCh38")
 
-        PanelRegion.objects.get_or_create(
-            panel_id=panel_instance.id,
-            region_id=region_instance.id,
-            defaults={"justification": "PanelApp"},
-        )
+        # attach Region record to Panel record - GRCh37 if data exists
+        if single_region.get("grch37_coordinates"):
+            region_instance_build_37, _ = Region.objects.get_or_create(
+                name=single_region.get("entity_name"),
+                verbose_name=single_region.get("verbose_name"),
+                chrom=single_region.get("chromosome"),
+                reference_genome=ref_grch37,
+                start=single_region.get("grch37_coordinates")[0],
+                end=single_region.get("grch37_coordinates")[1],
+                type=single_region.get("entity_type"),
+                confidence_id=confidence_instance.id,
+                moi_id=moi_instance.id,
+                mop_id=mop_instance.id,
+                penetrance_id=penetrance_instance.id,
+                haplo_id=haplo_instance.id,
+                triplo_id=triplo_instance.id,
+                overlap_id=overlap_instance.id,
+                vartype_id=vartype_instance.id,
+            )
+
+            PanelRegion.objects.get_or_create(
+                panel_id=panel_instance.id,
+                region_id=region_instance_build_37.id,
+                defaults={"justification": "PanelApp"},
+            )
+
+        # attach Region record to Panel record - GRCh38 if it exists
+        if single_region.get("grch38_coordinates"):
+            region_instance_build_38, _ = Region.objects.get_or_create(
+                name=single_region.get("entity_name"),
+                verbose_name=single_region.get("verbose_name"),
+                chrom=single_region.get("chromosome"),
+                reference_genome=ref_grch38,
+                start=single_region.get("grch38_coordinates")[0],
+                end=single_region.get("grch38_coordinates")[1],
+                type=single_region.get("entity_type"),
+                confidence_id=confidence_instance.id,
+                moi_id=moi_instance.id,
+                mop_id=mop_instance.id,
+                penetrance_id=penetrance_instance.id,
+                haplo_id=haplo_instance.id,
+                triplo_id=triplo_instance.id,
+                overlap_id=overlap_instance.id,
+                vartype_id=vartype_instance.id,
+            )
+
+            PanelRegion.objects.get_or_create(
+                panel_id=panel_instance.id,
+                region_id=region_instance_build_38.id,
+                defaults={"justification": "PanelApp"},
+            )
         # TODO: backward deactivation for PanelRegion, with history logging
 
 
@@ -284,8 +299,6 @@ def _insert_panel_data_into_db(panel: PanelClass, user: str) -> Panel:
         panel_version=sortable_version(panel_version),
         defaults={
             "panel_source": panel.panel_source,
-            "grch37": True,
-            "grch38": True,
             "test_directory": False,
         },
     )
@@ -346,8 +359,6 @@ def _insert_superpanel_into_db(
         panel_version=sortable_version(panel_version),
         defaults={
             "panel_source": superpanel.panel_source,
-            "grch37": True,
-            "grch38": True,
             "test_directory": False,
         },
     )

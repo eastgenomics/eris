@@ -350,8 +350,6 @@ def _make_panels_from_hgncs(
         test_directory=True,
         defaults={
             "panel_source": unique_td_source,
-            "grch37": True,
-            "grch38": True,
             "external_id": None,
             "panel_version": None,
         },
