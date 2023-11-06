@@ -816,18 +816,20 @@ class Region(models.Model):  # TODO: work out how to split out by transcript
 
     chrom = models.CharField(verbose_name="Chromosome", max_length=255)
 
-    start_37 = models.CharField(
-        verbose_name="Region start grch37", max_length=255, null=True
+    reference_genome = models.ForeignKey(
+        ReferenceGenome,
+        verbose_name="reference genome",
+        on_delete=models.PROTECT,
     )
-    end_37 = models.CharField(
-        verbose_name="Region end grch37", max_length=255, null=True
+
+    start = models.CharField(
+        verbose_name="Region start", max_length=255, null=True
     )
-    start_38 = models.CharField(
-        verbose_name="Region start grch38", max_length=255, null=True
+    
+    end = models.CharField(
+        verbose_name="Region end", max_length=255, null=True
     )
-    end_38 = models.CharField(
-        verbose_name="Region end grch38", max_length=255, null=True
-    )
+
     type = models.CharField(verbose_name="Region type", max_length=255)
 
     confidence = models.ForeignKey(
