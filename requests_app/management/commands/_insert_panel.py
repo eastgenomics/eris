@@ -230,8 +230,8 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
                 verbose_name=single_region.get("verbose_name"),
                 chrom=single_region.get("chromosome"),
                 reference_genome=ref_grch37,
-                start=(single_region.get("grch37_coordinates")[0]),
-                end=(single_region.get("grch37_coordinates")[1]),
+                start=single_region.get("grch37_coordinates")[0],
+                end=single_region.get("grch37_coordinates")[1],
                 type=single_region.get("entity_type"),
                 confidence_id=confidence_instance.id,
                 moi_id=moi_instance.id,
@@ -256,16 +256,8 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
                 verbose_name=single_region.get("verbose_name"),
                 chrom=single_region.get("chromosome"),
                 reference_genome=ref_grch38,
-                start=(
-                    single_region.get("grch38_coordinates")[0]
-                    if single_region.get("grch38_coordinates")
-                    else None
-                ),
-                end=(
-                    single_region.get("grch38_coordinates")[1]
-                    if single_region.get("grch38_coordinates")
-                    else None
-                ),
+                start=single_region.get("grch38_coordinates")[0],
+                end=single_region.get("grch38_coordinates")[1],
                 type=single_region.get("entity_type"),
                 confidence_id=confidence_instance.id,
                 moi_id=moi_instance.id,
