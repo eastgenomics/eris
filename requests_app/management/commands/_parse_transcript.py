@@ -125,7 +125,7 @@ def _link_unchanged_genes_to_new_release(unchanged_genes: list, hgnc_release: Hg
                            note=History.gene_hgnc_release_unchanged,
                            user=user)
 
-# TODO: what if a HGNC_ID is retired?
+
 def _add_new_genes_to_db(
     new_genes: dict[str:str], hgnc_release: HgncRelease, user: str
 ) -> None:
