@@ -4,7 +4,7 @@ from requests_app.management.commands._parse_transcript import _add_new_genes_to
 from tests.tests_requests_app.test_management.test_commands.test_insert_ci.test_insert_test_directory_data import (
     len_check_wrapper,
 )
-from requests_app.models import Gene
+from requests_app.models import Gene, HgncRelease, GeneHgncRelease, GeneHgncReleaseHistory
 
 
 class TestGetOrCreate_CreateNew(TestCase):
@@ -14,7 +14,8 @@ class TestGetOrCreate_CreateNew(TestCase):
     """
 
     def setUp(self) -> None:
-        pass
+        self.hgnc_release = HgncRelease.objects.create(hgnc_release="new_hgnc")
+        self.user = "test user"
 
     def test_adding_identical_gene(self):
         errors = []
@@ -22,7 +23,7 @@ class TestGetOrCreate_CreateNew(TestCase):
         approved_symbols = {"HGNC:10257": "ROR2", "HGNC:TEST": "TEST_SYMBOL"}
         alias_symbols = {"HGNC:10257": None, "HGNC:TEST": "TEST, ALIAS"}
 
-        _add_new_genes_to_db(approved_symbols, alias_symbols)
+        _add_new_genes_to_db(approved_symbols, alias_symbols, self.hgnc_release, self.user)
 
         post_run_genes = Gene.objects.all()
         errors += len_check_wrapper(post_run_genes, "number of post run genes", 2)

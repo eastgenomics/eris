@@ -87,7 +87,6 @@ def _update_existing_gene_metadata_aliases_in_db(
     :param hgnc_id_to_alias_symbols: dictionary of hgnc id to alias symbols
     :param hgnc_release: the HgncRelease for the currently-uploaded HGNC file
     :param user: currently a string to describe the user
-
     """
 
     hgnc_id_list = [{i.hgnc_id: i.alias_symbols} for i in Gene.objects.all()]
@@ -124,16 +123,19 @@ def _update_existing_gene_metadata_aliases_in_db(
 
 
 def _add_new_genes_to_db(
-    approved_symbols: dict[str:str], alias_symbols: dict[str:list]
+    approved_symbols: dict[str:str], alias_symbols: dict[str:list],
+    hgnc_release: HgncRelease, user: str
 ) -> None:
     """
     If a gene exists in the HGNC file, but does NOT exist in the db, make it.
-
+    Link the gene to the HGNC file's release, to help with auditing.
     To speed up the function, we utilise looping over lists-of-dictionaries,
-    and bulk updates.
+    and bulk updates in some places.
 
     :param approved_symbols: dictionary of hgnc id to approved symbols
     :param alias_symbols: dictionary of hgnc id to alias symbols
+    :param hgnc_release: the HgncRelease for the currently-uploaded HGNC file
+    :param user: currently a string to describe the user
     """
     genes_to_create = []
 
@@ -168,7 +170,18 @@ def _add_new_genes_to_db(
 
     now = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"Start gene bulk create: {now}")
-    Gene.objects.bulk_create(genes_to_create)
+    new_genes = Gene.objects.bulk_create(genes_to_create)
+
+    # for each new gene, link to release and add a note
+    for gene in new_genes:
+        gene_hgnc_release = GeneHgncRelease.objects.create(
+            gene=gene,
+            hgnc_release=hgnc_release
+        )
+
+        GeneHgncReleaseHistory(gene_hgnc_release=gene_hgnc_release,
+                           note=History.gene_hgnc_release_new,
+                           user=user)
 
 
 def _prepare_hgnc_file(hgnc_file: str, hgnc_version: str, user: str) -> dict[str, str]:
@@ -208,8 +221,10 @@ def _prepare_hgnc_file(hgnc_file: str, hgnc_version: str, user: str) -> dict[str
     with transaction.atomic():
         _update_existing_gene_metadata_symbol_in_db(hgnc_id_to_approved_symbol, hgnc_release,
                                                     user)
-        _update_existing_gene_metadata_aliases_in_db(hgnc_id_to_alias_symbols, hgnc_release)
-        _add_new_genes_to_db(hgnc_id_to_approved_symbol, hgnc_id_to_alias_symbols, hgnc_release)
+        _update_existing_gene_metadata_aliases_in_db(hgnc_id_to_alias_symbols, hgnc_release,
+                                                     user)
+        _add_new_genes_to_db(hgnc_id_to_approved_symbol, hgnc_id_to_alias_symbols, hgnc_release,
+                             user)
 
     return hgnc_symbol_to_hgnc_id
 
