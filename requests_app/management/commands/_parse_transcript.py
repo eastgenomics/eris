@@ -33,7 +33,7 @@ def _update_existing_gene_metadata_symbol_in_db(
     Function to update gene metadata in db using hgnc dump prepared dictionaries
     Updates approved symbol if that has changed.
     To speed up the function, we utilise looping over lists-of-dictionaries,
-    and bulk updates.
+    and bulk updates in some spots.
 
     :param hgnc_id_to_approved_symbol: dictionary of hgnc id to approved symbol
     :param hgnc_release: the HgncRelease for the currently-uploaded HGNC file
@@ -43,8 +43,9 @@ def _update_existing_gene_metadata_symbol_in_db(
     every_db_gene = [{i.hgnc_id: i.gene_symbol} for i in Gene.objects.all()]
 
     gene_symbol_updates = []
-    gene_hgnc_release_new = []
 
+    # queue up genes which need updating because their approved symbols have
+    # changed in HGNC
     for gene_info in every_db_gene:
         for hgnc_id, gene_symbol in gene_info.items():
             # if gene symbol in db differ from approved symbol in hgnc
@@ -55,30 +56,27 @@ def _update_existing_gene_metadata_symbol_in_db(
                     gene.gene_symbol = hgnc_id_to_approved_symbol[hgnc_id]
                     gene_symbol_updates.append(gene)
 
-                    # queue up the changed Gene object to be linked to the current HgncRelease
-                    gene_hgnc_release = GeneHgncRelease(
-                        gene=Gene,
-                        hgnc_release=hgnc_release
-                    )
-                    gene_hgnc_release_new.append(gene_hgnc_release)
-
-
+    # bulk update the changed genes
     now = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"Start gene symbol bulk update: {now}")
     Gene.objects.bulk_update(gene_symbol_updates, ["gene_symbol"])
-    gene_hgnc_created = GeneHgncRelease.objects.bulk_create(gene_hgnc_release, ignore_conflicts=True)
-    
-    # bulk create history entries for the changes?
-    #TODO: check that we get PIDs back for FAILED rows as well as CREATED rows?
-    for i in gene_hgnc_created:
-        GeneHgncReleaseHistory(gene_hgnc_release=i,
-                               note=History.gene_hgnc_release_approved_symbol_change,
-                               user=user)
+
+    # for each changed gene, link to release and add a note
+    for gene in gene_symbol_updates:
+        gene_hgnc_release = GeneHgncRelease.objects.create(
+            gene=gene,
+            hgnc_release=hgnc_release
+        )
+
+        GeneHgncReleaseHistory(gene_hgnc_release=gene_hgnc_release,
+                           note=History.gene_hgnc_release_approved_symbol_change,
+                           user=user)
 
 
 def _update_existing_gene_metadata_aliases_in_db(
     hgnc_id_to_alias_symbols: dict[str:str],
-    hgnc_release: HgncRelease
+    hgnc_release: HgncRelease,
+    user: str
 ) -> None:
     """
     Function to update gene metadata in db using hgnc dump prepared dictionaries
@@ -87,12 +85,14 @@ def _update_existing_gene_metadata_aliases_in_db(
     and bulk updates.
 
     :param hgnc_id_to_alias_symbols: dictionary of hgnc id to alias symbols
+    :param hgnc_release: the HgncRelease for the currently-uploaded HGNC file
+    :param user: currently a string to describe the user
+
     """
 
     hgnc_id_list = [{i.hgnc_id: i.alias_symbols} for i in Gene.objects.all()]
 
     gene_alias_updates = []
-    gene_hgnc_release_new = []
 
     for gene_info in hgnc_id_list:
         for hgnc_id, alias_symbols in gene_info.items():
@@ -106,17 +106,21 @@ def _update_existing_gene_metadata_aliases_in_db(
                     gene = Gene.objects.get(hgnc_id=hgnc_id)
                     gene.alias_symbols = joined_new_alias_symbols
                     gene_alias_updates.append(gene)
-                    # queue up the changed Gene object to be linked to the current HgncRelease
-                    gene_hgnc_release = GeneHgncRelease.objects.create(
-                        gene=Gene,
-                        hgnc_release=hgnc_release
-                    )
-                    gene_hgnc_release_new.append(gene_hgnc_release)
 
     now = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"Start gene alias bulk update: {now}")
     Gene.objects.bulk_update(gene_alias_updates, ["alias_symbols"])
-    geen_hgnc_created = GeneHgncRelease.objects.bulk_create(gene_hgnc_release, ignore_conflicts=True)
+
+    # for each changed gene, link to release and add a note
+    for gene in gene_alias_updates:
+        gene_hgnc_release = GeneHgncRelease.objects.create(
+            gene=gene,
+            hgnc_release=hgnc_release
+        )
+
+        GeneHgncReleaseHistory(gene_hgnc_release=gene_hgnc_release,
+                           note=History.gene_hgnc_release_alias_symbol_change,
+                           user=user)
 
 
 def _add_new_genes_to_db(
@@ -202,7 +206,6 @@ def _prepare_hgnc_file(hgnc_file: str, hgnc_version: str, user: str) -> dict[str
     hgnc_release, _ = HgncRelease.objects.create(hgnc_release=hgnc_version)
 
     with transaction.atomic():
-
         _update_existing_gene_metadata_symbol_in_db(hgnc_id_to_approved_symbol, hgnc_release,
                                                     user)
         _update_existing_gene_metadata_aliases_in_db(hgnc_id_to_alias_symbols, hgnc_release)

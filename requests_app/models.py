@@ -526,8 +526,8 @@ class GeneHgncRelease(models.Model):
     )
 
     hgnc_release = models.ForeignKey(
-        Gene,
-        verbose_name="Gene",
+        HgncRelease,
+        verbose_name="Hgnc Release",
         on_delete=models.PROTECT,
         default=None,
     )
@@ -571,7 +571,7 @@ class GeneHgncReleaseHistory(models.Model):
     )
 
     class Meta:
-        db_table = "gene_hgncrelease_history"
+        db_table = "gene_hgnc_release_history"
 
     def __str__(self):
         return str(self.id)

@@ -1,7 +1,7 @@
 from django.test import TestCase
 import numpy as np
 
-from requests_app.models import Gene
+from requests_app.models import Gene, HgncRelease, GeneHgncRelease, GeneHgncReleaseHistory
 
 from requests_app.management.commands._parse_transcript import (
     _update_existing_gene_metadata_symbol_in_db,
@@ -36,12 +36,19 @@ class TestUpdateExistingGeneSymbol(TestCase):
             hgnc_id="50", gene_symbol=None, alias_symbols=None
         )
 
+        self.hgnc_release = HgncRelease.objects.create(
+            hgnc_release="hgnc_v1"
+        )
+
+        self.user = "test_user"
+
     def test_no_changes(self):
         """
         A gene is unchanged
         """
         test_hgnc_approved = {"14163": "FAM234A"}
-        _update_existing_gene_metadata_symbol_in_db(test_hgnc_approved)
+        _update_existing_gene_metadata_symbol_in_db(test_hgnc_approved, self.hgnc_release,
+                                                    self.user)
 
         # check that the entry isn't changed from how it was at set-up
         gene_db = Gene.objects.filter(hgnc_id="14163")
@@ -55,7 +62,8 @@ class TestUpdateExistingGeneSymbol(TestCase):
         """
         made_up_approved_name = "FAM234A_test"
         test_hgnc_approved = {"14163": made_up_approved_name}
-        _update_existing_gene_metadata_symbol_in_db(test_hgnc_approved)
+        _update_existing_gene_metadata_symbol_in_db(test_hgnc_approved, self.hgnc_release,
+                                                    self.user)
 
         # check that the entry for 14163 in the Gene test datatable is updated
         gene_db = Gene.objects.filter(hgnc_id="14163")
@@ -74,7 +82,8 @@ class TestUpdateExistingGeneSymbol(TestCase):
             "14163": made_up_approved_name,
             "12713": made_up_approved_name_two,
         }
-        _update_existing_gene_metadata_symbol_in_db(test_hgnc_approved)
+        _update_existing_gene_metadata_symbol_in_db(test_hgnc_approved, self.hgnc_release,
+                                                    self.user)
 
         # check that the entry for 14163 in the Gene test datatable is updated
         gene_db = Gene.objects.filter(hgnc_id="14163")
@@ -113,12 +122,19 @@ class TestUpdateExistingAliasSymbol(TestCase):
             hgnc_id="50", gene_symbol=None, alias_symbols=None
         )
 
+        self.hgnc_release = HgncRelease.objects.create(
+            hgnc_release="hgnc_v1"
+        )
+
+        self.user = "test_user"
+
     def test_no_changes(self):
         """
         A gene is unchanged
         """
         test_aliases = {"14163": ["DKFZP761D0211", "FLJ32603"]}
-        _update_existing_gene_metadata_aliases_in_db(test_aliases)
+        _update_existing_gene_metadata_aliases_in_db(test_aliases, self.hgnc_release,
+                                                     self.user)
 
         # check that the entry isn't changed from how it was at set-up
         gene_db = Gene.objects.filter(hgnc_id="14163")
@@ -135,7 +151,8 @@ class TestUpdateExistingAliasSymbol(TestCase):
         made_up_aliases = ["alias1", "alias2"]
         test_hgnc_aliases = {"14163": made_up_aliases}
 
-        _update_existing_gene_metadata_aliases_in_db(test_hgnc_aliases)
+        _update_existing_gene_metadata_aliases_in_db(test_hgnc_aliases, self.hgnc_release,
+                                                     self.user)
 
         # check that the entry for 14163 in the Gene test datatable is updated
         gene_db = Gene.objects.filter(hgnc_id="14163")
@@ -151,7 +168,8 @@ class TestUpdateExistingAliasSymbol(TestCase):
         made_up_aliases = [np.nan]
         test_hgnc_aliases = {"14163": made_up_aliases}
 
-        _update_existing_gene_metadata_aliases_in_db(test_hgnc_aliases)
+        _update_existing_gene_metadata_aliases_in_db(test_hgnc_aliases, self.hgnc_release,
+                                                     self.user)
 
         # expect the entry for 14163 in the Gene test datatable to NOT update
         gene_db = Gene.objects.filter(hgnc_id="14163")
@@ -167,8 +185,8 @@ class TestUpdateExistingAliasSymbol(TestCase):
         made_up_aliases = []
         test_hgnc_aliases = {"14163": made_up_aliases}
 
-        _update_existing_gene_metadata_aliases_in_db(test_hgnc_aliases)
-
+        _update_existing_gene_metadata_aliases_in_db(test_hgnc_aliases, self.hgnc_release,
+                                                     self.user)
         # expect the entry for 14163 in the Gene test datatable to NOT update
         gene_db = Gene.objects.filter(hgnc_id="14163")
         assert len(gene_db) == 1
