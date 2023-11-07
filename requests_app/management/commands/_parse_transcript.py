@@ -82,7 +82,7 @@ def _update_existing_gene_metadata_aliases_in_db(
     """
     gene_alias_updates = []
 
-    for changed_gene, new_alias in hgnc_id_to_alias_symbols:
+    for changed_gene, new_alias in hgnc_id_to_alias_symbols.items():
         gene = Gene.objects.get(hgnc_id=changed_gene)
         gene.alias_symbols = new_alias
         gene_alias_updates.append(gene)

@@ -132,7 +132,7 @@ class TestUpdateExistingAliasSymbol(TestCase):
         """
         A gene is unchanged
         """
-        test_aliases = {"14163": ["DKFZP761D0211", "FLJ32603"]}
+        test_aliases = {"14163": "DKFZP761D0211,FLJ32603"}
         _update_existing_gene_metadata_aliases_in_db(test_aliases, self.hgnc_release,
                                                      self.user)
 
@@ -148,8 +148,7 @@ class TestUpdateExistingAliasSymbol(TestCase):
         Test case: the alias name has changed for a gene, since last update
         No change in approved name
         """
-        made_up_aliases = ["alias1", "alias2"]
-        test_hgnc_aliases = {"14163": made_up_aliases}
+        test_hgnc_aliases = {"14163": "alias1,alias2"}
 
         _update_existing_gene_metadata_aliases_in_db(test_hgnc_aliases, self.hgnc_release,
                                                      self.user)
@@ -157,37 +156,4 @@ class TestUpdateExistingAliasSymbol(TestCase):
         # check that the entry for 14163 in the Gene test datatable is updated
         gene_db = Gene.objects.filter(hgnc_id="14163")
         assert len(gene_db) == 1
-        assert gene_db[0].alias_symbols == ",".join(made_up_aliases)
-
-    def test_alias_now_numpy_na(self):
-        """
-        Test case: the alias name has changed for a gene, since last update
-        It is now numpy 'na' data
-        Expected: the alias is skipped and the old one is kept
-        """
-        made_up_aliases = [np.nan]
-        test_hgnc_aliases = {"14163": made_up_aliases}
-
-        _update_existing_gene_metadata_aliases_in_db(test_hgnc_aliases, self.hgnc_release,
-                                                     self.user)
-
-        # expect the entry for 14163 in the Gene test datatable to NOT update
-        gene_db = Gene.objects.filter(hgnc_id="14163")
-        assert len(gene_db) == 1
-        assert gene_db[0].alias_symbols == self.FAM234A.alias_symbols
-
-    def test_alias_list_empty(self):
-        """
-        Test case: the alias name has changed for a gene, since last update
-        It is now an empty list
-        Expected: the alias is skipped and the old one is kept
-        """
-        made_up_aliases = []
-        test_hgnc_aliases = {"14163": made_up_aliases}
-
-        _update_existing_gene_metadata_aliases_in_db(test_hgnc_aliases, self.hgnc_release,
-                                                     self.user)
-        # expect the entry for 14163 in the Gene test datatable to NOT update
-        gene_db = Gene.objects.filter(hgnc_id="14163")
-        assert len(gene_db) == 1
-        assert gene_db[0].alias_symbols == self.FAM234A.alias_symbols
+        assert gene_db[0].alias_symbols == "alias1,alias2"

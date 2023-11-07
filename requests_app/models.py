@@ -502,6 +502,7 @@ class HgncRelease(models.Model):
     hgnc_release = models.CharField(
         verbose_name="Hgnc Release",
         max_length=255,
+        unique=True
     )
 
     class Meta:
