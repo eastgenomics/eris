@@ -25,7 +25,7 @@ from requests_app.models import (
 
 
 def _update_existing_gene_metadata_symbol_in_db(
-    hgnc_id_to_approved_symbol: dict[str:str],
+    hgnc_id_to_symbol: dict[str:str],
     hgnc_release: HgncRelease,
     user: str
 ) -> None:
@@ -35,26 +35,18 @@ def _update_existing_gene_metadata_symbol_in_db(
     To speed up the function, we utilise looping over lists-of-dictionaries,
     and bulk updates in some spots.
 
-    :param hgnc_id_to_approved_symbol: dictionary of hgnc id to approved symbol
+    :param hgnc_id_to_symbol: dictionary of hgnc id to approved symbol
     :param hgnc_release: the HgncRelease for the currently-uploaded HGNC file
     :param user: currently a string to describe the user
     """
-
-    every_db_gene = [{i.hgnc_id: i.gene_symbol} for i in Gene.objects.all()]
-
     gene_symbol_updates = []
 
     # queue up genes which need updating because their approved symbols have
     # changed in HGNC
-    for gene_info in every_db_gene:
-        for hgnc_id, gene_symbol in gene_info.items():
-            # if gene symbol in db differ from approved symbol in hgnc
-            if hgnc_id in hgnc_id_to_approved_symbol:
-                if gene_symbol != hgnc_id_to_approved_symbol[hgnc_id]:
-                    # queue up the Gene object to be updated
-                    gene = Gene.objects.get(hgnc_id=hgnc_id)
-                    gene.gene_symbol = hgnc_id_to_approved_symbol[hgnc_id]
-                    gene_symbol_updates.append(gene)
+    for changed_gene, new_symbol in hgnc_id_to_symbol.items():
+        gene = Gene.objects.get(hgnc_id=changed_gene)
+        gene.gene_symbol = new_symbol
+        gene_symbol_updates.append(gene)
 
     # bulk update the changed genes
     now = datetime.datetime.now().strftime("%H:%M:%S")
@@ -84,27 +76,16 @@ def _update_existing_gene_metadata_aliases_in_db(
     To speed up the function, we utilise looping over lists-of-dictionaries,
     and bulk updates.
 
-    :param hgnc_id_to_alias_symbols: dictionary of hgnc id to alias symbols
+    :param hgnc_id_to_alias_symbols: dictionary of hgnc id to alias symbol
     :param hgnc_release: the HgncRelease for the currently-uploaded HGNC file
     :param user: currently a string to describe the user
     """
-
-    hgnc_id_list = [{i.hgnc_id: i.alias_symbols} for i in Gene.objects.all()]
-
     gene_alias_updates = []
 
-    for gene_info in hgnc_id_list:
-        for hgnc_id, alias_symbols in gene_info.items():
-            # if hgnc id in dictionary, and alias symbols are not all pd.nan
-            if (
-                hgnc_id in hgnc_id_to_alias_symbols
-                and not pd.isna(hgnc_id_to_alias_symbols[hgnc_id]).all()
-            ):
-                joined_new_alias_symbols = ",".join(hgnc_id_to_alias_symbols[hgnc_id])
-                if alias_symbols != joined_new_alias_symbols:
-                    gene = Gene.objects.get(hgnc_id=hgnc_id)
-                    gene.alias_symbols = joined_new_alias_symbols
-                    gene_alias_updates.append(gene)
+    for changed_gene, new_alias in hgnc_id_to_alias_symbols:
+        gene = Gene.objects.get(hgnc_id=changed_gene)
+        gene.alias_symbols = new_alias
+        gene_alias_updates.append(gene)
 
     now = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"Start gene alias bulk update: {now}")
@@ -122,9 +103,31 @@ def _update_existing_gene_metadata_aliases_in_db(
                            user=user)
 
 
+def _link_unchanged_genes_to_new_release(unchanged_genes: list, hgnc_release: HgncRelease,
+                                         user: str):
+    """
+    If a gene wasn't changed in a HGNC release, link it to the new release with a note,
+    so we know the gene is still current
+
+    :param unchanged_gene: a list of HGNC_IDs of unchanged genes
+    :param hgnc_release: a HgncRelease object of the current release
+    :param str: the name of the user making the changed
+    """
+    for hgnc_id in unchanged_genes:
+        gene = Gene.objects.get(hgnc_id=hgnc_id)
+
+        gene_hgnc_release = GeneHgncRelease.objects.create(
+            gene=gene,
+            hgnc_release=hgnc_release
+        )
+
+        GeneHgncReleaseHistory(gene_hgnc_release=gene_hgnc_release,
+                           note=History.gene_hgnc_release_unchanged,
+                           user=user)
+
+# TODO: what if a HGNC_ID is retired?
 def _add_new_genes_to_db(
-    approved_symbols: dict[str:str], alias_symbols: dict[str:list],
-    hgnc_release: HgncRelease, user: str
+    new_genes: dict[str:str], hgnc_release: HgncRelease, user: str
 ) -> None:
     """
     If a gene exists in the HGNC file, but does NOT exist in the db, make it.
@@ -132,39 +135,15 @@ def _add_new_genes_to_db(
     To speed up the function, we utilise looping over lists-of-dictionaries,
     and bulk updates in some places.
 
-    :param approved_symbols: dictionary of hgnc id to approved symbols
-    :param alias_symbols: dictionary of hgnc id to alias symbols
+    :param new_genes: a list of dicts, one per gene, with keys 'hgnc_id' 'symbol' and 'alias'
     :param hgnc_release: the HgncRelease for the currently-uploaded HGNC file
     :param user: currently a string to describe the user
     """
     genes_to_create = []
 
-    # all hgncs already in db
-    already_exist = [i.hgnc_id for i in Gene.objects.all()]
-
-    # get all possible HGNC IDs
-    all_hgnc_in_approved = list(set(approved_symbols.keys()))
-    all_hgnc_in_alias = list(set(alias_symbols.keys()))
-    hgncs = all_hgnc_in_alias + all_hgnc_in_approved
-    hgncs_not_in_db = list(set(hgncs) - set(already_exist))
-
-    for hgnc_id in hgncs_not_in_db:
-        # get approved symbols
-        matches = approved_symbols[hgnc_id]
-        if matches:
-            symbol_match = matches
-        else:
-            symbol_match = None
-
-        # get aliases
-        matches = alias_symbols[hgnc_id]
-        if matches:
-            alias_match = matches
-        else:
-            alias_match = None
-
+    for gene in new_genes:
         new_gene = Gene(
-            hgnc_id=hgnc_id, gene_symbol=symbol_match, alias_symbols=alias_match
+            hgnc_id=gene["hgnc_id"], gene_symbol=gene["symbol"], alias_symbols=gene["alias"]
         )
         genes_to_create.append(new_gene)
 
@@ -172,7 +151,7 @@ def _add_new_genes_to_db(
     print(f"Start gene bulk create: {now}")
     new_genes = Gene.objects.bulk_create(genes_to_create)
 
-    # for each new gene, link to release and add a note
+    # for each NEW gene, link to release and add a note
     for gene in new_genes:
         gene_hgnc_release = GeneHgncRelease.objects.create(
             gene=gene,
@@ -182,6 +161,78 @@ def _add_new_genes_to_db(
         GeneHgncReleaseHistory(gene_hgnc_release=gene_hgnc_release,
                            note=History.gene_hgnc_release_new,
                            user=user)
+
+
+def _make_hgnc_gene_sets(hgnc_id_to_symbol: dict[str: str], hgnc_id_to_alias: dict[str: str]):
+    """
+    Sort genes into:
+    - those which are not yet in the Gene table, but are in the HGNC release
+    - those which are both already in the Gene table and in the HGNC release:
+        - those that have changed in the HGNC release:
+            - symbol changes
+            - alias changes
+        - those that are unchanged in the HGNC release
+
+    These sets are then used by downstream functions to update the database
+
+    :param hgnc_id_to_approved_symbol: a dictionary of HGNC_ID to the approved symbols in the new HGNC release
+    :param hgnc_id_to_alias_symbol: a dictionary of HGNC_ID to the alias symbols in the new HGNC release
+
+    :return new_hgncs: a list of dicts, one per new gene, with keys 'hgnc_id' 'symbol' and 'alias'
+    :return hgnc_symbol_changed: a dict of genes with changed symbols, keys are hgnc_ids and values are new symbols
+    :return hgnc_alias_changed: a dict of genes with changed alias, keys are hgnc_ids and values are new alias
+    :return hgnc_unchanged: a list of HGNC IDs for genes which are in the release, but unchanged
+    """
+    # get every HGNC ID in the HGNC file
+    all_hgnc_in_approved = list(set(hgnc_id_to_symbol.keys()))
+    all_hgnc_in_alias = list(set(hgnc_id_to_alias.keys()))
+    all_hgnc_file_entries = all_hgnc_in_alias + all_hgnc_in_approved
+
+    # for hgnc_ids which already exist in the database, get the ones which have changed
+    # and ones which haven't changed
+    genes_in_db = Gene.objects.all()
+    hgnc_symbol_changed = []
+    hgnc_alias_changed = []
+    
+    hgnc_unchanged = []
+    
+    for gene in genes_in_db:
+        symbol_change = False
+        alias_change = False
+
+        # check symbol change
+        if gene.hgnc_id in hgnc_id_to_symbol:
+            if gene.gene_symbol != hgnc_id_to_symbol[gene.hgnc_id]:
+                #add to a list of symbol-changed HGNCs
+                symbol_change = True
+                hgnc_symbol_changed.append({gene.hgnc_id: hgnc_id_to_symbol[gene.hgnc_id]})
+
+        # check alias change
+        if (
+            gene.hgnc_id in hgnc_id_to_alias
+            and not pd.isna(hgnc_id_to_alias[gene.hgnc_id]).all()
+        ):
+            joined_new_alias_symbols = ",".join(hgnc_id_to_alias[gene.hgnc_id])
+            if gene.alias_symbols != joined_new_alias_symbols:
+                # add to a list of alias-changed HGNCs
+                alias_change = True
+                hgnc_alias_changed.append({gene.hgnc_id: joined_new_alias_symbols})
+
+        # if the gene is unchanged, add that to a list
+        if not symbol_change:
+            if not alias_change:
+                hgnc_unchanged.append(gene.hgnc_id)
+
+    # get HGNC IDs which are in the HGNC file, but not yet in db
+    new_hgncs = list(set(all_hgnc_file_entries) - set(genes_in_db))
+    new_hgncs = [
+        {"hgnc_id": hgnc_id, 
+         "symbol": (hgnc_id_to_symbol[hgnc_id] if hgnc_id_to_symbol[hgnc_id] else None),
+         "alias": (hgnc_id_to_alias[hgnc_id] if hgnc_id_to_alias[hgnc_id] else None)}
+         for hgnc_id in new_hgncs
+         ]
+
+    return new_hgncs, hgnc_symbol_changed, hgnc_alias_changed, hgnc_unchanged
 
 
 def _prepare_hgnc_file(hgnc_file: str, hgnc_version: str, user: str) -> dict[str, str]:
@@ -218,13 +269,19 @@ def _prepare_hgnc_file(hgnc_file: str, hgnc_version: str, user: str) -> dict[str
     # create HGNC release
     hgnc_release, _ = HgncRelease.objects.create(hgnc_release=hgnc_version)
 
+    # get all possible HGNC IDs from the HGNC file, and compare to what's already in the database,
+    # to sort them into those which need adding and those which need editing
+    new_genes, symbol_changed, alias_changed, unchanged_genes = \
+        _make_hgnc_gene_sets(hgnc_id_to_approved_symbol, hgnc_id_to_approved_symbol)
+
+    # make edits and new additions
     with transaction.atomic():
-        _update_existing_gene_metadata_symbol_in_db(hgnc_id_to_approved_symbol, hgnc_release,
+        _update_existing_gene_metadata_symbol_in_db(symbol_changed, hgnc_release,
                                                     user)
-        _update_existing_gene_metadata_aliases_in_db(hgnc_id_to_alias_symbols, hgnc_release,
+        _update_existing_gene_metadata_aliases_in_db(alias_changed, hgnc_release,
                                                      user)
-        _add_new_genes_to_db(hgnc_id_to_approved_symbol, hgnc_id_to_alias_symbols, hgnc_release,
-                             user)
+        _link_unchanged_genes_to_new_release(unchanged_genes, hgnc_release, user)
+        _add_new_genes_to_db(new_genes, hgnc_release, user)
 
     return hgnc_symbol_to_hgnc_id
 

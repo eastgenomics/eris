@@ -73,3 +73,6 @@ class History:
     
     def gene_hgnc_release_new() -> str:
         return f"HGNC gene has been added for the first time"
+    
+    def gene_hgnc_release_unchanged() -> str:
+        return f"HGNC gene is unchanged in this release"
