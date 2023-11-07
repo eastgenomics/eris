@@ -191,8 +191,8 @@ def _make_hgnc_gene_sets(hgnc_id_to_symbol: dict[str: str], hgnc_id_to_alias: di
     # for hgnc_ids which already exist in the database, get the ones which have changed
     # and ones which haven't changed
     genes_in_db = Gene.objects.all()
-    hgnc_symbol_changed = []
-    hgnc_alias_changed = []
+    hgnc_symbol_changed = {}
+    hgnc_alias_changed = {}
     
     hgnc_unchanged = []
     
@@ -205,7 +205,7 @@ def _make_hgnc_gene_sets(hgnc_id_to_symbol: dict[str: str], hgnc_id_to_alias: di
             if gene.gene_symbol != hgnc_id_to_symbol[gene.hgnc_id]:
                 #add to a list of symbol-changed HGNCs
                 symbol_change = True
-                hgnc_symbol_changed.append({gene.hgnc_id: hgnc_id_to_symbol[gene.hgnc_id]})
+                hgnc_symbol_changed[gene.hgnc_id] = hgnc_id_to_symbol[gene.hgnc_id]
 
         # check alias change
         if (
@@ -216,7 +216,7 @@ def _make_hgnc_gene_sets(hgnc_id_to_symbol: dict[str: str], hgnc_id_to_alias: di
             if gene.alias_symbols != joined_new_alias_symbols:
                 # add to a list of alias-changed HGNCs
                 alias_change = True
-                hgnc_alias_changed.append({gene.hgnc_id: joined_new_alias_symbols})
+                hgnc_alias_changed[gene.hgnc_id] = joined_new_alias_symbols
 
         # if the gene is unchanged, add that to a list
         if not symbol_change:
@@ -224,11 +224,11 @@ def _make_hgnc_gene_sets(hgnc_id_to_symbol: dict[str: str], hgnc_id_to_alias: di
                 hgnc_unchanged.append(gene.hgnc_id)
 
     # get HGNC IDs which are in the HGNC file, but not yet in db
-    new_hgncs = list(set(all_hgnc_file_entries) - set(genes_in_db))
+    new_hgncs = list(set(all_hgnc_file_entries) - set([i.hgnc_id for i in genes_in_db]))
     new_hgncs = [
         {"hgnc_id": hgnc_id, 
          "symbol": (hgnc_id_to_symbol[hgnc_id] if hgnc_id_to_symbol[hgnc_id] else None),
-         "alias": (hgnc_id_to_alias[hgnc_id] if hgnc_id_to_alias[hgnc_id] else None)}
+         "alias": (",".join(hgnc_id_to_alias[hgnc_id]) if hgnc_id_to_alias[hgnc_id] else None)}
          for hgnc_id in new_hgncs
          ]
 
@@ -272,7 +272,7 @@ def _prepare_hgnc_file(hgnc_file: str, hgnc_version: str, user: str) -> dict[str
     # get all possible HGNC IDs from the HGNC file, and compare to what's already in the database,
     # to sort them into those which need adding and those which need editing
     new_genes, symbol_changed, alias_changed, unchanged_genes = \
-        _make_hgnc_gene_sets(hgnc_id_to_approved_symbol, hgnc_id_to_approved_symbol)
+        _make_hgnc_gene_sets(hgnc_id_to_approved_symbol, hgnc_id_to_alias_symbols)
 
     # make edits and new additions
     with transaction.atomic():
