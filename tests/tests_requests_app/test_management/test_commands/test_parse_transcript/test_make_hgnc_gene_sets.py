@@ -44,15 +44,6 @@ class TestMakeHgncGeneSets_AllScenarios(TestCase):
 
         new_hgncs, hgnc_symbol_changed, hgnc_alias_changed, unchanged = \
             _make_hgnc_gene_sets(hgnc_id_to_symbol, hgnc_id_to_alias)
-        
-        print("new hgncs")
-        print(new_hgncs)
-        print("hgnc_symbol_changed")
-        print(hgnc_symbol_changed)
-        print("hgnc_alias_changed")
-        print(hgnc_alias_changed)
-        print("unchanged")
-        print(unchanged)
 
         self.assertDictEqual(new_hgncs[0], {"hgnc_id": "HGNC:600",
                                                 "symbol": "PQR1",
@@ -61,4 +52,4 @@ class TestMakeHgncGeneSets_AllScenarios(TestCase):
                                                        "HGNC:300": "not_GHI1"})
         self.assertDictEqual(hgnc_alias_changed, {"HGNC:200": "new,alias",
                                                       "HGNC:300": "not_Alias,Three"})
-        assert unchanged == ["HGNC:400"] #TODO: work out why 500 is getting put here for some reason
+        assert unchanged == ["HGNC:400"]

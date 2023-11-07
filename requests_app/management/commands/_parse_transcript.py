@@ -218,10 +218,12 @@ def _make_hgnc_gene_sets(hgnc_id_to_symbol: dict[str: str], hgnc_id_to_alias: di
                 alias_change = True
                 hgnc_alias_changed[gene.hgnc_id] = joined_new_alias_symbols
 
-        # if the gene is unchanged, add that to a list
+        # if the database gene is unchanged, add it to an 'unchanged' list if it's in HGNC file
+        # if it ISN'T in the HGNC file, it's not in this release - ignore it
         if not symbol_change:
             if not alias_change:
-                hgnc_unchanged.append(gene.hgnc_id)
+                if gene.hgnc_id in all_hgnc_file_entries:
+                    hgnc_unchanged.append(gene.hgnc_id)
 
     # get HGNC IDs which are in the HGNC file, but not yet in db
     new_hgncs = list(set(all_hgnc_file_entries) - set([i.hgnc_id for i in genes_in_db]))
