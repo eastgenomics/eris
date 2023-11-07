@@ -239,20 +239,19 @@ def _make_hgnc_gene_sets(hgnc_id_to_symbol: dict[str: str], hgnc_id_to_alias: di
 
 def _prepare_hgnc_file(hgnc_file: str, hgnc_version: str, user: str) -> dict[str, str]:
     """
-    Read hgnc file, sanity-check it, and prepare four dictionaries:
-    1. gene symbol to hgnc id
-    2. hgnc id to approved symbol
-    4. hgnc id to alias symbols
-
-    Create a HGNC release version if applicable
-
-    Finally, update any metadata for existing genes in the Eris database -
-    if this has changed since the last HGNC upload.
+    Read a hgnc file and sanity-check it
+    If the HGNC version is new, add it to the database
+    For each HGNC ID in the HGNC file, determine which are brand-new genes, which are genes in need
+    of updating, and which genes already exist in the database. 
+    Finally, use that categorised data to update the Eris database, linking any changes
+    to this HGNC file release.
+    Return a dictionary of every HGNC ID: symbol in the current file.
 
     :param hgnc_file: hgnc file path
     :param hgnc_version: a string describing the in-house-assigned release version of 
     the HGNC file
     :param user: str, the user's name
+
     :return: gene symbol to hgnc id dict
     """
     hgnc: pd.DataFrame = pd.read_csv(hgnc_file, delimiter="\t")
@@ -268,7 +267,7 @@ def _prepare_hgnc_file(hgnc_file: str, hgnc_version: str, user: str) -> dict[str
         hgnc.groupby("HGNC ID")["Alias symbols"].apply(list).to_dict()
     )
 
-    # create HGNC release
+    # create a HGNC release
     hgnc_release, _ = HgncRelease.objects.create(hgnc_release=hgnc_version)
 
     # get all possible HGNC IDs from the HGNC file, and compare to what's already in the database,
@@ -276,7 +275,7 @@ def _prepare_hgnc_file(hgnc_file: str, hgnc_version: str, user: str) -> dict[str
     new_genes, symbol_changed, alias_changed, unchanged_genes = \
         _make_hgnc_gene_sets(hgnc_id_to_approved_symbol, hgnc_id_to_alias_symbols)
 
-    # make edits and new additions
+    # make edits and release links to pre-existing genes, and add genes which are new in the HGNC file
     with transaction.atomic():
         _update_existing_gene_metadata_symbol_in_db(symbol_changed, hgnc_release,
                                                     user)
@@ -807,7 +806,7 @@ def seed_transcripts(
     # user - replace this with something sensible one day
     user = "transcripts_test_user"
 
-    # files preparation
+    # files preparation - parsing the files, and adding release versioning to the database
     hgnc_symbol_to_hgnc_id = _prepare_hgnc_file(hgnc_filepath, hgnc_release, user)
     mane_data = _prepare_mane_file(mane_filepath, hgnc_symbol_to_hgnc_id)
     gff = _prepare_gff_file(gff_filepath)
