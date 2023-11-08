@@ -517,7 +517,9 @@ class GeneHgncRelease(models.Model):
     Links Genes to HGNC releases if:
     - the release is where the Gene was first assigned its Symbol
     - the Gene's Symbol changed in the release
-    - The Gene's Alias changed in the release
+    - the Gene's Alias changed in the release
+    - the Gene was already in the database, and has not changed in a new release -
+    this is to show that the Gene is still present in the newer release
     """
     gene = models.ForeignKey(
         Gene,
@@ -576,6 +578,7 @@ class GeneHgncReleaseHistory(models.Model):
 
     def __str__(self):
         return str(self.id)
+   
 
 class TranscriptSource(models.Model):
     """
@@ -738,6 +741,50 @@ class TranscriptReleaseTranscript(models.Model):
     def __str__(self):
         return str(self.id)
 
+
+class GffRelease(models.Model):
+    """
+    Defines a particular release of the GFF file, the source of possibly-clinically relevant
+    transcripts.
+    """
+    gff_release = models.CharField(
+        verbose_name="Gff Release",
+        max_length=255,
+        unique=True
+    )
+    
+    class Meta:
+        db_table = "gff_release"
+
+    def __str__(self):
+        return str(self.id)
+    
+
+class TranscriptGffRelease(models.Model):
+    """
+    The link between a transcript and a GFF release.
+    This indicates that the transcript is present in that GFF release.
+    """
+    transcript = models.ForeignKey(
+        Transcript,
+        verbose_name="Transcript",
+        on_delete=models.PROTECT,
+        default=None,
+    )
+
+    gff_release = models.ForeignKey(
+        GffRelease,
+        verbose_name="Gff File Release",
+        on_delete=models.PROTECT,
+        default=None,
+    )
+
+    class Meta:
+        db_table = "transcript_gffrelease"
+        unique_together = ["transcript", "hgnc_release"]
+
+    def __str__(self):
+        return str(self.id)
 
 class PanelGene(models.Model):
     """Defines a link between a single panel and a single gene"""
