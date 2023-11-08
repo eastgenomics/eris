@@ -346,12 +346,15 @@ def _prepare_mane_file(
     return result_dict
 
 
-def _prepare_gff_file(gff_file: str) -> dict[str, list]:
+def _prepare_gff_file(gff_file: str, gff_version: str, user: str) -> dict[str, list]:
     """
     Read through gff files (from DNANexus)
     and prepare dict of hgnc id to list of transcripts
 
     :param gff_file: gff file path
+    :param hgnc_version: a string describing the in-house-assigned release version of 
+    the gff file
+    :param user: str, the user's name
 
     :return: dictionary of hgnc id to list of transcripts
     """
@@ -763,12 +766,13 @@ def seed_transcripts(
     mane_ext_id: str,
     mane_release: str,
     gff_filepath: str,
+    gff_release: str,
     g2refseq_filepath: str,
     g2refseq_ext_id: str,
     markname_filepath: str,
     markname_ext_id: str,
     hgmd_release: str,
-    reference_genome: str,  # add reference genome metadata on transcript model
+    reference_genome: str,
     write_error_log: bool,
 ) -> None:
     """
@@ -779,10 +783,12 @@ def seed_transcripts(
     Finally, each transcript is linked to the releases, allowing the user to
     see what information was used in decision-making.
     :param hgnc_filepath: hgnc file path for gene IDs with current, past, and alias symbols
+    :param hgnc_release: the hgnc release (e.g. v1) corresponding to the file in hgnc_filepath
     :param mane_filepath: mane file path for transcripts
     :param mane_ext_id: mane file's ID in DNAnexus or other external platform
     :param mane_release: the mane release (e.g. v1) corresponding to the file in mane_filepath and mane_ext_id
     :param gff_filepath: gff file path
+    :param gff_release: the gff release (e.g. v2) corresponding to the file in gff_filepath
     :param g2refseq_filepath: gene2refseq file path
     :param g2refseq_ext_id: gene2refseq file's ID in DNAnexus or other external platform
     :param markname_filepath: markname file path
@@ -809,7 +815,7 @@ def seed_transcripts(
     # files preparation - parsing the files, and adding release versioning to the database
     hgnc_symbol_to_hgnc_id = _prepare_hgnc_file(hgnc_filepath, hgnc_release, user)
     mane_data = _prepare_mane_file(mane_filepath, hgnc_symbol_to_hgnc_id)
-    gff = _prepare_gff_file(gff_filepath)
+    gff, gff_release = _prepare_gff_file(gff_filepath, gff_release, user)
     gene2refseq_hgmd = _prepare_gene2refseq_file(g2refseq_filepath)
     markname_hgmd = _prepare_markname_file(markname_filepath)
 
@@ -853,7 +859,7 @@ def seed_transcripts(
                 all_errors.append(err)
 
             # add the transcript to the Transcript table
-            transcript = _add_transcript_to_db(gene, tx, reference_genome)
+            transcript = _add_transcript_to_db(gene, tx, reference_genome, gff_release)
 
             # link all the releases to the Transcript,
             # with the dictionaries containing match information

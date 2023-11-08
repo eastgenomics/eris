@@ -104,6 +104,11 @@ class Command(BaseCommand):
             default="testing_files/hgnc_dump_20230613.txt",
         )
         transcript.add_argument(
+            "--hgnc_release",
+            type=str,
+            help="The documented release version of the HGNC file"
+            )
+        transcript.add_argument(
             "--mane",
             type=str,
             help="Path to mane .csv file",
@@ -124,6 +129,11 @@ class Command(BaseCommand):
             type=str,
             help="Path to parsed gff .tsv file",
             default="testing_files/GCF_000001405.25_GRCh37.p13_genomic.exon_5bp_v2.0.0.tsv",
+        )
+        transcript.add_argument(
+            "--gff_release",
+            type=str,
+            help="The documented release version of the GFF file",
         )
         transcript.add_argument(
             "--g2refseq",
@@ -148,7 +158,7 @@ class Command(BaseCommand):
             help="The file ID of the markname csv file. Will start with 'file-'",
         )
         transcript.add_argument(
-            "--hgmd_release_label",
+            "--hgmd_release",
             type=str,
             help="The documented release version of the HGMD files",
         )
@@ -234,24 +244,25 @@ class Command(BaseCommand):
                 insert_test_directory_data(json_data, force)
 
         # python manage.py seed transcript --hgnc <path> --hgnc_release <str> --mane <path>
-        # --mane_ext_id <str> --mane_release <str> --gff <path> --g2refseq <path>
+        # --mane_ext_id <str> --mane_release <str> --gff <path> --gff_release <str> --g2refseq <path>
         # --g2refseq_ext_id <str> --markname <path> --markname_ext_id <str>
-        # --hgmd_release_label <str> --refgenome <ref_genome_version> --error
+        # --hgmd_release <str> --refgenome <ref_genome_version> --error
         elif command == "transcript":
             """
             This seeding requires the following files and strings:
             1. hgnc dump - with HGNC ID, Approved Symbol, Previous Symbols, Alias Symbols
             2. hgnc release - the in-house release version assigned to the HGNC file
-            2. MANE file csv (http://tark.ensembl.org/web/mane_GRCh37_list/)
-            3. MANE file csv - the external ID
-            4. MANE release version
-            5. parsed gff file on DNAnexus (project-Fkb6Gkj433GVVvj73J7x8KbV:file-GF611Z8433Gk7gZ47gypK7ZZ)
-            6. gene2refseq table from HGMD database
-            7. gene2refseq table - the external ID
-            8. markname table from HGMD database
-            9. markname table from HGMD database - the external ID
-            10. hgmd release label - in-house label assigned to this version of the data dump
-            11. reference genome - e.g. 37/38
+            3. MANE file csv (http://tark.ensembl.org/web/mane_GRCh37_list/)
+            4. MANE file's external ID (e.g. in DNAnexus)
+            5. MANE release version
+            6. parsed gff file on DNAnexus (project-Fkb6Gkj433GVVvj73J7x8KbV:file-GF611Z8433Gk7gZ47gypK7ZZ)
+            7. gff release - the in-house release version assigned to the GFF file
+            8. gene2refseq table from HGMD database
+            9. gene2refseq table's external ID
+            10. markname table from HGMD database
+            11. markname table's the external ID
+            12. hgmd release - in-house label assigned to this version of the data dump
+            13. reference genome - e.g. 37/38
             """
 
             # fetch input reference genome - case sensitive
@@ -265,11 +276,12 @@ class Command(BaseCommand):
             mane_ext_id = kwargs.get("mane_ext_id")
             mane_release = kwargs.get("mane_release")
             gff_file = kwargs.get("gff")
+            gff_release = kwargs.get("gff_release")
             g2refseq_file = kwargs.get("g2refseq")
             g2refseq_ext_id = kwargs.get("g2refseq_ext_id")
             markname_file = kwargs.get("markname")
             markname_ext_id = kwargs.get("markname_ext_id")
-            hgmd_release_label = kwargs.get("hgmd_release_label")
+            hgmd_release_label = kwargs.get("hgmd_release")
 
             self._validate_file_exist(
                 [
@@ -292,6 +304,7 @@ class Command(BaseCommand):
                 mane_ext_id,
                 mane_release,
                 gff_file,
+                gff_release,
                 g2refseq_file,
                 g2refseq_ext_id,
                 markname_file,
