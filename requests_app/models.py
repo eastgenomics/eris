@@ -788,10 +788,45 @@ class TranscriptGffRelease(models.Model):
 
     class Meta:
         db_table = "transcript_gffrelease"
-        unique_together = ["transcript", "hgnc_release"]
+        unique_together = ["transcript", "gff_release"]
 
     def __str__(self):
         return str(self.id)
+    
+
+class TranscriptGffReleaseHistory(models.Model):
+    """
+    Tracking history for the link between a transcript and a GFF release.
+    """
+    transcript_gff = models.ForeignKey(
+        TranscriptGffRelease,
+        verbose_name="Transcript Gff",
+        on_delete=models.PROTECT,
+        default=None,
+    )
+
+    created = models.DateTimeField(
+        verbose_name="created",
+        auto_now_add=True,
+    )
+
+    note = models.CharField(
+        verbose_name="Note",
+        max_length=255,
+    )
+
+    user = models.CharField(
+        verbose_name="user",
+        max_length=255,
+        null=True,
+    )
+
+    class Meta:
+        db_table = "transcript_gff_file_history"
+
+    def __str__(self):
+        return str(self.id)
+
 
 class PanelGene(models.Model):
     """Defines a link between a single panel and a single gene"""

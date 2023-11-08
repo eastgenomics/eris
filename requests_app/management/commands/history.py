@@ -76,3 +76,10 @@ class History:
     
     def gene_hgnc_release_unchanged() -> str:
         return f"HGNC gene is unchanged in this release"
+    
+    # transcript/gff releases
+    def tx_gff_release_added() -> str:
+        return f"Transcript linked to release for first time"
+    
+    def tx_gff_release_unchanged() -> str:
+        return f"Transcript is unchanged in this release"

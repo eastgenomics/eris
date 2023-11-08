@@ -22,7 +22,8 @@ from requests_app.models import (
     GeneHgncReleaseHistory,
     ReferenceGenome,
     GffRelease,
-    TranscriptGffRelease
+    TranscriptGffRelease,
+    TranscriptGffReleaseHistory
 )
 
 
@@ -430,21 +431,42 @@ def _prepare_markname_file(markname_file: str) -> dict[str:list]:
 
 
 def _add_transcript_to_db(
-    gene: Gene, transcript: str, ref_genome: ReferenceGenome
-) -> Transcript:
+    gene: Gene, transcript: str, ref_genome: ReferenceGenome, gff_release: GffRelease,
+    user: str) -> Transcript:
     """
     Add each transcript to the database, with its gene.
+    Link it to the current GFF release, and log history of the change.
 
     :param: gene, a Gene in need to linking to a transcript
     :param: transcript, the name of a transcript to add to the db
     :param: ref_genome, the ReferenceGenome of this version of the transcript
+    :param: gff_release, the GffRelease of this version of the GFF file
+    :param: user, a string representing the user carrying out the upload
 
     :returns: Transcript instance, for the transcript added to the db
     """
     tx, _ = Transcript.objects.get_or_create(
         transcript=transcript, gene=gene, reference_genome=ref_genome
     )
-    tx.save()
+
+    tx_gff, tx_gff_created = TranscriptGffRelease.objects.get_or_create(
+        transcript=tx,
+        gff_release=gff_release
+    )
+
+    if tx_gff_created:
+        TranscriptGffReleaseHistory.objects.get_or_create(
+            transcript_gff=tx_gff,
+            note=History.tx_gff_release_added,
+            user=user
+        )
+    else:
+        TranscriptGffReleaseHistory.objects.get_or_create(
+            transcript_gff=tx_gff,
+            note=History.tx_gff_release_unchanged,
+            user=user
+        )
+
     return tx
 
 
@@ -877,7 +899,7 @@ def seed_transcripts(
                 all_errors.append(err)
 
             # add the transcript to the Transcript table
-            transcript = _add_transcript_to_db(gene, tx, reference_genome, gff_release)
+            transcript = _add_transcript_to_db(gene, tx, reference_genome, gff_release, user)
 
             # link all the releases to the Transcript,
             # with the dictionaries containing match information
