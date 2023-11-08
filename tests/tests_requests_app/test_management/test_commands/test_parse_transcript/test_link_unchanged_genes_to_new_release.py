@@ -55,10 +55,11 @@ class TestLinkUnchanged(TestCase):
                                           "linked release", self.new_hgnc_release)
 
         post_run_history = GeneHgncReleaseHistory.objects.all()
+        errors += len_check_wrapper(post_run_history, "history objects", 3)
         for i in range(len(post_run_history)):
-            errors += len_check_wrapper(post_run_history[i].note,
+            errors += value_check_wrapper(post_run_history[i].note,
                                         "linked history",
-                                        note=History.gene_hgnc_release_unchanged)
+                                        History.gene_hgnc_release_present())
 
         errors = "; ".join(errors)
         assert not errors, errors

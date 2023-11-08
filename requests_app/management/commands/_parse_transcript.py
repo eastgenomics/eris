@@ -64,7 +64,7 @@ def _update_existing_gene_metadata_symbol_in_db(
         )
 
         GeneHgncReleaseHistory(gene_hgnc_release=gene_hgnc_release,
-                           note=History.gene_hgnc_release_approved_symbol_change,
+                           note=History.gene_hgnc_release_approved_symbol_change(),
                            user=user)
 
 
@@ -101,8 +101,8 @@ def _update_existing_gene_metadata_aliases_in_db(
             hgnc_release=hgnc_release
         )
 
-        GeneHgncReleaseHistory(gene_hgnc_release=gene_hgnc_release,
-                           note=History.gene_hgnc_release_alias_symbol_change,
+        GeneHgncReleaseHistory.objects.create(gene_hgnc_release=gene_hgnc_release,
+                           note=History.gene_hgnc_release_alias_symbol_change(),
                            user=user)
 
 
@@ -124,8 +124,9 @@ def _link_unchanged_genes_to_new_release(unchanged_genes: list, hgnc_release: Hg
             hgnc_release=hgnc_release
         )
 
-        GeneHgncReleaseHistory(gene_hgnc_release=gene_hgnc_release,
-                           note=History.gene_hgnc_release_unchanged,
+        GeneHgncReleaseHistory.objects.create(
+            gene_hgnc_release=gene_hgnc_release,
+                           note=History.gene_hgnc_release_present(),
                            user=user)
 
 
@@ -162,7 +163,7 @@ def _add_new_genes_to_db(
         )
 
         GeneHgncReleaseHistory(gene_hgnc_release=gene_hgnc_release,
-                           note=History.gene_hgnc_release_new,
+                           note=History.gene_hgnc_release_new(),
                            user=user)
 
 
@@ -430,7 +431,7 @@ def _prepare_markname_file(markname_file: str) -> dict[str:list]:
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
 
 
-def _add_transcript_to_db(
+def _add_transcript_to_db_with_gff_release(
     gene: Gene, transcript: str, ref_genome: ReferenceGenome, gff_release: GffRelease,
     user: str) -> Transcript:
     """
@@ -445,7 +446,7 @@ def _add_transcript_to_db(
 
     :returns: Transcript instance, for the transcript added to the db
     """
-    tx, _ = Transcript.objects.get_or_create(
+    tx, tx_created = Transcript.objects.get_or_create(
         transcript=transcript, gene=gene, reference_genome=ref_genome
     )
 
@@ -454,18 +455,20 @@ def _add_transcript_to_db(
         gff_release=gff_release
     )
 
-    if tx_gff_created:
-        TranscriptGffReleaseHistory.objects.get_or_create(
-            transcript_gff=tx_gff,
-            note=History.tx_gff_release_added,
-            user=user
-        )
+    if tx_created:
+        message=History.tx_gff_release_new()
     else:
-        TranscriptGffReleaseHistory.objects.get_or_create(
-            transcript_gff=tx_gff,
-            note=History.tx_gff_release_unchanged,
-            user=user
-        )
+        if tx_gff_created:
+            message=History.tx_gff_release_present()
+        else:
+            # neither transcript nor its GFF link are new - no need to add history info
+            return tx
+
+    TranscriptGffReleaseHistory.objects.get_or_create(
+        transcript_gff=tx_gff,
+        note=message,
+        user=user
+    )
 
     return tx
 
@@ -899,7 +902,7 @@ def seed_transcripts(
                 all_errors.append(err)
 
             # add the transcript to the Transcript table
-            transcript = _add_transcript_to_db(gene, tx, reference_genome, gff_release, user)
+            transcript = _add_transcript_to_db_with_gff_release(gene, tx, reference_genome, gff_release, user)
 
             # link all the releases to the Transcript,
             # with the dictionaries containing match information
