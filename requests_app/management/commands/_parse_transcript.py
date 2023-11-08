@@ -33,7 +33,7 @@ def _update_existing_gene_metadata_symbol_in_db(
     user: str
 ) -> None:
     """
-    Function to update gene metadata in db using hgnc dump prepared dictionaries
+    Function to update gene metadata in db using a hgnc dump prepared dictionary
     Updates approved symbol if that has changed.
     To speed up the function, we utilise looping over lists-of-dictionaries,
     and bulk updates in some spots.
@@ -63,7 +63,7 @@ def _update_existing_gene_metadata_symbol_in_db(
             hgnc_release=hgnc_release
         )
 
-        GeneHgncReleaseHistory(gene_hgnc_release=gene_hgnc_release,
+        GeneHgncReleaseHistory.objects.create(gene_hgnc_release=gene_hgnc_release,
                            note=History.gene_hgnc_release_approved_symbol_change(),
                            user=user)
 
