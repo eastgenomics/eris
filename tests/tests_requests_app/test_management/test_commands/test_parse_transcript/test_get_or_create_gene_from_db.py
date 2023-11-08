@@ -44,16 +44,19 @@ class TestGetOrCreate_CreateNew(TestCase):
         # check HGNC release logging was correctly carried out
         post_run_hgnc_release_links = GeneHgncRelease.objects.all()
         errors += len_check_wrapper(post_run_hgnc_release_links, "number of release links", 2)
+
         for i in range(len(post_run_hgnc_release_links)):
             errors += value_check_wrapper(post_run_hgnc_release_links[i].hgnc_release,
                                           "linked release",
                                           self.hgnc_release)
 
         post_run_history = GeneHgncReleaseHistory.objects.all()
+        errors += len_check_wrapper(post_run_history, "number of history entries", 2)
+
         for i in range(len(post_run_history)):
-            errors += len_check_wrapper(post_run_history[i].note,
+            errors += value_check_wrapper(post_run_history[i].note,
                                         "linked history",
-                                        note=History.gene_hgnc_release_new)
+                                        History.gene_hgnc_release_new())
 
         errors = "; ".join(errors)
         assert not errors, errors

@@ -162,7 +162,7 @@ def _add_new_genes_to_db(
             hgnc_release=hgnc_release
         )
 
-        GeneHgncReleaseHistory(gene_hgnc_release=gene_hgnc_release,
+        GeneHgncReleaseHistory.objects.create(gene_hgnc_release=gene_hgnc_release,
                            note=History.gene_hgnc_release_new(),
                            user=user)
 
