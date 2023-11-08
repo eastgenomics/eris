@@ -500,9 +500,7 @@ class HgncRelease(models.Model):
     """
 
     hgnc_release = models.CharField(
-        verbose_name="Hgnc Release",
-        max_length=255,
-        unique=True
+        verbose_name="Hgnc Release", max_length=255, unique=True
     )
 
     class Meta:
@@ -510,7 +508,7 @@ class HgncRelease(models.Model):
 
     def __str__(self):
         return str(self.id)
-    
+
 
 class GeneHgncRelease(models.Model):
     """
@@ -521,6 +519,7 @@ class GeneHgncRelease(models.Model):
     - the Gene was already in the database, and has not changed in a new release -
     this is to show that the Gene is still present in the newer release
     """
+
     gene = models.ForeignKey(
         Gene,
         verbose_name="Gene",
@@ -541,7 +540,7 @@ class GeneHgncRelease(models.Model):
 
     def __str__(self):
         return str(self.id)
-   
+
 
 class GeneHgncReleaseHistory(models.Model):
     """
@@ -550,6 +549,7 @@ class GeneHgncReleaseHistory(models.Model):
     - the Gene's Symbol changed in the release
     - The Gene's Alias changed in the release
     """
+
     gene_hgnc_release = models.ForeignKey(
         GeneHgncRelease,
         verbose_name="Gene-HGNC Release Link",
@@ -578,7 +578,7 @@ class GeneHgncReleaseHistory(models.Model):
 
     def __str__(self):
         return str(self.id)
-   
+
 
 class TranscriptSource(models.Model):
     """
@@ -747,10 +747,9 @@ class GffRelease(models.Model):
     Defines a particular release of the GFF file, the source of possibly-clinically relevant
     transcripts. Release versions must be unique for a given reference genome.
     """
+
     gff_release = models.CharField(
-        verbose_name="Gff Release",
-        max_length=255,
-        unique=True
+        verbose_name="Gff Release", max_length=255, unique=True
     )
 
     reference_genome = models.ForeignKey(
@@ -758,20 +757,21 @@ class GffRelease(models.Model):
         verbose_name="reference genome",
         on_delete=models.PROTECT,
     )
-    
+
     class Meta:
         db_table = "gff_release"
         unique_together = ["gff_release", "reference_genome"]
 
     def __str__(self):
         return str(self.id)
-    
+
 
 class TranscriptGffRelease(models.Model):
     """
     The link between a transcript and a GFF release.
     This indicates that the transcript is present in that GFF release.
     """
+
     transcript = models.ForeignKey(
         Transcript,
         verbose_name="Transcript",
@@ -792,12 +792,13 @@ class TranscriptGffRelease(models.Model):
 
     def __str__(self):
         return str(self.id)
-    
+
 
 class TranscriptGffReleaseHistory(models.Model):
     """
     Tracking history for the link between a transcript and a GFF release.
     """
+
     transcript_gff = models.ForeignKey(
         TranscriptGffRelease,
         verbose_name="Transcript Gff",

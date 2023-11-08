@@ -106,8 +106,8 @@ class Command(BaseCommand):
         transcript.add_argument(
             "--hgnc_release",
             type=str,
-            help="The documented release version of the HGNC file"
-            )
+            help="The documented release version of the HGNC file",
+        )
         transcript.add_argument(
             "--mane",
             type=str,
