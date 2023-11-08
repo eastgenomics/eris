@@ -689,7 +689,7 @@ class Transcript(models.Model):
 
     class Meta:
         db_table = "transcript"
-        unique_together = ("transcript", "gene", "reference_genome")
+        unique_together = ["transcript", "gene", "reference_genome"]
 
     def __str__(self):
         return str(self.id)
@@ -745,16 +745,23 @@ class TranscriptReleaseTranscript(models.Model):
 class GffRelease(models.Model):
     """
     Defines a particular release of the GFF file, the source of possibly-clinically relevant
-    transcripts.
+    transcripts. Release versions must be unique for a given reference genome.
     """
     gff_release = models.CharField(
         verbose_name="Gff Release",
         max_length=255,
         unique=True
     )
+
+    reference_genome = models.ForeignKey(
+        ReferenceGenome,
+        verbose_name="reference genome",
+        on_delete=models.PROTECT,
+    )
     
     class Meta:
         db_table = "gff_release"
+        unique_together = ["gff_release", "reference_genome"]
 
     def __str__(self):
         return str(self.id)

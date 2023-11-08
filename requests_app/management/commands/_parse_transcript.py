@@ -21,6 +21,8 @@ from requests_app.models import (
     GeneHgncRelease,
     GeneHgncReleaseHistory,
     ReferenceGenome,
+    GffRelease,
+    TranscriptGffRelease
 )
 
 
@@ -647,6 +649,19 @@ def _transcript_assign_to_source(
     return mane_select_data, mane_plus_clinical_data, hgmd_data, err
 
 
+def _add_gff_release_info_to_db(gff_release: str, reference_genome: ReferenceGenome)\
+    -> GffRelease:
+    """
+    Add a release version to the database for the GFF file.
+    Add reference genome information.
+    """
+    gff_release, _ = GffRelease.objects.get_or_create(
+        gff_release=gff_release,
+        reference_genome=reference_genome
+    )
+    return gff_release
+
+
 def _add_transcript_release_info_to_db(
     source: str, release_version: str, ref_genome: ReferenceGenome, files: dict
 ) -> None:
@@ -815,12 +830,15 @@ def seed_transcripts(
     # files preparation - parsing the files, and adding release versioning to the database
     hgnc_symbol_to_hgnc_id = _prepare_hgnc_file(hgnc_filepath, hgnc_release, user)
     mane_data = _prepare_mane_file(mane_filepath, hgnc_symbol_to_hgnc_id)
-    gff, gff_release = _prepare_gff_file(gff_filepath, gff_release, user)
+    gff = _prepare_gff_file(gff_filepath, gff_release, user)
     gene2refseq_hgmd = _prepare_gene2refseq_file(g2refseq_filepath)
     markname_hgmd = _prepare_markname_file(markname_filepath)
 
     # set up the transcript release by adding it, any data sources, and any
     # supporting files to the database. Throw errors for repeated versions.
+
+    gff_release = _add_gff_release_info_to_db(gff_release, reference_genome)
+
     mane_select_rel = _add_transcript_release_info_to_db(
         "MANE Select", mane_release, reference_genome, {"mane": mane_ext_id}
     )
