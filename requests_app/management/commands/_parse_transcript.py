@@ -246,7 +246,8 @@ def _make_hgnc_gene_sets(
             ),
             "alias": (
                 ",".join(hgnc_id_to_alias[hgnc_id])
-                if hgnc_id_to_alias[hgnc_id]
+                if (hgnc_id_to_alias[hgnc_id]
+                and not pd.isna(hgnc_id_to_alias[hgnc_id]).all)
                 else None
             ),
         }
@@ -287,7 +288,7 @@ def _prepare_hgnc_file(hgnc_file: str, hgnc_version: str, user: str) -> dict[str
     )
 
     # create a HGNC release
-    hgnc_release, _ = HgncRelease.objects.create(hgnc_release=hgnc_version)
+    hgnc_release = HgncRelease.objects.create(hgnc_release=hgnc_version)
 
     # get all possible HGNC IDs from the HGNC file, and compare to what's already in the database,
     # to sort them into those which need adding and those which need editing
