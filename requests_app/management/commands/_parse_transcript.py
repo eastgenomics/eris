@@ -119,15 +119,18 @@ def _link_unchanged_genes_to_new_release(unchanged_genes: list, hgnc_release: Hg
     for hgnc_id in unchanged_genes:
         gene = Gene.objects.get(hgnc_id=hgnc_id)
 
-        gene_hgnc_release = GeneHgncRelease.objects.create(
+        gene_hgnc_release, release_created = GeneHgncRelease.objects.get_or_create(
             gene=gene,
             hgnc_release=hgnc_release
         )
 
-        GeneHgncReleaseHistory.objects.create(
-            gene_hgnc_release=gene_hgnc_release,
-                           note=History.gene_hgnc_release_present(),
-                           user=user)
+        # if a new gene-release link was made, log it in history
+        # if it existed already, don't log it
+        if release_created:
+            GeneHgncReleaseHistory.objects.create(
+                gene_hgnc_release=gene_hgnc_release,
+                            note=History.gene_hgnc_release_present(),
+                            user=user)
 
 
 def _add_new_genes_to_db(
