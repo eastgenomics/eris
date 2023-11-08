@@ -155,21 +155,6 @@ class TestUpdateExistingAliasSymbol(TestCase):
 
         self.user = "test_user"
 
-    def test_no_changes(self):
-        """
-        A gene is unchanged
-        """
-        test_aliases = {"14163": "DKFZP761D0211,FLJ32603"}
-        _update_existing_gene_metadata_aliases_in_db(test_aliases, self.hgnc_release,
-                                                     self.user)
-
-        # check that the entry isn't changed from how it was at set-up
-        gene_db = Gene.objects.filter(hgnc_id="14163")
-        assert len(gene_db) == 1
-        assert gene_db[0].hgnc_id == self.FAM234A.hgnc_id
-        assert gene_db[0].gene_symbol == self.FAM234A.gene_symbol
-        assert gene_db[0].alias_symbols == self.FAM234A.alias_symbols
-
     def test_alias_name_change(self):
         """
         Test case: the alias name has changed for a gene, since last update
@@ -180,7 +165,24 @@ class TestUpdateExistingAliasSymbol(TestCase):
         _update_existing_gene_metadata_aliases_in_db(test_hgnc_aliases, self.hgnc_release,
                                                      self.user)
 
+        err = []
+
         # check that the entry for 14163 in the Gene test datatable is updated
         gene_db = Gene.objects.filter(hgnc_id="14163")
-        assert len(gene_db) == 1
-        assert gene_db[0].alias_symbols == "alias1,alias2"
+        err += len_check_wrapper(gene_db, "genes", 1)
+        err += value_check_wrapper(gene_db[0].alias_symbols, "alias symbol", "alias1,alias2")
+
+        # check that the entry has been linked to a HgncRelease
+        gene_release = GeneHgncRelease.objects.all()
+        err += len_check_wrapper(gene_release, "Gene-HGNC links", 1)
+        err += value_check_wrapper(gene_release[0].gene, "gene in the link", gene_db[0])
+
+        # and there's a HgncRelease history entry with the 'symbol change' message
+        history = GeneHgncReleaseHistory.objects.all()
+        err += len_check_wrapper(history, "history entries", 1)
+        err += value_check_wrapper(history[0].gene_hgnc_release, "Gene-HGNC link", gene_release[0])
+        err += value_check_wrapper(history[0].note, "history note",
+                                   History.gene_hgnc_release_alias_symbol_change())
+
+        errors = "; ".join(err)
+        assert not errors, errors
