@@ -3,6 +3,7 @@ import pandas as pd
 import re
 import numpy as np
 from django.db import transaction
+from looseversion import LooseVersion
 
 pd.options.mode.chained_assignment = None  # default='warn'
 import datetime
@@ -838,49 +839,64 @@ def _check_for_transcript_seeding_version_regression(
     :param hgmd_release: user-input HGMD release version
     """
     # find the latest releases in the db
-    latest_hgnc = HgncRelease.objects.all().order_by("-hgnc_release").first()
-    latest_gff = GffRelease.objects.filter(reference_genome=reference_genome).\
-        order_by("-gff_release").first()
+    hgncs = HgncRelease.objects.all().order_by("-hgnc_release")
+    hgnc_releases = [v.hgnc_release for v in hgncs]
+    hgnc_releases.sort(key=LooseVersion, reverse=True)
+    latest_hgnc = str(hgnc_releases[0])
+
+    gffs = GffRelease.objects.filter(reference_genome=reference_genome).\
+        order_by("-gff_release")
+    gff_list = [v.gff_release for v in gffs]
+    gff_list.sort(key=LooseVersion, reverse=True)
+    latest_gff = str(gff_list[0])
 
     # for MANE need to check both Select and Plus Clinical to find the max
-    latest_select = (
+    selects = (
         TranscriptRelease.objects.filter(source__source="MANE Select")
+        .filter(reference_genome=reference_genome)
         .order_by("-release")
-        .first()
     )
-    latest_plus_clinical = (
+    select_list = [v.release for v in selects]
+    select_list.sort(key=LooseVersion, reverse=True)
+    latest_select = str(select_list[0])
+    
+    plus_clinicals = (
         TranscriptRelease.objects.filter(source__source="MANE Plus Clinical")
+        .filter(reference_genome=reference_genome)
         .order_by("-release")
-        .first()
     )
-    latest_mane = max(
-        [
-            latest_select.release,
-            latest_plus_clinical.release,
-        ]
-    )
+    plus_clinical_list = [v.release for v in plus_clinicals]
+    plus_clinical_list.sort(key=LooseVersion, reverse=True)
+    latest_plus_clinical = str(plus_clinical_list[0])
 
-    latest_hgmd = (
+    manes = [latest_plus_clinical, latest_select]
+    manes.sort(key=LooseVersion, reverse=True)
+    latest_mane = str(manes[0])
+
+    hgmds = (
         TranscriptRelease.objects.filter(source__source="HGMD")
+        .filter(reference_genome=reference_genome)
         .order_by("-release")
-        .first()
     )
+    hgmd_list = [v.release for v in hgmds]
+    hgmd_list.sort(key=LooseVersion, reverse=True)
+    latest_hgmd = str(hgmd_list[0])
 
     too_old = {}
 
-    # for each release: if the db contains a latest release, and the user-entered release is older,
-    # assemble an error message
+    # for each release: make a list of the user-provided and newest-in-database versions
+    # sort them with LooseVersion
     if latest_hgnc:
-        if hgnc_release < sortable_version(latest_hgnc):
+        if LooseVersion(str(hgnc_release)) < LooseVersion(latest_hgnc):
             too_old["hgnc release"] = latest_hgnc
     if latest_gff:
-        if gff_release < sortable_version(latest_gff):
+        if LooseVersion(str(gff_release)) < LooseVersion(latest_gff):
             too_old["gff release"] = latest_gff
     if latest_mane:
-        if mane_release < sortable_version(latest_mane):
+        if LooseVersion(str(mane_release)) < LooseVersion(latest_mane):
             too_old["hgnc release"] = latest_hgnc
     if latest_hgmd:
-        if hgmd_release < sortable_version(latest_hgmd):
+        if LooseVersion(str(hgmd_release)) < LooseVersion(latest_hgmd):
             too_old["gff release"] = latest_gff
 
     if too_old:
@@ -888,7 +904,7 @@ def _check_for_transcript_seeding_version_regression(
         for key, value in too_old.items():
             joined_output_str.append(f"{key} is a lower version than {value}")
         error = "; ".join(joined_output_str)
-        raise Exception("Abandoning input because: " + error)
+        raise ValueError("Abandoning input because: " + error)
 
 
 # 'atomic' should ensure that any failure rolls back the entire attempt to seed
