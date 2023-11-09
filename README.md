@@ -77,6 +77,9 @@ python manage.py seed transcript \
 --gff <path> --g2refseq <path> --g2refseq_ext_id <file ID> --markname <path> \
 --markname_ext_id <file ID> --hgmd_release_label <str> --refgenome <version> \
 --error
+
+# working example
+python manage.py seed transcript --hgnc testing_files/hgnc_dump_20230613.txt --mane testing_files/mane_grch37.csv --mane_ext_id file-123 --mane_release 1.0 --gff testing_files/GCF_000001405.25_GRCh37.p13_genomic.exon_5bp_v2.0.0.tsv --g2refseq testing_files/gene2refseq_202306131409.csv --g2refseq_ext_id file-123 --markname testing_files/markname_202306131409.csv --markname_ext_id file-234 --hgmd_release_label 1.4 --refgenome grch37
 ```
 
 The arguments are as follows:
