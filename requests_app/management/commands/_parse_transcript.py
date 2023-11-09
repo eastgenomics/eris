@@ -93,7 +93,7 @@ def _update_existing_gene_metadata_aliases_in_db(
 
     # for each changed gene, link to release and add a note
     for gene in gene_alias_updates:
-        gene_hgnc_release = GeneHgncRelease.objects.create(
+        gene_hgnc_release, _ = GeneHgncRelease.objects.get_or_create(
             gene=gene, hgnc_release=hgnc_release
         )
 
@@ -234,8 +234,6 @@ def _make_hgnc_gene_sets(
 
     # get HGNC IDs which are in the HGNC file, but not yet in db
     new_hgncs = list(set(all_hgnc_file_entries) - set([i.hgnc_id for i in genes_in_db]))
-    for i in new_hgncs:
-        print(hgnc_id_to_alias[i])
     new_hgncs = [
         {
             "hgnc_id": hgnc_id,
