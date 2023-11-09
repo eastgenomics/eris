@@ -8,6 +8,7 @@ from requests_app.models import (
     GffRelease,
     TranscriptRelease,
     TranscriptSource,
+    ReferenceGenome
 )
 from requests_app.management.commands.history import History
 from requests_app.management.commands._parse_transcript import (
@@ -24,7 +25,11 @@ class TestCheckRegressions_OldHgncRelease(TestCase):
     provided by a user, is too old
     """
     def setUp(self) -> None:
-        return super().setUp()
+        self.reference_genome = ReferenceGenome.objects.create(reference_genome="GRCh37")
+
+        self.hgnc = HgncRelease.objects.create(hgnc_release="2")
+        self.gff = GffRelease.objects.create(gff_release="1.0", reference_genome=self.reference_genome)
+        self.mane_select = TranscriptRelease.objects.create()
     
     def test_old_hgnc_release(self):
         """

@@ -63,7 +63,7 @@ class TestAddTranscriptRelease_FromScratch(TestCase):
         err += value_check_wrapper(file_1.file_id, "file ID 1", "file-1357")
         err += value_check_wrapper(file_2.file_id, "file ID 2", "file-101010")
         err += value_check_wrapper(
-            release.external_release_version, "release", "v1.2.3"
+            release.release, "release", "v1.2.3"
         )
         err += value_check_wrapper(
             rel_file_link_1.transcript_release, "release-file link 1", release
@@ -98,7 +98,7 @@ class TestAddTranscriptRelease_ErrorsOnVersionRepeatsWithDifferentFiles(TestCase
         self.source = TranscriptSource.objects.create(source="HGMD")
         self.release = TranscriptRelease.objects.create(
             source=self.source,
-            external_release_version="v1.0.5",
+            release="v1.0.5",
             reference_genome=self.reference_genome,
         )
 
@@ -140,7 +140,7 @@ class TestAddTranscriptRelease_SameFilesNoProblem(TestCase):
         self.source = TranscriptSource.objects.create(source="HGMD")
         self.release = TranscriptRelease.objects.create(
             source=self.source,
-            external_release_version="v1.0.5",
+            release="v1.0.5",
             reference_genome=self.reference_genome,
         )
         self.file_one = TranscriptFile.objects.create(file_id="123", file_type="test")
@@ -183,7 +183,7 @@ class TestAddTranscriptRelease_CheckNotMissingFiles(TestCase):
         self.source = TranscriptSource.objects.create(source="HGMD")
         self.release = TranscriptRelease.objects.create(
             source=self.source,
-            external_release_version="v1.0.5",
+            release="v1.0.5",
             reference_genome=self.reference_genome,
         )
         self.file_one = TranscriptFile.objects.create(file_id="123", file_type="test")

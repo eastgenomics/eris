@@ -740,7 +740,7 @@ def _add_transcript_release_info_to_db(
     # of another source)
     release, release_created = TranscriptRelease.objects.get_or_create(
         source=source_instance,
-        external_release_version=release_version,
+        release=release_version,
         reference_genome=ref_genome,
     )
 
@@ -823,7 +823,8 @@ def _parse_reference_genome(ref_genome: str) -> str:
 
 
 def _check_for_transcript_seeding_version_regression(
-    hgnc_release: str, gff_release: str, mane_release: str, hgmd_release: str
+    hgnc_release: str, gff_release: str, mane_release: str, hgmd_release: str,
+    reference_genome: ReferenceGenome
 ) -> None:
     """
     For any releases needed for transcript seeding,
@@ -838,29 +839,30 @@ def _check_for_transcript_seeding_version_regression(
     """
     # find the latest releases in the db
     latest_hgnc = HgncRelease.objects.all().order_by("-hgnc_release").first()
-    latest_gff = GffRelease.objects.all().order_by("-gff_release").first()
+    latest_gff = GffRelease.objects.filter(reference_genome=reference_genome).\
+        order_by("-gff_release").first()
 
     # for MANE need to check both Select and Plus Clinical to find the max
     latest_select = (
         TranscriptRelease.objects.filter(source__source="MANE Select")
-        .order_by("-external_release_version")
+        .order_by("-release")
         .first()
     )
     latest_plus_clinical = (
         TranscriptRelease.objects.filter(source__source="MANE Plus Clinical")
-        .order_by("-external_release_version")
+        .order_by("-release")
         .first()
     )
     latest_mane = max(
         [
-            latest_select.external_release_version,
-            latest_plus_clinical.external_release_version,
+            latest_select.release,
+            latest_plus_clinical.release,
         ]
     )
 
     latest_hgmd = (
         TranscriptRelease.objects.filter(source__source="HGMD")
-        .order_by("-external_release_version")
+        .order_by("-release")
         .first()
     )
 
@@ -944,7 +946,7 @@ def seed_transcripts(
 
     # throw errors if the release versions are older than those already in the db
     _check_for_transcript_seeding_version_regression(
-        hgnc_release, gff_release, mane_release, hgmd_release
+        hgnc_release, gff_release, mane_release, hgmd_release, reference_genome
     )
 
     # user - replace this with something sensible one day

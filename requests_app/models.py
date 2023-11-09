@@ -612,7 +612,7 @@ class TranscriptRelease(models.Model):
         default=None,
     )
 
-    external_release_version = models.CharField(
+    release = models.CharField(
         verbose_name="Transcript Release", max_length=255, null=True, default=None
     )
 
@@ -628,7 +628,7 @@ class TranscriptRelease(models.Model):
     class Meta:
         db_table = "transcript_release"
         # stop people reusing the same release version
-        unique_together = ["source", "external_release_version", "reference_genome"]
+        unique_together = ["source", "release", "reference_genome"]
 
     def __str__(self):
         return str(self.id)
