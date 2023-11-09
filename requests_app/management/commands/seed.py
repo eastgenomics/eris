@@ -54,7 +54,7 @@ class Command(BaseCommand):
                 f"External file IDs {', '.join(missing_ids)} are misformatted,"
                 f" file IDs must take the format 'file-' followed by an alphanumerical string"
             )
-        
+
     def _validate_release_versions(self, releases: list[str]) -> None:
         """
         Validate that the external releases are in the correct format
@@ -309,8 +309,9 @@ class Command(BaseCommand):
 
             self._validate_ext_ids([mane_ext_id, g2refseq_ext_id, markname_ext_id])
 
-            self._validate_release_versions([hgnc_release, mane_release, gff_release,
-                                             hgmd_release])
+            self._validate_release_versions(
+                [hgnc_release, mane_release, gff_release, hgmd_release]
+            )
 
             error_log = kwargs.get("error_log", False)
 
