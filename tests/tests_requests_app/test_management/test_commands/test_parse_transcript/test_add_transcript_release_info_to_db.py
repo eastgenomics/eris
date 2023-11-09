@@ -62,9 +62,7 @@ class TestAddTranscriptRelease_FromScratch(TestCase):
         err += value_check_wrapper(source.source, "source name", "MANE Select")
         err += value_check_wrapper(file_1.file_id, "file ID 1", "file-1357")
         err += value_check_wrapper(file_2.file_id, "file ID 2", "file-101010")
-        err += value_check_wrapper(
-            release.release, "release", "v1.2.3"
-        )
+        err += value_check_wrapper(release.release, "release", "v1.2.3")
         err += value_check_wrapper(
             rel_file_link_1.transcript_release, "release-file link 1", release
         )

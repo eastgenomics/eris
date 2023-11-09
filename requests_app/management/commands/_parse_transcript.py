@@ -822,9 +822,10 @@ def _parse_reference_genome(ref_genome: str) -> str:
             f"{'; '.join(permitted_grch38)} - you provided {ref_genome}"
         )
 
+
 def _get_latest_hgnc_release() -> str | None:
     """
-    Get the latest release in HgncRelease,using LooseVersion because the version formatting 
+    Get the latest release in HgncRelease,using LooseVersion because the version formatting
     isn't 100% consistent. Return None if the table has no matching results.
     :returns: string of latest HGNC release version, or None
     """
@@ -837,17 +838,19 @@ def _get_latest_hgnc_release() -> str | None:
         latest_hgnc = str(hgnc_releases[0])
         return latest_hgnc
 
+
 def _get_latest_gff_release(ref_genome: ReferenceGenome) -> str | None:
     """
     Get the latest GFF release in GffRelease for a given reference genome,
-      using LooseVersion because the version formatting 
+      using LooseVersion because the version formatting
     isn't 100% consistent. Return None if the table has no matching results.
 
     :param reference_genome: a ReferenceGenome object corresponding to user input
     :returns: string of latest GFF result in db, or None if no matches
     """
-    gffs = GffRelease.objects.filter(reference_genome=ref_genome).\
-        order_by("-gff_release")
+    gffs = GffRelease.objects.filter(reference_genome=ref_genome).order_by(
+        "-gff_release"
+    )
     if not gffs:
         return None
     else:
@@ -856,12 +859,15 @@ def _get_latest_gff_release(ref_genome: ReferenceGenome) -> str | None:
         latest_gff = str(gff_list[0])
         return latest_gff
 
-def _get_latest_transcript_release(source: str, ref_genome: ReferenceGenome) -> str | None:
+
+def _get_latest_transcript_release(
+    source: str, ref_genome: ReferenceGenome
+) -> str | None:
     """
     Get the latest release in the TranscriptRelease table for a given source
-    and reference genome, using LooseVersion because the version formatting 
+    and reference genome, using LooseVersion because the version formatting
     isn't 100% consistent. Return None if the table has no matching results.
-    
+
     :param source: a source string such as 'HGMD', 'MANE Plus Clinical' or 'MANE Select'
     :param reference_genome: a ReferenceGenome object corresponding to user input
     :returns: string of latest transcript release or None if no database matches
@@ -879,9 +885,13 @@ def _get_latest_transcript_release(source: str, ref_genome: ReferenceGenome) -> 
         latest = str(db_results_list[0])
         return latest
 
+
 def _check_for_transcript_seeding_version_regression(
-    hgnc_release: str, gff_release: str, mane_release: str, hgmd_release: str,
-    reference_genome: ReferenceGenome
+    hgnc_release: str,
+    gff_release: str,
+    mane_release: str,
+    hgmd_release: str,
+    reference_genome: ReferenceGenome,
 ) -> None:
     """
     For any releases needed for transcript seeding,
@@ -901,7 +911,9 @@ def _check_for_transcript_seeding_version_regression(
 
     # for MANE need to check both Select and Plus Clinical to find the max
     latest_select = _get_latest_transcript_release("MANE Select", reference_genome)
-    latest_plus_clinical = _get_latest_transcript_release("MANE Plus Clinical", reference_genome)
+    latest_plus_clinical = _get_latest_transcript_release(
+        "MANE Plus Clinical", reference_genome
+    )
     if latest_plus_clinical and latest_select:
         manes = [latest_plus_clinical, latest_select]
         manes.sort(key=LooseVersion, reverse=True)
