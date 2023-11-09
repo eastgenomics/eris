@@ -219,18 +219,14 @@ def _make_hgnc_gene_sets(
                 hgnc_symbol_changed[gene.hgnc_id] = hgnc_id_to_symbol[gene.hgnc_id]
 
         # check alias change
-        if (
-            gene.hgnc_id in hgnc_id_to_alias
-            and not pd.isna(hgnc_id_to_alias[gene.hgnc_id]).all()
-        ):
-            joined_new_alias_symbols = ",".join(hgnc_id_to_alias[gene.hgnc_id])
-            if gene.alias_symbols != joined_new_alias_symbols:
+        if gene.hgnc_id in hgnc_id_to_alias:
+            resolved_alias = _resolve_alias(hgnc_id_to_alias[gene.hgnc_id])
+            if gene.alias_symbols != resolved_alias:
                 # add to a list of alias-changed HGNCs
                 alias_change = True
-                hgnc_alias_changed[gene.hgnc_id] = joined_new_alias_symbols
+                hgnc_alias_changed[gene.hgnc_id] = resolved_alias
 
         # if the database gene is unchanged, add it to an 'unchanged' list if it's in HGNC file
-        # if it ISN'T in the HGNC file, it's not in this release - ignore it
         if not symbol_change:
             if not alias_change:
                 if gene.hgnc_id in all_hgnc_file_entries:
@@ -238,24 +234,39 @@ def _make_hgnc_gene_sets(
 
     # get HGNC IDs which are in the HGNC file, but not yet in db
     new_hgncs = list(set(all_hgnc_file_entries) - set([i.hgnc_id for i in genes_in_db]))
+    for i in new_hgncs:
+        print(hgnc_id_to_alias[i])
     new_hgncs = [
         {
             "hgnc_id": hgnc_id,
             "symbol": (
                 hgnc_id_to_symbol[hgnc_id] if hgnc_id_to_symbol[hgnc_id] else None
             ),
-            "alias": (
-                ",".join(hgnc_id_to_alias[hgnc_id])
-                if (hgnc_id_to_alias[hgnc_id]
-                and not pd.isna(hgnc_id_to_alias[hgnc_id]).all)
-                else None
-            ),
+            "alias": _resolve_alias(hgnc_id_to_alias[hgnc_id]),
         }
         for hgnc_id in new_hgncs
     ]
 
     return new_hgncs, hgnc_symbol_changed, hgnc_alias_changed, hgnc_unchanged
 
+
+def _resolve_alias(start_alias: list) -> str | None:
+    """
+    Joins aliases, handling the case where an alias contains pd.na
+    Mostly exists because this was originally a one-liner, but I started
+    struggling to read it.
+    :param start_alias: the list of alias names. It contains either strings or
+    a single np.nan value.
+    :param processed_alias: the alias returned as a single joined string, or, None
+    if the input was blank/just np.nan values.
+    """
+    if start_alias:
+        if not pd.isna(start_alias).all():
+            processed_alias = ",".join(start_alias)
+            return processed_alias
+    
+    return None
+    
 
 def _prepare_hgnc_file(hgnc_file: str, hgnc_version: str, user: str) -> dict[str, str]:
     """

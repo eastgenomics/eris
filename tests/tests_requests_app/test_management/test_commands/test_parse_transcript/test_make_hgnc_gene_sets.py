@@ -1,4 +1,5 @@
 from django.test import TestCase
+import numpy as np
 
 from requests_app.management.commands.history import History
 from requests_app.management.commands._parse_transcript import _make_hgnc_gene_sets
@@ -55,7 +56,7 @@ class TestMakeHgncGeneSets_AllScenarios(TestCase):
         }  # HGNC:600 is new to this release, and not in the db
         hgnc_id_to_alias = {
             "HGNC:100": ["Alias", "One"],
-            "HGNC:200": ["new", "alias"],  # HGNC:200 alias change
+            "HGNC:200": [np.nan],  # HGNC:200 alias change
             "HGNC:300": [
                 "not_Alias",
                 "Three",
@@ -79,6 +80,6 @@ class TestMakeHgncGeneSets_AllScenarios(TestCase):
             hgnc_symbol_changed, {"HGNC:100": "new_symbol", "HGNC:300": "not_GHI1"}
         )
         self.assertDictEqual(
-            hgnc_alias_changed, {"HGNC:200": "new,alias", "HGNC:300": "not_Alias,Three"}
+            hgnc_alias_changed, {"HGNC:200": None, "HGNC:300": "not_Alias,Three"}
         )
         assert unchanged == ["HGNC:400"]
