@@ -262,9 +262,9 @@ def _resolve_alias(start_alias: list) -> str | None:
         if not pd.isna(start_alias).all():
             processed_alias = ",".join(start_alias)
             return processed_alias
-    
+
     return None
-    
+
 
 def _prepare_hgnc_file(hgnc_file: str, hgnc_version: str, user: str) -> dict[str, str]:
     """
