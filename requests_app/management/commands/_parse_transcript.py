@@ -822,6 +822,62 @@ def _parse_reference_genome(ref_genome: str) -> str:
             f"{'; '.join(permitted_grch38)} - you provided {ref_genome}"
         )
 
+def _get_latest_hgnc_release() -> str | None:
+    """
+    Get the latest release in HgncRelease,using LooseVersion because the version formatting 
+    isn't 100% consistent. Return None if the table has no matching results.
+    :returns: string of latest HGNC release version, or None
+    """
+    hgncs = HgncRelease.objects.all().order_by("-hgnc_release")
+    if not hgncs:
+        return None
+    else:
+        hgnc_releases = [v.hgnc_release for v in hgncs]
+        hgnc_releases.sort(key=LooseVersion, reverse=True)
+        latest_hgnc = str(hgnc_releases[0])
+        return latest_hgnc
+
+def _get_latest_gff_release(ref_genome: ReferenceGenome) -> str | None:
+    """
+    Get the latest GFF release in GffRelease for a given reference genome,
+      using LooseVersion because the version formatting 
+    isn't 100% consistent. Return None if the table has no matching results.
+
+    :param reference_genome: a ReferenceGenome object corresponding to user input
+    :returns: string of latest GFF result in db, or None if no matches
+    """
+    gffs = GffRelease.objects.filter(reference_genome=ref_genome).\
+        order_by("-gff_release")
+    if not gffs:
+        return None
+    else:
+        gff_list = [v.gff_release for v in gffs]
+        gff_list.sort(key=LooseVersion, reverse=True)
+        latest_gff = str(gff_list[0])
+        return latest_gff
+
+def _get_latest_transcript_release(source: str, ref_genome: ReferenceGenome) -> str | None:
+    """
+    Get the latest release in the TranscriptRelease table for a given source
+    and reference genome, using LooseVersion because the version formatting 
+    isn't 100% consistent. Return None if the table has no matching results.
+    
+    :param source: a source string such as 'HGMD', 'MANE Plus Clinical' or 'MANE Select'
+    :param reference_genome: a ReferenceGenome object corresponding to user input
+    :returns: string of latest transcript release or None if no database matches
+    """
+    db_results = (
+        TranscriptRelease.objects.filter(source__source=source)
+        .filter(reference_genome=ref_genome)
+        .order_by("-release")
+    )
+    if not db_results:
+        return None
+    else:
+        db_results_list = [v.release for v in db_results]
+        db_results_list.sort(key=LooseVersion, reverse=True)
+        latest = str(db_results_list[0])
+        return latest
 
 def _check_for_transcript_seeding_version_regression(
     hgnc_release: str, gff_release: str, mane_release: str, hgmd_release: str,
@@ -839,48 +895,21 @@ def _check_for_transcript_seeding_version_regression(
     :param hgmd_release: user-input HGMD release version
     """
     # find the latest releases in the db
-    hgncs = HgncRelease.objects.all().order_by("-hgnc_release")
-    hgnc_releases = [v.hgnc_release for v in hgncs]
-    hgnc_releases.sort(key=LooseVersion, reverse=True)
-    latest_hgnc = str(hgnc_releases[0])
+    latest_hgnc = _get_latest_hgnc_release()
 
-    gffs = GffRelease.objects.filter(reference_genome=reference_genome).\
-        order_by("-gff_release")
-    gff_list = [v.gff_release for v in gffs]
-    gff_list.sort(key=LooseVersion, reverse=True)
-    latest_gff = str(gff_list[0])
+    latest_gff = _get_latest_gff_release(reference_genome)
 
     # for MANE need to check both Select and Plus Clinical to find the max
-    selects = (
-        TranscriptRelease.objects.filter(source__source="MANE Select")
-        .filter(reference_genome=reference_genome)
-        .order_by("-release")
-    )
-    select_list = [v.release for v in selects]
-    select_list.sort(key=LooseVersion, reverse=True)
-    latest_select = str(select_list[0])
-    
-    plus_clinicals = (
-        TranscriptRelease.objects.filter(source__source="MANE Plus Clinical")
-        .filter(reference_genome=reference_genome)
-        .order_by("-release")
-    )
-    plus_clinical_list = [v.release for v in plus_clinicals]
-    plus_clinical_list.sort(key=LooseVersion, reverse=True)
-    latest_plus_clinical = str(plus_clinical_list[0])
+    latest_select = _get_latest_transcript_release("MANE Select", reference_genome)
+    latest_plus_clinical = _get_latest_transcript_release("MANE Plus Clinical", reference_genome)
+    if latest_plus_clinical and latest_select:
+        manes = [latest_plus_clinical, latest_select]
+        manes.sort(key=LooseVersion, reverse=True)
+        latest_mane = str(manes[0])
+    else:
+        latest_mane = None
 
-    manes = [latest_plus_clinical, latest_select]
-    manes.sort(key=LooseVersion, reverse=True)
-    latest_mane = str(manes[0])
-
-    hgmds = (
-        TranscriptRelease.objects.filter(source__source="HGMD")
-        .filter(reference_genome=reference_genome)
-        .order_by("-release")
-    )
-    hgmd_list = [v.release for v in hgmds]
-    hgmd_list.sort(key=LooseVersion, reverse=True)
-    latest_hgmd = str(hgmd_list[0])
+    latest_hgmd = _get_latest_transcript_release("HGMD", reference_genome)
 
     too_old = {}
 
