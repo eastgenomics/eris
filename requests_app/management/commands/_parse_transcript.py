@@ -7,6 +7,7 @@ from django.db import transaction
 pd.options.mode.chained_assignment = None  # default='warn'
 import datetime
 
+from .utils import sortable_version
 from .history import History
 from requests_app.models import (
     Gene,
@@ -819,7 +820,58 @@ def _parse_reference_genome(ref_genome: str) -> str:
             f" such as {'; '.join(permitted_grch37)} or "
             f"{'; '.join(permitted_grch38)} - you provided {ref_genome}"
         )
+    
 
+def _check_for_transcript_seeding_version_regression(hgnc_release: str,
+                                  gff_release: str,
+                                  mane_release: str,
+                                  hgmd_release: str) -> None:
+    """
+    For any releases needed for transcript seeding,
+    get the latest ones in the database, and check that the user hasn't entered an older one.
+    Throw error messages if one or more releases are older than expect, and quit out.
+    Otherwise, continue.
+
+    :param hgnc_release: user-input HGNC release version
+    :param gff_release: user-input GFF release version
+    :param mane_release: user-input MANE release version
+    :param hgmd_release: user-input HGMD release version
+    """
+    # find the latest releases in the db
+    latest_hgnc = HgncRelease.objects.all().order_by("-hgnc_release").first()
+    latest_gff = GffRelease.objects.all().order_by("-gff_release").first()
+
+    # for MANE need to check both Select and Plus Clinical to find the max
+    latest_select = TranscriptRelease.objects.filter(source__source="MANE Select").order_by("-external_release_version").first()
+    latest_plus_clinical = TranscriptRelease.objects.filter(source__source="MANE Plus Clinical").order_by("-external_release_version").first()
+    latest_mane = max([latest_select.external_release_version, latest_plus_clinical.external_release_version])
+
+    latest_hgmd = TranscriptRelease.objects.filter(source__source="HGMD").order_by("-external_release_version").first()
+
+    too_old = {}
+
+    # for each release: if the db contains a latest release, and the user-entered release is older,
+    # assemble an error message
+    if latest_hgnc:
+        if hgnc_release < sortable_version(latest_hgnc):
+            too_old["hgnc release"] = latest_hgnc
+    if latest_gff:
+        if gff_release < sortable_version(latest_gff):
+            too_old["gff release"] = latest_gff
+    if latest_mane:
+        if mane_release < sortable_version(latest_mane):
+            too_old["hgnc release"] = latest_hgnc
+    if latest_hgmd:
+        if hgmd_release < sortable_version(latest_hgmd):
+            too_old["gff release"] = latest_gff
+
+    if too_old:
+        joined_output_str = []
+        for key, value in too_old.items():
+            joined_output_str.append(f"{key} is a lower version than {value}")
+        error = "; ".join(joined_output_str)
+        raise Exception("Abandoning input because: " + error)
+        
 
 # 'atomic' should ensure that any failure rolls back the entire attempt to seed
 # transcripts - resetting the database to its start position
@@ -862,7 +914,7 @@ def seed_transcripts(
     :param reference_genome: the reference genome build, e.g. 37, 38
     :param write_error_log: write error log or not
     """
-    # take today datetime
+    # take today's datetime
     current_datetime = dt.datetime.today().strftime("%Y%m%d")
 
     # prepare error log filename
@@ -873,6 +925,9 @@ def seed_transcripts(
     reference_genome, _ = ReferenceGenome.objects.get_or_create(
         reference_genome=reference_genome_str
     )
+
+    # throw errors if the release versions are older than those already in the db
+    _check_for_transcript_seeding_version_regression(hgnc_release, gff_release, mane_release, hgmd_release)
 
     # user - replace this with something sensible one day
     user = "transcripts_test_user"

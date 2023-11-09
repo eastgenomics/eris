@@ -51,7 +51,21 @@ class Command(BaseCommand):
 
         if missing_ids:
             raise Exception(
-                f"External file IDs {', '.join(missing_ids)} are misformatted"
+                f"External file IDs {', '.join(missing_ids)} are misformatted,"
+                f" file IDs must take the format 'file-' followed by an alphanumerical string"
+            )
+        
+    def _validate_release_versions(self, releases: list[str]) -> None:
+        """
+        Validate that the external releases are in the correct format
+        Only numbers and dots are permitted, e.g. 1.0.13
+        """
+        invalid_releases = [id for id in releases if not re.match(r"^\d+(\.\d+)*$", id)]
+
+        if invalid_releases:
+            raise Exception(
+                f"The release versions {', '.join(invalid_releases)} are misformatted, "
+                f"release versions may only contain numbers and dots"
             )
 
     def add_arguments(self, parser) -> None:
@@ -281,7 +295,7 @@ class Command(BaseCommand):
             g2refseq_ext_id = kwargs.get("g2refseq_ext_id")
             markname_file = kwargs.get("markname")
             markname_ext_id = kwargs.get("markname_ext_id")
-            hgmd_release_label = kwargs.get("hgmd_release")
+            hgmd_release = kwargs.get("hgmd_release")
 
             self._validate_file_exist(
                 [
@@ -294,6 +308,9 @@ class Command(BaseCommand):
             )
 
             self._validate_ext_ids([mane_ext_id, g2refseq_ext_id, markname_ext_id])
+
+            self._validate_release_versions([hgnc_release, mane_release, gff_release,
+                                             hgmd_release])
 
             error_log = kwargs.get("error_log", False)
 
@@ -309,7 +326,7 @@ class Command(BaseCommand):
                 g2refseq_ext_id,
                 markname_file,
                 markname_ext_id,
-                hgmd_release_label,
+                hgmd_release,
                 ref_genome,
                 error_log,
             )
