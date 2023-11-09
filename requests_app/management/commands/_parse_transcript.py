@@ -820,12 +820,11 @@ def _parse_reference_genome(ref_genome: str) -> str:
             f" such as {'; '.join(permitted_grch37)} or "
             f"{'; '.join(permitted_grch38)} - you provided {ref_genome}"
         )
-    
 
-def _check_for_transcript_seeding_version_regression(hgnc_release: str,
-                                  gff_release: str,
-                                  mane_release: str,
-                                  hgmd_release: str) -> None:
+
+def _check_for_transcript_seeding_version_regression(
+    hgnc_release: str, gff_release: str, mane_release: str, hgmd_release: str
+) -> None:
     """
     For any releases needed for transcript seeding,
     get the latest ones in the database, and check that the user hasn't entered an older one.
@@ -842,11 +841,28 @@ def _check_for_transcript_seeding_version_regression(hgnc_release: str,
     latest_gff = GffRelease.objects.all().order_by("-gff_release").first()
 
     # for MANE need to check both Select and Plus Clinical to find the max
-    latest_select = TranscriptRelease.objects.filter(source__source="MANE Select").order_by("-external_release_version").first()
-    latest_plus_clinical = TranscriptRelease.objects.filter(source__source="MANE Plus Clinical").order_by("-external_release_version").first()
-    latest_mane = max([latest_select.external_release_version, latest_plus_clinical.external_release_version])
+    latest_select = (
+        TranscriptRelease.objects.filter(source__source="MANE Select")
+        .order_by("-external_release_version")
+        .first()
+    )
+    latest_plus_clinical = (
+        TranscriptRelease.objects.filter(source__source="MANE Plus Clinical")
+        .order_by("-external_release_version")
+        .first()
+    )
+    latest_mane = max(
+        [
+            latest_select.external_release_version,
+            latest_plus_clinical.external_release_version,
+        ]
+    )
 
-    latest_hgmd = TranscriptRelease.objects.filter(source__source="HGMD").order_by("-external_release_version").first()
+    latest_hgmd = (
+        TranscriptRelease.objects.filter(source__source="HGMD")
+        .order_by("-external_release_version")
+        .first()
+    )
 
     too_old = {}
 
@@ -871,7 +887,7 @@ def _check_for_transcript_seeding_version_regression(hgnc_release: str,
             joined_output_str.append(f"{key} is a lower version than {value}")
         error = "; ".join(joined_output_str)
         raise Exception("Abandoning input because: " + error)
-        
+
 
 # 'atomic' should ensure that any failure rolls back the entire attempt to seed
 # transcripts - resetting the database to its start position
@@ -927,7 +943,9 @@ def seed_transcripts(
     )
 
     # throw errors if the release versions are older than those already in the db
-    _check_for_transcript_seeding_version_regression(hgnc_release, gff_release, mane_release, hgmd_release)
+    _check_for_transcript_seeding_version_regression(
+        hgnc_release, gff_release, mane_release, hgmd_release
+    )
 
     # user - replace this with something sensible one day
     user = "transcripts_test_user"
