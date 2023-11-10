@@ -1,10 +1,11 @@
 from django.db import models
 from requests_app.models import ClinicalIndication, Panel
+
 # Create your models here.
+
 
 class Individual(models.Model):
     """Records individuals"""
-
 
     class Meta:
         db_table = "individual"
@@ -12,9 +13,9 @@ class Individual(models.Model):
     def __str__(self):
         return str(self.id)
 
+
 class ClinicalIndication(models.Model):
     """Records clinical indications"""
-
 
     class Meta:
         db_table = "clinical_indication"
@@ -22,9 +23,9 @@ class ClinicalIndication(models.Model):
     def __str__(self):
         return str(self.id)
 
+
 class AffectedStatus(models.Model):
     """Records affected statuses"""
-
 
     class Meta:
         db_table = "affected_status"
@@ -32,9 +33,9 @@ class AffectedStatus(models.Model):
     def __str__(self):
         return str(self.id)
 
+
 class AssertionCriteria(models.Model):
     """Records assertion criteria"""
-
 
     class Meta:
         db_table = "assertion_criteria"
@@ -42,9 +43,9 @@ class AssertionCriteria(models.Model):
     def __str__(self):
         return str(self.id)
 
+
 class ClinicalSignificanceDescription(models.Model):
     """Records clinical significance descriptions"""
-
 
     class Meta:
         db_table = "clinical_significance_description"
@@ -52,9 +53,9 @@ class ClinicalSignificanceDescription(models.Model):
     def __str__(self):
         return str(self.id)
 
+
 class EvaluatedBy(models.Model):
     """Records who performed evaluation"""
-
 
     class Meta:
         db_table = "evaluated_by"
@@ -62,9 +63,9 @@ class EvaluatedBy(models.Model):
     def __str__(self):
         return str(self.id)
 
+
 class AssayMethod(models.Model):
     """Records assay methods"""
-
 
     class Meta:
         db_table = "assay_method"
@@ -72,9 +73,9 @@ class AssayMethod(models.Model):
     def __str__(self):
         return str(self.id)
 
+
 class ClinvarCollectionMethod(models.Model):
     """Records clinvar collection methods"""
-
 
     class Meta:
         db_table = "clinvar_collection_method"
@@ -82,9 +83,9 @@ class ClinvarCollectionMethod(models.Model):
     def __str__(self):
         return str(self.id)
 
+
 class Variant(models.Model):
     """Records variants"""
-
 
     class Meta:
         db_table = "variant"
@@ -92,9 +93,9 @@ class Variant(models.Model):
     def __str__(self):
         return str(self.id)
 
+
 class ClinvarAlleleOrigin(models.Model):
     """Records clinvar allele origins"""
-
 
     class Meta:
         db_table = "clinvar_allele_origin"
@@ -102,15 +103,16 @@ class ClinvarAlleleOrigin(models.Model):
     def __str__(self):
         return str(self.id)
 
+
 class ClinvarSubmission(models.Model):
     """Records clinvar submissions"""
-
 
     class Meta:
         db_table = "clinvar_submission"
 
     def __str__(self):
         return str(self.id)
+
 
 class Interpretation(models.Model):
     """Records interpretations"""
@@ -120,7 +122,9 @@ class Interpretation(models.Model):
     )
 
     clinical_indication_id = models.ForeignKey(
-        ClinicalIndication, verbose_name="Clinical Indication ID", on_delete=models.PROTECT
+        ClinicalIndication,
+        verbose_name="Clinical Indication ID",
+        on_delete=models.PROTECT,
     )
 
     affected_status_id = models.ForeignKey(
@@ -128,11 +132,15 @@ class Interpretation(models.Model):
     )
 
     assertion_criteria_id = models.ForeignKey(
-        AssertionCriteria, verbose_name="Assertion Criteria ID", on_delete=models.PROTECT
+        AssertionCriteria,
+        verbose_name="Assertion Criteria ID",
+        on_delete=models.PROTECT,
     )
 
     clinical_significance_description_id = models.ForeignKey(
-        ClinicalSignificanceDescription, verbose_name="Clinical Significance Description ID", on_delete=models.PROTECT
+        ClinicalSignificanceDescription,
+        verbose_name="Clinical Significance Description ID",
+        on_delete=models.PROTECT,
     )
 
     evaluated_by_id = models.ForeignKey(
@@ -148,7 +156,9 @@ class Interpretation(models.Model):
     )
 
     clinvar_collection_method_id = models.ForeignKey(
-        ClinvarCollectionMethod, verbose_name="Clinvar Collection Method ID", on_delete=models.PROTECT
+        ClinvarCollectionMethod,
+        verbose_name="Clinvar Collection Method ID",
+        on_delete=models.PROTECT,
     )
 
     variant_id = models.ForeignKey(
@@ -156,11 +166,15 @@ class Interpretation(models.Model):
     )
 
     clinvar_allele_origin_id = models.ForeignKey(
-        ClinvarAlleleOrigin, verbose_name="Clinvar Allele Origin ID", on_delete=models.PROTECT
+        ClinvarAlleleOrigin,
+        verbose_name="Clinvar Allele Origin ID",
+        on_delete=models.PROTECT,
     )
 
     clinvar_submission_id = models.ForeignKey(
-        ClinvarSubmission, verbose_name="Clinvar Submission ID", on_delete=models.PROTECT
+        ClinvarSubmission,
+        verbose_name="Clinvar Submission ID",
+        on_delete=models.PROTECT,
     )
 
     class Meta:

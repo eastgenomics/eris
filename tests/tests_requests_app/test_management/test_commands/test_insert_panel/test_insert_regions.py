@@ -268,9 +268,7 @@ class TestInsertRegions_PreexistingRegion(TestCase):
 
         self.triplosensitivity = Triplosensitivity.objects.create(triplosensitivity="")
 
-        self.reference_genome = ReferenceGenome.objects.create(
-            name="GRCh38"
-        )
+        self.reference_genome = ReferenceGenome.objects.create(name="GRCh38")
 
         self.first_region = Region.objects.create(
             name="ISCA-37406-Loss",
@@ -401,9 +399,7 @@ class TestInsertRegions_PreexistingLink(TestCase):
 
         self.triplosensitivity = Triplosensitivity.objects.create(triplosensitivity="")
 
-        self.reference_genome = ReferenceGenome.objects.create(
-            name="GRCh38"
-        )
+        self.reference_genome = ReferenceGenome.objects.create(name="GRCh38")
 
         self.first_region = Region.objects.create(
             name="ISCA-37406-Loss",
