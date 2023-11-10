@@ -152,6 +152,57 @@ class PanelSuperPanel(models.Model):
         return str(self.id)
 
 
+class TestDirectoryRelease(models.Model):
+    """
+    Defines a test directory release.
+    """
+    release = models.CharField(
+        verbose_name="test directory release",
+        max_length=255,
+        null=False
+    )
+
+    class Meta:
+        db_table = "td_release"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class TestDirectoryReleaseHistory(models.Model):
+    """
+    For adding information about when new tds were added, and by who
+    """
+    td_release = models.ForeignKey(
+        TestDirectoryRelease,
+        verbose_name="TD release",
+        on_delete=models.PROTECT,
+    )
+
+    # creation date
+    created = models.DateTimeField(
+        verbose_name="created",
+        auto_now_add=True,
+    )
+
+    note = models.CharField(
+        verbose_name="note",
+        max_length=255,
+    )
+
+    user = models.CharField(
+        verbose_name="user",
+        max_length=255,
+        null=True,
+    )
+
+    class Meta:
+        db_table = "test_directory_release_history"
+
+    def __str__(self):
+        return str(self.id)
+
+
 class ClinicalIndication(models.Model):
     """Defines a single clinical indication"""
 
@@ -203,10 +254,10 @@ class ClinicalIndicationPanel(models.Model):
         null=True,
     )
 
-    td_version = models.CharField(
+    td_version = models.ForeignKey(
+        TestDirectoryRelease,
         verbose_name="test directory version",
-        max_length=255,
-        null=True,
+        on_delete=models.PROTECT,
     )
 
     # creation date
@@ -267,10 +318,10 @@ class ClinicalIndicationSuperPanel(models.Model):
         null=True,
     )
 
-    td_version = models.CharField(
+    td_version = models.ForeignKey(
+        TestDirectoryRelease,
         verbose_name="test directory version",
-        max_length=255,
-        null=True,
+        on_delete=models.PROTECT,
     )
 
     # creation date

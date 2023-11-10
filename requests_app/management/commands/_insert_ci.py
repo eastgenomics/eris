@@ -10,6 +10,8 @@ from .utils import sortable_version, normalize_version
 from .history import History
 
 from requests_app.models import (
+    TestDirectoryRelease,
+    TestDirectoryReleaseHistory,
     Panel,
     SuperPanel,
     ClinicalIndication,
@@ -511,51 +513,31 @@ def _make_provisional_test_method_change(
         ci_instance.save()
 
 
-def _fetch_latest_td_version() -> str:
+def _fetch_latest_td_version() -> str | None:
     """
     Gets the highest test directory version currently in the database.
-    Searches the CI-Panel and CI-SuperPanel tables to get the highest
+    Searches the TestDirectoryRelease table to get the highest release
     number overall.
-    Returns the max number.
 
-    :returns: db_latest_td [str], the maximum test directory version in
-    the database
+    :returns: latest_td [str], the maximum test directory version in
+    the database, or None if there isn't an entry yet
     """
-    panels_latest_td: ClinicalIndicationPanel = (
-        ClinicalIndicationPanel.objects.filter(td_version__isnull=False)
-        .order_by("-td_version")
+    latest_td: TestDirectoryRelease = (
+        TestDirectoryRelease.objects.all()
+        .order_by("-release")
         .first()
     )
 
-    superpanels_latest_td: ClinicalIndicationSuperPanel = (
-        ClinicalIndicationSuperPanel.objects.filter(td_version__isnull=False)
-        .order_by("-td_version")
-        .first()
-    )
-
-    # get whichever version is highest, accounting for the fact that
-    # either or both could be None (which makes max error out)
-    if not panels_latest_td and not superpanels_latest_td:
-        db_latest_td = None
-    elif not panels_latest_td:
-        db_latest_td = sortable_version(superpanels_latest_td.td_version)
-    elif not superpanels_latest_td:
-        db_latest_td = sortable_version(panels_latest_td.td_version)
+    if latest_td:
+        return latest_td.release
     else:
-        db_latest_td = max(
-            [
-                sortable_version(panels_latest_td.td_version),
-                sortable_version(superpanels_latest_td.td_version),
-            ]
-        )
-
-    return db_latest_td
+        return None
 
 
 def _update_ci_panel_tables_with_new_ci(
     r_code: str,
     td_source: str,
-    td_version: str,
+    td_version: TestDirectoryRelease,
     ci_instance: ClinicalIndication,
     config_source: str,
 ) -> None:
@@ -566,7 +548,7 @@ def _update_ci_panel_tables_with_new_ci(
 
     :param: r_code [str], the R code of the new clinical indication
     :param: td_source [str], the test directory's source
-    :param: td_version [str], the test directory's version
+    :param: td_version [TestDirectoryRelease], the test directory's version
     :param: ci_instance [ClinicalIndication], the new ClinicalIndication object
     in the database which may need linking to some panels
     :param: config_source [str], source metadata for the CI-panel link
@@ -591,7 +573,7 @@ def _update_ci_panel_tables_with_new_ci(
         )
 
         # fill in new clinical indication - panel link metadata
-        new_clinical_indication_panel.td_version = sortable_version(td_version)
+        new_clinical_indication_panel.td_version = td_version
         new_clinical_indication_panel.config_source = config_source
         new_clinical_indication_panel.save()
 
@@ -599,7 +581,7 @@ def _update_ci_panel_tables_with_new_ci(
 def _update_ci_superpanel_tables_with_new_ci(
     r_code: str,
     td_source: str,
-    td_version: str,
+    td_version: TestDirectoryRelease,
     ci_instance: ClinicalIndication,
     config_source: str,
 ) -> None:
@@ -610,7 +592,7 @@ def _update_ci_superpanel_tables_with_new_ci(
 
     :param: r_code [str], the R code of the new clinical indication
     :param: td_source [str], the test directory's source
-    :param: td_version [str], the test directory's version
+    :param: td_version [TestDirectoryRelease], the test directory's version
     :param: ci_instance [ClinicalIndication], the new ClinicalIndication object
     in the database which may need linking to some superpanels
     :param: config_source [str], source metadata for the CI-superpanel link
@@ -637,7 +619,7 @@ def _update_ci_superpanel_tables_with_new_ci(
         )
 
         # fill in new clinical indication - panel link metadata
-        new_clinical_indication_superpanel.td_version = sortable_version(td_version)
+        new_clinical_indication_superpanel.td_version = td_version
         new_clinical_indication_superpanel.config_source = config_source
         new_clinical_indication_superpanel.save()
 
@@ -904,6 +886,23 @@ def _flag_superpanels_removed_from_test_directory(
                 )
 
 
+def _add_td_release_to_db(td_version: str, user: str) -> TestDirectoryRelease:
+    """
+    Add a new TestDirectory to the database with a sortable version, and make a history entry 
+    which will record datetime, user, and action.
+    :param td_version: the string of the version of the currently-uploaded test directory
+    :param user: the string representing the current user
+    :returns: the TestDirectoryRelease
+    """
+    td = TestDirectoryRelease.objects.create(release=sortable_version(td_version))
+    td_history = TestDirectoryReleaseHistory.objects.create(
+        td_release=td,
+        user=user,
+        note=History.td_added()
+    )
+    return td
+
+
 @transaction.atomic
 def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
     """This function insert TD data into DB
@@ -918,6 +917,9 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
 
     print(f"Inserting test directory data into database... forced: {force}")
 
+    #TODO: add a useful User one day
+    user = td_source
+
     # fetch td source from json file
     td_source: str = json_data.get("td_source")
     assert td_source, "Missing td_source in test directory json file"
@@ -929,6 +931,7 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
     # check the test directory upload isn't for an older version
     latest_td_version_in_db = _fetch_latest_td_version()
     _check_td_version_valid(td_version, latest_td_version_in_db, force)
+    td_version = _add_td_release_to_db(td_version, user)
 
     all_indication: list[dict] = json_data["indications"]
 
