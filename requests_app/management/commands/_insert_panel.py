@@ -225,8 +225,8 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
             triplosensitivity=single_region.get("triplosensitivity_score"),
         )
 
-        ref_grch37, _ = ReferenceGenome.objects.get_or_create(reference_genome="GRCh37")
-        ref_grch38, _ = ReferenceGenome.objects.get_or_create(reference_genome="GRCh38")
+        ref_grch37, _ = ReferenceGenome.objects.get_or_create(name="GRCh37")
+        ref_grch38, _ = ReferenceGenome.objects.get_or_create(name="GRCh38")
 
         # attach Region record to Panel record - GRCh37 if data exists
         if single_region.get("grch37_coordinates"):
