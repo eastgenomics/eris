@@ -27,6 +27,8 @@ from requests_app.models import (
     ClinicalIndicationPanelHistory,
     ClinicalIndicationTestMethodHistory,
     PanelGeneHistory,
+    CiPanelTdRelease,
+    CiSuperpanelTdRelease
 )
 
 
@@ -123,19 +125,21 @@ def provisionally_link_clinical_indication_to_panel(
     panel_id: int,
     clinical_indication_id: int,
     user: str,
+    td_version: TestDirectoryRelease
 ) -> ClinicalIndicationPanel:
     """
     Link a CI and panel, but set the 'pending' field to True,
-    so that it shows for manual review by a user.
-    Additionally, create a history record.
+    so that it shows for manual review by a user. Create a history record.
     Intended for use when you are making 'best guesses' for links based on
     previous CI-Panel links.
+    In addition, add the current TestDirectoryRelease
 
     :param: panel_id [int], the ID for a Panel which needs linking to
     a relevant clinical indication
     :param: clinical_indication_id [int], the ID for a ClinicalIndication
     which needs linking to its panel
     :param: user [str], currently a string, may one day be a User object
+    :param: td_version
     """
     ci_panel_instance, created = ClinicalIndicationPanel.objects.update_or_create(
         clinical_indication_id=clinical_indication_id,
@@ -144,6 +148,12 @@ def provisionally_link_clinical_indication_to_panel(
             "current": True,
             "pending": True,
         },
+    )
+
+    # attribute the pending Ci-Panel link to the current TestDirectoryRelease
+    release_link, create = CiPanelTdRelease.objects.get_or_create(
+        ci_panel=ci_panel_instance,
+        td_release=td_version
     )
 
     if created:
@@ -160,19 +170,22 @@ def provisionally_link_clinical_indication_to_superpanel(
     superpanel: SuperPanel,
     clinical_indication: ClinicalIndication,
     user: str,
+    td_version: TestDirectoryRelease
 ) -> ClinicalIndicationSuperPanel:
     """
     Link a CI and superpanel, but set the 'pending' field to True,
-    so that it shows for manual review by a user.
+    so that it shows for manual review by a user. Attribute the link to the current
+    version of the test directory.
     Additionally, create a history record.
     Intended for use when you are making 'best guesses' for links based on
     previous CI-SuperPanel links.
-
+    
     :param: superpanel [SuperPanel], a SuperPanel which needs linking to
     a relevant clinical indication
     :param: clinical_indication [ClinicalIndication], a ClinicalIndication which
     needs linking to its panel
     :param: user [str], the user initiating the action
+    :param: td_version [TestDirectoryRelease], the td release version provided by the user
     """
     (
         ci_superpanel_instance,
@@ -184,6 +197,11 @@ def provisionally_link_clinical_indication_to_superpanel(
             "current": True,
             "pending": True,
         },
+    )
+
+    release_link, create = CiSuperpanelTdRelease.objects.get_or_create(
+        ci_panel=ci_superpanel_instance,
+        td_release=td_version
     )
 
     if created:
@@ -420,7 +438,7 @@ def _make_panels_from_hgncs(
                 # linking old ci with new panel with pending = True
                 new_clinical_indication_panel = (
                     provisionally_link_clinical_indication_to_panel(
-                        panel_instance.id, ci.id, td_source
+                        panel_instance.id, ci.id, td_source, ci_panel.td_version
                     )
                 )
 
@@ -717,7 +735,7 @@ def _update_ci_superpanel_links(
 def _attempt_ci_panel_creation(
     ci_instance: ClinicalIndication,
     panel_record: Panel,
-    td_version: str,
+    td_version: TestDirectoryRelease,
     td_source: str,
     config_source: str,
 ) -> tuple[ClinicalIndicationPanel, bool]:
@@ -729,7 +747,7 @@ def _attempt_ci_panel_creation(
     needs linking to a panel
     :param: panel_record [Panel], a panel which needs linking to a clinical
     indication
-    :param: td_version [str], the TD version in the current user-added source
+    :param: td_version [TestDirectoryRelease], the TD version in the current user-added source
     :param: td_source [str], the source of current test directory information
     :param: config_source [str], other information from a JSON
 
@@ -742,6 +760,7 @@ def _attempt_ci_panel_creation(
     ) = ClinicalIndicationPanel.objects.get_or_create(
         clinical_indication_id=ci_instance.id,
         panel_id=panel_record.id,
+        td_version=td_version,
         defaults={
             "current": True,
             "td_version": sortable_version(td_version),
@@ -763,7 +782,7 @@ def _attempt_ci_panel_creation(
 def _attempt_ci_superpanel_creation(
     ci_instance: ClinicalIndication,
     superpanel_record: SuperPanel,
-    td_version: str,
+    td_version: TestDirectoryRelease,
     td_source: str,
     config_source: str,
 ) -> tuple[ClinicalIndicationSuperPanel, bool]:
@@ -788,6 +807,7 @@ def _attempt_ci_superpanel_creation(
     ) = ClinicalIndicationSuperPanel.objects.get_or_create(
         clinical_indication=ci_instance,
         superpanel=superpanel_record,
+        td_version=td_version,
         defaults={
             "current": True,
             "td_version": sortable_version(td_version),
@@ -886,7 +906,7 @@ def _flag_superpanels_removed_from_test_directory(
                 )
 
 
-def _add_td_release_to_db(td_version: str, user: str) -> TestDirectoryRelease:
+def _add_td_release_to_db(td_version: TestDirectoryRelease, user: str) -> TestDirectoryRelease:
     """
     Add a new TestDirectory to the database with a sortable version, and make a history entry 
     which will record datetime, user, and action.

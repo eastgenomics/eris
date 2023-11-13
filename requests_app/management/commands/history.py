@@ -63,3 +63,10 @@ class History:
 
     def panel_gene_reverted(user) -> str:
         return f"PanelGene reverted by {user}"
+
+    # test directory history
+    def td_added() -> str:
+        return f"New td version added"
+    
+    def td_for_panel_ci_autolink() -> str:
+        return f"Panel has automatically been linked to an existing ClinicalIndication - test directory version applied automatically"

@@ -258,6 +258,7 @@ class ClinicalIndicationPanel(models.Model):
         TestDirectoryRelease,
         verbose_name="test directory version",
         on_delete=models.PROTECT,
+        null=True
     )
 
     # creation date
@@ -322,6 +323,7 @@ class ClinicalIndicationSuperPanel(models.Model):
         TestDirectoryRelease,
         verbose_name="test directory version",
         on_delete=models.PROTECT,
+        null=True
     )
 
     # creation date
@@ -424,6 +426,49 @@ class ClinicalIndicationSuperPanelHistory(models.Model):
 
     class Meta:
         db_table = "clinical_indication_superpanel_history"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class CiPanelTdRelease(models.Model):
+    """
+    Link a ClinicalIndication-Panel link, to those test directory releases
+    which contain it. For example, clinical indication 'R001' might be linked to panel
+    ID '5' in version 3 of the test directory, and also in version 4 of the test directory,
+    making 2 entries in this CiPanelTdRelease table
+    """
+    ci_panel = models.ForeignKey(ClinicalIndicationPanel,
+                                 verbose_name="Clinical Indication-Panel link",
+                                 on_delete=models.PROTECT)
+    
+    td_release = models.ForeignKey(TestDirectoryRelease,
+                                   verbose_name="Test directory release",
+                                   on_delete=models.PROTECT)
+
+    class Meta:
+        db_table = "clinical_indication_panel_td_release"
+
+    def __str__(self):
+        return str(self.id)
+
+class CiSuperpanelTdRelease(models.Model):
+    """
+    Link a ClinicalIndication-Superpanel link, to those test directory releases
+    which contain it. For example, clinical indication 'R009' might be linked to superpanel
+    ID '10' in version 3 of the test directory, and also in version 4 of the test directory,
+    making 2 entries in this CiSuperpanelTdRelease table
+    """
+    ci_panel = models.ForeignKey(ClinicalIndicationSuperPanel,
+                                 verbose_name="Clinical Indication-SuperPanel link",
+                                 on_delete=models.PROTECT)
+    
+    td_release = models.ForeignKey(TestDirectoryRelease,
+                                   verbose_name="Test directory release",
+                                   on_delete=models.PROTECT)
+
+    class Meta:
+        db_table = "clinical_indication_superpanel_td_release"
 
     def __str__(self):
         return str(self.id)

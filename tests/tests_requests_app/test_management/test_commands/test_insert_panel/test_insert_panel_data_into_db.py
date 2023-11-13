@@ -16,6 +16,8 @@ from requests_app.models import (
     ClinicalIndicationPanel,
     PanelGene,
     PanelRegion,
+    TestDirectoryRelease,
+    TestDirectoryReleaseHistory
 )
 from requests_app.management.commands.utils import sortable_version
 from requests_app.management.commands._insert_panel import _insert_panel_data_into_db
