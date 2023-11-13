@@ -254,13 +254,6 @@ class ClinicalIndicationPanel(models.Model):
         null=True,
     )
 
-    td_version = models.ForeignKey(
-        TestDirectoryRelease,
-        verbose_name="test directory version",
-        on_delete=models.PROTECT,
-        null=True
-    )
-
     # creation date
     created = models.DateTimeField(
         verbose_name="created",
@@ -317,13 +310,6 @@ class ClinicalIndicationSuperPanel(models.Model):
         verbose_name="config source",
         max_length=255,
         null=True,
-    )
-
-    td_version = models.ForeignKey(
-        TestDirectoryRelease,
-        verbose_name="test directory version",
-        on_delete=models.PROTECT,
-        null=True
     )
 
     # creation date
@@ -459,7 +445,7 @@ class CiSuperpanelTdRelease(models.Model):
     ID '10' in version 3 of the test directory, and also in version 4 of the test directory,
     making 2 entries in this CiSuperpanelTdRelease table
     """
-    ci_panel = models.ForeignKey(ClinicalIndicationSuperPanel,
+    ci_superpanel = models.ForeignKey(ClinicalIndicationSuperPanel,
                                  verbose_name="Clinical Indication-SuperPanel link",
                                  on_delete=models.PROTECT)
     

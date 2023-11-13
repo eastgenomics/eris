@@ -199,8 +199,8 @@ def provisionally_link_clinical_indication_to_superpanel(
         },
     )
 
-    release_link, create = CiSuperpanelTdRelease.objects.get_or_create(
-        ci_panel=ci_superpanel_instance,
+    release_link, _ = CiSuperpanelTdRelease.objects.get_or_create(
+        ci_superpanel=ci_superpanel_instance,
         td_release=td_version
     )
 
@@ -425,8 +425,6 @@ def _make_panels_from_hgncs(
             clinical_indication_id=ci.id,
             panel_id__test_directory=True,
             current=True,
-        ).order_by(
-            "-td_version"
         )  # find all previous associated ci-panel
 
         if previous_ci_panels:  # in the case where there are old ci-panel
@@ -591,7 +589,6 @@ def _update_ci_panel_tables_with_new_ci(
         )
 
         # fill in new clinical indication - panel link metadata
-        new_clinical_indication_panel.td_version = td_version
         new_clinical_indication_panel.config_source = config_source
         new_clinical_indication_panel.save()
 
@@ -637,21 +634,19 @@ def _update_ci_superpanel_tables_with_new_ci(
         )
 
         # fill in new clinical indication - panel link metadata
-        new_clinical_indication_superpanel.td_version = td_version
         new_clinical_indication_superpanel.config_source = config_source
         new_clinical_indication_superpanel.save()
 
 
-def _update_ci_panel_links(
+def _update_ci_panel_links_td_source(
     cip_instance: ClinicalIndicationPanel,
-    td_version: str,
     td_source: str,
     config_source: str,
 ) -> None:
     """
     When getting information from a new test directory source,
     and a CI-Panel already exists and the link is the same,
-    just update the config source and td version (if different)
+    just update the config source if it's different
 
     :param: cip_instance [ClinicalIndicationPanel], a CI-Panel instance
     which may need td version or config source updating
@@ -660,19 +655,6 @@ def _update_ci_panel_links(
     :param: config_source [str], other information from a JSON
     """
     with transaction.atomic():
-        if sortable_version(td_version) >= sortable_version(cip_instance.td_version):
-            # take a note of the change in td version
-            ClinicalIndicationPanelHistory.objects.create(
-                clinical_indication_panel_id=cip_instance.id,
-                note=History.clinical_indication_panel_metadata_changed(
-                    "td_version",
-                    normalize_version(cip_instance.td_version),
-                    td_version,
-                ),
-                user=td_source,
-            )
-            cip_instance.td_version = sortable_version(td_version)
-
         if cip_instance.config_source != config_source:
             # take a note of the change in config source
             ClinicalIndicationPanelHistory.objects.create(
@@ -687,7 +669,7 @@ def _update_ci_panel_links(
         cip_instance.save()
 
 
-def _update_ci_superpanel_links(
+def _update_ci_superpanel_links_td_source(
     cip_instance: ClinicalIndicationSuperPanel,
     td_version: str,
     td_source: str,
@@ -696,28 +678,14 @@ def _update_ci_superpanel_links(
     """
     When getting information from a new test directory source,
     if CI-SuperPanel already exists and the link is the same,
-    just update the config source and td version (if different)
+    just update the config source
 
     :param: cip_instance [ClinicalIndicationSuperPanel], a CI-SuperPanel instance
     which may need td version or config source updating
-    :param: td_version [str], the TD version in the current user-added source
     :param: td_source [str], the source of current test directory information
     :param: config_source [str], other information from a JSON
     """
     with transaction.atomic():
-        if sortable_version(td_version) >= sortable_version(cip_instance.td_version):
-            # take a note of the change in test directory version
-            ClinicalIndicationSuperPanelHistory.objects.create(
-                clinical_indication_superpanel=cip_instance,
-                note=History.clinical_indication_panel_metadata_changed(
-                    "td_version",
-                    normalize_version(cip_instance.td_version),
-                    td_version,
-                ),
-                user=td_source,
-            )
-            cip_instance.td_version = sortable_version(td_version)
-
         if cip_instance.config_source != config_source:
             # take a note of the change in config source
             ClinicalIndicationSuperPanelHistory.objects.create(
@@ -740,8 +708,7 @@ def _attempt_ci_panel_creation(
     config_source: str,
 ) -> tuple[ClinicalIndicationPanel, bool]:
     """
-    Gets-or-creates a ClinicalIndicationPanel entry.
-    If the entry is new, it will log history too.
+    Gets-or-creates a ClinicalIndicationPanel entry. Links to test directory release.
 
     :param: ci_instance [ClinicalIndication], a clinical indication which
     needs linking to a panel
@@ -760,12 +727,17 @@ def _attempt_ci_panel_creation(
     ) = ClinicalIndicationPanel.objects.get_or_create(
         clinical_indication_id=ci_instance.id,
         panel_id=panel_record.id,
-        td_version=td_version,
         defaults={
             "current": True,
             "td_version": sortable_version(td_version),
             "config_source": config_source,
         },
+    )
+
+    # link the CI-Panel to the current test directory release
+    cipanel_td, _ = CiPanelTdRelease.objects.get_or_create(
+        ci_panel=cip_instance,
+        td_release=td_version
     )
 
     if cip_created:
@@ -774,6 +746,25 @@ def _attempt_ci_panel_creation(
             clinical_indication_panel_id=cip_instance.id,
             note=History.clinical_indication_panel_created(),
             user=td_source,
+        )
+    else:
+        # log the fact that there's a newer test directory version now, in the history
+        ClinicalIndicationPanelHistory.objects.create(
+            clinical_indication_panel_id=cip_instance.id,
+            note=History.clinical_indication_panel_metadata_changed(
+                "td_version",
+                normalize_version(td_version.release),
+                td_version,
+            ),
+            user=td_source,
+        )
+
+        # update the test directory SOURCE info
+        _update_ci_panel_links_td_source(
+            cip_instance,
+            td_version,
+            td_source,
+            config_source,
         )
 
     return cip_instance, cip_created
@@ -787,8 +778,7 @@ def _attempt_ci_superpanel_creation(
     config_source: str,
 ) -> tuple[ClinicalIndicationSuperPanel, bool]:
     """
-    Gets-or-creates a ClinicalIndicationSuperPanel entry.
-    If the entry is new, it will log history too.
+    Gets-or-creates a ClinicalIndicationSuperPanel entry. Link to td version.
 
     :param: ci_instance [ClinicalIndication], a clinical indication which
     needs linking to a panel
@@ -807,7 +797,6 @@ def _attempt_ci_superpanel_creation(
     ) = ClinicalIndicationSuperPanel.objects.get_or_create(
         clinical_indication=ci_instance,
         superpanel=superpanel_record,
-        td_version=td_version,
         defaults={
             "current": True,
             "td_version": sortable_version(td_version),
@@ -815,12 +804,37 @@ def _attempt_ci_superpanel_creation(
         },
     )
 
+    # link ci-superpanel to current test directory release
+    cisuperpanel_td, _ = CiSuperpanelTdRelease.objects.get_or_create(
+        ci_superpanel=cip_instance,
+        td_release=td_version
+    )
+
     if cip_created:
         # if CI-Panel record is created, create a history record
         ClinicalIndicationSuperPanelHistory.objects.create(
-            clinical_indication_superpanel=cip_instance,
+            clinical_indication_panel_id=cip_instance,
             note=History.clinical_indication_panel_created(),
             user=td_source,
+        ),
+    else:
+        # log the fact that there's a newer test directory version now, in the history
+        ClinicalIndicationSuperPanelHistory.objects.create(
+            clinical_indication_panel_id=cip_instance,
+            note=History.clinical_indication_panel_metadata_changed(
+                "td_version",
+                normalize_version(td_version.release),
+                td_version,
+            ),
+            user=td_source,
+        )
+
+        # update the test directory SOURCE info
+        _update_ci_superpanel_links_td_source(
+            cip_instance,
+            td_version,
+            td_source,
+            config_source,
         )
 
     return cip_instance, cip_created
@@ -1012,13 +1026,7 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
                         td_source,
                         json_data["config_source"],
                     )
-                    if not cip_created:
-                        _update_ci_panel_links(
-                            cip_instance,
-                            td_version,
-                            td_source,
-                            json_data["config_source"],
-                        )
+                    
 
                 # for PA panel ids, retrieve latest version matching SuperPanel records
                 super_panel_record: SuperPanel = _retrieve_superpanel_from_pa_id(
@@ -1033,14 +1041,6 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
                         td_source,
                         json_data["config_source"],
                     )
-
-                    if not cip_created:
-                        _update_ci_superpanel_links(
-                            cip_instance,
-                            td_version,
-                            td_source,
-                            json_data["config_source"],
-                        )
 
                 if not panel_record:
                     if not super_panel_record:
