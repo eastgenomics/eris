@@ -197,8 +197,8 @@ def _make_hgnc_gene_sets(
     :return hgnc_unchanged: a list of HGNC IDs for genes which are in the release, but unchanged
     """
     # get every HGNC ID in the HGNC file
-    all_hgnc_in_approved = hgnc_id_to_symbol.keys()
-    all_hgnc_in_alias = hgnc_id_to_alias.keys()
+    all_hgnc_in_approved = list(hgnc_id_to_symbol.keys())
+    all_hgnc_in_alias = list(hgnc_id_to_alias.keys())
     all_hgnc_file_entries = all_hgnc_in_alias + all_hgnc_in_approved
 
     # for hgnc_ids which already exist in the database, get the ones which have changed
