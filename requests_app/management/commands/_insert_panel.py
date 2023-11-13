@@ -289,9 +289,11 @@ def _get_most_recent_td_release_for_ci_panel(ci_panel: ClinicalIndicationPanel) 
     based on data which exists for earlier versions of the same R code and Panel ID.
     """
     # get all td_releases
-    releases = CiPanelTdRelease.objects.filter(ci_panel=ci_panel)
-    #TODO: get the latest one
-
+    release = CiPanelTdRelease.objects.filter(ci_panel=ci_panel).order_by("-td_release").first()
+    if release:
+        return release
+    else:
+        return None
 
 def _get_most_recent_td_release_for_ci_superpanel(ci_superpanel: ClinicalIndicationSuperPanel) \
     -> TestDirectoryRelease | None:
@@ -302,8 +304,11 @@ def _get_most_recent_td_release_for_ci_superpanel(ci_superpanel: ClinicalIndicat
     based on data which exists for earlier versions of the same R code and SuperPanel ID.
     """
     # get all td_releases
-    releases = CiSuperpanelTdRelease.objects.filter(ci_panel=ci_superpanel)
-    #TODO: get the latest one
+    release = CiSuperpanelTdRelease.objects.filter(ci_superpanel=ci_superpanel).order_by("-td_release").first()
+    if release:
+        return release
+    else:
+        return None
 
 
 def _insert_panel_data_into_db(panel: PanelClass, user: str) -> Panel:
@@ -414,7 +419,6 @@ def _insert_superpanel_into_db(
                 clinical_indication_superpanel, "PanelApp"
             )
 
-            #TODO: get the most-recent release of the test directory
             latest_active_td_release = _get_most_recent_td_release_for_ci_superpanel(\
                 clinical_indication_superpanel)
 
@@ -422,6 +426,7 @@ def _insert_superpanel_into_db(
                 superpanel,
                 clinical_indication_superpanel.clinical_indication,
                 "PanelApp",
+                latest_active_td_release,
             )
 
     # if the superpanel hasn't just been created: the SuperPanel is either

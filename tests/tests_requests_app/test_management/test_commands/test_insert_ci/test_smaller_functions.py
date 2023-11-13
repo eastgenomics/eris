@@ -19,6 +19,7 @@ from requests_app.models import (
     ClinicalIndicationPanelHistory,
     ClinicalIndicationSuperPanelHistory,
     ClinicalIndicationTestMethodHistory,
+    TestDirectoryRelease
 )
 from requests_app.management.commands.utils import sortable_version
 from requests_app.management.commands._insert_ci import (
@@ -121,7 +122,6 @@ class TestFlagClinicalIndicationPanelForReview(TestCase):
 
         self.first_clinical_indication_panel = ClinicalIndicationPanel.objects.create(
             config_source=None,
-            td_version=None,
             clinical_indication_id=self.first_clinical_indication.id,
             panel_id=self.first_panel.id,
             current=True,
@@ -166,7 +166,6 @@ class TestFlagClinicalIndicationSuperpanelForReview(TestCase):
         self.first_clinical_indication_superpanel = (
             ClinicalIndicationSuperPanel.objects.create(
                 config_source=None,
-                td_version=None,
                 clinical_indication=self.first_clinical_indication,
                 superpanel=self.first_superpanel,
                 current=True,
@@ -212,7 +211,6 @@ class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
 
         self.first_clinical_indication_panel = ClinicalIndicationPanel.objects.create(
             config_source=None,
-            td_version=None,
             clinical_indication_id=self.first_clinical_indication.id,
             panel_id=self.first_panel.id,
             current=True,
@@ -277,10 +275,11 @@ class TestProvisionallyLinkClinicalIndicationToSuperPanel(TestCase):
             panel_version=sortable_version("1.15"),
         )
 
+        self.td_version = TestDirectoryRelease(release="5.0")
+
         self.first_clinical_indication_superpanel = (
             ClinicalIndicationSuperPanel.objects.create(
                 config_source=None,
-                td_version=None,
                 clinical_indication=self.first_clinical_indication,
                 superpanel=self.first_superpanel,
                 current=True,
@@ -308,7 +307,7 @@ class TestProvisionallyLinkClinicalIndicationToSuperPanel(TestCase):
         """
 
         provisionally_link_clinical_indication_to_superpanel(
-            self.first_superpanel, self.first_clinical_indication, "test"
+            self.first_superpanel, self.first_clinical_indication, "test", self.td_version
         )  # this is an existing link in db
 
         self.first_clinical_indication_superpanel.refresh_from_db()

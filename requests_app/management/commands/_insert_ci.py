@@ -541,7 +541,7 @@ def _fetch_latest_td_version() -> str | None:
     """
     latest_td: TestDirectoryRelease = (
         TestDirectoryRelease.objects.all()
-        .order_by("-release")
+        .order_by("-td_release")
         .first()
     )
 
@@ -628,9 +628,10 @@ def _update_ci_superpanel_tables_with_new_ci(
         # will still be one ci-panel link instead of two being created
         new_clinical_indication_superpanel = (
             provisionally_link_clinical_indication_to_superpanel(
-                clinical_indication_superpanel,
+                clinical_indication_superpanel.superpanel,
                 ci_instance,
                 td_source,
+                td_version
             )
         )
 

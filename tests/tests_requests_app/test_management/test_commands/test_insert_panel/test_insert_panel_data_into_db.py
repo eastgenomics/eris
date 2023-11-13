@@ -45,7 +45,6 @@ class TestInsertDataIntoDB(TestCase):
 
         self.first_link = ClinicalIndicationPanel.objects.create(
             config_source="Test config source",
-            td_version=None,
             clinical_indication_id=self.first_clinical_indication.id,
             panel_id=self.first_panel.id,
             current=True,
