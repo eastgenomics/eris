@@ -442,6 +442,7 @@ def _make_panels_from_hgncs(
 
                 # check if there is any change in td version or config source
                 # update as appropriate
+                #TODO: link to 
                 new_clinical_indication_panel.td_version = sortable_version(td_version)
                 new_clinical_indication_panel.config_source = config_source
 
@@ -729,7 +730,6 @@ def _attempt_ci_panel_creation(
         panel_id=panel_record.id,
         defaults={
             "current": True,
-            "td_version": sortable_version(td_version),
             "config_source": config_source,
         },
     )
@@ -799,7 +799,6 @@ def _attempt_ci_superpanel_creation(
         superpanel=superpanel_record,
         defaults={
             "current": True,
-            "td_version": sortable_version(td_version),
             "config_source": config_source,
         },
     )
