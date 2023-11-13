@@ -3,7 +3,7 @@ import pandas as pd
 import re
 import numpy as np
 from django.db import transaction
-from looseversion import LooseVersion
+from packaging.version import Version
 
 pd.options.mode.chained_assignment = None  # default='warn'
 import datetime
@@ -197,8 +197,8 @@ def _make_hgnc_gene_sets(
     :return hgnc_unchanged: a list of HGNC IDs for genes which are in the release, but unchanged
     """
     # get every HGNC ID in the HGNC file
-    all_hgnc_in_approved = list(set(hgnc_id_to_symbol.keys()))
-    all_hgnc_in_alias = list(set(hgnc_id_to_alias.keys()))
+    all_hgnc_in_approved = hgnc_id_to_symbol.keys()
+    all_hgnc_in_alias = hgnc_id_to_alias.keys()
     all_hgnc_file_entries = all_hgnc_in_alias + all_hgnc_in_approved
 
     # for hgnc_ids which already exist in the database, get the ones which have changed
@@ -229,10 +229,8 @@ def _make_hgnc_gene_sets(
                 hgnc_alias_changed[gene.hgnc_id] = resolved_alias
 
         # if the database gene is unchanged, add it to an 'unchanged' list if it's in HGNC file
-        if not symbol_change:
-            if not alias_change:
-                if gene.hgnc_id in all_hgnc_file_entries:
-                    hgnc_unchanged.append(gene.hgnc_id)
+        if not symbol_change and not alias_change and gene.hgnc_id in all_hgnc_file_entries:
+            hgnc_unchanged.append(gene.hgnc_id)
 
     # get HGNC IDs which are in the HGNC file, but not yet in db
     new_hgncs = list(set(all_hgnc_file_entries) - set([i.hgnc_id for i in genes_in_db]))
@@ -486,12 +484,11 @@ def _add_transcript_to_db_with_gff_release(
 
     if tx_created:
         message = History.tx_gff_release_new()
+    elif tx_gff_created:
+        message = History.tx_gff_release_present()
     else:
-        if tx_gff_created:
-            message = History.tx_gff_release_present()
-        else:
-            # neither transcript nor its GFF link are new - no need to add history info
-            return tx
+        # neither transcript nor its GFF link are new - no need to add history info
+        return tx
 
     TranscriptGffReleaseHistory.objects.get_or_create(
         transcript_gff=tx_gff, note=message, user=user
@@ -707,6 +704,9 @@ def _add_gff_release_info_to_db(
     """
     Add a release version to the database for the GFF file.
     Add reference genome information.
+    :param gff_release: string of the release version of the GFF file
+    :param reference_genome: a ReferenceGenome object to associate with this GFF file
+    :return gff_release: a GffRelease instance
     """
     gff_release, _ = GffRelease.objects.get_or_create(
         gff_release=gff_release, reference_genome=reference_genome
@@ -825,8 +825,8 @@ def _parse_reference_genome(ref_genome: str) -> str:
 
 def _get_latest_hgnc_release() -> str | None:
     """
-    Get the latest release in HgncRelease,using LooseVersion because the version formatting
-    isn't 100% consistent. Return None if the table has no matching results.
+    Get the latest release in HgncRelease, using packaging.version to handle version formatting
+    which isn't 100% consistent. Return None if the table has no matching results.
     :returns: string of latest HGNC release version, or None
     """
     hgncs = HgncRelease.objects.all().order_by("-hgnc_release")
@@ -834,7 +834,7 @@ def _get_latest_hgnc_release() -> str | None:
         return None
     else:
         hgnc_releases = [v.hgnc_release for v in hgncs]
-        hgnc_releases.sort(key=LooseVersion, reverse=True)
+        hgnc_releases.sort(key=Version, reverse=True)
         latest_hgnc = str(hgnc_releases[0])
         return latest_hgnc
 
@@ -842,7 +842,7 @@ def _get_latest_hgnc_release() -> str | None:
 def _get_latest_gff_release(ref_genome: ReferenceGenome) -> str | None:
     """
     Get the latest GFF release in GffRelease for a given reference genome,
-      using LooseVersion because the version formatting
+      using packaging.version because the version formatting
     isn't 100% consistent. Return None if the table has no matching results.
 
     :param reference_genome: a ReferenceGenome object corresponding to user input
@@ -855,7 +855,7 @@ def _get_latest_gff_release(ref_genome: ReferenceGenome) -> str | None:
         return None
     else:
         gff_list = [v.gff_release for v in gffs]
-        gff_list.sort(key=LooseVersion, reverse=True)
+        gff_list.sort(key=Version, reverse=True)
         latest_gff = str(gff_list[0])
         return latest_gff
 
@@ -865,8 +865,7 @@ def _get_latest_transcript_release(
 ) -> str | None:
     """
     Get the latest release in the TranscriptRelease table for a given source
-    and reference genome, using LooseVersion because the version formatting
-    isn't 100% consistent. Return None if the table has no matching results.
+    and reference genome. Return None if the table has no matching results.
 
     :param source: a source string such as 'HGMD', 'MANE Plus Clinical' or 'MANE Select'
     :param reference_genome: a ReferenceGenome object corresponding to user input
@@ -881,7 +880,7 @@ def _get_latest_transcript_release(
         return None
     else:
         db_results_list = [v.release for v in db_results]
-        db_results_list.sort(key=LooseVersion, reverse=True)
+        db_results_list.sort(key=Version, reverse=True)
         latest = str(db_results_list[0])
         return latest
 
@@ -916,7 +915,7 @@ def _check_for_transcript_seeding_version_regression(
     )
     if latest_plus_clinical and latest_select:
         manes = [latest_plus_clinical, latest_select]
-        manes.sort(key=LooseVersion, reverse=True)
+        manes.sort(key=Version, reverse=True)
         latest_mane = str(manes[0])
     else:
         latest_mane = None
@@ -925,26 +924,22 @@ def _check_for_transcript_seeding_version_regression(
 
     too_old = {}
 
-    # for each release: make a list of the user-provided and newest-in-database versions
-    # sort them with LooseVersion
+    # for each release: make a sorted list of the user-provided and newest-in-database versions
     if latest_hgnc:
-        if LooseVersion(str(hgnc_release)) < LooseVersion(latest_hgnc):
+        if Version(str(hgnc_release)) < Version(latest_hgnc):
             too_old["hgnc release"] = latest_hgnc
     if latest_gff:
-        if LooseVersion(str(gff_release)) < LooseVersion(latest_gff):
+        if Version(str(gff_release)) < Version(latest_gff):
             too_old["gff release"] = latest_gff
     if latest_mane:
-        if LooseVersion(str(mane_release)) < LooseVersion(latest_mane):
+        if Version(str(mane_release)) < Version(latest_mane):
             too_old["hgnc release"] = latest_hgnc
     if latest_hgmd:
-        if LooseVersion(str(hgmd_release)) < LooseVersion(latest_hgmd):
+        if Version(str(hgmd_release)) < Version(latest_hgmd):
             too_old["gff release"] = latest_gff
 
     if too_old:
-        joined_output_str = []
-        for key, value in too_old.items():
-            joined_output_str.append(f"{key} is a lower version than {value}")
-        error = "; ".join(joined_output_str)
+        error = "; ".join([f"{key} is a lower version than {value}" for key, value in too_old.items()])
         raise ValueError("Abandoning input because: " + error)
 
 
