@@ -272,7 +272,6 @@ class TestInsertSuperpanelNameChange(TestCase):
 
         self.ci_old_superpanel_link = ClinicalIndicationSuperPanel.objects.create(
             config_source="td",
-            td_version=self.td_version,
             superpanel=self.old_superpanel,
             clinical_indication=self.ci,
             current=True,
@@ -378,7 +377,6 @@ class TestInsertSuperpanelUnchanged(TestCase):
 
         self.ci_old_superpanel_link = ClinicalIndicationSuperPanel.objects.create(
             config_source="td",
-            td_version=self.td_version,
             superpanel=self.old_superpanel,
             clinical_indication=self.ci,
             current=True,

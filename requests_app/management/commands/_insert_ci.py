@@ -151,10 +151,11 @@ def provisionally_link_clinical_indication_to_panel(
     )
 
     # attribute the pending Ci-Panel link to the current TestDirectoryRelease
-    release_link, create = CiPanelTdRelease.objects.get_or_create(
-        ci_panel=ci_panel_instance,
-        td_release=td_version
-    )
+    if ci_panel_instance:
+        release_link, create = CiPanelTdRelease.objects.get_or_create(
+            ci_panel=ci_panel_instance,
+            td_release=td_version
+        )
 
     if created:
         ClinicalIndicationPanelHistory.objects.create(
@@ -199,10 +200,11 @@ def provisionally_link_clinical_indication_to_superpanel(
         },
     )
 
-    release_link, _ = CiSuperpanelTdRelease.objects.get_or_create(
-        ci_superpanel=ci_superpanel_instance,
-        td_release=td_version
-    )
+    if ci_superpanel_instance:
+        release_link, _ = CiSuperpanelTdRelease.objects.get_or_create(
+            ci_superpanel=ci_superpanel_instance,
+            td_release=td_version
+        )
 
     if created:
         ClinicalIndicationSuperPanelHistory.objects.create(

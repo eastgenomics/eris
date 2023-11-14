@@ -217,6 +217,8 @@ class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
             pending=False,
         )
 
+        self.td_version = TestDirectoryRelease.objects.create(release="2.1.0")
+
     def test_that_existing_link_is_flagged(self):
         """
         `provisionally_link_clinical_indication_to_panel` basically
@@ -235,6 +237,7 @@ class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
             self.first_panel.id,
             self.first_clinical_indication.id,
             "test",
+            self.td_version
         )  # this is an existing link in db
 
         self.first_clinical_indication_panel.refresh_from_db()
@@ -250,6 +253,7 @@ class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
             self.first_panel.id,
             self.second_clinical_indication.id,
             "test",
+            self.td_version
         )
 
         assert ClinicalIndicationPanel.objects.count() == 2  # one new link created
@@ -275,7 +279,7 @@ class TestProvisionallyLinkClinicalIndicationToSuperPanel(TestCase):
             panel_version=sortable_version("1.15"),
         )
 
-        self.td_version = TestDirectoryRelease(release="5.0")
+        self.td_version = TestDirectoryRelease.objects.create(release="5.0")
 
         self.first_clinical_indication_superpanel = (
             ClinicalIndicationSuperPanel.objects.create(
@@ -326,6 +330,7 @@ class TestProvisionallyLinkClinicalIndicationToSuperPanel(TestCase):
             self.first_superpanel,
             self.second_clinical_indication,
             "test",
+            self.td_version
         )
 
         # one new link created
