@@ -184,7 +184,7 @@ def _add_new_genes_to_db(
 
 def _make_hgnc_gene_sets(
     hgnc_id_to_symbol: dict[str:str], hgnc_id_to_alias: dict[str:str]
-    ) -> tuple[list, dict, dict, list]:
+) -> tuple[list, dict, dict, list]:
     """
     Sort genes into:
     - those which are not yet in the Gene table, but are in the HGNC release
@@ -228,7 +228,9 @@ def _make_hgnc_gene_sets(
                 hgnc_symbol_changed[gene.hgnc_id] = {}
                 symbol_change = True
                 hgnc_symbol_changed[gene.hgnc_id]["old"] = gene.gene_symbol
-                hgnc_symbol_changed[gene.hgnc_id]["new"] = hgnc_id_to_symbol[gene.hgnc_id]
+                hgnc_symbol_changed[gene.hgnc_id]["new"] = hgnc_id_to_symbol[
+                    gene.hgnc_id
+                ]
 
         # check alias change
         if gene.hgnc_id in hgnc_id_to_alias:
@@ -241,7 +243,11 @@ def _make_hgnc_gene_sets(
                 hgnc_alias_changed[gene.hgnc_id]["new"] = resolved_alias
 
         # if the database gene is unchanged, add it to an 'unchanged' list if it's in HGNC file
-        if not symbol_change and not alias_change and gene.hgnc_id in all_hgnc_file_entries:
+        if (
+            not symbol_change
+            and not alias_change
+            and gene.hgnc_id in all_hgnc_file_entries
+        ):
             hgnc_unchanged.append(gene.hgnc_id)
 
     # get HGNC IDs which are in the HGNC file, but not yet in db
@@ -249,9 +255,7 @@ def _make_hgnc_gene_sets(
     new_hgncs = [
         {
             "hgnc_id": hgnc_id,
-            "symbol": (
-                hgnc_id_to_symbol.get(hgnc_id)
-            ),
+            "symbol": (hgnc_id_to_symbol.get(hgnc_id)),
             "alias": _resolve_alias(hgnc_id_to_alias[hgnc_id]),
         }
         for hgnc_id in new_hgncs
@@ -950,7 +954,9 @@ def _check_for_transcript_seeding_version_regression(
             too_old["gff release"] = latest_gff
 
     if too_old:
-        error = "; ".join([f"{key} is a lower version than {value}" for key, value in too_old.items()])
+        error = "; ".join(
+            [f"{key} is a lower version than {value}" for key, value in too_old.items()]
+        )
         raise ValueError("Abandoning input because: " + error)
 
 
@@ -1012,7 +1018,7 @@ def seed_transcripts(
         hgnc_release, gff_release, mane_release, hgmd_release, reference_genome
     )
 
-    #TODO: user - replace this with something sensible one day
+    # TODO: user - replace this with something sensible one day
     user = "init_v1_user"
 
     # files preparation - parsing the files, and adding release versioning to the database

@@ -89,7 +89,8 @@ class TestMakeHgncGeneSets_AllScenarios(TestCase):
             hgnc_alias_changed["HGNC:200"], {"new": None, "old": "Alias,Two"}
         )
         self.assertDictEqual(
-            hgnc_alias_changed["HGNC:300"], {"new": "not_Alias,Three", "old": "Alias,Three"}
+            hgnc_alias_changed["HGNC:300"],
+            {"new": "not_Alias,Three", "old": "Alias,Three"},
         )
         assert unchanged == ["HGNC:400"]
 

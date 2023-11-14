@@ -66,9 +66,7 @@ class TestUpdateExistingGeneSymbol(TestCase):
         # check that the entry for 14163 in the Gene test datatable is updated
         gene_db = Gene.objects.filter(hgnc_id="14163")
         err += len_check_wrapper(gene_db, "gene objects matching 14163", 1)
-        err += value_check_wrapper(
-            gene_db[0].gene_symbol, "gene symbol", new_name
-        )
+        err += value_check_wrapper(gene_db[0].gene_symbol, "gene symbol", new_name)
 
         # check that the entry has been linked to a HgncRelease
         gene_release = GeneHgncRelease.objects.all()
@@ -102,7 +100,7 @@ class TestUpdateExistingGeneSymbol(TestCase):
 
         test_hgnc_approved = {
             "14163": {"new": new_name, "old": old_name},
-            "12713": {"new": new_name_two, "old": old_name_two}
+            "12713": {"new": new_name_two, "old": old_name_two},
         }
         _update_existing_gene_metadata_symbol_in_db(
             test_hgnc_approved, self.hgnc_release, self.user
@@ -113,9 +111,7 @@ class TestUpdateExistingGeneSymbol(TestCase):
         # check that the entry for 14163 in the Gene test datatable is updated
         gene_db_one = Gene.objects.filter(hgnc_id="14163")
         err += len_check_wrapper(gene_db_one, "genes matching 14163", 1)
-        err += value_check_wrapper(
-            gene_db_one[0].gene_symbol, "gene symbol", new_name
-        )
+        err += value_check_wrapper(gene_db_one[0].gene_symbol, "gene symbol", new_name)
 
         gene_db_two = Gene.objects.filter(hgnc_id="12713")
         err += len_check_wrapper(gene_db_two, "genes matching 12713", 1)
@@ -150,7 +146,9 @@ class TestUpdateExistingGeneSymbol(TestCase):
         err += value_check_wrapper(
             history[1].note,
             "history note",
-            History.gene_hgnc_release_approved_symbol_change(old_name_two, new_name_two),
+            History.gene_hgnc_release_approved_symbol_change(
+                old_name_two, new_name_two
+            ),
         )
 
         errors = "; ".join(err)
