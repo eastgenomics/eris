@@ -250,7 +250,7 @@ def _make_hgnc_gene_sets(
         {
             "hgnc_id": hgnc_id,
             "symbol": (
-                hgnc_id_to_symbol[hgnc_id] if hgnc_id_to_symbol[hgnc_id] else None
+                hgnc_id_to_symbol.get(hgnc_id)
             ),
             "alias": _resolve_alias(hgnc_id_to_alias[hgnc_id]),
         }
