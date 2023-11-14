@@ -80,10 +80,16 @@ class TestMakeHgncGeneSets_AllScenarios(TestCase):
             {"hgnc_id": "HGNC:600", "symbol": "PQR1", "alias": "Alias,Six"},
         )
         self.assertDictEqual(
-            hgnc_symbol_changed, {"HGNC:100": "new_symbol", "HGNC:300": "not_GHI1"}
+            hgnc_symbol_changed["HGNC:100"], {"new": "new_symbol", "old": "ABC1"}
         )
         self.assertDictEqual(
-            hgnc_alias_changed, {"HGNC:200": None, "HGNC:300": "not_Alias,Three"}
+            hgnc_symbol_changed["HGNC:300"], {"new": "not_GHI1", "old": "GHI1"}
+        )
+        self.assertDictEqual(
+            hgnc_alias_changed["HGNC:200"], {"new": None, "old": "Alias,Two"}
+        )
+        self.assertDictEqual(
+            hgnc_alias_changed["HGNC:300"], {"new": "not_Alias,Three", "old": "Alias,Three"}
         )
         assert unchanged == ["HGNC:400"]
 

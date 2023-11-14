@@ -56,8 +56,9 @@ class TestUpdateExistingGeneSymbol(TestCase):
         """
         err = []
 
-        made_up_approved_name = "FAM234A_test"
-        test_hgnc_approved = {"14163": made_up_approved_name}
+        new_name = "FAM234A_test"
+        old_name = "FAM234A"
+        test_hgnc_approved = {"14163": {"new": new_name, "old": old_name}}
         _update_existing_gene_metadata_symbol_in_db(
             test_hgnc_approved, self.hgnc_release, self.user
         )
@@ -66,7 +67,7 @@ class TestUpdateExistingGeneSymbol(TestCase):
         gene_db = Gene.objects.filter(hgnc_id="14163")
         err += len_check_wrapper(gene_db, "gene objects matching 14163", 1)
         err += value_check_wrapper(
-            gene_db[0].gene_symbol, "gene symbol", made_up_approved_name
+            gene_db[0].gene_symbol, "gene symbol", new_name
         )
 
         # check that the entry has been linked to a HgncRelease
@@ -83,7 +84,7 @@ class TestUpdateExistingGeneSymbol(TestCase):
         err += value_check_wrapper(
             history[0].note,
             "history note",
-            History.gene_hgnc_release_approved_symbol_change(),
+            History.gene_hgnc_release_approved_symbol_change(old_name, new_name),
         )
 
         errors = "; ".join(err)
@@ -94,12 +95,14 @@ class TestUpdateExistingGeneSymbol(TestCase):
         Test case: the approved name has changed for several genes, since last
         update
         """
-        made_up_approved_name = "FAM234A_test"
-        made_up_approved_name_two = "test_nonsense"
+        new_name = "FAM234A_test"
+        old_name = "test"
+        new_name_two = "test_nonsense"
+        old_name_two = "nonsense"
 
         test_hgnc_approved = {
-            "14163": made_up_approved_name,
-            "12713": made_up_approved_name_two,
+            "14163": {"new": new_name, "old": old_name},
+            "12713": {"new": new_name_two, "old": old_name_two}
         }
         _update_existing_gene_metadata_symbol_in_db(
             test_hgnc_approved, self.hgnc_release, self.user
@@ -111,13 +114,13 @@ class TestUpdateExistingGeneSymbol(TestCase):
         gene_db_one = Gene.objects.filter(hgnc_id="14163")
         err += len_check_wrapper(gene_db_one, "genes matching 14163", 1)
         err += value_check_wrapper(
-            gene_db_one[0].gene_symbol, "gene symbol", made_up_approved_name
+            gene_db_one[0].gene_symbol, "gene symbol", new_name
         )
 
         gene_db_two = Gene.objects.filter(hgnc_id="12713")
         err += len_check_wrapper(gene_db_two, "genes matching 12713", 1)
         err += value_check_wrapper(
-            gene_db_two[0].gene_symbol, "gene symbol", made_up_approved_name_two
+            gene_db_two[0].gene_symbol, "gene symbol", new_name_two
         )
 
         # check that the two gene entries have been linked to a HgncRelease
@@ -139,7 +142,7 @@ class TestUpdateExistingGeneSymbol(TestCase):
         err += value_check_wrapper(
             history[0].note,
             "history note",
-            History.gene_hgnc_release_approved_symbol_change(),
+            History.gene_hgnc_release_approved_symbol_change(old_name, new_name),
         )
         err += value_check_wrapper(
             history[1].gene_hgnc_release, "Gene-HGNC link", gene_release[1]
@@ -147,7 +150,7 @@ class TestUpdateExistingGeneSymbol(TestCase):
         err += value_check_wrapper(
             history[1].note,
             "history note",
-            History.gene_hgnc_release_approved_symbol_change(),
+            History.gene_hgnc_release_approved_symbol_change(old_name_two, new_name_two),
         )
 
         errors = "; ".join(err)
@@ -190,7 +193,9 @@ class TestUpdateExistingAliasSymbol(TestCase):
         Test case: the alias name has changed for a gene, since last update
         No change in approved name
         """
-        test_hgnc_aliases = {"14163": "alias1,alias2"}
+        old_alias = "alias1"
+        new_alias = "alias1,alias2"
+        test_hgnc_aliases = {"14163": {"new": new_alias, "old": old_alias}}
 
         _update_existing_gene_metadata_aliases_in_db(
             test_hgnc_aliases, self.hgnc_release, self.user
@@ -219,7 +224,7 @@ class TestUpdateExistingAliasSymbol(TestCase):
         err += value_check_wrapper(
             history[0].note,
             "history note",
-            History.gene_hgnc_release_alias_symbol_change(),
+            History.gene_hgnc_release_alias_symbol_change(old_alias, new_alias),
         )
 
         errors = "; ".join(err)

@@ -65,11 +65,15 @@ class History:
         return f"PanelGene reverted by {user}"
 
     # gene/HGNC releases
-    def gene_hgnc_release_approved_symbol_change() -> str:
-        return f"HGNC approved symbol has changed"
+    def gene_hgnc_release_approved_symbol_change(
+            old_value: str,
+            new_value: str) -> str:
+        return f"HGNC approved symbol has changed from {old_value} to {new_value}"
 
-    def gene_hgnc_release_alias_symbol_change() -> str:
-        return f"HGNC alias symbol has changed"
+    def gene_hgnc_release_alias_symbol_change(
+            old_value: str,
+            new_value: str) -> str:
+        return f"HGNC alias symbol has changed from {old_value} to {new_value}"
 
     def gene_hgnc_release_new() -> str:
         return f"HGNC gene has been added for the first time"

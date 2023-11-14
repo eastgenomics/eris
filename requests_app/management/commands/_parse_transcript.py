@@ -46,9 +46,9 @@ def _update_existing_gene_metadata_symbol_in_db(
 
     # queue up genes which need updating because their approved symbols have
     # changed in HGNC
-    for changed_gene, new_symbol in hgnc_id_to_symbol.items():
+    for changed_gene, symbols in hgnc_id_to_symbol.items():
         gene = Gene.objects.get(hgnc_id=changed_gene)
-        gene.gene_symbol = new_symbol
+        gene.gene_symbol = symbols["new"]
         gene_symbol_updates.append(gene)
 
     # bulk update the changed genes
@@ -62,9 +62,13 @@ def _update_existing_gene_metadata_symbol_in_db(
             gene=gene, hgnc_release=hgnc_release
         )
 
+        # get the old and new symbols for history-notes
+        new = hgnc_id_to_symbol[gene.hgnc_id]["new"]
+        old = hgnc_id_to_symbol[gene.hgnc_id]["old"]
+
         GeneHgncReleaseHistory.objects.create(
             gene_hgnc_release=gene_hgnc_release,
-            note=History.gene_hgnc_release_approved_symbol_change(),
+            note=History.gene_hgnc_release_approved_symbol_change(old, new),
             user=user,
         )
 
@@ -86,7 +90,7 @@ def _update_existing_gene_metadata_aliases_in_db(
 
     for changed_gene, new_alias in hgnc_id_to_alias_symbols.items():
         gene = Gene.objects.get(hgnc_id=changed_gene)
-        gene.alias_symbols = new_alias
+        gene.alias_symbols = new_alias["new"]
         gene_alias_updates.append(gene)
 
     now = datetime.datetime.now().strftime("%H:%M:%S")
@@ -99,9 +103,13 @@ def _update_existing_gene_metadata_aliases_in_db(
             gene=gene, hgnc_release=hgnc_release
         )
 
+        # get the old and new aliases for history-logging
+        new = hgnc_id_to_alias_symbols[gene.hgnc_id]["new"]
+        old = hgnc_id_to_alias_symbols[gene.hgnc_id]["old"]
+
         GeneHgncReleaseHistory.objects.create(
             gene_hgnc_release=gene_hgnc_release,
-            note=History.gene_hgnc_release_alias_symbol_change(),
+            note=History.gene_hgnc_release_alias_symbol_change(old, new),
             user=user,
         )
 
@@ -176,7 +184,7 @@ def _add_new_genes_to_db(
 
 def _make_hgnc_gene_sets(
     hgnc_id_to_symbol: dict[str:str], hgnc_id_to_alias: dict[str:str]
-):
+    ) -> tuple[list, dict, dict, list]:
     """
     Sort genes into:
     - those which are not yet in the Gene table, but are in the HGNC release
@@ -192,8 +200,8 @@ def _make_hgnc_gene_sets(
     :param hgnc_id_to_alias_symbol: a dictionary of HGNC_ID to the alias symbols in the new HGNC release
 
     :return new_hgncs: a list of dicts, one per new gene, with keys 'hgnc_id' 'symbol' and 'alias'
-    :return hgnc_symbol_changed: a dict of genes with changed symbols, keys are hgnc_ids and values are new symbols
-    :return hgnc_alias_changed: a dict of genes with changed alias, keys are hgnc_ids and values are new alias
+    :return hgnc_symbol_changed: a dict-of-dicts of genes with changed symbols, keys are hgnc_ids, the nested dict has 'old' and 'new 'aliases
+    :return hgnc_alias_changed: a dict-of-dicts of genes with changed alias, keys are hgnc_ids, the nested dict has 'old' and 'new 'aliases
     :return hgnc_unchanged: a list of HGNC IDs for genes which are in the release, but unchanged
     """
     # get every HGNC ID in the HGNC file
@@ -217,16 +225,20 @@ def _make_hgnc_gene_sets(
         if gene.hgnc_id in hgnc_id_to_symbol:
             if gene.gene_symbol != hgnc_id_to_symbol[gene.hgnc_id]:
                 # add to a list of symbol-changed HGNCs
+                hgnc_symbol_changed[gene.hgnc_id] = {}
                 symbol_change = True
-                hgnc_symbol_changed[gene.hgnc_id] = hgnc_id_to_symbol[gene.hgnc_id]
+                hgnc_symbol_changed[gene.hgnc_id]["old"] = gene.gene_symbol
+                hgnc_symbol_changed[gene.hgnc_id]["new"] = hgnc_id_to_symbol[gene.hgnc_id]
 
         # check alias change
         if gene.hgnc_id in hgnc_id_to_alias:
             resolved_alias = _resolve_alias(hgnc_id_to_alias[gene.hgnc_id])
             if gene.alias_symbols != resolved_alias:
                 # add to a list of alias-changed HGNCs
+                hgnc_alias_changed[gene.hgnc_id] = {}
                 alias_change = True
-                hgnc_alias_changed[gene.hgnc_id] = resolved_alias
+                hgnc_alias_changed[gene.hgnc_id]["old"] = gene.alias_symbols
+                hgnc_alias_changed[gene.hgnc_id]["new"] = resolved_alias
 
         # if the database gene is unchanged, add it to an 'unchanged' list if it's in HGNC file
         if not symbol_change and not alias_change and gene.hgnc_id in all_hgnc_file_entries:
@@ -258,10 +270,9 @@ def _resolve_alias(start_alias: list) -> str | None:
     :param processed_alias: the alias returned as a single joined string, or, None
     if the input was blank/just np.nan values.
     """
-    if start_alias:
-        if not pd.isna(start_alias).all():
-            processed_alias = ",".join(start_alias)
-            return processed_alias
+    if start_alias and not pd.isna(start_alias).all():
+        processed_alias = ",".join(start_alias)
+        return processed_alias
 
     return None
 
