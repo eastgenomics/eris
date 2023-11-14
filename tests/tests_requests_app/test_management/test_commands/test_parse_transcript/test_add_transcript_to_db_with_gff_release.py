@@ -39,7 +39,7 @@ class TestAddTranscriptWithGff_NewTranscript(TestCase):
             gff_release="v10.2", reference_genome=self.ref_genome
         )
 
-        self.user = "Andy Test"
+        self.user = "init_v1_user"
 
     def test_novel_transcript_links_successfully(self):
         """
@@ -114,7 +114,7 @@ class TestAddTranscriptWithGff_ExistingTranscripts(TestCase):
             reference_genome=self.ref_genome,
         )
 
-        self.user = "Andy Test"
+        self.user = "init_v1_user"
 
     def test_existing_transcript_links_successfully(self):
         """

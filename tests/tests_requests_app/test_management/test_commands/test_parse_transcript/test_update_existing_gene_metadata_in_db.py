@@ -48,7 +48,7 @@ class TestUpdateExistingGeneSymbol(TestCase):
 
         self.hgnc_release = HgncRelease.objects.create(hgnc_release="hgnc_v1")
 
-        self.user = "test_user"
+        self.user = "init_v1_user"
 
     def test_approved_name_change(self):
         """
@@ -186,7 +186,7 @@ class TestUpdateExistingAliasSymbol(TestCase):
 
         self.hgnc_release = HgncRelease.objects.create(hgnc_release="hgnc_v1")
 
-        self.user = "test_user"
+        self.user = "init_v1_user"
 
     def test_alias_name_change(self):
         """

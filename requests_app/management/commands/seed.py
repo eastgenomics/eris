@@ -198,7 +198,7 @@ class Command(BaseCommand):
         assert command, "Please specify command: panelapp / td / transcript"
 
         # TODO: fill user variable from somewhere more appropriate, like a database table
-        user = "cmd line"
+        user = "init_v1_user"
 
         # python manage.py seed panelapp <all/panel_id> <version>
         if command == "panelapp":

@@ -22,7 +22,7 @@ class TestGetOrCreate_CreateNew(TestCase):
 
     def setUp(self) -> None:
         self.hgnc_release = HgncRelease.objects.create(hgnc_release="new_hgnc")
-        self.user = "test user"
+        self.user = "init_v1_user"
 
     def test_adding_new_gene(self):
         errors = []

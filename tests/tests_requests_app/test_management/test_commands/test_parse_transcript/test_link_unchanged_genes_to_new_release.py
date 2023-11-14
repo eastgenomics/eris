@@ -24,7 +24,7 @@ class TestLinkMade_GeneUnchanged(TestCase):
     """
 
     def setUp(self) -> None:
-        self.user = "test_user"
+        self.user = "init_v1_user"
 
         self.new_hgnc_release = HgncRelease.objects.create(hgnc_release="version2")
 
@@ -96,7 +96,7 @@ class TestLinkAlreadyExists(TestCase):
     """
 
     def setUp(self) -> None:
-        self.user = "test_user"
+        self.user = "init_v1_user"
 
         self.new_hgnc_release = HgncRelease.objects.create(hgnc_release="version2")
 

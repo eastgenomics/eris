@@ -1012,8 +1012,8 @@ def seed_transcripts(
         hgnc_release, gff_release, mane_release, hgmd_release, reference_genome
     )
 
-    # user - replace this with something sensible one day
-    user = "transcripts_test_user"
+    #TODO: user - replace this with something sensible one day
+    user = "init_v1_user"
 
     # files preparation - parsing the files, and adding release versioning to the database
     hgnc_symbol_to_hgnc_id = _prepare_hgnc_file(hgnc_filepath, hgnc_release, user)
