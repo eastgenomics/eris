@@ -41,11 +41,8 @@ def _get_most_recent_td_release_for_ci_panel(ci_panel: ClinicalIndicationPanel) 
     """
     # get all td_releases
     release = CiPanelTdRelease.objects.filter(ci_panel=ci_panel).order_by("-td_release").first()
-    print("***")
-    print(release)
-    print("***")
     if release:
-        return release
+        return release.td_release
     else:
         return None
 
@@ -444,9 +441,9 @@ def _make_panels_from_hgncs(
         )  # find all previous associated ci-panel
 
         if previous_ci_panels:  # in the case where there are old ci-panel
-            latest_active_td_release = \
-                    _get_most_recent_td_release_for_ci_panel(ci_panel)
             for ci_panel in previous_ci_panels:
+                latest_active_td_release = \
+                    _get_most_recent_td_release_for_ci_panel(ci_panel)
                 flag_clinical_indication_panel_for_review(
                     ci_panel, td_source
                 )  # flag for review
@@ -574,6 +571,7 @@ def _update_ci_panel_tables_with_new_ci(
     in the database which may need linking to some panels
     :param: config_source [str], source metadata for the CI-panel link
     """
+    #TODO: write unit tests
     for clinical_indication_panel in ClinicalIndicationPanel.objects.filter(
         clinical_indication_id__r_code=r_code,
         current=True,
@@ -618,6 +616,7 @@ def _update_ci_superpanel_tables_with_new_ci(
     in the database which may need linking to some superpanels
     :param: config_source [str], source metadata for the CI-superpanel link
     """
+    #TODO: write unit tests
     for clinical_indication_superpanel in ClinicalIndicationSuperPanel.objects.filter(
         clinical_indication__r_code=r_code,
         current=True,
@@ -768,7 +767,6 @@ def _make_ci_panel_td_link(
         # update the test directory SOURCE info
         _update_ci_panel_links_td_source(
             cip_instance,
-            td_version,
             td_source,
             config_source,
         )
@@ -956,12 +954,12 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
 
     print(f"Inserting test directory data into database... forced: {force}")
 
-    #TODO: add a useful User one day
-    user = td_source
-
     # fetch td source from json file
     td_source: str = json_data.get("td_source")
     assert td_source, "Missing td_source in test directory json file"
+
+    #TODO: add a useful User one day
+    user = td_source
 
     # fetch TD version from filename
     td_version: str = _get_td_version(td_source)
@@ -1067,9 +1065,7 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
             )
 
         if hgnc_list:
-            _make_panels_from_hgncs(json_data, ci_instance, hgnc_list)
-
-            _make_ci_panel_td_link()
+            _make_panels_from_hgncs(json_data, ci_instance, td_version, hgnc_list)
 
     _backward_deactivate(all_indication, td_source)
 

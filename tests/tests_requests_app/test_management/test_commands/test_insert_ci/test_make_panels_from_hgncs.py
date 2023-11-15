@@ -17,6 +17,8 @@ from requests_app.models import (
     PanelGene,
     PanelGeneHistory,
     ClinicalIndicationPanelHistory,
+    TestDirectoryRelease,
+    CiPanelTdRelease
 )
 from requests_app.management.commands._insert_ci import _make_panels_from_hgncs
 from tests.tests_requests_app.test_management.test_commands.test_insert_panel.test_insert_gene import (
@@ -24,7 +26,7 @@ from tests.tests_requests_app.test_management.test_commands.test_insert_panel.te
     value_check_wrapper,
 )
 
-
+# TODO: add td version as arg to _make_panels_from_hgncs
 class TestMakePanelsFromHgncs(TestCase):
     """
     The core function is to make panels from a list of hgncs.
@@ -45,6 +47,8 @@ class TestMakePanelsFromHgncs(TestCase):
             test_method="Test method",
         )
 
+        self.td_version = TestDirectoryRelease.objects.create(release="3.0")
+
     def test_make_panel_function(self):
         """
         Given a list of hgncs, make a panel and link it to the clinical indication
@@ -60,6 +64,7 @@ class TestMakePanelsFromHgncs(TestCase):
         _make_panels_from_hgncs(
             mock_test_directory,
             self.first_clinical_indication,
+            self.td_version,
             ["HGNC:1", "HGNC:2"],
         )
 
@@ -126,6 +131,12 @@ class TestMakePanelsFromHgncs(TestCase):
             panel_genes[0].panel, "panel-gene panel", panel_genes[1].panel
         )
 
+        # check that test directory release links are formed
+        links_with_td = CiPanelTdRelease.objects.all()
+        errors += len_check_wrapper(links_with_td, "links with td", 1)
+        errors += value_check_wrapper(links_with_td[0].td_release, "td release in link", self.td_version)
+        errors += value_check_wrapper(links_with_td[0].ci_panel, "ci-panel in link", links[0])
+
         assert not errors, errors
 
     def test_that_previous_clinical_indication_panel_links_are_flagged(self):
@@ -167,6 +178,7 @@ class TestMakePanelsFromHgncs(TestCase):
         _make_panels_from_hgncs(
             mock_test_directory,
             self.first_clinical_indication,
+            self.td_version,
             ["HGNC:1", "HGNC:2", "HGNC:3"],
         )
 
@@ -186,11 +198,7 @@ class TestMakePanelsFromHgncs(TestCase):
             True,
         )  # both links should be flagged for review)
 
-        errors += value_check_wrapper(
-            clinical_indication_panels[1].td_version,
-            "td version",
-            sortable_version("5.1"),
-        )
+        #TODO: check version link made
 
         errors += value_check_wrapper(
             clinical_indication_panels[1].config_source, "config source", "230401_RD"
@@ -199,6 +207,13 @@ class TestMakePanelsFromHgncs(TestCase):
         errors += len_check_wrapper(
             PanelGeneHistory.objects.all(), "panel-gene history records", 3
         )  # should have 3 history recorded HGNC:1 HGNC:2 and HGNC:3
+
+        # check that test directory release links are formed
+        links_with_td = CiPanelTdRelease.objects.all()
+        errors += len_check_wrapper(links_with_td, "links with td", 2)
+        # errors += value_check_wrapper(links_with_td[0].td_release, "td release in link", self.td_version)
+        # errors += value_check_wrapper(links_with_td[0].ci_panel, "ci-panel in link", links[0])
+
 
     # NOTE: there is no need to test backward deactivation for panel-gene in this function
     # because it makes panel based on the provided hgncs
@@ -224,7 +239,7 @@ class TestMakePanelsFromHgncs(TestCase):
         hgncs = [f"HGNC:{i}" for i in range(1000)]
 
         _make_panels_from_hgncs(
-            mock_test_directory, self.first_clinical_indication, hgncs
+            mock_test_directory, self.first_clinical_indication, self.td_version, hgncs
         )
 
         panel = Panel.objects.first()

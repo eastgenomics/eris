@@ -18,32 +18,33 @@ class TestMostRecentRelease(TestCase):
     """
     """
     def setUp(self) -> None:
-        self.first_release = TestDirectoryRelease(release="1.0.0")
+        self.first_release = TestDirectoryRelease.objects.create(release="1.0.0")
         
-        self.panel = Panel(
+        self.panel = Panel.objects.create(
             external_id="test",
             panel_name="test panel",
             panel_source="PanelApp",
             panel_version="5"
         )
 
-        self.ci = ClinicalIndication(
+        self.ci = ClinicalIndication.objects.create(
             r_code="R1",
             name="some ci",
             test_method="ngs"
         )
 
-        self.ci_panel = ClinicalIndicationPanel(
+        self.ci_panel = ClinicalIndicationPanel.objects.create(
             clinical_indication=self.ci,
-            panel=self.panel
+            panel=self.panel,
+            current=True
         )
 
-        self.ci_panel_td = CiPanelTdRelease(
+        self.ci_panel_td = CiPanelTdRelease.objects.create(
             ci_panel=self.ci_panel,
             td_release=self.first_release
         )
 
     def test_single_entry(self):
-        ans = _get_most_recent_td_release_for_ci_panel(self.ci_panel)
-        assert ans == "1.0.0"
+        answer = _get_most_recent_td_release_for_ci_panel(self.ci_panel)
+        assert answer.release == "1.0.0"
     

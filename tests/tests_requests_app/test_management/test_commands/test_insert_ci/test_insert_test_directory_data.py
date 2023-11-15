@@ -24,6 +24,8 @@ from requests_app.models import (
     Panel,
     ClinicalIndication,
     ClinicalIndicationTestMethodHistory,
+    TestDirectoryRelease,
+    CiPanelTdRelease
 )
 from requests_app.management.commands._insert_ci import insert_test_directory_data
 from requests_app.management.commands.utils import sortable_version
@@ -39,7 +41,8 @@ class TestInsertTestDirectoryData(TestCase):
         We setup the following:
         1. a panel in db
         2. a clinical indication in db
-        3. a link between the panel and the clinical indication (ClinicalIndicationPanel) with td_version 5.1
+        3. a pre-existing link between the panel and the clinical indication (ClinicalIndicationPanel) 
+        with td_version 5.1
         """
 
         self.panel = Panel.objects.create(
@@ -53,18 +56,21 @@ class TestInsertTestDirectoryData(TestCase):
             test_method="test method",
         )
 
-        ClinicalIndicationPanel.objects.create(
+        self.ci_panel = ClinicalIndicationPanel.objects.create(
             clinical_indication_id=self.clinical_indication.id,
             panel_id=self.panel.id,
-            td_version=sortable_version("5.1"),
             current=True,
             pending=False,
-        )  # make a mock link which have td_version 5.1
+        )
+        
+        # make a mock link which has td_version 5.1
+        self.td_release = TestDirectoryRelease.objects.create(release="5.1")
+
 
     def test_missing_td_source(self):
         """
-        scenario where test directory td_source field is missing.
-        we expect assertion error
+        CASE: a scenario where the test directory's td_source field is missing.
+        EXPECT: an assertion error should be raised
         """
 
         with self.assertRaises(AssertionError):
@@ -82,13 +88,9 @@ class TestInsertTestDirectoryData(TestCase):
 
     def test_lower_td_version_will_raise_exception(self):
         """
-        scenario where we are seeding test directory that are of lower version
+        CASE: scenario where we are trying to seed with a test directory that is a lower version
         than the one in db
-
-        we check the most current td_version in db by looking at ClinicalIndicationPanel table
-        where it will record which td_version initiated the ClinicalIndicationPanel link
-
-        we expect the function to raise Exception error
+        EXPECT: we expect the function to raise Exception error
         """
 
         mock_test_directory = {
@@ -117,25 +119,25 @@ class TestInsertTestDirectoryData(TestCase):
 
     def test_that_the_function_will_compare_with_the_latest_td_version(self):
         """
-        this scenario is unlikely to happen but imagine we have multiple ClinicalIndicationPanel links in db
-        with different td_version
+        Imagine that we have multiple ClinicalIndicationPanel links in db, with different td_version:
         e.g.
         link 1 - v4.0
-        link 2 - v5.0
-        this might happen if we happen to keep clinical indication-panel from old test directory active
-
-        imagine if we seed test directory v4.5 now, we expect the function to raise Exception error
-        as the latest td_version in db is v5.0 rather than v4.0
+        link 2 - v5.1
+        Check that if we seed test directory v4.5 now, the function still raises an Exception
+        as the latest td_version in db is v5.1
         """
 
-        ClinicalIndicationPanel.objects.create(
+        ci_pan = ClinicalIndicationPanel.objects.create(
             clinical_indication_id=self.clinical_indication.id,
             panel_id=self.panel.id,
-            td_version=sortable_version("4.1"),
             current=True,
-        )  # make a mock link which have td_version 4.0
-
-        # NOTE: there is already a link with td_version 5.1 in setup above
+        ) 
+        
+        rel_4_1 = TestDirectoryRelease.objects.create(release="4.0")
+        
+        CiPanelTdRelease.objects.create(
+            ci_panel=ci_pan,
+            td_release=rel_4_1)
 
         mock_test_directory = {
             "indications": [],
@@ -237,7 +239,6 @@ class TestInsertTestDirectoryData(TestCase):
         clinical_indication_panels = ClinicalIndicationPanel.objects.order_by(
             "id"
         ).values(
-            "td_version",
             "clinical_indication_id__name",
             "clinical_indication_id__r_code",
             "pending",
@@ -246,11 +247,21 @@ class TestInsertTestDirectoryData(TestCase):
             clinical_indication_panels, "clinical indication-panel", 2
         )  # should have 2 links; one from setup and one from the function
 
-        errors += value_check_wrapper(
-            clinical_indication_panels[1]["td_version"],
-            "td_version",
-            sortable_version("5.2"),
-        )  # the new link is of td_version 5.2
+        # errors += value_check_wrapper(
+        #     clinical_indication_panels[1]["td_version"],
+        #     "td_version",
+        #     sortable_version("5.2"),
+        # )  # the new link is of td_version 5.2
+
+        # check for a link with td_version 5.2
+        td_ver_5_2 = TestDirectoryRelease.objects.filter(release="5.2")[0]
+        td_ci_panel_links = CiPanelTdRelease.objects.filter(
+            ci_panel=clinical_indication_panels[1],
+            td_release=td_ver_5_2
+        )
+        errors += len_check_wrapper(
+            td_ci_panel_links, "links between ci-panel and release", 1
+        )
 
         errors += value_check_wrapper(
             clinical_indication_panels[1]["clinical_indication_id__name"],
