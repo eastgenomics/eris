@@ -5,6 +5,7 @@
 import os
 
 from django.db import transaction
+from typing import Dict, List, Tuple, Union
 
 from .utils import sortable_version, normalize_version
 from .history import History
@@ -28,11 +29,11 @@ from requests_app.models import (
 )
 
 
-def _backward_deactivate(indications: list[dict], user: str) -> None:
+def _backward_deactivate(indications: List[Dict], user: str) -> None:
     """
     This function flag any clinical indication that doesn't exist in TestDirectory
 
-    :params: indications [list]: list of clinical indication from TD
+    :params: indications [List]: List of clinical indication from TD
     :params: user [str]: user who is importing the TD
     """
     r_codes = set([indication["code"] for indication in indications])
@@ -194,7 +195,7 @@ def provisionally_link_clinical_indication_to_superpanel(
     return ci_superpanel_instance
 
 
-def _get_td_version(filename: str) -> str | None:
+def _get_td_version(filename: str) -> Union[str, None]:
     """
     Get TD version from filename.
     convert "rare-and-inherited-disease-national-genomic-test-directory-v4.xlsx" into "4"
@@ -244,7 +245,7 @@ def _check_td_version_valid(
             )
 
 
-def _retrieve_panel_from_pa_id(ci_code: str, pa_id: str) -> Panel | None:
+def _retrieve_panel_from_pa_id(ci_code: str, pa_id: str) -> Union[Panel, None]:
     """
     Retrieve a single Panel record based on PA panel id.
     We order multiple Panel records by version and select the highest,
@@ -265,7 +266,7 @@ def _retrieve_panel_from_pa_id(ci_code: str, pa_id: str) -> Panel | None:
     return panel_instance
 
 
-def _retrieve_superpanel_from_pa_id(ci_code: str, pa_id: str) -> SuperPanel | None:
+def _retrieve_superpanel_from_pa_id(ci_code: str, pa_id: str) -> Union[SuperPanel, None]:
     """
     Retrieve a single SuperPanel record based on PA panel id.
     We order multiple SuperPanel records by version and select the highest,
@@ -287,7 +288,7 @@ def _retrieve_superpanel_from_pa_id(ci_code: str, pa_id: str) -> SuperPanel | No
 
 
 def _retrieve_unknown_metadata_records() -> (
-    tuple[Confidence, ModeOfInheritance, ModeOfPathogenicity, Penetrance]
+    Tuple[Confidence, ModeOfInheritance, ModeOfPathogenicity, Penetrance]
 ):
     """
     Retrieve additional metadata records for PanelGene records
@@ -311,9 +312,9 @@ def _retrieve_unknown_metadata_records() -> (
 
 
 def _make_panels_from_hgncs(
-    json_data: dict,
+    json_data: Dict,
     ci: ClinicalIndication,
-    hgnc_list: list,
+    hgnc_list: List,
 ) -> None:
     """
     Make Panel records from a list of HGNC ids.
@@ -738,7 +739,7 @@ def _attempt_ci_panel_creation(
     td_version: str,
     td_source: str,
     config_source: str,
-) -> tuple[ClinicalIndicationPanel, bool]:
+) -> Tuple[ClinicalIndicationPanel, bool]:
     """
     Gets-or-creates a ClinicalIndicationPanel entry.
     If the entry is new, it will log history too.
@@ -784,7 +785,7 @@ def _attempt_ci_superpanel_creation(
     td_version: str,
     td_source: str,
     config_source: str,
-) -> tuple[ClinicalIndicationSuperPanel, bool]:
+) -> Tuple[ClinicalIndicationSuperPanel, bool]:
     """
     Gets-or-creates a ClinicalIndicationSuperPanel entry.
     If the entry is new, it will log history too.
@@ -825,7 +826,7 @@ def _attempt_ci_superpanel_creation(
 
 
 def _flag_panels_removed_from_test_directory(
-    ci_instance: ClinicalIndication, panels: list, td_source: str
+    ci_instance: ClinicalIndication, panels: List, td_source: str
 ) -> None:
     """
     For a clinical indication, finds any pre-existing links to Panels and
@@ -864,7 +865,7 @@ def _flag_panels_removed_from_test_directory(
 
 
 def _flag_superpanels_removed_from_test_directory(
-    ci_instance: ClinicalIndication, panels: list, td_source: str
+    ci_instance: ClinicalIndication, panels: List, td_source: str
 ) -> None:
     """
     For a clinical indication, finds any pre-existing links to SuperPanels and
@@ -930,7 +931,7 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
     latest_td_version_in_db = _fetch_latest_td_version()
     _check_td_version_valid(td_version, latest_td_version_in_db, force)
 
-    all_indication: list[dict] = json_data["indications"]
+    all_indication: List[Dict] = json_data["indications"]
 
     for indication in all_indication:
         r_code: str = indication["code"].strip()
@@ -961,7 +962,7 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
                 )
 
         # link each CI record to the appropriate Panel records
-        hgnc_list: list[str] = []
+        hgnc_list: List[str] = []
 
         # attaching Panels to CI
         if indication["panels"]:

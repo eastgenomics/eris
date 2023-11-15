@@ -1,10 +1,12 @@
+import json
+import collections
+import datetime as dt
+import dxpy as dx
 import secrets
 import string
-import collections
-import json
+
 from itertools import chain
-import dxpy as dx
-import datetime as dt
+from typing import List, Dict
 
 from django.shortcuts import render, redirect
 from django.db.models import QuerySet, Q
@@ -41,12 +43,12 @@ def index(request):
     """
 
     # fetch all clinical indications
-    all_ci: list[ClinicalIndication] = ClinicalIndication.objects.order_by(
+    all_ci: List[ClinicalIndication] = ClinicalIndication.objects.order_by(
         "r_code"
     ).all()
 
     # fetch all panels
-    all_panels: list[dict] = Panel.objects.order_by("panel_name").all()
+    all_panels: List[Dict] = Panel.objects.order_by("panel_name").all()
 
     # normalize panel version
     for panel in all_panels:
@@ -130,7 +132,7 @@ def panel(request, panel_id: int):
     agg_history = list(chain(ci_test_method_history, ci_panels_history))
 
     # fetch genes associated with panel
-    pgs: QuerySet[dict] = (
+    pgs: QuerySet[Dict] = (
         PanelGene.objects.filter(panel_id=panel_id)
         .values(
             "gene_id",
@@ -251,7 +253,7 @@ def clinical_indication(request, ci_id: int):
     agg_history = list(chain(ci_test_method_history, ci_panels_history))
 
     # fetch panel-gene
-    panel_genes: QuerySet[dict] = (
+    panel_genes: QuerySet[Dict] = (
         PanelGene.objects.filter(
             panel_id__in=[p.id for p in panels if p.id in active_panel_ids]
         )
@@ -266,7 +268,7 @@ def clinical_indication(request, ci_id: int):
     )
 
     # prepare panel-gene dict
-    panel_genes_dict: dict[str, list] = collections.defaultdict(list)
+    panel_genes_dict: Dict[str, List] = collections.defaultdict(list)
 
     for pg in panel_genes:
         # there can be multiple history associated with a panel-gene id
@@ -464,7 +466,7 @@ def add_ci_panel(request, ci_id: int):
     """
 
     # find all panel linked to this ci
-    linked_panels: list[int] = [
+    linked_panels: List[int] = [
         cip.panel_id
         for cip in ClinicalIndicationPanel.objects.filter(
             clinical_indication_id=ci_id, current=True
@@ -482,7 +484,7 @@ def add_ci_panel(request, ci_id: int):
 
     if request.method == "GET":
         # active ci-panel links
-        linked_panels: list[int] = [
+        linked_panels: List[int] = [
             cip.panel_id
             for cip in ClinicalIndicationPanel.objects.filter(
                 clinical_indication_id=ci_id, current=True
@@ -490,7 +492,7 @@ def add_ci_panel(request, ci_id: int):
         ]
 
         # fetch any pending ci-panel links
-        pending_ci_panels: list[int] = [
+        pending_ci_panels: List[int] = [
             cip.panel_id
             for cip in ClinicalIndicationPanel.objects.filter(
                 clinical_indication_id=ci_id, pending=True
@@ -560,7 +562,7 @@ def add_ci_panel(request, ci_id: int):
                     user="online",
                 )
 
-        linked_panels: list[int] = [
+        linked_panels: List[int] = [
             cip.panel_id
             for cip in ClinicalIndicationPanel.objects.filter(
                 clinical_indication_id=ci_id, current=True
@@ -770,7 +772,7 @@ def edit_gene(request, panel_id: int):
     )
 
     if request.method == "POST":
-        selected_gene_ids: list[int] = request.POST.getlist("genes")
+        selected_gene_ids: List[int] = request.POST.getlist("genes")
 
         if selected_gene_ids:
             with transaction.atomic():
@@ -852,7 +854,7 @@ def edit_gene(request, panel_id: int):
             agg_history = list(chain(ci_test_method_history, ci_panels_history))
 
             # fetch genes associated with panel
-            pgs: QuerySet[dict] = (
+            pgs: QuerySet[Dict] = (
                 PanelGene.objects.filter(panel_id=new_panel.id)
                 .values(
                     "gene_id",
@@ -1457,9 +1459,9 @@ def genepanel(request):
     ).values("gene_id__hgnc_id", "gene_id", "panel_id"):
         panel_genes[row["panel_id"]].append((row["gene_id__hgnc_id"], row["gene_id"]))
 
-    list_of_genepanel: list[Genepanel] = []
+    list_of_genepanel: List[Genepanel] = []
     ci_panel_to_genes = collections.defaultdict(list)
-    file_result: list[list[str]] = []
+    file_result: List[List[str]] = []
 
     # for each r code panel combo, we make a list of genes associated with it
     for r_code, panel_list in ci_panels.items():

@@ -1,7 +1,7 @@
 """
 External python modules or scripts relavant to the web app
 """
-
+from typing import List
 
 class Genepanel:
     """
@@ -15,7 +15,7 @@ class Genepanel:
         ci_name: str,
         panel_name: str,
         panel_version: str,
-        hgncs: list[str],
+        hgncs: List[str],
     ) -> None:
         self.r_code = r_code
         self.ci_name = ci_name
