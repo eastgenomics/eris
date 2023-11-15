@@ -49,7 +49,7 @@ class TestBackwardDeactivation(TestCase):
 
         self.first_clinical_indication_panel = ClinicalIndicationPanel.objects.create(
             config_source=None,
-            td_version=None,
+            #td_version=None,
             clinical_indication_id=self.first_clinical_indication.id,
             panel_id=self.first_panel.id,
             current=True,
@@ -194,6 +194,10 @@ class TestFlagClinicalIndicationSuperpanelForReview(TestCase):
 
 
 class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
+    """
+    Tests for the function which automatically links a new version/name of a panel,
+    to the same clinical indication that is linked to an earlier version of the panel.
+    """
     def setUp(self) -> None:
         self.first_clinical_indication = ClinicalIndication.objects.create(
             r_code="R123", name="Test CI", test_method="Test method"
@@ -225,6 +229,7 @@ class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
         link a panel-id to a clinical indication-id to create a clinical indication-panel link
 
         - the general output is that the link will be created but also flagged for review (expect `pending` to be True)
+        - there should be a link made between Ci-Panel and the test directory release
         - we expect this behaviour for both new or existing clinica indication-panel link
 
         below we test for an existing link
@@ -242,7 +247,15 @@ class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
 
         self.first_clinical_indication_panel.refresh_from_db()
 
-        assert self.first_clinical_indication_panel.pending == True
+        # check that the ci-panel is set to pending
+        with self.subTest():
+            assert self.first_clinical_indication_panel.pending == True
+        
+        # test that a release was linked to the ci-panel
+        with self.subTest():
+            releases = TestDirectoryRelease.objects.all()
+            assert len(releases) == 1
+            assert releases[0].release == "2.1.0"
 
     def test_that_new_link_is_flagged(self):
         """
@@ -256,14 +269,24 @@ class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
             self.td_version
         )
 
-        assert ClinicalIndicationPanel.objects.count() == 2  # one new link created
+        # test a new ci-panel link is made and flagged for review
+        with self.subTest():
+            assert ClinicalIndicationPanel.objects.count() == 2  # one new link created
+            new_link = ClinicalIndicationPanel.objects.last()
 
-        new_link = ClinicalIndicationPanel.objects.last()
+            assert new_link.pending == True  # new link should be flagged for review
 
-        assert new_link.pending == True  # new link should be flagged for review
-
+        # test that a release was linked to the ci-panel
+        with self.subTest():
+            releases = TestDirectoryRelease.objects.all()
+            assert len(releases) == 1
+            assert releases[0].release == "2.1.0"
 
 class TestProvisionallyLinkClinicalIndicationToSuperPanel(TestCase):
+    """
+    Tests for the function which automatically links a new version/name of a superpanel,
+    to the same clinical indication that is linked to an earlier version of the superpanel.
+    """
     def setUp(self) -> None:
         self.first_clinical_indication = ClinicalIndication.objects.create(
             r_code="R123", name="Test CI", test_method="Test method"
@@ -316,7 +339,15 @@ class TestProvisionallyLinkClinicalIndicationToSuperPanel(TestCase):
 
         self.first_clinical_indication_superpanel.refresh_from_db()
 
-        assert self.first_clinical_indication_superpanel.pending
+        # test that a release was linked to the ci-panel
+        with self.subTest():
+            assert self.first_clinical_indication_superpanel.pending
+
+        # test that a release was linked to the ci-superpanel
+        with self.subTest():
+            releases = TestDirectoryRelease.objects.all()
+            assert len(releases) == 1
+            assert releases[0].release == "5.0"
 
     def test_that_new_link_is_flagged(self):
         """
@@ -340,6 +371,12 @@ class TestProvisionallyLinkClinicalIndicationToSuperPanel(TestCase):
 
         # new link should be flagged for review
         assert new_link.pending
+
+        # check that a test directory release was linked
+        with self.subTest():
+            releases = TestDirectoryRelease.objects.all()
+            assert len(releases) == 1
+            assert releases[0].release == "5.0"
 
 
 class TestGetTDVersion(TestCase):
@@ -385,12 +422,20 @@ class TestRetrievePanelFromPanelID(TestCase):
         )
 
     def test_that_latest_panel_version_will_be_retrieved(self):
-        panel = _retrieve_panel_from_pa_id(None, 123)
+        """
+        Case: Trying to fetch the latest version for a panel which exists in 2 versions
+        Expect: The panel with the most-recent version number to be returned
+        """
+        panel = _retrieve_panel_from_pa_id(123)
 
         assert panel.panel_version == sortable_version("1.19")
 
     def test_that_it_will_return_none_if_panel_id_does_not_exist(self):
-        panel = _retrieve_panel_from_pa_id(None, 999)
+        """
+        Case: Trying to fetch the latest version for a panel which is not in the database
+        Expect: Function returns None
+        """
+        panel = _retrieve_panel_from_pa_id(999)
 
         assert panel == None
 

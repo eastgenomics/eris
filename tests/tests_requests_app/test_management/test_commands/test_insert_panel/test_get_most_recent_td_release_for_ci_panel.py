@@ -34,21 +34,16 @@ class TestMostRecentRelease(TestCase):
         )
 
         self.ci_panel = ClinicalIndicationPanel(
-            clinical_indication=self.clinical_indication,
+            clinical_indication=self.ci,
             panel=self.panel
         )
 
         self.ci_panel_td = CiPanelTdRelease(
-            ci_panel=self.panel,
+            ci_panel=self.ci_panel,
             td_release=self.first_release
         )
 
     def test_single_entry(self):
         ans = _get_most_recent_td_release_for_ci_panel(self.ci_panel)
-        print()
-        print()
-        print(ans)
-        print()
-        print()
-        assert ans == self.ci_panel_td
+        assert ans == "1.0.0"
     

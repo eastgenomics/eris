@@ -151,7 +151,7 @@ class TestMakePanelsFromHgncs(TestCase):
 
         ClinicalIndicationPanel.objects.create(
             config_source="230401_RD",
-            td_version=sortable_version("5.0"),
+            #td_version=sortable_version("5.0"),
             clinical_indication=self.first_clinical_indication,
             panel_id=first_panel.id,
             current=True,

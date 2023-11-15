@@ -7,13 +7,12 @@ from requests_app.models import (
     ClinicalIndication,
     ClinicalIndicationPanel,
     ClinicalIndicationSuperPanel,
+    TestDirectoryRelease,
+    CiPanelTdRelease,
+    CiSuperpanelTdRelease
 )
 from requests_app.management.commands._insert_ci import _fetch_latest_td_version
 from requests_app.management.commands.utils import sortable_version
-from tests.tests_requests_app.test_management.test_commands.test_insert_panel.test_insert_gene import (
-    len_check_wrapper,
-    value_check_wrapper,
-)
 
 
 class TestFetchLatestTdVersion_OlderPanel(TestCase):
@@ -24,6 +23,14 @@ class TestFetchLatestTdVersion_OlderPanel(TestCase):
     """
 
     def setUp(self) -> None:
+        self.td_release = TestDirectoryRelease.objects.create(
+            release="2"
+        )
+
+        self.td_release_two = TestDirectoryRelease.objects.create(
+            release="3"
+        )
+
         self.ci = ClinicalIndication.objects.create(
             r_code="R100.1", name="An illness", test_method="NGS"
         )
@@ -38,7 +45,6 @@ class TestFetchLatestTdVersion_OlderPanel(TestCase):
 
         self.ci_panel = ClinicalIndicationPanel.objects.create(
             config_source="test",
-            td_version="3",
             clinical_indication=self.ci,
             panel=self.panel,
             current=True,
@@ -46,10 +52,19 @@ class TestFetchLatestTdVersion_OlderPanel(TestCase):
 
         self.ci_superpanel = ClinicalIndicationSuperPanel.objects.create(
             config_source="test",
-            td_version="2",
             clinical_indication=self.ci,
             superpanel=self.superpanel,
             current=True,
+        )
+
+        self.cip_td = CiPanelTdRelease(
+            ci_panel=self.ci_panel,
+            td_release=self.td_release
+        )
+
+        self.cip_td = CiSuperpanelTdRelease(
+            ci_superpanel=self.ci_superpanel,
+            td_release=self.td_release_two
         )
 
     def test_panel_older_than_superpanel(self):
@@ -60,7 +75,7 @@ class TestFetchLatestTdVersion_OlderPanel(TestCase):
         """
         latest_td = _fetch_latest_td_version()
 
-        assert latest_td == sortable_version("3")
+        assert latest_td == "3"
 
 
 class TestFetchLatestTdVersion_OlderSuperPanel(TestCase):
@@ -83,20 +98,31 @@ class TestFetchLatestTdVersion_OlderSuperPanel(TestCase):
             external_id=500, panel_source="PanelApp", panel_version=6
         )
 
+        self.td_old = TestDirectoryRelease.objects.create(release="3")
+        self.td_new = TestDirectoryRelease.objects.create(release="4")
+
         self.ci_panel = ClinicalIndicationPanel.objects.create(
             config_source="test",
-            td_version="3",
             clinical_indication=self.ci,
             panel=self.panel,
             current=True,
         )
 
+        self.ci_panel_td_release = CiPanelTdRelease(
+            ci_panel=self.ci_panel,
+            td_release=self.td_old
+        )
+
         self.ci_superpanel = ClinicalIndicationSuperPanel.objects.create(
             config_source="test",
-            td_version="4",
             clinical_indication=self.ci,
             superpanel=self.superpanel,
             current=True,
+        )
+
+        self.ci_superpanel_td_release = CiSuperpanelTdRelease(
+            ci_superpanel=self.ci_superpanel,
+            td_release=self.td_new
         )
 
     def test_superpanel_older_than_panel(self):
@@ -107,7 +133,7 @@ class TestFetchLatestTdVersion_OlderSuperPanel(TestCase):
         """
         latest_td = _fetch_latest_td_version()
 
-        assert latest_td == sortable_version("4")
+        assert latest_td == "4"
 
 
 class TestFetchLatestTdVersion_PanelOnly(TestCase):
@@ -128,11 +154,16 @@ class TestFetchLatestTdVersion_PanelOnly(TestCase):
 
         self.ci_panel = ClinicalIndicationPanel.objects.create(
             config_source="test",
-            td_version="3",
             clinical_indication=self.ci,
             panel=self.panel,
             current=True,
         )
+
+        self.td = TestDirectoryRelease.objects.create(release="3")
+
+        self.ci_panel_td = CiPanelTdRelease(ci_panel=self.ci_panel,
+                                            td_release=self.td)
+
 
     def test_only_panel_exists(self):
         """
@@ -142,42 +173,7 @@ class TestFetchLatestTdVersion_PanelOnly(TestCase):
         """
         latest_td = _fetch_latest_td_version()
 
-        assert latest_td == sortable_version("3")
-
-
-class TestFetchLatestTdVersion_SuperPanelOnly(TestCase):
-    """
-    Check that when there is no Panel data in the db,
-    the td version in the panel-related data is correctly returned
-    EXPECT: ClinicalIndicationSuperPanel's td version is returned as correct
-    """
-
-    def setUp(self) -> None:
-        self.ci = ClinicalIndication.objects.create(
-            r_code="R100.1", name="An illness", test_method="NGS"
-        )
-
-        self.panel = SuperPanel.objects.create(
-            external_id=500, panel_source="PanelApp", panel_version=6
-        )
-
-        self.ci_panel = ClinicalIndicationSuperPanel.objects.create(
-            config_source="test",
-            td_version="3",
-            clinical_indication=self.ci,
-            superpanel=self.panel,
-            current=True,
-        )
-
-    def test_only_panel_exists(self):
-        """
-        Check that when there is no Panel data in the db,
-        the td version in the panel-related data is correctly returned
-        EXPECT: ClinicalIndicationSuperPanel's td version is returned as correct
-        """
-        latest_td = _fetch_latest_td_version()
-
-        assert latest_td == sortable_version("3")
+        assert latest_td == "3"
 
 
 class TestFetchLatestTdVersion_NoDataAvailable(TestCase):
@@ -193,7 +189,7 @@ class TestFetchLatestTdVersion_NoDataAvailable(TestCase):
     def test_only_panel_exists(self):
         latest_td = _fetch_latest_td_version()
 
-        assert latest_td == None
+        assert not latest_td
 
 
 # TODO: test '_check_td_version_valid' if concerned

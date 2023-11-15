@@ -33,6 +33,7 @@ from ._insert_ci import (
     flag_clinical_indication_superpanel_for_review,
     provisionally_link_clinical_indication_to_panel,
     provisionally_link_clinical_indication_to_superpanel,
+    _get_most_recent_td_release_for_ci_panel
 )
 from .panelapp import PanelClass, SuperPanelClass
 from django.db import transaction
@@ -280,21 +281,6 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
         # TODO: backward deactivation for PanelRegion, with history logging
 
 
-def _get_most_recent_td_release_for_ci_panel(ci_panel: ClinicalIndicationPanel) \
-    -> TestDirectoryRelease | None:
-    """
-    For a clinical indication-panel link, find the most-recent active test directory release.
-    Return it, or 'none' if it fails.
-    Used in cases where an inferred link is being made between a new CI and a new Panel,
-    based on data which exists for earlier versions of the same R code and Panel ID.
-    """
-    # get all td_releases
-    release = CiPanelTdRelease.objects.filter(ci_panel=ci_panel).order_by("-td_release").first()
-    if release:
-        return release
-    else:
-        return None
-
 def _get_most_recent_td_release_for_ci_superpanel(ci_superpanel: ClinicalIndicationSuperPanel) \
     -> TestDirectoryRelease | None:
     """
@@ -423,8 +409,8 @@ def _insert_superpanel_into_db(
 
             latest_active_td_release = _get_most_recent_td_release_for_ci_superpanel(\
                 clinical_indication_superpanel)
+            
 
-    
             provisionally_link_clinical_indication_to_superpanel(
                 superpanel,
                 clinical_indication_superpanel.clinical_indication,
