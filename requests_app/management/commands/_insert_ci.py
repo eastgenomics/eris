@@ -923,7 +923,7 @@ def _flag_superpanels_removed_from_test_directory(
                 )
 
 
-def _add_td_release_to_db(td_version: TestDirectoryRelease, user: str) -> TestDirectoryRelease:
+def _add_td_release_to_db(td_version: str, user: str) -> TestDirectoryRelease:
     """
     Add a new TestDirectory to the database with a sortable version, and make a history entry 
     which will record datetime, user, and action.

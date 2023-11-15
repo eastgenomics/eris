@@ -170,7 +170,7 @@ class TestInsertTestDirectoryData(TestCase):
             "date": "230616",
         }
 
-        insert_test_directory_data(mock_test_directory)
+        insert_test_directory_data(mock_test_directory, False)
 
         clinical_indications = ClinicalIndication.objects.all()
         errors += len_check_wrapper(clinical_indications, "clinical indications", 2)
@@ -186,26 +186,26 @@ class TestInsertTestDirectoryData(TestCase):
             clinical_indication_panels, "clinical indication-panel", 2
         )  # should have 2 links; one from setup and one from the function
 
-        # errors += value_check_wrapper(
-        #     clinical_indication_panels[1].td_version,
-        #     "td_version",
-        #     sortable_version("5.2"),
-        # )
-        #TODO: check links to td version
-
         errors += value_check_wrapper(
             clinical_indication_panels[1].clinical_indication.id,
             "clinical indication id",
             clinical_indications[1].id,
         )
 
+        #check there are 2 links to td version
+        links = CiPanelTdRelease.objects.all()
+        
+        errors += len_check_wrapper(links, "ci-panel td-release links matching our ci_panel", 1)
+
         assert not errors, errors
 
     def test_that_change_in_clinical_indication_name_will_flag_old_links(self):
         """
-        scenario where a clinical indication R123 may be renamed from "test ci" to "test ci 2"
-        we expect the function to make a new link between "test ci 2" and the panels that "test ci" is linked to
-        and flag both old and new links for review
+        CASE: A clinical indication R123 is renamed from "test ci" to "test ci 2"
+        EXPECT: A second clinical indication is made.
+        A new link is made between "test ci 2" and the panels that "test ci" is linked to.
+        Both these old and new links are flagged for review.
+        The new link is linked to a TestDirectoryRelease entry for release 5.2.
 
         """
         errors = []
@@ -248,22 +248,6 @@ class TestInsertTestDirectoryData(TestCase):
             clinical_indication_panels, "clinical indication-panel", 2
         )  # should have 2 links; one from setup and one from the function
 
-        # errors += value_check_wrapper(
-        #     clinical_indication_panels[1]["td_version"],
-        #     "td_version",
-        #     sortable_version("5.2"),
-        # )  # the new link is of td_version 5.2
-
-        # check for a link with td_version 5.2
-        td_ver_5_2 = TestDirectoryRelease.objects.filter(release="5.2")[0]
-        td_ci_panel_links = CiPanelTdRelease.objects.filter(
-            ci_panel=clinical_indication_panels[1],
-            td_release=td_ver_5_2
-        )
-        errors += len_check_wrapper(
-            td_ci_panel_links, "links between ci-panel and release", 1
-        )
-
         errors += value_check_wrapper(
             clinical_indication_panels[1]["clinical_indication_id__name"],
             "clinical indication panel name",
@@ -281,6 +265,7 @@ class TestInsertTestDirectoryData(TestCase):
             True,
         )  # check that both ci-panel links are linked to the same clinical indication (the one in setup)
 
+        # both links are flagged `pending` True
         errors += value_check_wrapper(
             all(
                 [
@@ -290,7 +275,14 @@ class TestInsertTestDirectoryData(TestCase):
             ),
             "clinical indication pending",
             True,
-        )  # both links are flagged `pending` True
+        )  
+
+        #check there is 1 link to the td version (I didn't make a link in setUp for the 'old' CI)
+        links = CiPanelTdRelease.objects.all()
+        errors += len_check_wrapper(links, "ci-panel td-release links matching our ci_panel", 1)
+        errors += value_check_wrapper(links[0].ci_panel.clinical_indication,
+                                      "new ci-panel linked to new td-release", 
+                                      clinical_indications[1])
 
         assert not errors, errors
 
