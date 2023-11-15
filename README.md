@@ -73,26 +73,28 @@ MANE and HGMD files should be version-controlled locally, with file IDs for ever
 
 ```
 python manage.py seed transcript \
---hgnc <path> --mane <path> --mane_ext_id <file ID> --mane_release <release> \
+--hgnc <path> --hgnc_release <release> --mane <path> --mane_ext_id <file ID> --mane_release <release> \
 --gff <path> --g2refseq <path> --g2refseq_ext_id <file ID> --markname <path> \
 --markname_ext_id <file ID> --hgmd_release_label <str> --refgenome <version> \
 --error
 
 # working example
-python manage.py seed transcript --hgnc testing_files/hgnc_dump_20230613.txt --mane testing_files/mane_grch37.csv --mane_ext_id file-123 --mane_release 1.0 --gff testing_files/GCF_000001405.25_GRCh37.p13_genomic.exon_5bp_v2.0.0.tsv --g2refseq testing_files/gene2refseq_202306131409.csv --g2refseq_ext_id file-123 --markname testing_files/markname_202306131409.csv --markname_ext_id file-234 --hgmd_release_label 1.4 --refgenome grch37
+python manage.py seed transcript --hgnc testing_files/hgnc_dump_20230613.txt --hgnc_release 1.0 --mane testing_files/mane_grch37.csv --mane_ext_id file-123 --mane_release 1.0 --gff testing_files/GCF_000001405.25_GRCh37.p13_genomic.exon_5bp_v2.0.0.tsv --gff_release 1.0 --g2refseq testing_files/gene2refseq_202306131409.csv --g2refseq_ext_id file-123 --markname testing_files/markname_202306131409.csv --markname_ext_id file-234 --hgmd_release 1.4 --refgenome grch37
 ```
 
 The arguments are as follows:
 - `hgnc`: path to HGMC dump txt file, allowing gene names to be standardised. The file is CSV format and contains columns for HGNC ID, Approved Symbol, Previous Symbols, Alias Symbols. This file should be documented with a release version. An example HGNC file can be downloaded from: https://www.genenames.org/download/custom/
+- `hgnc_release`: the documented release version for the `hgnc` file. This must consist only of numbers and full stops, e.g. 1.0.1.
 - `mane`: path to MANE CSV file, which informs which transcripts are labelled as clinical. This file should be documented with a release version. An example GRCh37 file is available at: http://tark.ensembl.org/web/mane_GRCh37_list/
 - `mane_ext_id`: the external file ID for the release-tagged MANE CSV file
-- `mane_release`: the release version associated with the MANE CSV file and its file ID.
+- `mane_release`: the release version associated with the MANE CSV file and its file ID. This must consist only of numbers and full stops, e.g. 1.0.1.
 - `gff`: path to parsed gff.tsv (project-Fkb6Gkj433GVVvj73J7x8KbV:file-GF611Z8433Gk7gZ47gypK7ZZ)
+- `gff_release`: the documented release version for the `gff` file. This must consist only of numbers and full stops, e.g. 1.0.1.
 - `g2refseq`: path to the g2refseq table from the HGMD database, in csv format
 - `g2refseq_ext_id`: external file ID for release-tagged HGMD g2refseq table
 - `markname`: path to markname table from the HGMD database, in csv format
 - `markname_ext_id`: external file ID for versioned HGMD markname table
-- `hgmd_release_label`: the release version of HGMD, associated with both markname and g2refseq
+- `hgmd_release`: the release version of HGMD, associated with both markname and g2refseq. This must consist only of numbers and full stops, e.g. 1.0.1.
 - `refgenome`: reference genome. Permitted values are: 37/GRCh37/hg19 or 38/GRCh38/hg38
 
 *HGMD database source can be found on DNAnexus (project-Fz4Q15Q42Z9YjYk110b3vGYQ:file-Fz4Q46842Z9z2Q6ZBjy7jVPY)

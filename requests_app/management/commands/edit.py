@@ -86,7 +86,7 @@ class Command(BaseCommand):
         ), "Command not available, options are: " + ", ".join(POSSIBLE_COMMANDS)
 
         # TODO: add user later, once we've decided on how to do that
-        user = "command line"
+        user = "init_v1_user"
 
         action: str = kwargs.get("action")
 
