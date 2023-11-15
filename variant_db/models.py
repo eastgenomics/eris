@@ -7,8 +7,8 @@ from requests_app.models import Chromosome, ClinicalIndication, Panel, Reference
 class Individual(models.Model):
     """Records individuals"""
 
-    individual_identifier = models.CharField(
-        verbose_name="Individual external ID", max_length=255
+    individual_identifier = models.TextField(
+        verbose_name="Individual external ID"
     )
 
     class Meta:
@@ -21,7 +21,7 @@ class Individual(models.Model):
 class AffectedStatus(models.Model):
     """Records affected statuses"""
 
-    name = models.CharField(verbose_name="Affected status", max_length=255)
+    name = models.TextField(verbose_name="Affected status")
 
     class Meta:
         db_table = "affected_status"
@@ -33,7 +33,7 @@ class AffectedStatus(models.Model):
 class AssertionCriteria(models.Model):
     """Records assertion criteria"""
 
-    name = models.CharField(verbose_name="Assertion criteria name", max_length=255)
+    name = models.TextField(verbose_name="Assertion criteria name")
 
     class Meta:
         db_table = "assertion_criteria"
@@ -45,7 +45,7 @@ class AssertionCriteria(models.Model):
 class ClinicalSignificanceDescription(models.Model):
     """Records clinical significance descriptions"""
 
-    category = models.CharField(verbose_name="CSD category", max_length=255)
+    category = models.TextField(verbose_name="CSD category")
 
     class Meta:
         db_table = "clinical_significance_description"
@@ -57,7 +57,7 @@ class ClinicalSignificanceDescription(models.Model):
 class EvaluatedBy(models.Model):
     """Records who performed evaluation"""
 
-    group = models.CharField(verbose_name="Evaluated by", max_length=255)
+    group = models.TextField(verbose_name="Evaluated by")
 
     class Meta:
         db_table = "evaluated_by"
@@ -69,7 +69,7 @@ class EvaluatedBy(models.Model):
 class AssayMethod(models.Model):
     """Records assay methods"""
 
-    name = models.CharField(verbose_name="Assay method name", max_length=255)
+    name = models.TextField(verbose_name="Assay method name")
 
     class Meta:
         db_table = "assay_method"
@@ -81,8 +81,8 @@ class AssayMethod(models.Model):
 class ClinvarCollectionMethod(models.Model):
     """Records clinvar collection methods"""
 
-    name = models.CharField(
-        verbose_name="Clinvar collection method name", max_length=255
+    name = models.TextField(
+        verbose_name="Clinvar collection method name"
     )
 
     class Meta:
@@ -105,11 +105,11 @@ class Variant(models.Model):
 
     position = models.IntegerField(verbose_name="Variant Position")
 
-    ref = models.CharField(
+    ref = models.TextField(
         verbose_name="Reference variant allele", max_size=255
     )  # what's the maximum variant size?
 
-    alt = models.CharField(
+    alt = models.TextField(
         verbose_name="Alternative variant allele", max_size=255
     )  # see above
 
@@ -123,7 +123,7 @@ class Variant(models.Model):
 class ClinvarAlleleOrigin(models.Model):
     """Records clinvar allele origins"""
 
-    category = models.CharField(verbose_name="Allele origin", max_size=255)
+    category = models.TextField(verbose_name="Allele origin", max_size=255)
 
     class Meta:
         db_table = "clinvar_allele_origin"
@@ -135,11 +135,11 @@ class ClinvarAlleleOrigin(models.Model):
 class ClinvarSubmission(models.Model):
     """Records clinvar submissions"""
 
-    scv_id = models.CharField(verbose_name="SCV ID", max_size=255)
+    scv_id = models.TextField(verbose_name="SCV ID", max_size=255)
 
-    scv_id_version = models.CharField(verbose_name="SCV ID version", max_size=255)
+    scv_id_version = models.TextField(verbose_name="SCV ID version", max_size=255)
 
-    submission_id = models.CharField(verbose_name="ClinVar submission ID", max_size=255)
+    submission_id = models.TextField(verbose_name="ClinVar submission ID", max_size=255)
 
     submission_date = models.DateTimeField(verbose_name="Submission timestamp")
 
