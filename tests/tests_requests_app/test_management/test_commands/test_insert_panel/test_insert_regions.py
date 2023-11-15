@@ -4,6 +4,7 @@ from django_mock_queries.query import MockSet, MockModel
 
 from requests_app.models import (
     Panel,
+    Chromosome,
     Confidence,
     ModeOfInheritance,
     Penetrance,
@@ -247,6 +248,8 @@ class TestInsertRegions_PreexistingRegion(TestCase):
             panel_version="4.31",
         )
 
+        self.chromosome = Chromosome.objects.create(panelapp_name="16")
+
         self.confidence = Confidence.objects.create(confidence_level=3)
 
         self.moi = ModeOfInheritance.objects.create(mode_of_inheritance="TEST VALUE")
@@ -265,14 +268,12 @@ class TestInsertRegions_PreexistingRegion(TestCase):
 
         self.triplosensitivity = Triplosensitivity.objects.create(triplosensitivity="")
 
-        self.reference_genome = ReferenceGenome.objects.create(
-            reference_genome="GRCh38"
-        )
+        self.reference_genome = ReferenceGenome.objects.create(name="GRCh38")
 
         self.first_region = Region.objects.create(
             name="ISCA-37406-Loss",
             verbose_name="16p13.3 region (includes CREBBP) Loss",
-            chrom="16",
+            chrom=self.chromosome,
             reference_genome=self.reference_genome,
             start=3725055,
             end=3880120,
@@ -378,6 +379,8 @@ class TestInsertRegions_PreexistingLink(TestCase):
             panel_version="4.31",
         )
 
+        self.chromosome = Chromosome.objects.create(panelapp_name="16")
+
         self.confidence = Confidence.objects.create(confidence_level=3)
 
         self.moi = ModeOfInheritance.objects.create(mode_of_inheritance="TEST VALUE")
@@ -396,14 +399,12 @@ class TestInsertRegions_PreexistingLink(TestCase):
 
         self.triplosensitivity = Triplosensitivity.objects.create(triplosensitivity="")
 
-        self.reference_genome = ReferenceGenome.objects.create(
-            reference_genome="GRCh38"
-        )
+        self.reference_genome = ReferenceGenome.objects.create(name="GRCh38")
 
         self.first_region = Region.objects.create(
             name="ISCA-37406-Loss",
             verbose_name="16p13.3 region (includes CREBBP) Loss",
-            chrom="16",
+            chrom=self.chromosome,
             reference_genome=self.reference_genome,
             start=3725055,
             end=3880120,

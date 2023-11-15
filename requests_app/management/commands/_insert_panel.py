@@ -8,6 +8,7 @@ from requests_app.models import (
     ClinicalIndicationSuperPanel,
     ClinicalIndicationPanel,
     Gene,
+    Chromosome,
     Confidence,
     Penetrance,
     ModeOfInheritance,
@@ -188,6 +189,10 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
 
     # for each panel region, populate the region attribute models
     for single_region in panel.regions:
+        chromosome, _ = Chromosome.objects.get_or_create(
+            panelapp_name=single_region.get("chromosome"),
+        )
+
         confidence_instance, _ = Confidence.objects.get_or_create(
             confidence_level=single_region.get("confidence_level"),
         )
@@ -220,15 +225,15 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
             triplosensitivity=single_region.get("triplosensitivity_score"),
         )
 
-        ref_grch37, _ = ReferenceGenome.objects.get_or_create(reference_genome="GRCh37")
-        ref_grch38, _ = ReferenceGenome.objects.get_or_create(reference_genome="GRCh38")
+        ref_grch37, _ = ReferenceGenome.objects.get_or_create(name="GRCh37")
+        ref_grch38, _ = ReferenceGenome.objects.get_or_create(name="GRCh38")
 
         # attach Region record to Panel record - GRCh37 if data exists
         if single_region.get("grch37_coordinates"):
             region_instance_build_37, _ = Region.objects.get_or_create(
                 name=single_region.get("entity_name"),
                 verbose_name=single_region.get("verbose_name"),
-                chrom=single_region.get("chromosome"),
+                chrom=chromosome,
                 reference_genome=ref_grch37,
                 start=single_region.get("grch37_coordinates")[0],
                 end=single_region.get("grch37_coordinates")[1],
@@ -254,7 +259,7 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
             region_instance_build_38, _ = Region.objects.get_or_create(
                 name=single_region.get("entity_name"),
                 verbose_name=single_region.get("verbose_name"),
-                chrom=single_region.get("chromosome"),
+                chrom=chromosome,
                 reference_genome=ref_grch38,
                 start=single_region.get("grch38_coordinates")[0],
                 end=single_region.get("grch38_coordinates")[1],
