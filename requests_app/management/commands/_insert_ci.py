@@ -284,10 +284,10 @@ def _check_td_version_valid(
     else:
         # if currently imported TD version is lower than latest TD version in db
         # then abort
-        if sortable_version(td_version) <= sortable_version(latest_db_version):
+        if Version(td_version) <= Version(latest_db_version):
             raise Exception(
-                f"TD version {normalize_version(td_version)} is less than or the same as"
-                f" the version currently in the db, {normalize_version(latest_db_version)}."
+                f"TD version {td_version} is less than or the same as"
+                f" the version currently in the db, {latest_db_version}."
                 f" Abandoning import."
             )
 
@@ -770,7 +770,7 @@ def _make_ci_panel_td_link(
             clinical_indication_panel_id=cip_instance.id,
             note=History.clinical_indication_panel_metadata_changed(
                 "td_version",
-                normalize_version(td_version.release),
+                td_version.release,
                 td_version,
             ),
             user=td_source,
@@ -838,7 +838,7 @@ def _attempt_ci_superpanel_creation(
             clinical_indication_panel_id=cip_instance,
             note=History.clinical_indication_panel_metadata_changed(
                 "td_version",
-                normalize_version(td_version.release),
+                td_version.release,
                 td_version,
             ),
             user=td_source,
@@ -937,13 +937,13 @@ def _flag_superpanels_removed_from_test_directory(
 
 def _add_td_release_to_db(td_version: str, user: str) -> TestDirectoryRelease:
     """
-    Add a new TestDirectory to the database with a sortable version, and make a history entry 
+    Add a new TestDirectory to the database with a version, and make a history entry 
     which will record datetime, user, and action.
     :param td_version: the string of the version of the currently-uploaded test directory
     :param user: the string representing the current user
     :returns: the TestDirectoryRelease
     """
-    td = TestDirectoryRelease.objects.create(release=sortable_version(td_version))
+    td = TestDirectoryRelease.objects.create(release=td_version)
     td_history = TestDirectoryReleaseHistory.objects.create(
         td_release=td,
         user=user,
