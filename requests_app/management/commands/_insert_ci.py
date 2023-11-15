@@ -44,15 +44,18 @@ def _get_most_recent_td_release_for_ci_panel(ci_panel: ClinicalIndicationPanel) 
     :return: most recent TestDirectoryRelease, or None if no db entries
     """
     # get all td_releases
-    release = CiPanelTdRelease.objects.filter(ci_panel=ci_panel).order_by("-td_release")
-    if not release:
+    releases = CiPanelTdRelease.objects.filter(ci_panel=ci_panel).order_by("-td_release")
+    if not releases:
         return None
     else:
-        # get the latest - use packaging Version to do sorting
-        td_releases = [v.td_release for v in release]
+        # get the latest release - use packaging Version to do sorting
+        td_releases = [v.td_release.release for v in releases]
         td_releases.sort(key=Version, reverse=True)
         latest_td = str(td_releases[0])
-        return latest_td
+
+        # return the instance for that release
+        latest_td_instance = TestDirectoryRelease.objects.get(release=latest_td)
+        return latest_td_instance
 
 
 def _backward_deactivate(indications: list[dict], user: str) -> None:
