@@ -494,6 +494,92 @@ class Gene(models.Model):
         return str(self.id)
 
 
+class HgncRelease(models.Model):
+    """
+    Defines a particular release of HGNC, the source of gene IDs, symbols, and aliases
+    """
+
+    hgnc_release = models.CharField(
+        verbose_name="Hgnc Release", max_length=255, unique=True
+    )
+
+    class Meta:
+        db_table = "hgnc_release"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class GeneHgncRelease(models.Model):
+    """
+    Links Genes to HGNC releases if:
+    - the release is where the Gene was first assigned its Symbol
+    - the Gene's Symbol changed in the release
+    - the Gene's Alias changed in the release
+    - the Gene was already in the database, and has not changed in a new release -
+    this is to show that the Gene is still present in the newer release
+    """
+
+    gene = models.ForeignKey(
+        Gene,
+        verbose_name="Gene",
+        on_delete=models.PROTECT,
+        default=None,
+    )
+
+    hgnc_release = models.ForeignKey(
+        HgncRelease,
+        verbose_name="Hgnc Release",
+        on_delete=models.PROTECT,
+        default=None,
+    )
+
+    class Meta:
+        db_table = "gene_hgncrelease"
+        unique_together = ["gene", "hgnc_release"]
+
+    def __str__(self):
+        return str(self.id)
+
+
+class GeneHgncReleaseHistory(models.Model):
+    """
+    Details changes to the links between Genes and particular HGNC releases, if:
+    - the release is where the Gene was first assigned its Symbol
+    - the Gene's Symbol changed in the release
+    - The Gene's Alias changed in the release
+    """
+
+    gene_hgnc_release = models.ForeignKey(
+        GeneHgncRelease,
+        verbose_name="Gene-HGNC Release Link",
+        on_delete=models.PROTECT,
+        default=None,
+    )
+
+    created = models.DateTimeField(
+        verbose_name="created",
+        auto_now_add=True,
+    )
+
+    note = models.CharField(
+        verbose_name="Note",
+        max_length=255,
+    )
+
+    user = models.CharField(
+        verbose_name="user",
+        max_length=255,
+        null=True,
+    )
+
+    class Meta:
+        db_table = "gene_hgnc_release_history"
+
+    def __str__(self):
+        return str(self.id)
+
+
 class TranscriptSource(models.Model):
     """
     Defines a particular source AND category of transcript information,
@@ -526,7 +612,7 @@ class TranscriptRelease(models.Model):
         default=None,
     )
 
-    external_release_version = models.CharField(
+    release = models.CharField(
         verbose_name="Transcript Release", max_length=255, null=True, default=None
     )
 
@@ -542,7 +628,7 @@ class TranscriptRelease(models.Model):
     class Meta:
         db_table = "transcript_release"
         # stop people reusing the same release version
-        unique_together = ["source", "external_release_version", "reference_genome"]
+        unique_together = ["source", "release", "reference_genome"]
 
     def __str__(self):
         return str(self.id)
@@ -603,7 +689,7 @@ class Transcript(models.Model):
 
     class Meta:
         db_table = "transcript"
-        unique_together = ("transcript", "gene", "reference_genome")
+        unique_together = ["transcript", "gene", "reference_genome"]
 
     def __str__(self):
         return str(self.id)
@@ -651,6 +737,93 @@ class TranscriptReleaseTranscript(models.Model):
 
     class Meta:
         db_table = "transcript_release_link"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class GffRelease(models.Model):
+    """
+    Defines a particular release of the GFF file, the source of possibly-clinically relevant
+    transcripts. Release versions must be unique for a given reference genome.
+    """
+
+    gff_release = models.CharField(
+        verbose_name="Gff Release", max_length=255, unique=True
+    )
+
+    reference_genome = models.ForeignKey(
+        ReferenceGenome,
+        verbose_name="reference genome",
+        on_delete=models.PROTECT,
+    )
+
+    class Meta:
+        db_table = "gff_release"
+        unique_together = ["gff_release", "reference_genome"]
+
+    def __str__(self):
+        return str(self.id)
+
+
+class TranscriptGffRelease(models.Model):
+    """
+    The link between a transcript and a GFF release.
+    This indicates that the transcript is present in that GFF release.
+    """
+
+    transcript = models.ForeignKey(
+        Transcript,
+        verbose_name="Transcript",
+        on_delete=models.PROTECT,
+        default=None,
+    )
+
+    gff_release = models.ForeignKey(
+        GffRelease,
+        verbose_name="Gff File Release",
+        on_delete=models.PROTECT,
+        default=None,
+    )
+
+    class Meta:
+        db_table = "transcript_gffrelease"
+        unique_together = ["transcript", "gff_release"]
+
+    def __str__(self):
+        return str(self.id)
+
+
+class TranscriptGffReleaseHistory(models.Model):
+    """
+    Tracking history for the link between a transcript and a GFF release.
+    """
+
+    transcript_gff = models.ForeignKey(
+        TranscriptGffRelease,
+        verbose_name="Transcript Gff",
+        on_delete=models.PROTECT,
+        default=None,
+    )
+
+    created = models.DateTimeField(
+        verbose_name="created",
+        auto_now_add=True,
+    )
+
+    note = models.CharField(
+        verbose_name="Note",
+        max_length=255,
+    )
+
+    user = models.CharField(
+        verbose_name="user",
+        max_length=255,
+        null=True,
+    )
+
+    class Meta:
+        db_table = "transcript_gff_file_history"
 
     def __str__(self):
         return str(self.id)

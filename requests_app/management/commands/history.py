@@ -63,3 +63,23 @@ class History:
 
     def panel_gene_reverted(user) -> str:
         return f"PanelGene reverted by {user}"
+
+    # gene/HGNC releases
+    def gene_hgnc_release_approved_symbol_change(old_value: str, new_value: str) -> str:
+        return f"HGNC approved symbol has changed from {old_value} to {new_value}"
+
+    def gene_hgnc_release_alias_symbol_change(old_value: str, new_value: str) -> str:
+        return f"HGNC alias symbol has changed from {old_value} to {new_value}"
+
+    def gene_hgnc_release_new() -> str:
+        return f"HGNC gene has been added for the first time"
+
+    def gene_hgnc_release_present() -> str:
+        return f"HGNC gene is present in this release"
+
+    # transcript/gff releases
+    def tx_gff_release_new() -> str:
+        return f"Transcript added from a GFF release for the first time"
+
+    def tx_gff_release_present() -> str:
+        return f"Transcript is present in this release"
