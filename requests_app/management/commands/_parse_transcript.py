@@ -183,7 +183,7 @@ def _add_new_genes_to_db(
 
 
 def _make_hgnc_gene_sets(
-    hgnc_id_to_symbol: dict[str:str], hgnc_id_to_alias: dict[str:str]
+    hgnc_id_to_symbol: dict[str:str], hgnc_id_to_alias: dict[str:list]
 ) -> tuple[list, dict, dict, list]:
     """
     Sort genes into:
@@ -197,7 +197,7 @@ def _make_hgnc_gene_sets(
     These sets are then used by downstream functions to update the database
 
     :param hgnc_id_to_approved_symbol: a dictionary of HGNC_ID to the approved symbols in the new HGNC release
-    :param hgnc_id_to_alias_symbol: a dictionary of HGNC_ID to the alias symbols in the new HGNC release
+    :param hgnc_id_to_alias_symbol: a dictionary of HGNC_ID to the list of alias symbols in the new HGNC release
 
     :return new_hgncs: a list of dicts, one per new gene, with keys 'hgnc_id' 'symbol' and 'alias'
     :return hgnc_symbol_changed: a dict-of-dicts of genes with changed symbols, keys are hgnc_ids, the nested dict has 'old' and 'new 'aliases
