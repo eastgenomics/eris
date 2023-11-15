@@ -5,6 +5,7 @@
 import os
 
 from django.db import transaction
+from packaging.version import Version
 
 from .utils import sortable_version, normalize_version
 from .history import History
@@ -38,13 +39,21 @@ def _get_most_recent_td_release_for_ci_panel(ci_panel: ClinicalIndicationPanel) 
     Return it, or 'none' if it fails.
     Used in cases where an inferred link is being made between a new CI and a new Panel,
     based on data which exists for earlier versions of the same R code and Panel ID.
+    
+    :param ci_panel: the ClinicalIndicationPanel for which we want the most recent td release
+    :return: most recent TestDirectoryRelease, or None if no db entries
     """
     # get all td_releases
-    release = CiPanelTdRelease.objects.filter(ci_panel=ci_panel).order_by("-td_release").first()
-    if release:
-        return release.td_release
-    else:
+    release = CiPanelTdRelease.objects.filter(ci_panel=ci_panel).order_by("-td_release")
+    if not release:
         return None
+    else:
+        # get the latest - use packaging Version to do sorting
+        td_releases = [v.td_release for v in release]
+        td_releases.sort(key=Version, reverse=True)
+        latest_td = str(td_releases[0])
+        return latest_td
+
 
 def _backward_deactivate(indications: list[dict], user: str) -> None:
     """
