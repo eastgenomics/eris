@@ -2,8 +2,6 @@
 
 # TODO: deal with PA ids which aren't in the db (looking at you 489) - Panel has been retired!
 
-import os
-
 from django.db import transaction
 from packaging.version import Version
 
@@ -337,6 +335,31 @@ def _retrieve_unknown_metadata_records() -> (
     return conf, moi, mop, pen
 
 
+def _check_for_changed_pg_justification(pg_instance: PanelGene,
+                                        unique_td_source: str):
+    """
+    For a PanelGene instance, check that the justification hasn't changed.
+    If it has, update it and log it in history.
+    You might run this if there's a new td import, for example.
+    
+    :param pg_instance: a PanelGene which might have changed
+    :param unique_td_source: the test directory source, which can be used
+    as a justification.
+    """
+    if pg_instance.justification != unique_td_source:
+        PanelGeneHistory.objects.create(
+            panel_gene_id=pg_instance.id,
+            note=History.panel_gene_metadata_changed(
+                "justification",
+                pg_instance.justification,
+                unique_td_source,
+            ),
+            user=unique_td_source,
+        )
+
+        pg_instance.justification = unique_td_source
+        pg_instance.save()
+
 def _make_panels_from_hgncs(
     json_data: dict,
     ci: ClinicalIndication,
@@ -409,22 +432,8 @@ def _make_panels_from_hgncs(
                 user=unique_td_source,
             )
         else:
-            # a Panel-Gene record already exists
-            # change justification, because new TD import
-            #TODO: unit test missing for the line below.
-            if pg_instance.justification != unique_td_source:
-                PanelGeneHistory.objects.create(
-                    panel_gene_id=pg_instance.id,
-                    note=History.panel_gene_metadata_changed(
-                        "justification",
-                        pg_instance.justification,
-                        unique_td_source,
-                    ),
-                    user=unique_td_source,
-                )
-
-                pg_instance.justification = unique_td_source
-                pg_instance.save()
+            # a Panel-Gene record already exists - change justification
+            _check_for_changed_pg_justification(pg_instance, unique_td_source)
 
     if panel_created:  # new panel created
         previous_ci_panels = ClinicalIndicationPanel.objects.filter(
