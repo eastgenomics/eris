@@ -3,7 +3,6 @@ This file contains tests for the smaller functions in the insert_ci command.
 - _backward_deactivate
 - flag_clinical_indication_panel_for_review
 - provisionally_link_clinical_indication_to_panel
-- _get_td_version
 - _retrieve_panel_from_pa_id
 - _retrieve_unknown_metadata_records
 - _make_provisional_test_method_change
@@ -28,7 +27,6 @@ from requests_app.management.commands._insert_ci import (
     flag_clinical_indication_superpanel_for_review,
     provisionally_link_clinical_indication_to_panel,
     provisionally_link_clinical_indication_to_superpanel,
-    _get_td_version,
     _retrieve_panel_from_pa_id,
     _retrieve_unknown_metadata_records,
     _make_provisional_test_method_change,
@@ -377,27 +375,6 @@ class TestProvisionallyLinkClinicalIndicationToSuperPanel(TestCase):
             releases = TestDirectoryRelease.objects.all()
             assert len(releases) == 1
             assert releases[0].release == "5.0"
-
-
-class TestGetTDVersion(TestCase):
-    """
-    test directory parser will generate a `td_source` in its output parsed json file which
-    looks like this "rare-and-inherited-disease-national-gnomic-test-directory-v5.1.xlsx"
-
-    this function will extract the version number from the td_source above by
-    - separating the filename from file extension
-    - splitting the td_source by "-" and taking the last element
-    - left stripping the "v" from the version number
-
-    """
-
-    def test_get_td_version_from_filename(self):
-        assert (
-            _get_td_version(
-                "rare-and-inherited-disease-national-gnomic-test-directory-v5.1.xlsx"
-            )
-            == "5.1"
-        )
 
 
 class TestRetrievePanelFromPanelID(TestCase):

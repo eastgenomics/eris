@@ -26,7 +26,6 @@ from tests.tests_requests_app.test_management.test_commands.test_insert_panel.te
     value_check_wrapper,
 )
 
-# TODO: add td version as arg to _make_panels_from_hgncs
 class TestMakePanelsFromHgncs(TestCase):
     """
     The core function is to make panels from a list of hgncs.

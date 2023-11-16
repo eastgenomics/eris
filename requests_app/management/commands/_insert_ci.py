@@ -241,28 +241,6 @@ def provisionally_link_clinical_indication_to_superpanel(
 
     return ci_superpanel_instance
 
-
-def _get_td_version(filename: str) -> str | None:
-    """
-    Get TD version from filename.
-    convert "rare-and-inherited-disease-national-genomic-test-directory-v4.xlsx" into "4"
-
-    :param: filename [str]: filename of TD json file
-
-    returns:
-        td_version [str]: TD version e.g. 4
-    """
-
-    # grab only filename without the extension
-    td_filename, _ = os.path.splitext(filename)
-
-    try:
-        return td_filename.split("-")[-1].lstrip("v").strip()
-    except IndexError:
-        print(f"TD version not found in filename {filename}")
-        return None
-
-
 def _check_td_version_valid(
     td_version: str, latest_db_version: str, force: bool
 ) -> None:
@@ -373,6 +351,8 @@ def _make_panels_from_hgncs(
     :param: td_release [TestDirectoryRelease], the td release instance to link to the new CI-panel interaction
     :param: hgnc_list [list], list of HGNC ids which need to be made into a single panel
     """
+    #TODO: unit test
+
     # get current config source and test directory date
     td_source: str = json_data["td_source"]
     config_source: str = json_data["config_source"]
@@ -587,7 +567,6 @@ def _update_ci_panel_tables_with_new_ci(
     in the database which may need linking to some panels
     :param: config_source [str], source metadata for the CI-panel link
     """
-    #TODO: write unit tests
     for clinical_indication_panel in ClinicalIndicationPanel.objects.filter(
         clinical_indication_id__r_code=r_code,
         current=True,
@@ -873,6 +852,7 @@ def _flag_panels_removed_from_test_directory(
     :param: panels, a list of relevant panels taken from the TD json or other data source
     :param: td_source, the source of test directory information
     """
+    #TODO: test
     ci_panels = ClinicalIndicationPanel.objects.filter(
         clinical_indication_id__r_code=ci_instance.r_code, current=True
     )
@@ -913,6 +893,7 @@ def _flag_superpanels_removed_from_test_directory(
     data source
     :param: td_source, the source of test directory information
     """
+    #TODO: test
     ci_superpanels = ClinicalIndicationSuperPanel.objects.filter(
         clinical_indication__r_code=ci_instance.r_code, current=True
     )
