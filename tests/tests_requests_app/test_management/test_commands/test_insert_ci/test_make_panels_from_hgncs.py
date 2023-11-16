@@ -47,7 +47,10 @@ class TestMakePanelsFromHgncs(TestCase):
             test_method="Test method",
         )
 
-        self.td_version = TestDirectoryRelease.objects.create(release="3.0")
+        self.td_version = TestDirectoryRelease.objects.create(release="3.0",
+                                                              td_source="rare-and-inherited-disease-national-gnomic-test-directory-v5.1.xlsx",
+                                                              config_source="230401_RD",
+                                                              td_date="230616")
 
         self.user = "test"
 
@@ -57,14 +60,7 @@ class TestMakePanelsFromHgncs(TestCase):
         """
         errors = []
 
-        mock_test_directory = {
-            "td_source": "rare-and-inherited-disease-national-gnomic-test-directory-v5.1.xlsx",
-            "config_source": "230401_RD",
-            "date": "230616",
-        }
-
         _make_panels_from_hgncs(
-            mock_test_directory,
             self.first_clinical_indication,
             self.td_version,
             ["HGNC:1", "HGNC:2"],
@@ -170,14 +166,7 @@ class TestMakePanelsFromHgncs(TestCase):
             pending=False,
         )  # we make a mock link in the database with td version 6.1
 
-        mock_test_directory = {
-            "td_source": "rare-and-inherited-disease-national-gnomic-test-directory-v5.1.xlsx",
-            "config_source": "230401_RD",
-            "date": "230616",
-        }  # this is the test directory that we are going to seed into the db: td version 5.1
-
         _make_panels_from_hgncs(
-            mock_test_directory,
             self.first_clinical_indication,
             self.td_version,
             ["HGNC:1", "HGNC:2", "HGNC:3"],
@@ -228,16 +217,11 @@ class TestMakePanelsFromHgncs(TestCase):
 
         we expect the function to truncate the panel name to 200 chars and store it in db
         """
-        mock_test_directory = {
-            "td_source": "rare-and-inherited-disease-national-gnomic-test-directory-v5.2.xlsx",
-            "config_source": "230401_RD",
-            "date": "230616",
-        }
-
+        
         hgncs = [f"HGNC:{i}" for i in range(1000)]
 
         _make_panels_from_hgncs(
-            mock_test_directory, self.first_clinical_indication, self.td_version, hgncs,
+            self.first_clinical_indication, self.td_version, hgncs,
             self.user
         )
 

@@ -873,9 +873,6 @@ def insert_test_directory_data(json_data: dict, td_release: str, force: bool = F
 
     print(f"Inserting test directory data into database... forced: {force}")
 
-    #TODO: add a useful User one day
-    user = td_source
-
     # fetch td source and config source from json file
     td_source: str = json_data.get("td_source")
     assert td_source, "Missing td_source in test directory json file"
@@ -884,6 +881,9 @@ def insert_test_directory_data(json_data: dict, td_release: str, force: bool = F
     # fetch td version and check it's valid
     latest_td_version_in_db = _fetch_latest_td_version()
     _check_td_version_valid(td_release, latest_td_version_in_db, force)
+
+    #TODO: add a useful User one day
+    user = td_source
 
     # add test directory to the db
     td_version = _add_td_release_to_db(td_release, td_source, config_source, user)
@@ -981,7 +981,7 @@ def insert_test_directory_data(json_data: dict, td_release: str, force: bool = F
             )
 
         if hgnc_list:
-            _make_panels_from_hgncs(json_data, ci_instance, td_version, hgnc_list, user)
+            _make_panels_from_hgncs(ci_instance, td_version, hgnc_list, user)
 
     _backward_deactivate(all_indication, td_source)
 
