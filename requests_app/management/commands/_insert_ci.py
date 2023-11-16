@@ -269,7 +269,7 @@ def _check_td_version_valid(
     """
     Compares the current TD upload's version to the latest in the
     database. Causes exceptions to raise if the current TD upload
-    is for an old version of the test directory, relative to what's
+    is for an old or identical version of the test directory, relative to what's
     in Eris already. If everything is fine, does nothing.
 
     Can be overridden by passing force=True
