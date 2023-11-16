@@ -558,12 +558,14 @@ def _fetch_latest_td_version() -> str | None:
     :returns: latest_td [str], the maximum test directory version in
     the database, or None if there isn't an entry yet
     """
-    latest_td = TestDirectoryRelease.objects.all().order_by("-release").first()
-
-    if latest_td:
-        return latest_td.release
-    else:
+    latest_tds = TestDirectoryRelease.objects.all().order_by("-release")
+    if not latest_tds:
         return None
+    else:
+        releases = [v.release for v in latest_tds]
+        releases.sort(key=Version, reverse=True)
+        latest = str(releases[0])
+        return latest
 
 
 def _update_ci_panel_tables_with_new_ci(
