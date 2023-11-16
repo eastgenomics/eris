@@ -351,8 +351,6 @@ def _make_panels_from_hgncs(
     :param: td_release [TestDirectoryRelease], the td release instance to link to the new CI-panel interaction
     :param: hgnc_list [list], list of HGNC ids which need to be made into a single panel
     """
-    #TODO: unit test
-
     # get current config source and test directory date
     td_source: str = json_data["td_source"]
     config_source: str = json_data["config_source"]
@@ -413,6 +411,7 @@ def _make_panels_from_hgncs(
         else:
             # a Panel-Gene record already exists
             # change justification, because new TD import
+            #TODO: unit test missing for the line below.
             if pg_instance.justification != unique_td_source:
                 PanelGeneHistory.objects.create(
                     panel_gene_id=pg_instance.id,
@@ -481,6 +480,7 @@ def _make_panels_from_hgncs(
         with transaction.atomic():
             if cpi_instance.config_source != json_data["config_source"]:
                 # take a note of the change
+                #TODO: unit test missing for the object-creation line below, and the config_source setting
                 ClinicalIndicationPanelHistory.objects.create(
                     clinical_indication_panel_id=cpi_instance.id,
                     note=History.clinical_indication_panel_metadata_changed(
@@ -790,6 +790,7 @@ def _attempt_ci_superpanel_creation(
     :return: a tuple containing the created or fetched ClinicalIndicationSuperPanel
     instance, plus a bool for if it was created or not
     """
+    #TODO: need unit tests on some sections here
     (
         cip_instance,
         cip_created,
@@ -811,14 +812,14 @@ def _attempt_ci_superpanel_creation(
     if cip_created:
         # if CI-Panel record is created, create a history record
         ClinicalIndicationSuperPanelHistory.objects.create(
-            clinical_indication_panel_id=cip_instance,
+            clinical_indication_superpanel=cip_instance,
             note=History.clinical_indication_panel_created(),
             user=td_source,
         ),
     else:
         # log the fact that there's a newer test directory version now, in the history
         ClinicalIndicationSuperPanelHistory.objects.create(
-            clinical_indication_panel_id=cip_instance,
+            clinical_indication_superpanel_id=cip_instance,
             note=History.clinical_indication_panel_metadata_changed(
                 "td_version",
                 td_version.release,
@@ -912,7 +913,7 @@ def _flag_superpanels_removed_from_test_directory(
                 cip.save()
 
                 ClinicalIndicationSuperPanelHistory.objects.create(
-                    clinical_indication_panel=cip,
+                    clinical_indication_superpanel=cip,
                     note=History.flag_clinical_indication_panel(
                         "ClinicalIndicationSuperPanel does not exist in TD"
                     ),
@@ -1002,6 +1003,7 @@ def insert_test_directory_data(json_data: dict, td_release: str, force: bool = F
         if indication["panels"]:
             for pa_id in indication["panels"]:
                 if not pa_id or not pa_id.strip():
+                    #TODO: no tests hit continue
                     continue
 
                 # add any individual hgnc ids to a separate list
@@ -1041,6 +1043,7 @@ def insert_test_directory_data(json_data: dict, td_release: str, force: bool = F
 
                 if not panel_record:
                     if not super_panel_record:
+                        #TODO: no tests for this case yet
                         # No record exists of this panel/superpanel
                         # e.g. panel id 489 has been retired
                         print(
