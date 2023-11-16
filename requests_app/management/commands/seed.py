@@ -102,6 +102,12 @@ class Command(BaseCommand):
         )
 
         td.add_argument(
+            "--td_release",
+            type=str,
+            help="The documented release version of the test directory file",
+        )
+
+        td.add_argument(
             "--force",
             action="store_true",
             help="force td seed ignoring td version",
@@ -243,19 +249,22 @@ class Command(BaseCommand):
 
                 print("Done.")
 
-        # python manage.py seed td <input_json> <Y/N>
+        # python manage.py seed td <input_json> --td_release <td_release_version> <Y/N>
         elif command == "td":
             input_directory = kwargs.get("input")
+            td_release = kwargs.get("td_release")
             force: bool = kwargs.get("force")
 
             if not self._validate_td(input_directory):
                 raise ValueError("Invalid input file")
 
+            self._validate_release_versions([td_release])
+            
             with open(input_directory) as reader:
                 json_data = json.load(reader)
 
             if not test_mode:
-                insert_test_directory_data(json_data, force)
+                insert_test_directory_data(json_data, td_release, force)
 
         # python manage.py seed transcript --hgnc <path> --hgnc_release <str> --mane <path>
         # --mane_ext_id <str> --mane_release <str> --gff <path> --gff_release <str> --g2refseq <path>

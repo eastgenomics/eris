@@ -953,15 +953,16 @@ def _add_td_release_to_db(td_version: str, user: str) -> TestDirectoryRelease:
 
 
 @transaction.atomic
-def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
+def insert_test_directory_data(json_data: dict, td_release: str, force: bool = False) -> None:
     """This function inserts TD data into DB
 
     e.g. command
-    python manage.py seed test_dir <input_json> <Y/N>
+    python manage.py seed test_dir <input_json> --td_release <td_release_version> <Y/N>
 
     args:
         json_data [json dict]: data from TD
-        td_current [bool]: is this the current TD version
+        td_release [str]: the version of the test directory file
+        td_current [bool]: is this the current TD version?
     """
 
     print(f"Inserting test directory data into database... forced: {force}")
@@ -973,14 +974,10 @@ def insert_test_directory_data(json_data: dict, force: bool = False) -> None:
     #TODO: add a useful User one day
     user = td_source
 
-    # fetch TD version from filename
-    td_version: str = _get_td_version(td_source)
-    assert td_version, f"Cannot parse TD version {td_version}"
-
     # check the test directory upload isn't for an older version
     latest_td_version_in_db = _fetch_latest_td_version()
-    _check_td_version_valid(td_version, latest_td_version_in_db, force)
-    td_version = _add_td_release_to_db(td_version, user)
+    _check_td_version_valid(td_release, latest_td_version_in_db, force)
+    td_version = _add_td_release_to_db(td_release, user)
 
     all_indication: list[dict] = json_data["indications"]
 
