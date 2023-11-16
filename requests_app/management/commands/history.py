@@ -67,10 +67,10 @@ class History:
     # test directory history
     def td_added() -> str:
         return f"New td version added"
-    
+
     def td_for_panel_ci_autolink() -> str:
         return f"Panel has automatically been linked to an existing ClinicalIndication - test directory version applied automatically"
-    
+
     # gene/HGNC releases
     def gene_hgnc_release_approved_symbol_change(old_value: str, new_value: str) -> str:
         return f"HGNC approved symbol has changed from {old_value} to {new_value}"

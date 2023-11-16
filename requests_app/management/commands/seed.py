@@ -259,7 +259,7 @@ class Command(BaseCommand):
                 raise ValueError("Invalid input file")
 
             self._validate_release_versions([td_release])
-            
+
             with open(input_directory) as reader:
                 json_data = json.load(reader)
 

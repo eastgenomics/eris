@@ -18,7 +18,7 @@ from requests_app.models import (
     ClinicalIndicationPanelHistory,
     ClinicalIndicationSuperPanelHistory,
     ClinicalIndicationTestMethodHistory,
-    TestDirectoryRelease
+    TestDirectoryRelease,
 )
 from requests_app.management.commands.utils import sortable_version
 from requests_app.management.commands._insert_ci import (
@@ -192,6 +192,7 @@ class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
     Tests for the function which automatically links a new version/name of a panel,
     to the same clinical indication that is linked to an earlier version of the panel.
     """
+
     def setUp(self) -> None:
         self.first_clinical_indication = ClinicalIndication.objects.create(
             r_code="R123", name="Test CI", test_method="Test method"
@@ -235,7 +236,7 @@ class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
             self.first_panel.id,
             self.first_clinical_indication.id,
             "test",
-            self.td_version
+            self.td_version,
         )  # this is an existing link in db
 
         self.first_clinical_indication_panel.refresh_from_db()
@@ -243,7 +244,7 @@ class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
         # check that the ci-panel is set to pending
         with self.subTest():
             assert self.first_clinical_indication_panel.pending == True
-        
+
         # test that a release was linked to the ci-panel
         with self.subTest():
             releases = TestDirectoryRelease.objects.all()
@@ -259,7 +260,7 @@ class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
             self.first_panel.id,
             self.second_clinical_indication.id,
             "test",
-            self.td_version
+            self.td_version,
         )
 
         # test a new ci-panel link is made and flagged for review
@@ -275,11 +276,13 @@ class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
             assert len(releases) == 1
             assert releases[0].release == "2.1.0"
 
+
 class TestProvisionallyLinkClinicalIndicationToSuperPanel(TestCase):
     """
     Tests for the function which automatically links a new version/name of a superpanel,
     to the same clinical indication that is linked to an earlier version of the superpanel.
     """
+
     def setUp(self) -> None:
         self.first_clinical_indication = ClinicalIndication.objects.create(
             r_code="R123", name="Test CI", test_method="Test method"
@@ -326,7 +329,10 @@ class TestProvisionallyLinkClinicalIndicationToSuperPanel(TestCase):
         """
 
         provisionally_link_clinical_indication_to_superpanel(
-            self.first_superpanel, self.first_clinical_indication, "test", self.td_version
+            self.first_superpanel,
+            self.first_clinical_indication,
+            "test",
+            self.td_version,
         )  # this is an existing link in db
 
         self.first_clinical_indication_superpanel.refresh_from_db()
@@ -353,7 +359,7 @@ class TestProvisionallyLinkClinicalIndicationToSuperPanel(TestCase):
             self.first_superpanel,
             self.second_clinical_indication,
             "test",
-            self.td_version
+            self.td_version,
         )
 
         # one new link created

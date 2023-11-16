@@ -842,7 +842,7 @@ def _get_latest_hgnc_release() -> str | None:
     """
     Get the latest release in HgncRelease, using packaging.version to handle version formatting
     which isn't 100% consistent. Return None if the table has no matching results.
-    
+
     :returns: string of latest HGNC release version, or None
     """
     hgncs = HgncRelease.objects.all().order_by("-hgnc_release")

@@ -1,4 +1,3 @@
-
 from typing import Any
 from django.test import TestCase
 
@@ -12,12 +11,14 @@ from requests_app.models import (
     PanelGeneHistory,
     ClinicalIndicationPanelHistory,
     TestDirectoryRelease,
-    CiPanelTdRelease
+    CiPanelTdRelease,
 )
-from requests_app.management.commands._insert_ci import _check_for_changed_pg_justification
+from requests_app.management.commands._insert_ci import (
+    _check_for_changed_pg_justification,
+)
 from tests.tests_requests_app.test_management.test_commands.test_insert_panel.test_insert_gene import (
     len_check_wrapper,
     value_check_wrapper,
 )
 
-#TODO: write this?
+# TODO: write this?

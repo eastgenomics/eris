@@ -27,22 +27,26 @@ from requests_app.models import (
     ClinicalIndicationTestMethodHistory,
     PanelGeneHistory,
     CiPanelTdRelease,
-    CiSuperpanelTdRelease
+    CiSuperpanelTdRelease,
 )
 
-def _get_most_recent_td_release_for_ci_panel(ci_panel: ClinicalIndicationPanel) \
-    -> TestDirectoryRelease | None:
+
+def _get_most_recent_td_release_for_ci_panel(
+    ci_panel: ClinicalIndicationPanel,
+) -> TestDirectoryRelease | None:
     """
     For a clinical indication-panel link, find the most-recent active test directory release.
     Return it, or 'none' if it fails.
     Used in cases where an inferred link is being made between a new CI and a new Panel,
     based on data which exists for earlier versions of the same R code and Panel ID.
-    
+
     :param ci_panel: the ClinicalIndicationPanel for which we want the most recent td release
     :return: most recent TestDirectoryRelease, or None if no db entries
     """
     # get all td_releases
-    releases = CiPanelTdRelease.objects.filter(ci_panel=ci_panel).order_by("-td_release")
+    releases = CiPanelTdRelease.objects.filter(ci_panel=ci_panel).order_by(
+        "-td_release"
+    )
     if not releases:
         return None
     else:
@@ -149,7 +153,7 @@ def provisionally_link_clinical_indication_to_panel(
     panel_id: int,
     clinical_indication_id: int,
     user: str,
-    td_version: TestDirectoryRelease
+    td_version: TestDirectoryRelease,
 ) -> ClinicalIndicationPanel:
     """
     Link a CI and panel, but set the 'pending' field to True,
@@ -177,8 +181,7 @@ def provisionally_link_clinical_indication_to_panel(
     # attribute the pending Ci-Panel link to the current TestDirectoryRelease
     if ci_panel_instance and td_version:
         release_link, create = CiPanelTdRelease.objects.get_or_create(
-            ci_panel=ci_panel_instance,
-            td_release=td_version
+            ci_panel=ci_panel_instance, td_release=td_version
         )
 
     if created:
@@ -195,7 +198,7 @@ def provisionally_link_clinical_indication_to_superpanel(
     superpanel: SuperPanel,
     clinical_indication: ClinicalIndication,
     user: str,
-    td_version: TestDirectoryRelease
+    td_version: TestDirectoryRelease,
 ) -> ClinicalIndicationSuperPanel:
     """
     Link a CI and superpanel, but set the 'pending' field to True,
@@ -204,7 +207,7 @@ def provisionally_link_clinical_indication_to_superpanel(
     Additionally, create a history record.
     Intended for use when you are making 'best guesses' for links based on
     previous CI-SuperPanel links.
-    
+
     :param: superpanel [SuperPanel], a SuperPanel which needs linking to
     a relevant clinical indication
     :param: clinical_indication [ClinicalIndication], a ClinicalIndication which
@@ -226,8 +229,7 @@ def provisionally_link_clinical_indication_to_superpanel(
 
     if ci_superpanel_instance and td_version:
         release_link, _ = CiSuperpanelTdRelease.objects.get_or_create(
-            ci_superpanel=ci_superpanel_instance,
-            td_release=td_version
+            ci_superpanel=ci_superpanel_instance, td_release=td_version
         )
 
     if created:
@@ -238,6 +240,7 @@ def provisionally_link_clinical_indication_to_superpanel(
         )
 
     return ci_superpanel_instance
+
 
 def _check_td_version_valid(
     td_version: str, latest_db_version: str, force: bool
@@ -335,13 +338,12 @@ def _retrieve_unknown_metadata_records() -> (
     return conf, moi, mop, pen
 
 
-def _check_for_changed_pg_justification(pg_instance: PanelGene,
-                                        unique_td_source: str):
+def _check_for_changed_pg_justification(pg_instance: PanelGene, unique_td_source: str):
     """
     For a PanelGene instance, check that the justification hasn't changed.
     If it has, update it and log it in history.
     You might run this if there's a new td import, for example.
-    
+
     :param pg_instance: a PanelGene which might have changed
     :param unique_td_source: the test directory source, which can be used
     as a justification.
@@ -360,11 +362,9 @@ def _check_for_changed_pg_justification(pg_instance: PanelGene,
         pg_instance.justification = unique_td_source
         pg_instance.save()
 
+
 def _make_panels_from_hgncs(
-    ci: ClinicalIndication,
-    td_release: TestDirectoryRelease,
-    hgnc_list: list,
-    user: str
+    ci: ClinicalIndication, td_release: TestDirectoryRelease, hgnc_list: list, user: str
 ) -> None:
     """
     Make Panel records from a list of HGNC ids.
@@ -384,7 +384,7 @@ def _make_panels_from_hgncs(
 
     # make the panel name
     # the max length of Panel name is 255
-    # if the length of panel_name is more than 255, truncate it to 245 
+    # if the length of panel_name is more than 255, truncate it to 245
     # and add TRUNCATED (9 chars) which will be 254 chars in total
 
     panel_name = ",".join(sorted(hgnc_list))
@@ -392,7 +392,7 @@ def _make_panels_from_hgncs(
         panel_name[:245] + "TRUNCATED" if len(panel_name) > 255 else panel_name
     )
 
-    # create Panel record only when HGNC is different 
+    # create Panel record only when HGNC is different
     panel_instance, panel_created = Panel.objects.get_or_create(
         panel_name=formatted_panel_name,
         test_directory=True,
@@ -443,12 +443,13 @@ def _make_panels_from_hgncs(
 
         if previous_ci_panels:  # in the case where there are old ci-panel
             for ci_panel in previous_ci_panels:
-                latest_active_td_release = \
-                    _get_most_recent_td_release_for_ci_panel(ci_panel)
+                latest_active_td_release = _get_most_recent_td_release_for_ci_panel(
+                    ci_panel
+                )
                 flag_clinical_indication_panel_for_review(
                     ci_panel, user
                 )  # flag for review
-                
+
                 # linking old ci with new panel with pending = True
                 new_clinical_indication_panel = (
                     provisionally_link_clinical_indication_to_panel(
@@ -472,8 +473,7 @@ def _make_panels_from_hgncs(
     )
     # link it to the current test directory release
     cip_release, _ = CiPanelTdRelease.objects.get_or_create(
-        ci_panel=cpi_instance,
-        td_release=td_release
+        ci_panel=cpi_instance, td_release=td_release
     )
 
     if created:
@@ -482,7 +482,7 @@ def _make_panels_from_hgncs(
             note=History.clinical_indication_panel_created(),
             user=td_source,
         )
-    #TODO: I think the below section is now redundant since config_source went onto a different model, but check later
+    # TODO: I think the below section is now redundant since config_source went onto a different model, but check later
     # else:
     #     # panel already exist
     #     with transaction.atomic():
@@ -560,7 +560,7 @@ def _update_ci_panel_tables_with_new_ci(
     r_code: str,
     td_version: TestDirectoryRelease,
     ci_instance: ClinicalIndication,
-    user: str
+    user: str,
 ) -> None:
     """
     New clinical indication - the old CI-panel entries with the
@@ -587,10 +587,7 @@ def _update_ci_panel_tables_with_new_ci(
         previous_panel_id = clinical_indication_panel.panel_id
 
         new_clinical_indication_panel = provisionally_link_clinical_indication_to_panel(
-            previous_panel_id,
-            ci_instance.id,
-            user,
-            td_version
+            previous_panel_id, ci_instance.id, user, td_version
         )
 
 
@@ -598,7 +595,7 @@ def _update_ci_superpanel_tables_with_new_ci(
     r_code: str,
     td_version: TestDirectoryRelease,
     ci_instance: ClinicalIndication,
-    user: str
+    user: str,
 ) -> None:
     """
     New clinical indication - the old CI-superpanel entries with the
@@ -612,7 +609,7 @@ def _update_ci_superpanel_tables_with_new_ci(
     :param: config_source [str], source metadata for the CI-superpanel link
     :param: user [str], the current user
     """
-    #TODO: write unit tests
+    # TODO: write unit tests
     for clinical_indication_superpanel in ClinicalIndicationSuperPanel.objects.filter(
         clinical_indication__r_code=r_code,
         current=True,
@@ -628,18 +625,16 @@ def _update_ci_superpanel_tables_with_new_ci(
         # will still be one ci-panel link instead of two being created
         new_clinical_indication_superpanel = (
             provisionally_link_clinical_indication_to_superpanel(
-                clinical_indication_superpanel.superpanel,
-                ci_instance,
-                user,
-                td_version
+                clinical_indication_superpanel.superpanel, ci_instance, user, td_version
             )
         )
+
 
 def _make_ci_panel_td_link(
     ci_instance: ClinicalIndication,
     panel_record: Panel,
     td_version: TestDirectoryRelease,
-    user: str
+    user: str,
 ) -> tuple[ClinicalIndicationPanel, bool]:
     """
     Gets-or-creates a ClinicalIndicationPanel entry. Links to test directory release.
@@ -660,15 +655,12 @@ def _make_ci_panel_td_link(
     ) = ClinicalIndicationPanel.objects.get_or_create(
         clinical_indication_id=ci_instance.id,
         panel_id=panel_record.id,
-        defaults={
-            "current": True
-        }
+        defaults={"current": True},
     )
 
     # link the CI-Panel to the current test directory release
     cipanel_td, _ = CiPanelTdRelease.objects.get_or_create(
-        ci_panel=cip_instance,
-        td_release=td_version
+        ci_panel=cip_instance, td_release=td_version
     )
 
     if cip_created:
@@ -697,7 +689,7 @@ def _make_ci_superpanel_td_link(
     ci_instance: ClinicalIndication,
     superpanel_record: SuperPanel,
     td_version: TestDirectoryRelease,
-    user: str
+    user: str,
 ) -> tuple[ClinicalIndicationSuperPanel, bool]:
     """
     Gets-or-creates a ClinicalIndicationSuperPanel entry. Link to td release.
@@ -712,7 +704,7 @@ def _make_ci_superpanel_td_link(
     :return: a tuple containing the created or fetched ClinicalIndicationSuperPanel
     instance, plus a bool for if it was created or not
     """
-    #TODO: need unit tests on some sections here
+    # TODO: need unit tests on some sections here
     (
         cip_instance,
         cip_created,
@@ -726,8 +718,7 @@ def _make_ci_superpanel_td_link(
 
     # link ci-superpanel to current test directory release
     cisuperpanel_td, _ = CiSuperpanelTdRelease.objects.get_or_create(
-        ci_superpanel=cip_instance,
-        td_release=td_version
+        ci_superpanel=cip_instance, td_release=td_version
     )
 
     if cip_created:
@@ -766,7 +757,7 @@ def _flag_panels_removed_from_test_directory(
     :param: panels, a list of relevant panels taken from the TD json or other data source
     :param: user, the current user name
     """
-    #TODO: test
+    # TODO: test
     ci_panels = ClinicalIndicationPanel.objects.filter(
         clinical_indication_id__r_code=ci_instance.r_code, current=True
     )
@@ -807,7 +798,7 @@ def _flag_superpanels_removed_from_test_directory(
     data source
     :param: user, the current user
     """
-    #TODO: test
+    # TODO: test
     ci_superpanels = ClinicalIndicationSuperPanel.objects.filter(
         clinical_indication__r_code=ci_instance.r_code, current=True
     )
@@ -834,10 +825,11 @@ def _flag_superpanels_removed_from_test_directory(
                 )
 
 
-def _add_td_release_to_db(td_version: str, td_source: str, config_source: str, user: str) \
-    -> TestDirectoryRelease:
+def _add_td_release_to_db(
+    td_version: str, td_source: str, config_source: str, user: str
+) -> TestDirectoryRelease:
     """
-    Add a new TestDirectory to the database with a version, and make a history entry 
+    Add a new TestDirectory to the database with a version, and make a history entry
     which will record datetime, user, and action.
     :param td_version: the string of the version of the currently-uploaded test directory
     :param td_source: the string of the source of the currently-uploaded test directory
@@ -846,20 +838,19 @@ def _add_td_release_to_db(td_version: str, td_source: str, config_source: str, u
     :returns: the TestDirectoryRelease
     """
     td = TestDirectoryRelease.objects.create(
-        release=td_version,
-        td_source=td_source,
-        config_source=config_source)
-    
+        release=td_version, td_source=td_source, config_source=config_source
+    )
+
     td_history = TestDirectoryReleaseHistory.objects.create(
-        td_release=td,
-        user=user,
-        note=History.td_added()
+        td_release=td, user=user, note=History.td_added()
     )
     return td
 
 
 @transaction.atomic
-def insert_test_directory_data(json_data: dict, td_release: str, force: bool = False) -> None:
+def insert_test_directory_data(
+    json_data: dict, td_release: str, force: bool = False
+) -> None:
     """This function inserts TD data into DB
 
     e.g. command
@@ -882,7 +873,7 @@ def insert_test_directory_data(json_data: dict, td_release: str, force: bool = F
     latest_td_version_in_db = _fetch_latest_td_version()
     _check_td_version_valid(td_release, latest_td_version_in_db, force)
 
-    #TODO: add a useful User one day
+    # TODO: add a useful User one day
     user = td_source
 
     # add test directory to the db
@@ -905,9 +896,7 @@ def insert_test_directory_data(json_data: dict, td_release: str, force: bool = F
             # if a clinical indication is new to the db - check it isn't already linked to a panel
             # # under a different name. If it IS, mark the old panel link as pending,
             # and provisionally link the affected panel to this new CI
-            _update_ci_panel_tables_with_new_ci(
-                r_code, td_version, ci_instance, user
-            )
+            _update_ci_panel_tables_with_new_ci(r_code, td_version, ci_instance, user)
             _update_ci_superpanel_tables_with_new_ci(
                 r_code, td_version, ci_instance, user
             )
@@ -929,7 +918,7 @@ def insert_test_directory_data(json_data: dict, td_release: str, force: bool = F
         if indication["panels"]:
             for pa_id in indication["panels"]:
                 if not pa_id or not pa_id.strip():
-                    #TODO: write a test that hits continue
+                    # TODO: write a test that hits continue
                     continue
 
                 # add any individual hgnc ids to a separate list
@@ -947,10 +936,7 @@ def insert_test_directory_data(json_data: dict, td_release: str, force: bool = F
                 # if we import the same version of TD but with different config source:
                 if panel_record:
                     cip_instance, cip_created = _make_ci_panel_td_link(
-                        ci_instance,
-                        panel_record,
-                        td_version,
-                        user
+                        ci_instance, panel_record, td_version, user
                     )
 
                 if super_panel_record:
@@ -962,7 +948,7 @@ def insert_test_directory_data(json_data: dict, td_release: str, force: bool = F
                     )
 
                 if not panel_record and not super_panel_record:
-                    #TODO: no tests for this case yet
+                    # TODO: no tests for this case yet
                     # No record exists of this panel/superpanel
                     # e.g. panel id 489 has been retired
                     print(

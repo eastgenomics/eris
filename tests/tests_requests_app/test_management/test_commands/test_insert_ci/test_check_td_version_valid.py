@@ -1,4 +1,3 @@
-
 from django.test import TestCase
 
 from requests_app.management.commands._insert_ci import _check_td_version_valid
@@ -10,6 +9,7 @@ class TestCheckTdValid_ValidCases(TestCase):
     when the currently-uploaded version of the td is higher than or
     equal to the most-recent version in the database.
     """
+
     def test_valid_case_one(self):
         """
         CASE: Straightforward case where versions use the same syntax
@@ -53,6 +53,7 @@ class TestCheckTdValid_FailingCases(TestCase):
     when the currently-uploaded version of the td is lower than
     the most-recent version in the database.
     """
+
     def test_invalid_case_one(self):
         """
         CASE: Straightforward case where versions match each other, but use different syntax
@@ -83,7 +84,7 @@ class TestCheckTdValid_FailingCases(TestCase):
 
         with self.assertRaisesRegex(Exception, expected_err):
             _check_td_version_valid(td_upload, latest_in_db, False)
-    
+
     def test_invalid_case_three(self):
         """
         CASE: Less straightforward, with a newer version already in the db

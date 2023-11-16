@@ -20,7 +20,7 @@ from requests_app.models import (
     ClinicalIndicationSuperPanel,
     ClinicalIndicationSuperPanelHistory,
     TestDirectoryRelease,
-    TestDirectoryReleaseHistory
+    TestDirectoryReleaseHistory,
 )
 from requests_app.management.commands.utils import sortable_version, normalize_version
 from requests_app.management.commands.history import History

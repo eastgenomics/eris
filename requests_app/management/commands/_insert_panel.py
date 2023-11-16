@@ -23,7 +23,7 @@ from requests_app.models import (
     ReferenceGenome,
     TestDirectoryRelease,
     CiPanelTdRelease,
-    CiSuperpanelTdRelease
+    CiSuperpanelTdRelease,
 )
 
 from .utils import sortable_version
@@ -33,7 +33,7 @@ from ._insert_ci import (
     flag_clinical_indication_superpanel_for_review,
     provisionally_link_clinical_indication_to_panel,
     provisionally_link_clinical_indication_to_superpanel,
-    _get_most_recent_td_release_for_ci_panel
+    _get_most_recent_td_release_for_ci_panel,
 )
 from .panelapp import PanelClass, SuperPanelClass
 from django.db import transaction
@@ -282,8 +282,9 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
         # TODO: backward deactivation for PanelRegion, with history logging
 
 
-def _get_most_recent_td_release_for_ci_superpanel(ci_superpanel: ClinicalIndicationSuperPanel) \
-    -> TestDirectoryRelease | None:
+def _get_most_recent_td_release_for_ci_superpanel(
+    ci_superpanel: ClinicalIndicationSuperPanel,
+) -> TestDirectoryRelease | None:
     """
     For a clinical indication-superpanel link, find the most-recent active test directory release.
     Return it, or 'none' if it fails.
@@ -291,7 +292,11 @@ def _get_most_recent_td_release_for_ci_superpanel(ci_superpanel: ClinicalIndicat
     based on data which exists for earlier versions of the same R code and SuperPanel ID.
     """
     # get all td_releases
-    releases = CiSuperpanelTdRelease.objects.filter(ci_superpanel=ci_superpanel).order_by("-td_release").first()
+    releases = (
+        CiSuperpanelTdRelease.objects.filter(ci_superpanel=ci_superpanel)
+        .order_by("-td_release")
+        .first()
+    )
     if not releases:
         return None
     else:
@@ -347,14 +352,19 @@ def _insert_panel_data_into_db(panel: PanelClass, user: str) -> Panel:
 
             clinical_indication_id = clinical_indication_panel.clinical_indication_id
 
-            #TODO: get the most recent TestDirectoryRelease for this clinical_indication_panel,
+            # TODO: get the most recent TestDirectoryRelease for this clinical_indication_panel,
             #  and provisionally link it
-            latest_active_td_release = _get_most_recent_td_release_for_ci_panel(clinical_indication_panel)
+            latest_active_td_release = _get_most_recent_td_release_for_ci_panel(
+                clinical_indication_panel
+            )
             print("Latest active td release")
             print(latest_active_td_release)
 
             provisionally_link_clinical_indication_to_panel(
-                panel_instance.id, clinical_indication_id, "PanelApp", latest_active_td_release
+                panel_instance.id,
+                clinical_indication_id,
+                "PanelApp",
+                latest_active_td_release,
             )
 
     # attach each Gene record to the Panel record,
@@ -415,9 +425,9 @@ def _insert_superpanel_into_db(
                 clinical_indication_superpanel, "PanelApp"
             )
 
-            latest_active_td_release = _get_most_recent_td_release_for_ci_superpanel(\
-                clinical_indication_superpanel)
-            
+            latest_active_td_release = _get_most_recent_td_release_for_ci_superpanel(
+                clinical_indication_superpanel
+            )
 
             provisionally_link_clinical_indication_to_superpanel(
                 superpanel,

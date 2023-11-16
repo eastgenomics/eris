@@ -156,28 +156,21 @@ class TestDirectoryRelease(models.Model):
     """
     Defines a test directory release.
     """
+
     release = models.CharField(
-        verbose_name="test directory release",
-        max_length=255,
-        null=False
+        verbose_name="test directory release", max_length=255, null=False
     )
 
     td_source = models.CharField(
-        verbose_name="test directory source",
-        max_length=255,
-        null=False
+        verbose_name="test directory source", max_length=255, null=False
     )
 
     config_source = models.CharField(
-        verbose_name="config source",
-        max_length=255,
-        null=False
+        verbose_name="config source", max_length=255, null=False
     )
 
     td_date = models.CharField(
-        verbose_name="date from td file",
-        max_length=255,
-        null=False
+        verbose_name="date from td file", max_length=255, null=False
     )
 
     class Meta:
@@ -191,6 +184,7 @@ class TestDirectoryReleaseHistory(models.Model):
     """
     For adding information about when new tds were added, and by who
     """
+
     td_release = models.ForeignKey(
         TestDirectoryRelease,
         verbose_name="TD release",
@@ -428,19 +422,25 @@ class CiPanelTdRelease(models.Model):
     ID '5' in version 3 of the test directory, and also in version 4 of the test directory,
     making 2 entries in this CiPanelTdRelease table
     """
-    ci_panel = models.ForeignKey(ClinicalIndicationPanel,
-                                 verbose_name="Clinical Indication-Panel link",
-                                 on_delete=models.PROTECT)
-    
-    td_release = models.ForeignKey(TestDirectoryRelease,
-                                   verbose_name="Test directory release",
-                                   on_delete=models.PROTECT)
+
+    ci_panel = models.ForeignKey(
+        ClinicalIndicationPanel,
+        verbose_name="Clinical Indication-Panel link",
+        on_delete=models.PROTECT,
+    )
+
+    td_release = models.ForeignKey(
+        TestDirectoryRelease,
+        verbose_name="Test directory release",
+        on_delete=models.PROTECT,
+    )
 
     class Meta:
         db_table = "clinical_indication_panel_td_release"
 
     def __str__(self):
         return str(self.id)
+
 
 class CiSuperpanelTdRelease(models.Model):
     """
@@ -449,13 +449,18 @@ class CiSuperpanelTdRelease(models.Model):
     ID '10' in version 3 of the test directory, and also in version 4 of the test directory,
     making 2 entries in this CiSuperpanelTdRelease table
     """
-    ci_superpanel = models.ForeignKey(ClinicalIndicationSuperPanel,
-                                 verbose_name="Clinical Indication-SuperPanel link",
-                                 on_delete=models.PROTECT)
-    
-    td_release = models.ForeignKey(TestDirectoryRelease,
-                                   verbose_name="Test directory release",
-                                   on_delete=models.PROTECT)
+
+    ci_superpanel = models.ForeignKey(
+        ClinicalIndicationSuperPanel,
+        verbose_name="Clinical Indication-SuperPanel link",
+        on_delete=models.PROTECT,
+    )
+
+    td_release = models.ForeignKey(
+        TestDirectoryRelease,
+        verbose_name="Test directory release",
+        on_delete=models.PROTECT,
+    )
 
     class Meta:
         db_table = "clinical_indication_superpanel_td_release"

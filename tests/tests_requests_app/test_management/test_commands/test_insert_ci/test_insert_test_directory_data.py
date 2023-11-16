@@ -25,7 +25,7 @@ from requests_app.models import (
     ClinicalIndication,
     ClinicalIndicationTestMethodHistory,
     TestDirectoryRelease,
-    CiPanelTdRelease
+    CiPanelTdRelease,
 )
 from requests_app.management.commands._insert_ci import insert_test_directory_data
 from requests_app.management.commands.utils import sortable_version
@@ -41,7 +41,7 @@ class TestInsertTestDirectoryData(TestCase):
         We setup the following:
         1. a panel in db
         2. a clinical indication in db
-        3. a pre-existing link between the panel and the clinical indication (ClinicalIndicationPanel) 
+        3. a pre-existing link between the panel and the clinical indication (ClinicalIndicationPanel)
         with td_version 5.1
         """
 
@@ -62,14 +62,14 @@ class TestInsertTestDirectoryData(TestCase):
             current=True,
             pending=False,
         )
-        
+
         # make a mock link which has td_version 5.1
         self.td_release = TestDirectoryRelease.objects.create(
             release="5.1",
             td_source="td_source",
             config_source="config_source",
-            td_date="date")
-
+            td_date="date",
+        )
 
     def test_missing_td_source(self):
         """
@@ -79,8 +79,7 @@ class TestInsertTestDirectoryData(TestCase):
 
         with self.assertRaises(AssertionError):
             insert_test_directory_data(
-                {},
-                "5.2"
+                {}, "5.2"
             )  # the third parameter is False. In normal circumstances, it is False by default
 
     def test_missing_td_version_in_td_source(self):
@@ -117,9 +116,9 @@ class TestInsertTestDirectoryData(TestCase):
         mock_test_directory = {
             "indications": [],
             "td_source": "rare-and-inherited-disease-national-gnomic-test-directory-v5.0.xlsx",
-            "config_source": "config_source"
-        }  
-        
+            "config_source": "config_source",
+        }
+
         version = "5.0"
         # here's a mock version that is lower - v5.0 compared to the v5.1 in setup above
 
@@ -141,13 +140,11 @@ class TestInsertTestDirectoryData(TestCase):
             clinical_indication_id=self.clinical_indication.id,
             panel_id=self.panel.id,
             current=True,
-        ) 
-        
+        )
+
         rel_4_1 = TestDirectoryRelease.objects.create(release="4.0")
-        
-        CiPanelTdRelease.objects.create(
-            ci_panel=ci_pan,
-            td_release=rel_4_1)
+
+        CiPanelTdRelease.objects.create(ci_panel=ci_pan, td_release=rel_4_1)
 
         mock_test_directory = {
             "indications": [],
@@ -204,10 +201,12 @@ class TestInsertTestDirectoryData(TestCase):
             clinical_indications[1].id,
         )
 
-        #check there are 2 links to td version
+        # check there are 2 links to td version
         links = CiPanelTdRelease.objects.all()
-        
-        errors += len_check_wrapper(links, "ci-panel td-release links matching our ci_panel", 1)
+
+        errors += len_check_wrapper(
+            links, "ci-panel td-release links matching our ci_panel", 1
+        )
 
         assert not errors, errors
 
@@ -287,14 +286,18 @@ class TestInsertTestDirectoryData(TestCase):
             ),
             "clinical indication pending",
             True,
-        )  
+        )
 
-        #check there is 1 link to the td version (I didn't make a link in setUp for the 'old' CI)
+        # check there is 1 link to the td version (I didn't make a link in setUp for the 'old' CI)
         links = CiPanelTdRelease.objects.all()
-        errors += len_check_wrapper(links, "ci-panel td-release links matching our ci_panel", 1)
-        errors += value_check_wrapper(links[0].ci_panel.clinical_indication,
-                                      "new ci-panel linked to new td-release", 
-                                      clinical_indications[1])
+        errors += len_check_wrapper(
+            links, "ci-panel td-release links matching our ci_panel", 1
+        )
+        errors += value_check_wrapper(
+            links[0].ci_panel.clinical_indication,
+            "new ci-panel linked to new td-release",
+            clinical_indications[1],
+        )
 
         assert not errors, errors
 
@@ -315,8 +318,7 @@ class TestInsertTestDirectoryData(TestCase):
         # thus making sure that Panel 234 is already in the db since PanelApp is where we source our Panel
         # thus here we will need to make panel 234 for this condition to work
 
-        Panel.objects.create(external_id="234", 
-                             panel_name="test panel 2")
+        Panel.objects.create(external_id="234", panel_name="test panel 2")
 
         mock_test_directory = {
             "indications": [
@@ -457,7 +459,7 @@ class TestInsertTestDirectoryData(TestCase):
         #     "td_version",
         #     sortable_version("5.2"),
         # )
-        #TODO: td_version
+        # TODO: td_version
 
         # errors += value_check_wrapper(
         #     clinical_indication_panels[1].td_version,

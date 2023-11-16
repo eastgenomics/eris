@@ -18,13 +18,14 @@ from requests_app.models import (
     PanelGeneHistory,
     ClinicalIndicationPanelHistory,
     TestDirectoryRelease,
-    CiPanelTdRelease
+    CiPanelTdRelease,
 )
 from requests_app.management.commands._insert_ci import _make_panels_from_hgncs
 from tests.tests_requests_app.test_management.test_commands.test_insert_panel.test_insert_gene import (
     len_check_wrapper,
     value_check_wrapper,
 )
+
 
 class TestMakePanelsFromHgncs(TestCase):
     """
@@ -35,7 +36,7 @@ class TestMakePanelsFromHgncs(TestCase):
     we should expect to see a clinical indication-panel relationship in the database
 
     if the same clinical indication gets the same panel (same list of hgncs), nothing should be changed
-    if the same clinical indication gets a different panel (different), new link should be generated but 
+    if the same clinical indication gets a different panel (different), new link should be generated but
     flagged for review (new and old links)
 
     """
@@ -47,10 +48,12 @@ class TestMakePanelsFromHgncs(TestCase):
             test_method="Test method",
         )
 
-        self.td_version = TestDirectoryRelease.objects.create(release="3.0",
-                                                              td_source="rare-and-inherited-disease-national-gnomic-test-directory-v5.1.xlsx",
-                                                              config_source="230401_RD",
-                                                              td_date="230616")
+        self.td_version = TestDirectoryRelease.objects.create(
+            release="3.0",
+            td_source="rare-and-inherited-disease-national-gnomic-test-directory-v5.1.xlsx",
+            config_source="230401_RD",
+            td_date="230616",
+        )
 
         self.user = "test"
 
@@ -64,7 +67,7 @@ class TestMakePanelsFromHgncs(TestCase):
             self.first_clinical_indication,
             self.td_version,
             ["HGNC:1", "HGNC:2"],
-            self.user
+            self.user,
         )
 
         panels = Panel.objects.all()
@@ -133,8 +136,12 @@ class TestMakePanelsFromHgncs(TestCase):
         # check that test directory release links are formed
         links_with_td = CiPanelTdRelease.objects.all()
         errors += len_check_wrapper(links_with_td, "links with td", 1)
-        errors += value_check_wrapper(links_with_td[0].td_release, "td release in link", self.td_version)
-        errors += value_check_wrapper(links_with_td[0].ci_panel, "ci-panel in link", links[0])
+        errors += value_check_wrapper(
+            links_with_td[0].td_release, "td release in link", self.td_version
+        )
+        errors += value_check_wrapper(
+            links_with_td[0].ci_panel, "ci-panel in link", links[0]
+        )
 
         assert not errors, errors
 
@@ -170,7 +177,7 @@ class TestMakePanelsFromHgncs(TestCase):
             self.first_clinical_indication,
             self.td_version,
             ["HGNC:1", "HGNC:2", "HGNC:3"],
-            self.user
+            self.user,
         )
 
         errors += value_check_wrapper(
@@ -189,7 +196,7 @@ class TestMakePanelsFromHgncs(TestCase):
             True,
         )  # both links should be flagged for review)
 
-        #TODO: check version link made
+        # TODO: check version link made
 
         errors += len_check_wrapper(
             PanelGeneHistory.objects.all(), "panel-gene history records", 3
@@ -200,7 +207,6 @@ class TestMakePanelsFromHgncs(TestCase):
         errors += len_check_wrapper(links_with_td, "links with td", 2)
         # errors += value_check_wrapper(links_with_td[0].td_release, "td release in link", self.td_version)
         # errors += value_check_wrapper(links_with_td[0].ci_panel, "ci-panel in link", links[0])
-
 
     # NOTE: there is no need to test backward deactivation for panel-gene in this function
     # because it makes panel based on the provided hgncs
@@ -217,12 +223,11 @@ class TestMakePanelsFromHgncs(TestCase):
 
         we expect the function to truncate the panel name to 200 chars and store it in db
         """
-        
+
         hgncs = [f"HGNC:{i}" for i in range(1000)]
 
         _make_panels_from_hgncs(
-            self.first_clinical_indication, self.td_version, hgncs,
-            self.user
+            self.first_clinical_indication, self.td_version, hgncs, self.user
         )
 
         panel = Panel.objects.first()
