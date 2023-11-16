@@ -272,6 +272,8 @@ def _check_td_version_valid(
     is for an old version of the test directory, relative to what's
     in Eris already. If everything is fine, does nothing.
 
+    Can be overridden by passing force=True
+
     :param: td_version [str], the TD version parsed from the user-uploaded
     test directory file
     :param: latest_db_version [str], the latest TD version found in the

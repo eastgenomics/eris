@@ -20,3 +20,10 @@ from tests.tests_requests_app.test_management.test_commands.test_insert_panel.te
 )
 
 #TODO: write tests here
+class CheckTdValid_ValidCases(TestCase):
+    """
+    """
+    def valid_case_one(self):
+        td_upload = "1.0.1"
+        latest_in_db = "1.0"
+        _check_td_version_valid(td_upload, latest_in_db, False)

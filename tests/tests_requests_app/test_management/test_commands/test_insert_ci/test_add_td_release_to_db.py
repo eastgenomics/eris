@@ -13,7 +13,7 @@ from requests_app.models import (
     TestDirectoryRelease,
     CiPanelTdRelease
 )
-from requests_app.management.commands._insert_ci import _check_td_version_valid
+from requests_app.management.commands._insert_ci import _add_td_release_to_db
 from tests.tests_requests_app.test_management.test_commands.test_insert_panel.test_insert_gene import (
     len_check_wrapper,
     value_check_wrapper,

@@ -75,8 +75,9 @@ class TestInsertTestDirectoryData(TestCase):
 
         with self.assertRaises(AssertionError):
             insert_test_directory_data(
-                {}
-            )  # the second parameter is False. In normal circumstances, it is False by default
+                {},
+                "5.2"
+            )  # the third parameter is False. In normal circumstances, it is False by default
 
     def test_missing_td_version_in_td_source(self):
         """
@@ -84,7 +85,7 @@ class TestInsertTestDirectoryData(TestCase):
         """
 
         with self.assertRaises(AssertionError):
-            insert_test_directory_data({"td_source": ""})
+            insert_test_directory_data({"td_source": ""}, "5.0")
 
     def test_lower_td_version_will_raise_exception(self):
         """
@@ -94,11 +95,12 @@ class TestInsertTestDirectoryData(TestCase):
         """
 
         mock_test_directory = {
-            "td_source": "rare-and-inherited-disease-national-gnomic-test-directory-v5.0.xlsx",
-        }  # here's a mock test directory that is of lower version - v5.0 compared to the v5.1 in setup above
+            "td_source": "rare-and-inherited-disease-national-gnomic-test-directory-v2.0.xlsx",
+        }
+        version = "2.0"
 
         with self.assertRaises(Exception):
-            insert_test_directory_data(mock_test_directory)
+            insert_test_directory_data(mock_test_directory, version)
 
     def test_lower_td_version_but_with_force(self):
         """
@@ -111,10 +113,13 @@ class TestInsertTestDirectoryData(TestCase):
         mock_test_directory = {
             "indications": [],
             "td_source": "rare-and-inherited-disease-national-gnomic-test-directory-v5.0.xlsx",
-        }  # here's a mock test directory that is of lower version - v5.0 compared to the v5.1 in setup above
+        }  
+        
+        version = "5.0"
+        # here's a mock version that is lower - v5.0 compared to the v5.1 in setup above
 
         assert insert_test_directory_data(
-            mock_test_directory, True
+            mock_test_directory, version, True
         )  # notice the True for `force` parameter
 
     def test_that_the_function_will_compare_with_the_latest_td_version(self):
@@ -144,8 +149,10 @@ class TestInsertTestDirectoryData(TestCase):
             "td_source": "rare-and-inherited-disease-national-gnomic-test-directory-v5.0.xlsx",
         }
 
+        version = "5.0"
+
         with self.assertRaises(Exception):
-            insert_test_directory_data(mock_test_directory)
+            insert_test_directory_data(mock_test_directory, version)
 
     def test_make_clinical_indication_and_link_to_panel(self):
         """
@@ -170,7 +177,7 @@ class TestInsertTestDirectoryData(TestCase):
             "date": "230616",
         }
 
-        insert_test_directory_data(mock_test_directory, False)
+        insert_test_directory_data(mock_test_directory, "5.2", False)
 
         clinical_indications = ClinicalIndication.objects.all()
         errors += len_check_wrapper(clinical_indications, "clinical indications", 2)
@@ -228,7 +235,7 @@ class TestInsertTestDirectoryData(TestCase):
             "date": "230616",
         }
 
-        insert_test_directory_data(mock_test_directory)
+        insert_test_directory_data(mock_test_directory, "5.2")
 
         clinical_indications = ClinicalIndication.objects.all().order_by("id")
         errors += len_check_wrapper(clinical_indications, "clinical indications", 2)
@@ -321,7 +328,7 @@ class TestInsertTestDirectoryData(TestCase):
             "date": "230616",
         }
 
-        insert_test_directory_data(mock_test_directory)
+        insert_test_directory_data(mock_test_directory, "5.2")
 
         clinical_indication_panels = ClinicalIndicationPanel.objects.order_by(
             "id"
@@ -378,7 +385,7 @@ class TestInsertTestDirectoryData(TestCase):
             "date": "230616",
         }
 
-        insert_test_directory_data(mock_test_directory)
+        insert_test_directory_data(mock_test_directory, "5.2")
 
         self.clinical_indication.refresh_from_db()
 
@@ -422,7 +429,7 @@ class TestInsertTestDirectoryData(TestCase):
             "date": "230616",
         }
 
-        insert_test_directory_data(mock_test_directory)
+        insert_test_directory_data(mock_test_directory, "5.2")
 
         clinical_indications = ClinicalIndication.objects.all().order_by("id")
 
@@ -525,7 +532,7 @@ class TestInsertTestDirectoryData(TestCase):
             "date": "230616",
         }
 
-        insert_test_directory_data(mock_test_directory)
+        insert_test_directory_data(mock_test_directory, "5.2")
 
         clinical_indication_panels = ClinicalIndicationPanel.objects.order_by(
             "id"
@@ -603,7 +610,7 @@ class TestInsertTestDirectoryData(TestCase):
             "date": "230616",
         }
 
-        insert_test_directory_data(mock_test_directory)
+        insert_test_directory_data(mock_test_directory, "5.2")
 
         clinical_indication_panels = ClinicalIndicationPanel.objects.order_by(
             "id"
@@ -662,7 +669,7 @@ class TestInsertTestDirectoryData(TestCase):
             "date": "230616",
         }
 
-        insert_test_directory_data(mock_test_directory)
+        insert_test_directory_data(mock_test_directory, "5.2")
 
         clinical_indication_panels = ClinicalIndicationPanel.objects.all()
 
