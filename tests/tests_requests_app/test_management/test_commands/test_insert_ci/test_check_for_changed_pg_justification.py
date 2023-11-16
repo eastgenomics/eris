@@ -23,8 +23,20 @@ from tests.tests_requests_app.test_management.test_commands.test_insert_panel.te
 class TestCheckChangedPg(TestCase):
     """
     """
+    #TODO: write this
     def setUp(self) -> None:
-        return super().setUp()
+        self.panel = Panel.objects.create(
+
+        )
+
+        self.gene = Gene.objects.create(
+
+        )
+
+        self.existing_pg = PanelGene.objects.create(
+            panel=self.panel,
+            gene=self.gene
+        )
     
     def test_thing():
         _check_for_changed_pg_justification

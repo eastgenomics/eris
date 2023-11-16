@@ -162,6 +162,18 @@ class TestDirectoryRelease(models.Model):
         null=False
     )
 
+    td_source = models.CharField(
+        verbose_name="test directory source",
+        max_length=255,
+        null=False
+    )
+
+    config_source = models.CharField(
+        verbose_name="config source",
+        max_length=255,
+        null=False
+    )
+
     class Meta:
         db_table = "td_release"
 
@@ -247,13 +259,6 @@ class ClinicalIndicationPanel(models.Model):
     Panel might be made
     """
 
-    # metadata
-    config_source = models.TextField(
-        verbose_name="config source",
-        max_length=255,
-        null=True,
-    )
-
     # creation date
     created = models.DateTimeField(
         verbose_name="created",
@@ -304,13 +309,6 @@ class ClinicalIndicationSuperPanel(models.Model):
     a new association between Clinical Indication and new version of
     Panel might be made
     """
-
-    # metadata
-    config_source = models.TextField(
-        verbose_name="config source",
-        max_length=255,
-        null=True,
-    )
 
     # creation date
     created = models.DateTimeField(

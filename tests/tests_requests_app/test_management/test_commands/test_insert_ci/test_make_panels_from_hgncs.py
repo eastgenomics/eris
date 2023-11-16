@@ -35,7 +35,8 @@ class TestMakePanelsFromHgncs(TestCase):
     we should expect to see a clinical indication-panel relationship in the database
 
     if the same clinical indication gets the same panel (same list of hgncs), nothing should be changed
-    if the same clinical indication gets a different panel (different), new link should be generated but flagged for review (new and old links)
+    if the same clinical indication gets a different panel (different), new link should be generated but 
+    flagged for review (new and old links)
 
     """
 

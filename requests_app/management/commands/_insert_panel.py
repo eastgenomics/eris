@@ -37,6 +37,7 @@ from ._insert_ci import (
 )
 from .panelapp import PanelClass, SuperPanelClass
 from django.db import transaction
+from packaging.version import Version
 
 
 def _insert_gene(
@@ -290,11 +291,18 @@ def _get_most_recent_td_release_for_ci_superpanel(ci_superpanel: ClinicalIndicat
     based on data which exists for earlier versions of the same R code and SuperPanel ID.
     """
     # get all td_releases
-    release = CiSuperpanelTdRelease.objects.filter(ci_superpanel=ci_superpanel).order_by("-td_release").first()
-    if release:
-        return release
-    else:
+    releases = CiSuperpanelTdRelease.objects.filter(ci_superpanel=ci_superpanel).order_by("-td_release").first()
+    if not releases:
         return None
+    else:
+        # get the latest release - use packaging Version to do sorting
+        td_releases = [v.td_release.release for v in releases]
+        td_releases.sort(key=Version, reverse=True)
+        latest_td = str(td_releases[0])
+
+        # return the instance for that release
+        latest_td_instance = TestDirectoryRelease.objects.get(release=latest_td)
+        return latest_td_instance
 
 
 def _insert_panel_data_into_db(panel: PanelClass, user: str) -> Panel:
