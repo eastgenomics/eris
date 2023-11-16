@@ -46,8 +46,6 @@ class TestBackwardDeactivation(TestCase):
         )
 
         self.first_clinical_indication_panel = ClinicalIndicationPanel.objects.create(
-            config_source=None,
-            #td_version=None,
             clinical_indication_id=self.first_clinical_indication.id,
             panel_id=self.first_panel.id,
             current=True,
@@ -119,7 +117,6 @@ class TestFlagClinicalIndicationPanelForReview(TestCase):
         )
 
         self.first_clinical_indication_panel = ClinicalIndicationPanel.objects.create(
-            config_source=None,
             clinical_indication_id=self.first_clinical_indication.id,
             panel_id=self.first_panel.id,
             current=True,
@@ -163,7 +160,6 @@ class TestFlagClinicalIndicationSuperpanelForReview(TestCase):
 
         self.first_clinical_indication_superpanel = (
             ClinicalIndicationSuperPanel.objects.create(
-                config_source=None,
                 clinical_indication=self.first_clinical_indication,
                 superpanel=self.first_superpanel,
                 current=True,
@@ -212,7 +208,6 @@ class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
         )
 
         self.first_clinical_indication_panel = ClinicalIndicationPanel.objects.create(
-            config_source=None,
             clinical_indication_id=self.first_clinical_indication.id,
             panel_id=self.first_panel.id,
             current=True,
@@ -304,7 +299,6 @@ class TestProvisionallyLinkClinicalIndicationToSuperPanel(TestCase):
 
         self.first_clinical_indication_superpanel = (
             ClinicalIndicationSuperPanel.objects.create(
-                config_source=None,
                 clinical_indication=self.first_clinical_indication,
                 superpanel=self.first_superpanel,
                 current=True,

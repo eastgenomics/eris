@@ -150,7 +150,6 @@ class TestInsertSuperpanelVersionChange(TestCase):
         self.td_version = TestDirectoryRelease.objects.create(release="5")
 
         self.ci_old_superpanel_link = ClinicalIndicationSuperPanel.objects.create(
-            config_source="td",
             superpanel=self.old_superpanel,
             clinical_indication=self.ci,
             current=True,
@@ -271,7 +270,6 @@ class TestInsertSuperpanelNameChange(TestCase):
         self.td_version = TestDirectoryRelease.objects.create(release="5")
 
         self.ci_old_superpanel_link = ClinicalIndicationSuperPanel.objects.create(
-            config_source="td",
             superpanel=self.old_superpanel,
             clinical_indication=self.ci,
             current=True,
@@ -376,7 +374,6 @@ class TestInsertSuperpanelUnchanged(TestCase):
         self.td_version = TestDirectoryRelease.objects.create(release="5")
 
         self.ci_old_superpanel_link = ClinicalIndicationSuperPanel.objects.create(
-            config_source="td",
             superpanel=self.old_superpanel,
             clinical_indication=self.ci,
             current=True,

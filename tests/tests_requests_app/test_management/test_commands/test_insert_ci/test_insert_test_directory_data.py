@@ -64,7 +64,11 @@ class TestInsertTestDirectoryData(TestCase):
         )
         
         # make a mock link which has td_version 5.1
-        self.td_release = TestDirectoryRelease.objects.create(release="5.1")
+        self.td_release = TestDirectoryRelease.objects.create(
+            release="5.1",
+            td_source="td_source",
+            config_source="config_source",
+            td_date="date")
 
 
     def test_missing_td_source(self):
@@ -113,6 +117,7 @@ class TestInsertTestDirectoryData(TestCase):
         mock_test_directory = {
             "indications": [],
             "td_source": "rare-and-inherited-disease-national-gnomic-test-directory-v5.0.xlsx",
+            "config_source": "config_source"
         }  
         
         version = "5.0"
@@ -310,7 +315,8 @@ class TestInsertTestDirectoryData(TestCase):
         # thus making sure that Panel 234 is already in the db since PanelApp is where we source our Panel
         # thus here we will need to make panel 234 for this condition to work
 
-        Panel.objects.create(external_id="234", panel_name="test panel 2")
+        Panel.objects.create(external_id="234", 
+                             panel_name="test panel 2")
 
         mock_test_directory = {
             "indications": [

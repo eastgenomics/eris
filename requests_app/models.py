@@ -174,6 +174,12 @@ class TestDirectoryRelease(models.Model):
         null=False
     )
 
+    td_date = models.CharField(
+        verbose_name="date from td file",
+        max_length=255,
+        null=False
+    )
+
     class Meta:
         db_table = "td_release"
 

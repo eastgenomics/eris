@@ -377,9 +377,9 @@ def _make_panels_from_hgncs(
     :param: user [str], the current user
     """
     # get current config source and test directory date
-    td_source: str = td_release.source
-    config_source: str = json_data["config_source"]
-    td_date: str = json_data["date"]
+    td_source: str = td_release.td_source
+    config_source: str = td_release.config_source
+    td_date: str = td_release.td_date
 
     unique_td_source: str = f"{td_source} + {config_source} + {td_date}"
 
@@ -471,7 +471,6 @@ def _make_panels_from_hgncs(
         panel_id=panel_instance.id,
         defaults={
             "current": True,
-            "config_source": config_source,
         },
     )
     # link it to the current test directory release
@@ -486,23 +485,24 @@ def _make_panels_from_hgncs(
             note=History.clinical_indication_panel_created(),
             user=td_source,
         )
-    else:
-        # panel already exist
-        with transaction.atomic():
-            if cpi_instance.config_source != json_data["config_source"]:
-                # take a note of the change
-                #TODO: unit test missing for the object-creation line below, and the config_source setting
-                ClinicalIndicationPanelHistory.objects.create(
-                    clinical_indication_panel_id=cpi_instance.id,
-                    note=History.clinical_indication_panel_metadata_changed(
-                        "config_source",
-                        cpi_instance.config_source,
-                        config_source,
-                    ),
-                    user=td_source,
-                )
-                cpi_instance.config_source = config_source
-            cpi_instance.save()
+    #TODO: I think the below section is now redundant since config_source went onto a different model, but check later
+    # else:
+    #     # panel already exist
+    #     with transaction.atomic():
+    #         if cpi_instance.config_source != json_data["config_source"]:
+    #             # take a note of the change
+    #             #TODO: unit test missing for the object-creation line below, and the config_source setting
+    #             ClinicalIndicationPanelHistory.objects.create(
+    #                 clinical_indication_panel_id=cpi_instance.id,
+    #                 note=History.clinical_indication_panel_metadata_changed(
+    #                     "config_source",
+    #                     cpi_instance.config_source,
+    #                     config_source,
+    #                 ),
+    #                 user=td_source,
+    #             )
+    #             cpi_instance.config_source = config_source
+    #         cpi_instance.save()
 
 
 def _make_provisional_test_method_change(
@@ -663,6 +663,9 @@ def _make_ci_panel_td_link(
     ) = ClinicalIndicationPanel.objects.get_or_create(
         clinical_indication_id=ci_instance.id,
         panel_id=panel_record.id,
+        defaults={
+            "current": True
+        }
     )
 
     # link the CI-Panel to the current test directory release
@@ -754,7 +757,7 @@ def _attempt_ci_superpanel_creation(
 
 
 def _flag_panels_removed_from_test_directory(
-    ci_instance: ClinicalIndication, panels: list, td_source: str
+    ci_instance: ClinicalIndication, panels: list, user: str
 ) -> None:
     """
     For a clinical indication, finds any pre-existing links to Panels and
@@ -765,7 +768,7 @@ def _flag_panels_removed_from_test_directory(
     :param: ci_instance, a ClinicalIndication which needs its pre-existing links
     to be found and flagged
     :param: panels, a list of relevant panels taken from the TD json or other data source
-    :param: td_source, the source of test directory information
+    :param: user, the current user name
     """
     #TODO: test
     ci_panels = ClinicalIndicationPanel.objects.filter(
@@ -789,12 +792,12 @@ def _flag_panels_removed_from_test_directory(
                     note=History.flag_clinical_indication_panel(
                         "ClinicalIndicationPanel does not exist in TD"
                     ),
-                    user=td_source,
+                    user=user,
                 )
 
 
 def _flag_superpanels_removed_from_test_directory(
-    ci_instance: ClinicalIndication, panels: list, td_source: str
+    ci_instance: ClinicalIndication, panels: list, user: str
 ) -> None:
     """
     For a clinical indication, finds any pre-existing links to SuperPanels and
@@ -806,7 +809,7 @@ def _flag_superpanels_removed_from_test_directory(
     to be found and flagged
     :param: superpanels, a list of relevant panels taken from the TD json or other
     data source
-    :param: td_source, the source of test directory information
+    :param: user, the current user
     """
     #TODO: test
     ci_superpanels = ClinicalIndicationSuperPanel.objects.filter(
@@ -831,7 +834,7 @@ def _flag_superpanels_removed_from_test_directory(
                     note=History.flag_clinical_indication_panel(
                         "ClinicalIndicationSuperPanel does not exist in TD"
                     ),
-                    user=td_source,
+                    user=user,
                 )
 
 
@@ -947,8 +950,7 @@ def insert_test_directory_data(json_data: dict, td_release: str, force: bool = F
                         ci_instance,
                         panel_record,
                         td_version,
-                        td_source,
-                        json_data["config_source"],
+                        user
                     )
                     
 
@@ -978,10 +980,10 @@ def insert_test_directory_data(json_data: dict, td_release: str, force: bool = F
             # deal with change in clinical indication-panel/superpanel interaction
             # e.g. clinical indication R1 changed from panel 1 to panel 2
             _flag_panels_removed_from_test_directory(
-                ci_instance, indication["panels"], td_source
+                ci_instance, indication["panels"], user
             )
             _flag_superpanels_removed_from_test_directory(
-                ci_instance, indication["panels"], td_source
+                ci_instance, indication["panels"], user
             )
 
         if hgnc_list:

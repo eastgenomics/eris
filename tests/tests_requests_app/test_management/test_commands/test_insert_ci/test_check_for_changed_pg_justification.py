@@ -20,23 +20,4 @@ from tests.tests_requests_app.test_management.test_commands.test_insert_panel.te
     value_check_wrapper,
 )
 
-class TestCheckChangedPg(TestCase):
-    """
-    """
-    #TODO: write this
-    def setUp(self) -> None:
-        self.panel = Panel.objects.create(
-
-        )
-
-        self.gene = Gene.objects.create(
-
-        )
-
-        self.existing_pg = PanelGene.objects.create(
-            panel=self.panel,
-            gene=self.gene
-        )
-    
-    def test_thing():
-        _check_for_changed_pg_justification
+#TODO: write this?

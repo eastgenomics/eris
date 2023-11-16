@@ -49,6 +49,8 @@ class TestMakePanelsFromHgncs(TestCase):
 
         self.td_version = TestDirectoryRelease.objects.create(release="3.0")
 
+        self.user = "test"
+
     def test_make_panel_function(self):
         """
         Given a list of hgncs, make a panel and link it to the clinical indication
@@ -66,6 +68,7 @@ class TestMakePanelsFromHgncs(TestCase):
             self.first_clinical_indication,
             self.td_version,
             ["HGNC:1", "HGNC:2"],
+            self.user
         )
 
         panels = Panel.objects.all()
@@ -161,8 +164,6 @@ class TestMakePanelsFromHgncs(TestCase):
         )
 
         ClinicalIndicationPanel.objects.create(
-            config_source="230401_RD",
-            #td_version=sortable_version("5.0"),
             clinical_indication=self.first_clinical_indication,
             panel_id=first_panel.id,
             current=True,
@@ -180,6 +181,7 @@ class TestMakePanelsFromHgncs(TestCase):
             self.first_clinical_indication,
             self.td_version,
             ["HGNC:1", "HGNC:2", "HGNC:3"],
+            self.user
         )
 
         errors += value_check_wrapper(
@@ -199,10 +201,6 @@ class TestMakePanelsFromHgncs(TestCase):
         )  # both links should be flagged for review)
 
         #TODO: check version link made
-
-        errors += value_check_wrapper(
-            clinical_indication_panels[1].config_source, "config source", "230401_RD"
-        )
 
         errors += len_check_wrapper(
             PanelGeneHistory.objects.all(), "panel-gene history records", 3
@@ -239,7 +237,8 @@ class TestMakePanelsFromHgncs(TestCase):
         hgncs = [f"HGNC:{i}" for i in range(1000)]
 
         _make_panels_from_hgncs(
-            mock_test_directory, self.first_clinical_indication, self.td_version, hgncs
+            mock_test_directory, self.first_clinical_indication, self.td_version, hgncs,
+            self.user
         )
 
         panel = Panel.objects.first()
