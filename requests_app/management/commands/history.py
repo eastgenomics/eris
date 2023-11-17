@@ -18,6 +18,9 @@ class History:
 
     def clinical_indication_panel_created() -> str:
         return f"ClinicalIndicationPanel record created"
+    
+    def clinical_indication_superpanel_created() -> str:
+        return f"ClinicalIndicationSuperPanel record created"
 
     # modification
     def panel_gene_metadata_changed(

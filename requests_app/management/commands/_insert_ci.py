@@ -705,14 +705,14 @@ def _make_ci_superpanel_td_link(
         # if CI-Panel record is created, create a history record
         ClinicalIndicationSuperPanelHistory.objects.create(
             clinical_indication_superpanel=cip_instance,
-            note=History.clinical_indication_panel_created(),
+            note=History.clinical_indication_superpanel_created(),
             user=user,
         ),
 
     # log the fact that a td-ci_panel link was made
     if cisuperpanel_td_created:
-        CiPanelTdReleaseHistory.objects.create(
-            clinical_indication_panel_id=cisuperpanel_td.id,
+        CiSuperpanelTdReleaseHistory.objects.create(
+            cip_td=cisuperpanel_td,
             note=History.td_superpanel_ci_autolink(
                 cisuperpanel_td.td_release.release,
                 ),
