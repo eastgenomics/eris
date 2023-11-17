@@ -27,12 +27,10 @@ class History:
     ) -> str:
         return f"PanelGene metadata {field} changed from {old_value} to {new_value}"
 
-    def clinical_indication_panel_metadata_changed(
-        field: str,
-        old_value: str,
+    def clinical_indication_panel_new_td_link(
         new_value: str,
     ) -> str:
-        return f"ClinicalIndicationPanel metadata {field} changed from {old_value} to {new_value}"
+        return f"ClinicalIndicationPanel linked to new test directory release: {new_value}"
 
     def clinical_indication_metadata_changed(
         field: str, old_value: str, new_value: str
@@ -68,8 +66,14 @@ class History:
     def td_added() -> str:
         return f"New td version added"
 
-    def td_for_panel_ci_autolink() -> str:
+    def panel_ci_autolink() -> str:
         return f"Panel has automatically been linked to an existing ClinicalIndication - test directory version applied automatically"
+
+    def td_panel_ci_autolink(new_td) -> str:
+        return f"Panel-ClinicalIndication linked to a new TestDirectoryRelease {new_td}"
+    
+    def td_superpanel_ci_autolink(new_td) -> str:
+        return f"SuperPanel-ClinicalIndication linked to a new TestDirectoryRelease {new_td}"
 
     # gene/HGNC releases
     def gene_hgnc_release_approved_symbol_change(old_value: str, new_value: str) -> str:

@@ -27,7 +27,9 @@ from requests_app.models import (
     ClinicalIndicationTestMethodHistory,
     PanelGeneHistory,
     CiPanelTdRelease,
+    CiPanelTdReleaseHistory,
     CiSuperpanelTdRelease,
+    CiSuperpanelTdReleaseHistory
 )
 
 
@@ -609,7 +611,6 @@ def _update_ci_superpanel_tables_with_new_ci(
             )
         )
 
-
 def _make_ci_panel_td_link(
     ci_instance: ClinicalIndication,
     panel_record: Panel,
@@ -639,7 +640,7 @@ def _make_ci_panel_td_link(
     )
 
     # link the CI-Panel to the current test directory release
-    cipanel_td, _ = CiPanelTdRelease.objects.get_or_create(
+    cipanel_td, cipanel_td_created = CiPanelTdRelease.objects.get_or_create(
         ci_panel=cip_instance, td_release=td_version
     )
 
@@ -650,15 +651,14 @@ def _make_ci_panel_td_link(
             note=History.clinical_indication_panel_created(),
             user=user,
         )
-    else:
-        # log the fact that there's a newer test directory version now, in the history
-        ClinicalIndicationPanelHistory.objects.create(
-            clinical_indication_panel_id=cip_instance.id,
-            note=History.clinical_indication_panel_metadata_changed(
-                "td_version",
+
+    # log the fact that a td-ci_panel link was made
+    if cipanel_td_created:
+        CiPanelTdReleaseHistory.objects.create(
+            cip_td=cipanel_td,
+            note=History.td_panel_ci_autolink(
                 td_version.release,
-                td_version,
-            ),
+                ),
             user=user,
         )
 
@@ -697,7 +697,7 @@ def _make_ci_superpanel_td_link(
     )
 
     # link ci-superpanel to current test directory release
-    cisuperpanel_td, _ = CiSuperpanelTdRelease.objects.get_or_create(
+    cisuperpanel_td, cisuperpanel_td_created = CiSuperpanelTdRelease.objects.get_or_create(
         ci_superpanel=cip_instance, td_release=td_version
     )
 
@@ -708,18 +708,16 @@ def _make_ci_superpanel_td_link(
             note=History.clinical_indication_panel_created(),
             user=user,
         ),
-    else:
-        # log the fact that there's a newer test directory version now, in the history
-        ClinicalIndicationSuperPanelHistory.objects.create(
-            clinical_indication_superpanel_id=cip_instance,
-            note=History.clinical_indication_panel_metadata_changed(
-                "td_version",
-                td_version.release,
-                td_version,
-            ),
+
+    # log the fact that a td-ci_panel link was made
+    if cisuperpanel_td_created:
+        CiPanelTdReleaseHistory.objects.create(
+            clinical_indication_panel_id=cisuperpanel_td.id,
+            note=History.td_superpanel_ci_autolink(
+                cisuperpanel_td.td_release.release,
+                ),
             user=user,
         )
-
     return cip_instance, cip_created
 
 

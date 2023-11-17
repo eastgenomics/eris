@@ -442,6 +442,40 @@ class CiPanelTdRelease(models.Model):
         return str(self.id)
 
 
+class CiPanelTdReleaseHistory(models.Model):
+    """
+    Tracks the history of links made between a CiPanel
+    and a Test Directory Release
+    """
+    cip_td = models.ForeignKey(
+        CiPanelTdRelease,
+        verbose_name="Clinical Indication Panel - Test Directory Release link",
+        on_delete=models.PROTECT,
+    )
+
+    created = models.DateTimeField(
+        verbose_name="created",
+        auto_now_add=True,
+    )
+
+    note = models.CharField(
+        verbose_name="Note",
+        max_length=255,
+    )
+
+    user = models.CharField(
+        verbose_name="user",
+        max_length=255,
+        null=True,
+    )
+
+    class Meta:
+        db_table = "ci_panel_td_history"
+
+    def __str__(self):
+        return str(self.id)
+
+
 class CiSuperpanelTdRelease(models.Model):
     """
     Link a ClinicalIndication-Superpanel link, to those test directory releases
@@ -464,6 +498,40 @@ class CiSuperpanelTdRelease(models.Model):
 
     class Meta:
         db_table = "clinical_indication_superpanel_td_release"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class CiSuperpanelTdReleaseHistory(models.Model):
+    """
+    Tracks the history of links made between a CiSuperpanel
+    and a Test Directory Release
+    """
+    cip_td = models.ForeignKey(
+        CiSuperpanelTdRelease,
+        verbose_name="Clinical Indication SuperPanel - Test Directory Release link",
+        on_delete=models.PROTECT,
+    )
+    
+    created = models.DateTimeField(
+        verbose_name="created",
+        auto_now_add=True,
+    )
+
+    note = models.CharField(
+        verbose_name="Note",
+        max_length=255,
+    )
+
+    user = models.CharField(
+        verbose_name="user",
+        max_length=255,
+        null=True,
+    )
+
+    class Meta:
+        db_table = "ci_superpanel_td_history"
 
     def __str__(self):
         return str(self.id)
