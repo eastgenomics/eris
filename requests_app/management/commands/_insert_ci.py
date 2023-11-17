@@ -734,7 +734,6 @@ def _flag_panels_removed_from_test_directory(
     :param: panels, a list of relevant panels taken from the TD json or other data source
     :param: user, the current user name
     """
-    # TODO: test
     ci_panels = ClinicalIndicationPanel.objects.filter(
         clinical_indication_id__r_code=ci_instance.r_code, current=True
     )
@@ -780,13 +779,9 @@ def _flag_superpanels_removed_from_test_directory(
     )
 
     for cip in ci_superpanels:
-        # grab associated panel
-        associated_panel = SuperPanel.objects.get(id=cip.superpanel_id)
-
-        # if for the clinical indication
-        # the associated panel association is not in test directory
-        # flag for review
-        if associated_panel.external_id and associated_panel.external_id not in panels:
+        # if the linked panel is not in test directory,
+        # flag it for review
+        if cip.superpanel.external_id not in panels:
             with transaction.atomic():
                 cip.pending = True
                 cip.current = False
