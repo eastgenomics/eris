@@ -813,7 +813,10 @@ def _add_td_release_to_db(
     :returns: the TestDirectoryRelease
     """
     td = TestDirectoryRelease.objects.create(
-        release=td_version, td_source=td_source, td_date=td_date, config_source=config_source
+        release=td_version,
+        td_source=td_source,
+        td_date=td_date,
+        config_source=config_source,
     )
 
     td_history = TestDirectoryReleaseHistory.objects.create(
@@ -853,7 +856,9 @@ def insert_test_directory_data(
     user = td_source
 
     # add test directory to the db
-    td_version = _add_td_release_to_db(td_release, td_source, config_source, td_date, user)
+    td_version = _add_td_release_to_db(
+        td_release, td_source, config_source, td_date, user
+    )
 
     all_indication: list[dict] = json_data["indications"]
 
