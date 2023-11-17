@@ -447,6 +447,7 @@ class CiPanelTdReleaseHistory(models.Model):
     Tracks the history of links made between a CiPanel
     and a Test Directory Release
     """
+
     cip_td = models.ForeignKey(
         CiPanelTdRelease,
         verbose_name="Clinical Indication Panel - Test Directory Release link",
@@ -508,12 +509,13 @@ class CiSuperpanelTdReleaseHistory(models.Model):
     Tracks the history of links made between a CiSuperpanel
     and a Test Directory Release
     """
+
     cip_td = models.ForeignKey(
         CiSuperpanelTdRelease,
         verbose_name="Clinical Indication SuperPanel - Test Directory Release link",
         on_delete=models.PROTECT,
     )
-    
+
     created = models.DateTimeField(
         verbose_name="created",
         auto_now_add=True,

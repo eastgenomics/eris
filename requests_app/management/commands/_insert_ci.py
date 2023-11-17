@@ -29,7 +29,7 @@ from requests_app.models import (
     CiPanelTdRelease,
     CiPanelTdReleaseHistory,
     CiSuperpanelTdRelease,
-    CiSuperpanelTdReleaseHistory
+    CiSuperpanelTdReleaseHistory,
 )
 
 
@@ -484,6 +484,7 @@ def _make_panels_from_hgncs(
             user=td_source,
         )
 
+
 def _make_provisional_test_method_change(
     ci_instance: ClinicalIndication,
     new_test_method: str,
@@ -591,7 +592,6 @@ def _update_ci_superpanel_tables_with_new_ci(
     :param: config_source [str], source metadata for the CI-superpanel link
     :param: user [str], the current user
     """
-    # TODO: write unit tests
     for clinical_indication_superpanel in ClinicalIndicationSuperPanel.objects.filter(
         clinical_indication__r_code=r_code,
         current=True,
@@ -610,6 +610,7 @@ def _update_ci_superpanel_tables_with_new_ci(
                 clinical_indication_superpanel.superpanel, ci_instance, user, td_version
             )
         )
+
 
 def _make_ci_panel_td_link(
     ci_instance: ClinicalIndication,
@@ -658,7 +659,7 @@ def _make_ci_panel_td_link(
             cip_td=cipanel_td,
             note=History.td_panel_ci_autolink(
                 td_version.release,
-                ),
+            ),
             user=user,
         )
 
@@ -696,7 +697,10 @@ def _make_ci_superpanel_td_link(
     )
 
     # link ci-superpanel to current test directory release
-    cisuperpanel_td, cisuperpanel_td_created = CiSuperpanelTdRelease.objects.get_or_create(
+    (
+        cisuperpanel_td,
+        cisuperpanel_td_created,
+    ) = CiSuperpanelTdRelease.objects.get_or_create(
         ci_superpanel=cip_instance, td_release=td_version
     )
 
@@ -714,7 +718,7 @@ def _make_ci_superpanel_td_link(
             cip_td=cisuperpanel_td,
             note=History.td_superpanel_ci_autolink(
                 cisuperpanel_td.td_release.release,
-                ),
+            ),
             user=user,
         )
     return cip_instance, cip_created

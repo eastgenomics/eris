@@ -18,7 +18,7 @@ class History:
 
     def clinical_indication_panel_created() -> str:
         return f"ClinicalIndicationPanel record created"
-    
+
     def clinical_indication_superpanel_created() -> str:
         return f"ClinicalIndicationSuperPanel record created"
 
@@ -33,7 +33,9 @@ class History:
     def clinical_indication_panel_new_td_link(
         new_value: str,
     ) -> str:
-        return f"ClinicalIndicationPanel linked to new test directory release: {new_value}"
+        return (
+            f"ClinicalIndicationPanel linked to new test directory release: {new_value}"
+        )
 
     def clinical_indication_metadata_changed(
         field: str, old_value: str, new_value: str
@@ -74,7 +76,7 @@ class History:
 
     def td_panel_ci_autolink(new_td) -> str:
         return f"Panel-ClinicalIndication linked to a new TestDirectoryRelease {new_td}"
-    
+
     def td_superpanel_ci_autolink(new_td) -> str:
         return f"SuperPanel-ClinicalIndication linked to a new TestDirectoryRelease {new_td}"
 

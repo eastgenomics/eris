@@ -352,13 +352,11 @@ def _insert_panel_data_into_db(panel: PanelClass, user: str) -> Panel:
 
             clinical_indication_id = clinical_indication_panel.clinical_indication_id
 
-            # TODO: get the most recent TestDirectoryRelease for this clinical_indication_panel,
+            # get the most recent TestDirectoryRelease for this clinical_indication_panel,
             #  and provisionally link it
             latest_active_td_release = _get_most_recent_td_release_for_ci_panel(
                 clinical_indication_panel
             )
-            print("Latest active td release")
-            print(latest_active_td_release)
 
             provisionally_link_clinical_indication_to_panel(
                 panel_instance.id,
