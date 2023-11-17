@@ -293,12 +293,11 @@ def _retrieve_panel_from_pa_id(pa_id: str) -> Panel | None:
     return panel_instance
 
 
-def _retrieve_superpanel_from_pa_id(ci_code: str, pa_id: str) -> SuperPanel | None:
+def _retrieve_superpanel_from_pa_id(pa_id: str) -> SuperPanel | None:
     """
     Retrieve a single SuperPanel record based on PA panel id.
     We order multiple SuperPanel records by version and select the highest,
      to account for multiple entries.
-    :param: ci_code [str]: clinical indication code
     :param: pa_id [str]: panelapp id
 
     returns:
@@ -482,25 +481,6 @@ def _make_panels_from_hgncs(
             note=History.clinical_indication_panel_created(),
             user=td_source,
         )
-    # TODO: I think the below section is now redundant since config_source went onto a different model, but check later
-    # else:
-    #     # panel already exist
-    #     with transaction.atomic():
-    #         if cpi_instance.config_source != json_data["config_source"]:
-    #             # take a note of the change
-    #             #TODO: unit test missing for the object-creation line below, and the config_source setting
-    #             ClinicalIndicationPanelHistory.objects.create(
-    #                 clinical_indication_panel_id=cpi_instance.id,
-    #                 note=History.clinical_indication_panel_metadata_changed(
-    #                     "config_source",
-    #                     cpi_instance.config_source,
-    #                     config_source,
-    #                 ),
-    #                 user=td_source,
-    #             )
-    #             cpi_instance.config_source = config_source
-    #         cpi_instance.save()
-
 
 def _make_provisional_test_method_change(
     ci_instance: ClinicalIndication,
@@ -918,7 +898,6 @@ def insert_test_directory_data(
         if indication["panels"]:
             for pa_id in indication["panels"]:
                 if not pa_id or not pa_id.strip():
-                    # TODO: write a test that hits continue
                     continue
 
                 # add any individual hgnc ids to a separate list
@@ -929,9 +908,7 @@ def insert_test_directory_data(
 
                 # for PA panel ids, retrieve latest version matching Panel and SuperPanel records
                 panel_record: Panel = _retrieve_panel_from_pa_id(pa_id)
-                super_panel_record: SuperPanel = _retrieve_superpanel_from_pa_id(
-                    indication["code"], pa_id
-                )
+                super_panel_record: SuperPanel = _retrieve_superpanel_from_pa_id(pa_id)
 
                 # if we import the same version of TD but with different config source:
                 if panel_record:
@@ -948,7 +925,6 @@ def insert_test_directory_data(
                     )
 
                 if not panel_record and not super_panel_record:
-                    # TODO: no tests for this case yet
                     # No record exists of this panel/superpanel
                     # e.g. panel id 489 has been retired
                     print(
