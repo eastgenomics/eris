@@ -99,7 +99,7 @@ class TestInsertTestDirectoryData(TestCase):
 
         mock_test_directory = {
             "td_source": "rare-and-inherited-disease-national-gnomic-test-directory-v2.0.xlsx",
-            "date": "20230908"
+            "date": "20230908",
         }
         version = "2.0"
 
@@ -118,7 +118,7 @@ class TestInsertTestDirectoryData(TestCase):
             "indications": [],
             "td_source": "rare-and-inherited-disease-national-gnomic-test-directory-v5.0.xlsx",
             "config_source": "config_source",
-            "date": "20230908"
+            "date": "20230908",
         }
 
         version = "5.0"
@@ -151,7 +151,7 @@ class TestInsertTestDirectoryData(TestCase):
         mock_test_directory = {
             "indications": [],
             "td_source": "rare-and-inherited-disease-national-gnomic-test-directory-v5.0.xlsx",
-            "date": "20230908"
+            "date": "20230908",
         }
 
         version = "5.0"
