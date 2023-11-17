@@ -801,7 +801,7 @@ def _flag_superpanels_removed_from_test_directory(
 
 
 def _add_td_release_to_db(
-    td_version: str, td_source: str, config_source: str, user: str
+    td_version: str, td_source: str, config_source: str, td_date: str, user: str
 ) -> TestDirectoryRelease:
     """
     Add a new TestDirectory to the database with a version, and make a history entry
@@ -813,7 +813,7 @@ def _add_td_release_to_db(
     :returns: the TestDirectoryRelease
     """
     td = TestDirectoryRelease.objects.create(
-        release=td_version, td_source=td_source, config_source=config_source
+        release=td_version, td_source=td_source, td_date=td_date, config_source=config_source
     )
 
     td_history = TestDirectoryReleaseHistory.objects.create(
@@ -842,6 +842,7 @@ def insert_test_directory_data(
     # fetch td source and config source from json file
     td_source: str = json_data.get("td_source")
     assert td_source, "Missing td_source in test directory json file"
+    td_date: str = json_data.get("td_date")
     config_source = json_data["config_source"]
 
     # fetch td version and check it's valid
@@ -852,7 +853,7 @@ def insert_test_directory_data(
     user = td_source
 
     # add test directory to the db
-    td_version = _add_td_release_to_db(td_release, td_source, config_source, user)
+    td_version = _add_td_release_to_db(td_release, td_source, config_source, td_date, user)
 
     all_indication: list[dict] = json_data["indications"]
 
