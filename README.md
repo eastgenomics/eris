@@ -75,8 +75,8 @@ MANE and HGMD files should be version-controlled locally, with file IDs for ever
 ```
 python manage.py seed transcript \
 --hgnc <path> --hgnc_release <release> --mane <path> --mane_ext_id <file ID> --mane_release <release> \
---gff <path> --g2refseq <path> --g2refseq_ext_id <file ID> --markname <path> \
---markname_ext_id <file ID> --hgmd_release_label <str> --refgenome <version> \
+--gff <path> --gff_release <release> --g2refseq <path> --g2refseq_ext_id <file ID> --markname <path> \
+--markname_ext_id <file ID> --hgmd_release <str> --refgenome <version> \
 --error
 
 # working example
