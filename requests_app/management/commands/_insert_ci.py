@@ -845,7 +845,7 @@ def insert_test_directory_data(
     # fetch td source and config source from json file
     td_source: str = json_data.get("td_source")
     assert td_source, "Missing td_source in test directory json file"
-    td_date: str = json_data.get("td_date")
+    td_date: str = json_data.get("date")
     config_source = json_data["config_source"]
 
     # fetch td version and check it's valid
