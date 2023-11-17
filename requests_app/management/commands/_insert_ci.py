@@ -684,7 +684,6 @@ def _make_ci_superpanel_td_link(
     :return: a tuple containing the created or fetched ClinicalIndicationSuperPanel
     instance, plus a bool for if it was created or not
     """
-    # TODO: need unit tests on some sections here
     (
         cip_instance,
         cip_created,
@@ -772,11 +771,10 @@ def _flag_superpanels_removed_from_test_directory(
 
     :param: ci_instance, a ClinicalIndication which needs its pre-existing links
     to be found and flagged
-    :param: superpanels, a list of relevant panels taken from the TD json or other
+    :param: panels, a list of relevant superpanels taken from the TD json or other
     data source
     :param: user, the current user
     """
-    # TODO: test
     ci_superpanels = ClinicalIndicationSuperPanel.objects.filter(
         clinical_indication__r_code=ci_instance.r_code, current=True
     )
