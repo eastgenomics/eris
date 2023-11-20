@@ -503,6 +503,12 @@ class HgncRelease(models.Model):
         verbose_name="Hgnc Release", max_length=255, unique=True
     )
 
+    created = models.DateTimeField(
+        verbose_name="created",
+        help="date-time of release version's creation in Eris",
+        auto_now_add=True,
+    )
+
     class Meta:
         db_table = "hgnc_release"
 
@@ -756,6 +762,12 @@ class GffRelease(models.Model):
         ReferenceGenome,
         verbose_name="reference genome",
         on_delete=models.PROTECT,
+    )
+
+    created = models.DateTimeField(
+        verbose_name="created",
+        help="date-time of release version's creation in Eris",
+        auto_now_add=True,
     )
 
     class Meta:
