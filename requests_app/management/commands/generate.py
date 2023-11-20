@@ -7,7 +7,7 @@ from requests_app.models import (
     PanelSuperPanel,
     PanelGene,
     Transcript,
-    TestDirectoryRelease
+    TestDirectoryRelease,
 )
 import os
 import csv

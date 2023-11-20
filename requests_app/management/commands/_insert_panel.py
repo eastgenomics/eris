@@ -346,9 +346,7 @@ def _insert_panel_data_into_db(panel: PanelClass, user: str) -> Panel:
             panel_id__external_id=panel_external_id,
             current=True,
         ):
-            flag_clinical_indication_panel_for_review(
-                clinical_indication_panel, user
-            )
+            flag_clinical_indication_panel_for_review(clinical_indication_panel, user)
 
             clinical_indication_id = clinical_indication_panel.clinical_indication_id
 
