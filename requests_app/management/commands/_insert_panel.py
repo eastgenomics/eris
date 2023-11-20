@@ -35,6 +35,50 @@ from .panelapp import PanelClass, SuperPanelClass
 from django.db import transaction
 
 
+def _populate_nullable_gene_and_regions_fields(region: dict) -> tuple[ModeOfInheritance | None,
+                                                                      ModeOfPathogenicity | None,
+                                                                      Penetrance | None]:
+    """
+    Handles extracting fields which can be nullable.
+    Make these in the db where they exist, but DON'T make them in the db if they are None.
+    Strips leading and trailing spaces for strings.
+    Here to save some lines of code.
+    
+    :param: region or gene - a dictionary containing attributes such as moi, mop, e.t.c. Values
+    might be null
+
+    :return: moi_instance, a ModeOfInheritance instance, or None if not applicable
+    :return: mop_instance, a ModeOfPathogenicity instance, or None if not applicable
+    :returnL penetrance, a Penetrance instance, or None if not applicable
+    """
+    inheritance = region.get("mode_of_inheritance")
+    if inheritance:
+        inheritance = inheritance.strip()
+        moi_instance, _ = ModeOfInheritance.objects.get_or_create(
+            mode_of_inheritance=inheritance)
+    else:
+        moi_instance = None
+
+    mop = region.get("mode_of_pathogenicity")
+    if mop:
+        mop = mop.strip()
+        mop_instance, _ = ModeOfPathogenicity.objects.get_or_create(
+            mode_of_pathogenicity=mop,
+        )
+    else:
+        mop_instance = None
+
+    penetrance = region.get("penetrance")
+    if penetrance:
+        penetrance_instance, _ = Penetrance.objects.get_or_create(
+            penetrance=penetrance,
+        )
+    else:
+        penetrance_instance = None
+
+    return moi_instance, mop_instance, penetrance_instance
+
+
 def _insert_gene(
     panel: PanelClass,
     panel_instance: Panel,
@@ -117,19 +161,8 @@ def _insert_gene(
             confidence_level=3,  # we only seed level 3 confidence
         )
 
-        moi_instance, _ = ModeOfInheritance.objects.get_or_create(
-            mode_of_inheritance=single_gene.get("mode_of_inheritance"),
-        )
-
-        # mop value might be None
-        mop_instance, _ = ModeOfPathogenicity.objects.get_or_create(
-            mode_of_pathogenicity=single_gene.get("mode_of_pathogenicity"),
-        )
-
-        # value for 'penetrance' might be empty
-        penetrance_instance, _ = Penetrance.objects.get_or_create(
-            penetrance=single_gene.get("penetrance"),
-        )
+        moi_instance, mop_instance, penetrance_instance = \
+            _populate_nullable_gene_and_regions_fields(single_gene)
 
         pg_instance, pg_created = PanelGene.objects.get_or_create(
             panel_id=panel_instance.id,
@@ -137,9 +170,9 @@ def _insert_gene(
             defaults={
                 "justification": "PanelApp",
                 "confidence_id": confidence_instance.id,
-                "moi_id": moi_instance.id,
-                "mop_id": mop_instance.id,
-                "penetrance_id": penetrance_instance.id,
+                "moi_id": (moi_instance.id if moi_instance else None),
+                "mop_id": (mop_instance.id if mop_instance else None),
+                "penetrance_id": (penetrance_instance.id if penetrance_instance else None),
                 "active": True,
             },
         )
@@ -192,10 +225,6 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
             confidence_level=single_region.get("confidence_level"),
         )
 
-        moi_instance, _ = ModeOfInheritance.objects.get_or_create(
-            mode_of_inheritance=single_region.get("mode_of_inheritance"),
-        )
-
         vartype_instance, _ = VariantType.objects.get_or_create(
             variant_type=single_region.get("type_of_variants"),
         )
@@ -204,21 +233,24 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
             required_overlap=single_region.get("required_overlap_percentage"),
         )
 
-        mop_instance, _ = ModeOfPathogenicity.objects.get_or_create(
-            mode_of_pathogenicity=single_region.get("mode_of_pathogenicity")
-        )
+        moi_instance, mop_instance, penetrance_instance = \
+            _populate_nullable_gene_and_regions_fields(single_region)
 
-        penetrance_instance, _ = Penetrance.objects.get_or_create(
-            penetrance=single_region.get("penetrance"),
-        )
+        haplo = single_region.get("haploinsufficiency_score")
+        if haplo:
+            haplo_instance, _ = Haploinsufficiency.objects.get_or_create(
+                haploinsufficiency=haplo,
+            )
+        else:
+            haplo_instance = None
 
-        haplo_instance, _ = Haploinsufficiency.objects.get_or_create(
-            haploinsufficiency=single_region.get("haploinsufficiency_score"),
-        )
-
-        triplo_instance, _ = Triplosensitivity.objects.get_or_create(
-            triplosensitivity=single_region.get("triplosensitivity_score"),
-        )
+        triplo = single_region.get("triplosensitivity_score")
+        if triplo:
+            triplo_instance, _ = Triplosensitivity.objects.get_or_create(
+                triplosensitivity=triplo,
+            )
+        else:
+            triplo_instance = None
 
         ref_grch37, _ = ReferenceGenome.objects.get_or_create(reference_genome="GRCh37")
         ref_grch38, _ = ReferenceGenome.objects.get_or_create(reference_genome="GRCh38")
@@ -234,11 +266,11 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
                 end=single_region.get("grch37_coordinates")[1],
                 type=single_region.get("entity_type"),
                 confidence_id=confidence_instance.id,
-                moi_id=moi_instance.id,
-                mop_id=mop_instance.id,
-                penetrance_id=penetrance_instance.id,
-                haplo_id=haplo_instance.id,
-                triplo_id=triplo_instance.id,
+                moi_id=(moi_instance.id if moi_instance else None),
+                mop_id=(mop_instance.id if mop_instance else None),
+                penetrance_id=(penetrance_instance.id if penetrance_instance else None),
+                haplo_id=(haplo_instance.id if haplo_instance else None),
+                triplo_id=(triplo_instance.id if triplo_instance else None),
                 overlap_id=overlap_instance.id,
                 vartype_id=vartype_instance.id,
             )
@@ -260,11 +292,11 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
                 end=single_region.get("grch38_coordinates")[1],
                 type=single_region.get("entity_type"),
                 confidence_id=confidence_instance.id,
-                moi_id=moi_instance.id,
-                mop_id=mop_instance.id,
-                penetrance_id=penetrance_instance.id,
-                haplo_id=haplo_instance.id,
-                triplo_id=triplo_instance.id,
+                moi_id=(moi_instance.id if moi_instance else None),
+                mop_id=(mop_instance.id if mop_instance else None),
+                penetrance_id=(penetrance_instance.id if penetrance_instance else None),
+                haplo_id=(haplo_instance.id if haplo_instance else None),
+                triplo_id=(triplo_instance.id if triplo_instance else None),
                 overlap_id=overlap_instance.id,
                 vartype_id=vartype_instance.id,
             )
