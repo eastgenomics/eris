@@ -505,7 +505,7 @@ class HgncRelease(models.Model):
 
     created = models.DateTimeField(
         verbose_name="created",
-        help="date-time of release version's creation in Eris",
+        help_text="date-time of release version's creation in Eris",
         auto_now_add=True,
     )
 
@@ -766,7 +766,7 @@ class GffRelease(models.Model):
 
     created = models.DateTimeField(
         verbose_name="created",
-        help="date-time of release version's creation in Eris",
+        help_text="date-time of release version's creation in Eris",
         auto_now_add=True,
     )
 
