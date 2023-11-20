@@ -7,6 +7,7 @@ from requests_app.models import (
     PanelSuperPanel,
     PanelGene,
     Transcript,
+    TestDirectoryRelease
 )
 import os
 import csv
@@ -259,11 +260,8 @@ class Command(BaseCommand):
         """
         print("Creating genepanels file")
 
-        if not ClinicalIndicationPanel.objects.filter(
-            current=True, pending=False
-        ).exists():
-            # if there's no CiPanelAssociation date column, high chance Test Directory
-            # has not been imported yet.
+        if not TestDirectoryRelease.objects.all().exists():
+            # if there's no TestDirectoryRelease, a td has not been imported yet.
             raise ValueError(
                 "Test Directory has not yet been imported!"
                 "ClinicalIndicationPanel table is empty"

@@ -347,7 +347,7 @@ def _insert_panel_data_into_db(panel: PanelClass, user: str) -> Panel:
             current=True,
         ):
             flag_clinical_indication_panel_for_review(
-                clinical_indication_panel, "PanelApp"
+                clinical_indication_panel, user
             )
 
             clinical_indication_id = clinical_indication_panel.clinical_indication_id
@@ -420,7 +420,7 @@ def _insert_superpanel_into_db(
             superpanel__external_id=panel_external_id, current=True
         ):
             flag_clinical_indication_superpanel_for_review(
-                clinical_indication_superpanel, "PanelApp"
+                clinical_indication_superpanel, user
             )
 
             latest_active_td_release = _get_most_recent_td_release_for_ci_superpanel(
