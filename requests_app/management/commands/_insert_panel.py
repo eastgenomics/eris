@@ -270,7 +270,7 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
             details_38["end"] = single_region.get("grch38_coordinates")[1]
             details_38["reference"] = ref_grch38
             coords.append(details_38)
-        
+
         # for each available build - attach Region record to Panel record
         for coord in coords:
             region, _ = Region.objects.get_or_create(
