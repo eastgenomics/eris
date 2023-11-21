@@ -74,7 +74,7 @@ class Command(BaseCommand):
 
         for idx, release in enumerate(releases):
             if release is None:
-                raise Exception(f"External file id for {FILES[idx]} is missing!")
+                raise Exception(f"External version for {FILES[idx]} is missing!")
 
         # check if valid
         invalid_releases = [id for id in releases if not re.match(r"^\d+(\.\d+)*$", id)]
