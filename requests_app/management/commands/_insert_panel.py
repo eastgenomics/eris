@@ -35,15 +35,15 @@ from .panelapp import PanelClass, SuperPanelClass
 from django.db import transaction
 
 
-def _populate_nullable_gene_and_regions_fields(region: dict) -> tuple[ModeOfInheritance | None,
-                                                                      ModeOfPathogenicity | None,
-                                                                      Penetrance | None]:
+def _populate_nullable_gene_and_regions_fields(
+    region: dict,
+) -> tuple[ModeOfInheritance | None, ModeOfPathogenicity | None, Penetrance | None]:
     """
     Handles extracting fields which can be nullable.
     Make these in the db where they exist, but DON'T make them in the db if they are None.
     Strips leading and trailing spaces for strings.
     Here to save some lines of code.
-    
+
     :param: region or gene - a dictionary containing attributes such as moi, mop, e.t.c. Values
     might be null
 
@@ -55,7 +55,8 @@ def _populate_nullable_gene_and_regions_fields(region: dict) -> tuple[ModeOfInhe
     if inheritance:
         inheritance = inheritance.strip()
         moi_instance, _ = ModeOfInheritance.objects.get_or_create(
-            mode_of_inheritance=inheritance)
+            mode_of_inheritance=inheritance
+        )
     else:
         moi_instance = None
 
@@ -161,8 +162,11 @@ def _insert_gene(
             confidence_level=3,  # we only seed level 3 confidence
         )
 
-        moi_instance, mop_instance, penetrance_instance = \
-            _populate_nullable_gene_and_regions_fields(single_gene)
+        (
+            moi_instance,
+            mop_instance,
+            penetrance_instance,
+        ) = _populate_nullable_gene_and_regions_fields(single_gene)
 
         pg_instance, pg_created = PanelGene.objects.get_or_create(
             panel_id=panel_instance.id,
@@ -172,7 +176,9 @@ def _insert_gene(
                 "confidence_id": confidence_instance.id,
                 "moi_id": (moi_instance.id if moi_instance else None),
                 "mop_id": (mop_instance.id if mop_instance else None),
-                "penetrance_id": (penetrance_instance.id if penetrance_instance else None),
+                "penetrance_id": (
+                    penetrance_instance.id if penetrance_instance else None
+                ),
                 "active": True,
             },
         )
@@ -233,8 +239,11 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
             required_overlap=single_region.get("required_overlap_percentage"),
         )
 
-        moi_instance, mop_instance, penetrance_instance = \
-            _populate_nullable_gene_and_regions_fields(single_region)
+        (
+            moi_instance,
+            mop_instance,
+            penetrance_instance,
+        ) = _populate_nullable_gene_and_regions_fields(single_region)
 
         haplo = single_region.get("haploinsufficiency_score")
         if haplo:
@@ -255,7 +264,7 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
         ref_grch37, _ = ReferenceGenome.objects.get_or_create(reference_genome="GRCh37")
         ref_grch38, _ = ReferenceGenome.objects.get_or_create(reference_genome="GRCh38")
 
-        # queue up start and end positions for regions - 
+        # queue up start and end positions for regions -
         # there might be info for build 37, or build 38, or both
         coords = []
         if single_region.get("grch37_coordinates"):
