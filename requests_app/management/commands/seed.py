@@ -47,6 +47,15 @@ class Command(BaseCommand):
         Validate that the external file ids are in the correct format
         :param: file_ids, a list of file ID strings
         """
+
+        # check if the arguments are provided
+        FILES = ["MANE", "G2REFSEQ", "MARKNAME"]
+
+        for idx, file_id in enumerate(file_ids):
+            if file_id is None:
+                raise Exception(f"External file id for {FILES[idx]} is missing!")
+
+        # check if the arguments are valid
         missing_ids = [id for id in file_ids if not re.match(r"^file-[\w]+$", id)]
 
         if missing_ids:
@@ -60,6 +69,14 @@ class Command(BaseCommand):
         Validate that the external releases are in the correct format
         Only numbers and dots are permitted, e.g. 1.0.13
         """
+        # check if arg provided
+        FILES = ["HGNC RELEASE", "MANE RELEASE", "GFF RELEASE", "HGMD RELEASE"]
+
+        for idx, release in enumerate(releases):
+            if release is None:
+                raise Exception(f"External file id for {FILES[idx]} is missing!")
+
+        # check if valid
         invalid_releases = [id for id in releases if not re.match(r"^\d+(\.\d+)*$", id)]
 
         if invalid_releases:
