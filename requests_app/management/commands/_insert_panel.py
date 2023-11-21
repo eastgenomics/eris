@@ -40,6 +40,67 @@ from django.db import transaction
 from packaging.version import Version
 
 
+def _handle_nulls_and_blanks_from_json(json_field: str | None) -> str | None:
+    """
+    For an attribute extracted from the genes and regions sections
+    of the PanelApp API call - check it isn't some variety of none-type data.
+    Make it into None if it's none-type.
+    Otherwise return a string with leading/trailing whitespace cut out.
+
+    :param: json field (str), e.g. mode_of_inheritance, or None
+    :return: the sanitised json field (str) or None
+    """
+    if json_field:
+        json_field = json_field.strip()
+        if json_field:
+            return json_field
+        else:
+            return None
+    else:
+        return None
+
+
+def _populate_nullable_gene_and_regions_fields(
+    region: dict,
+) -> tuple[ModeOfInheritance | None, ModeOfPathogenicity | None, Penetrance | None]:
+    """
+    Handles extracting fields which are commonly nullable, and are common to both gene
+    and region-parsing.
+    Where the fields exist, make them in the db.
+    Strips leading and trailing spaces for strings.
+
+    :param: region (or gene) - a dictionary containing attributes such as moi, mop, e.t.c. Values
+    might be null
+
+    :return: moi_instance, a ModeOfInheritance instance, or None if not applicable
+    :return: mop_instance, a ModeOfPathogenicity instance, or None if not applicable
+    :return: penetrance, a Penetrance instance, or None if not applicable
+    """
+    moi_instance = None
+    mop_instance = None
+    penetrance_instance = None
+
+    inheritance = _handle_nulls_and_blanks_from_json(region.get("mode_of_inheritance"))
+    if inheritance:
+        moi_instance, _ = ModeOfInheritance.objects.get_or_create(
+            mode_of_inheritance=inheritance
+        )
+
+    mop = _handle_nulls_and_blanks_from_json(region.get("mode_of_pathogenicity"))
+    if mop:
+        mop_instance, _ = ModeOfPathogenicity.objects.get_or_create(
+            mode_of_pathogenicity=mop,
+        )
+
+    penetrance = _handle_nulls_and_blanks_from_json(region.get("penetrance"))
+    if penetrance:
+        penetrance_instance, _ = Penetrance.objects.get_or_create(
+            penetrance=penetrance,
+        )
+
+    return moi_instance, mop_instance, penetrance_instance
+
+
 def _insert_gene(
     panel: PanelClass,
     panel_instance: Panel,
@@ -122,19 +183,11 @@ def _insert_gene(
             confidence_level=3,  # we only seed level 3 confidence
         )
 
-        moi_instance, _ = ModeOfInheritance.objects.get_or_create(
-            mode_of_inheritance=single_gene.get("mode_of_inheritance"),
-        )
-
-        # mop value might be None
-        mop_instance, _ = ModeOfPathogenicity.objects.get_or_create(
-            mode_of_pathogenicity=single_gene.get("mode_of_pathogenicity"),
-        )
-
-        # value for 'penetrance' might be empty
-        penetrance_instance, _ = Penetrance.objects.get_or_create(
-            penetrance=single_gene.get("penetrance"),
-        )
+        (
+            moi_instance,
+            mop_instance,
+            penetrance_instance,
+        ) = _populate_nullable_gene_and_regions_fields(single_gene)
 
         pg_instance, pg_created = PanelGene.objects.get_or_create(
             panel_id=panel_instance.id,
@@ -142,9 +195,11 @@ def _insert_gene(
             defaults={
                 "justification": "PanelApp",
                 "confidence_id": confidence_instance.id,
-                "moi_id": moi_instance.id,
-                "mop_id": mop_instance.id,
-                "penetrance_id": penetrance_instance.id,
+                "moi_id": (moi_instance.id if moi_instance else None),
+                "mop_id": (mop_instance.id if mop_instance else None),
+                "penetrance_id": (
+                    penetrance_instance.id if penetrance_instance else None
+                ),
                 "active": True,
             },
         )
@@ -197,10 +252,6 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
             confidence_level=single_region.get("confidence_level"),
         )
 
-        moi_instance, _ = ModeOfInheritance.objects.get_or_create(
-            mode_of_inheritance=single_region.get("mode_of_inheritance"),
-        )
-
         vartype_instance, _ = VariantType.objects.get_or_create(
             variant_type=single_region.get("type_of_variants"),
         )
@@ -209,74 +260,74 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
             required_overlap=single_region.get("required_overlap_percentage"),
         )
 
-        mop_instance, _ = ModeOfPathogenicity.objects.get_or_create(
-            mode_of_pathogenicity=single_region.get("mode_of_pathogenicity")
-        )
+        (
+            moi_instance,
+            mop_instance,
+            penetrance_instance,
+        ) = _populate_nullable_gene_and_regions_fields(single_region)
 
-        penetrance_instance, _ = Penetrance.objects.get_or_create(
-            penetrance=single_region.get("penetrance"),
+        haplo = _handle_nulls_and_blanks_from_json(
+            single_region.get("haploinsufficiency_score")
         )
+        if haplo:
+            haplo_instance, _ = Haploinsufficiency.objects.get_or_create(
+                haploinsufficiency=haplo,
+            )
+        else:
+            haplo_instance = None
 
-        haplo_instance, _ = Haploinsufficiency.objects.get_or_create(
-            haploinsufficiency=single_region.get("haploinsufficiency_score"),
+        triplo = _handle_nulls_and_blanks_from_json(
+            single_region.get("triplosensitivity_score")
         )
-
-        triplo_instance, _ = Triplosensitivity.objects.get_or_create(
-            triplosensitivity=single_region.get("triplosensitivity_score"),
-        )
+        if triplo:
+            triplo_instance, _ = Triplosensitivity.objects.get_or_create(
+                triplosensitivity=triplo,
+            )
+        else:
+            triplo_instance = None
 
         ref_grch37, _ = ReferenceGenome.objects.get_or_create(reference_genome="GRCh37")
         ref_grch38, _ = ReferenceGenome.objects.get_or_create(reference_genome="GRCh38")
 
-        # attach Region record to Panel record - GRCh37 if data exists
+        # queue up start and end positions for regions -
+        # there might be info for build 37, or build 38, or both
+        coords = []
         if single_region.get("grch37_coordinates"):
-            region_instance_build_37, _ = Region.objects.get_or_create(
-                name=single_region.get("entity_name"),
-                verbose_name=single_region.get("verbose_name"),
-                chrom=single_region.get("chromosome"),
-                reference_genome=ref_grch37,
-                start=single_region.get("grch37_coordinates")[0],
-                end=single_region.get("grch37_coordinates")[1],
-                type=single_region.get("entity_type"),
-                confidence_id=confidence_instance.id,
-                moi_id=moi_instance.id,
-                mop_id=mop_instance.id,
-                penetrance_id=penetrance_instance.id,
-                haplo_id=haplo_instance.id,
-                triplo_id=triplo_instance.id,
-                overlap_id=overlap_instance.id,
-                vartype_id=vartype_instance.id,
-            )
-
-            PanelRegion.objects.get_or_create(
-                panel_id=panel_instance.id,
-                region_id=region_instance_build_37.id,
-                defaults={"justification": "PanelApp"},
-            )
-
-        # attach Region record to Panel record - GRCh38 if it exists
+            details_37 = {}
+            details_37["start"] = single_region.get("grch37_coordinates")[0]
+            details_37["end"] = single_region.get("grch37_coordinates")[1]
+            details_37["reference"] = ref_grch37
+            coords.append(details_37)
         if single_region.get("grch38_coordinates"):
-            region_instance_build_38, _ = Region.objects.get_or_create(
+            details_38 = {}
+            details_38["start"] = single_region.get("grch38_coordinates")[0]
+            details_38["end"] = single_region.get("grch38_coordinates")[1]
+            details_38["reference"] = ref_grch38
+            coords.append(details_38)
+
+        # for each available build - attach Region record to Panel record
+        for coord in coords:
+            region, _ = Region.objects.get_or_create(
                 name=single_region.get("entity_name"),
                 verbose_name=single_region.get("verbose_name"),
                 chrom=single_region.get("chromosome"),
-                reference_genome=ref_grch38,
-                start=single_region.get("grch38_coordinates")[0],
-                end=single_region.get("grch38_coordinates")[1],
+                reference_genome=coord["reference"],
+                start=coord["start"],
+                end=coord["end"],
                 type=single_region.get("entity_type"),
                 confidence_id=confidence_instance.id,
-                moi_id=moi_instance.id,
-                mop_id=mop_instance.id,
-                penetrance_id=penetrance_instance.id,
-                haplo_id=haplo_instance.id,
-                triplo_id=triplo_instance.id,
+                moi_id=(moi_instance.id if moi_instance else None),
+                mop_id=(mop_instance.id if mop_instance else None),
+                penetrance_id=(penetrance_instance.id if penetrance_instance else None),
+                haplo_id=(haplo_instance.id if haplo_instance else None),
+                triplo_id=(triplo_instance.id if triplo_instance else None),
                 overlap_id=overlap_instance.id,
                 vartype_id=vartype_instance.id,
             )
 
             PanelRegion.objects.get_or_create(
                 panel_id=panel_instance.id,
-                region_id=region_instance_build_38.id,
+                region_id=region.id,
                 defaults={"justification": "PanelApp"},
             )
         # TODO: backward deactivation for PanelRegion, with history logging
