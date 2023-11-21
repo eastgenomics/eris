@@ -61,18 +61,24 @@
                     <th scope="col">Transcript</th>
                     <th scope="col">Source</th>
                     <th scope="col">Reference Genome</th>
+                    <th scope="col">Clinical</th>
                   </tr>
                 </thead>
                 <tbody>
                     {% for transcript in transcripts %}
                     <tr>
-                        <td>{{ transcript.transcript }}</td>
-                        {% if transcript.source %}
-                        <td><span class="badge text-bg-info">{{ transcript.source }}</span></td>
+                        <td>{{ transcript.transcript_id__transcript }}</td>
+                        {% if transcript.release_id__source_id__source %}
+                        <td><span class="badge text-bg-info">{{ transcript.release_id__source_id__source }}</span></td>
                         {% else %}
-                        <td>{{ transcript.source }}</td>
+                        <td>{{ transcript.release_id__source_id__source }}</td>
                         {% endif %}
-                        <td>{{ transcript.reference_genome }}</td>
+                        <td>{{ transcript.release_id__reference_genome_id__reference_genome }}</td>
+                        {% if transcript.default_clinical %}
+                            <td><span class="badge text-bg-success">{{ transcript.default_clinical }}</span></td>
+                        {% else %}
+                            <td>{{ transcript.default_clinical }}</td>
+                        {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>

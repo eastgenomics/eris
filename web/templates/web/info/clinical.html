@@ -35,7 +35,7 @@
     <div class="row">
         {% if panels %}
         {% for panel in panels %}
-        <div class="col-lg-4 col-md-8 col-sm-12 mt-2">
+        <div class="col-lg-6 col-md-8 col-sm-12 mt-2">
             <div class="card shadow">
                 <div class="card-body">
                     <h5 class="text-break"><a href="{% url 'panel' panel.id %}">{{ panel.panel_name }}</a></h5>
@@ -98,7 +98,6 @@
                             <li class="list-group-item">imported by test directory version: {{ ci_panel.td_version }}</li>
                             <li class="list-group-item">created: {{ ci_panel.created }}</li>
                             <li class="list-group-item">last updated: {{ ci_panel.last_updated }}</li>
-                            <li class="list-group-item">target: <a href="{% url 'panel' ci_panel.panel_id %}"><span class="text-info">{{ ci_panel.panel_id__panel_name }}</span></a></li>
                         </ul>
                     </p>
 
@@ -155,89 +154,6 @@
                         <td>{{ history.user }}</td>
                         {% endif %}
                         <td>{{ history.clinical_indication_panel_id }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="col">
-            <div class="alert alert-info" role="alert">
-                Nothing to show here!
-            </div>
-        </div>
-        {% endif %}
-    </div>
-
-    <br> <!-- Panel Genes Link -->
-    <h3>Panel Genes</h3>
-    <p class="fs-6 text-muted">genes associated to the panel</p>
-    <div class="row">
-        {% if panel_genes %}
-        {% for key, values in panel_genes.items %}
-        <div class="col-12 mt-3">
-            <div class="card shadow">
-                <div class="card-body">
-                    
-                    <h5 class="card-title">panel id: <span class="text-info">{{ key }}</span></h5>
-
-                    <p class="card-text">
-                        <table class="table pt-2" id="geneTable">
-                            <thead class="table-success">
-                            <tr>
-                                <th scope="col">HGNC id</th>
-                                <th scope="col">Gene Symbol</th>
-                                <th scope="col">Created</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                                {% for gene in values %}
-                                <tr>
-                                    <td><a href="{% url 'gene' gene.gene_id %}">{{ gene.hgnc }}</a></td>
-                                    <td>{{ gene.symbol }}</td>
-                                    <td>{{ gene.created }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </p>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-        {% else %}
-        <div class="col">
-            <div class="alert alert-info" role="alert">
-                Nothing to show here!
-            </div>
-        </div>
-        {% endif %}
-    </div>
-
-    <br> <!-- Panel Genes Link Modification History -->
-    <h3>Transcripts</h3>
-    <p class="fs-6 text-muted">transcripts associated with the genes</p>
-    <div class="row">
-        {% if transcripts %}
-        <div class="col-12">
-            <table class="table pt-2" id="transcriptTable">
-                <thead class="table-success">
-                <tr>
-                    <th scope="col">Gene</th>
-                    <th scope="col">Transcript</th>
-                    <th scope="col">Source</th>
-                </tr>
-                </thead>
-                <tbody>
-                    {% for transcript in transcripts %}
-                    <tr>
-                        <td>{{ transcript.gene_id__hgnc_id }}</td>
-                        <td>{{ transcript.transcript }}</td>
-                        {% if transcript.source %}
-                        <td><span class="badge text-bg-success">{{ transcript.source }}</span></td>
-                        {% else %}
-                        <td>{{ transcript.source }}</td>
-                        {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>

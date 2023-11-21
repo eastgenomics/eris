@@ -60,15 +60,25 @@
                   <tr>
                     <th scope="col">HGNC ID</th>
                     <th scope="col">Transcript</th>
-                    <th scope="col">Source</th>
+                    <th scope="col">Sources</th>
+                    <th scoope="col">Clinical Sources</th>
                   </tr>
                 </thead>
                 <tbody>
                     {% for transcript in transcripts %}
                   <tr>
-                    <th><a href="{% url 'gene' transcript.gene_id %}" target="_blank">{{ transcript.gene_id__hgnc_id }}</a></th>
-                    <td>{{ transcript.transcript }}</td>
-                    <td>{{ transcript.source }}</td>
+                    <th><a href="{% url 'gene' transcript.gene_id %}" target="_blank">{{ transcript.hgnc_id }}</a></th>
+                    <td>{{ transcript.tx }}</td>
+                    <td>{{ transcript.sources }}</td>
+                    {% if transcript.clinical_sources %}
+                      <td>
+                        {% for source in transcript.clinical_sources %}
+                          <span class="badge text-bg-success">{{ source }}</span>
+                        {% endfor %}
+                      </td>
+                    {% else %}
+                      <td>None</td>
+                    {% endif %}
                   </tr>
                     {% endfor %}
                 </tbody>

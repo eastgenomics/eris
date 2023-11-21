@@ -32,6 +32,7 @@ from requests_app.models import (
     ModeOfInheritance,
     ModeOfPathogenicity,
     Penetrance,
+    TranscriptReleaseTranscript,
 )
 
 
@@ -143,9 +144,16 @@ def panel(request, panel_id: int):
 
     # fetch all transcripts associated with genes in panel
     all_transcripts: QuerySet[Transcript] = (
-        Transcript.objects.filter(gene_id__in=[p["gene_id"] for p in pgs])
-        .values("gene_id__hgnc_id", "transcript", "source")
-        .order_by("gene_id__hgnc_id", "source")
+        TranscriptReleaseTranscript.objects.filter(
+            transcript_id__gene_id__in=[p["gene_id"] for p in pgs]
+        )
+        .values(
+            "transcript_id__gene_id__hgnc_id",
+            "transcript_id__transcript",
+            "release_id__source_id__source",
+            "default_clinical",
+        )
+        .order_by("transcript_id__gene_id__hgnc_id", "release_id__source_id__source")
     )
 
     return render(
@@ -250,57 +258,6 @@ def clinical_indication(request, ci_id: int):
     # combine ci-panels history and ci-test-method history
     agg_history = list(chain(ci_test_method_history, ci_panels_history))
 
-    # fetch panel-gene
-    panel_genes: QuerySet[dict] = (
-        PanelGene.objects.filter(
-            panel_id__in=[p.id for p in panels if p.id in active_panel_ids]
-        )
-        .order_by("panel_id")
-        .values(
-            "id",
-            "panel_id",
-            "gene_id",
-            "gene_id__hgnc_id",
-            "gene_id__gene_symbol",
-        )
-    )
-
-    # prepare panel-gene dict
-    panel_genes_dict: dict[str, list] = collections.defaultdict(list)
-
-    for pg in panel_genes:
-        # there can be multiple history associated with a panel-gene id
-        latest_pg_history: PanelGeneHistory = (
-            PanelGeneHistory.objects.filter(
-                panel_gene_id=pg["id"],
-            )
-            .order_by("-id")
-            .first()
-        )
-
-        panel_genes_dict[pg["panel_id"]].append(
-            {
-                "id": pg["id"],
-                "gene_id": pg["gene_id"],
-                "hgnc": pg["gene_id__hgnc_id"],
-                "symbol": pg["gene_id__gene_symbol"],
-                "created": latest_pg_history.created,
-            }
-        )
-
-    # ensure django template can read collections.defaultdict as dict
-    panel_genes_dict.default_factory = None
-
-    # fetch all genes associated with panel
-    all_gene_ids: set[str] = set([pg["gene_id"] for pg in panel_genes])
-
-    # fetch all transcripts associated with genes in panel
-    all_transcripts: QuerySet[Transcript] = (
-        Transcript.objects.filter(gene_id__in=all_gene_ids)
-        .values("gene_id__hgnc_id", "transcript", "source")
-        .order_by("gene_id__hgnc_id", "source")
-    )
-
     return render(
         request,
         "web/info/clinical.html",
@@ -309,8 +266,6 @@ def clinical_indication(request, ci_id: int):
             "ci_panels": ci_panels,
             "panels": panels,
             "ci_history": agg_history,
-            "panel_genes": panel_genes_dict,
-            "transcripts": all_transcripts,
             "ci_pending_approval": ci.pending,
             "ci_panel_pending_approval": any([cp["pending"] for cp in ci_panels]),
         },
@@ -1411,7 +1366,14 @@ def gene(request, gene_id: int) -> None:
         "active",
     )
 
-    transcripts = Transcript.objects.filter(gene_id=gene_id)
+    transcripts = TranscriptReleaseTranscript.objects.filter(
+        transcript_id__gene_id=gene_id
+    ).values(
+        "transcript_id__transcript",
+        "release_id__source_id__source",
+        "release_id__reference_genome_id__reference_genome",
+        "default_clinical",
+    )
 
     return render(
         request,
@@ -1609,11 +1571,54 @@ def genetotranscript(request):
     """
     success = None
 
-    transcripts = (
-        Transcript.objects.order_by("gene_id")
-        .all()
-        .values("gene_id__hgnc_id", "gene_id", "transcript", "source")
+    transcripts = TranscriptReleaseTranscript.objects.values(
+        "transcript_id__gene_id__hgnc_id",
+        "transcript_id__gene_id",
+        "transcript_id__transcript",
+        "release_id__source_id__source",
+        "default_clinical",
     )
+
+    # convert to list of [hgnc-id, transcript, sources, which one is clinical]
+    hgnc_to_gene_id = {}
+    hgnc_to_txs = collections.defaultdict(list)
+    hgnc_tx_to_assessed_sources = collections.defaultdict(list)
+    hgnc_tx_to_clinical_source = collections.defaultdict(list)
+
+    for tx in transcripts:
+        hgnc = tx["transcript_id__gene_id__hgnc_id"]
+        transcript = tx["transcript_id__transcript"]
+
+        if hgnc not in hgnc_to_gene_id:
+            hgnc_to_gene_id[hgnc] = tx["transcript_id__gene_id"]
+
+        if transcript not in hgnc_to_txs[hgnc]:
+            hgnc_to_txs[hgnc].append(transcript)
+
+        if tx["default_clinical"]:
+            hgnc_tx_to_clinical_source[hgnc + transcript].append(
+                tx["release_id__source_id__source"]
+            )
+
+        hgnc_tx_to_assessed_sources[hgnc + transcript].append(
+            tx["release_id__source_id__source"]
+        )
+
+    trancript_list = []
+
+    for hgnc, txs in hgnc_to_txs.items():
+        for tx in txs:
+            trancript_list.append(
+                {
+                    "gene_id": hgnc_to_gene_id[hgnc],
+                    "hgnc_id": hgnc,
+                    "tx": tx,
+                    "sources": ", ".join(
+                        hgnc_tx_to_assessed_sources.get(hgnc + tx, [])
+                    ),
+                    "clinical_sources": hgnc_tx_to_clinical_source.get(hgnc + tx, []),
+                }
+            )
 
     if request.method == "POST":
         project_id = request.POST.get("project_id").strip()
@@ -1680,7 +1685,7 @@ def genetotranscript(request):
     return render(
         request,
         "web/info/gene2transcript.html",
-        {"transcripts": transcripts, "success": success},
+        {"transcripts": trancript_list, "success": success},
     )
 
 
