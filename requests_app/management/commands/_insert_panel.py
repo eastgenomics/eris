@@ -35,6 +35,28 @@ from .panelapp import PanelClass, SuperPanelClass
 from django.db import transaction
 
 
+def _handle_nulls_and_blanks_from_json(
+        json_field: str | None
+) -> str | None:
+    """
+    For an attribute extracted from the genes and regions sections
+    of the PanelApp API call - check it isn't some variety of none-type data.
+    Make it into None if it's none-type.
+    Otherwise return a string with leading/trailing whitespace cut out.
+
+    :param: json field (str), e.g. mode_of_inheritance, or None
+    :return: the sanitised json field (str) or None
+    """
+    if json_field:
+        json_field = json_field.strip()
+        if json_field:
+            return json_field
+        else:
+            return None
+    else:
+        return None
+
+
 def _populate_nullable_gene_and_regions_fields(
     region: dict,
 ) -> tuple[ModeOfInheritance | None, ModeOfPathogenicity | None, Penetrance | None]:
@@ -51,31 +73,27 @@ def _populate_nullable_gene_and_regions_fields(
     :return: mop_instance, a ModeOfPathogenicity instance, or None if not applicable
     :return: penetrance, a Penetrance instance, or None if not applicable
     """
-    inheritance = region.get("mode_of_inheritance")
+    moi_instance = None
+    mop_instance = None
+    penetrance_instance = None
+
+    inheritance = _handle_nulls_and_blanks_from_json(region.get("mode_of_inheritance"))
     if inheritance:
-        inheritance = inheritance.strip()
         moi_instance, _ = ModeOfInheritance.objects.get_or_create(
-            mode_of_inheritance=inheritance
-        )
-    else:
-        moi_instance = None
+                mode_of_inheritance=inheritance
+            )
 
-    mop = region.get("mode_of_pathogenicity")
+    mop = _handle_nulls_and_blanks_from_json(region.get("mode_of_pathogenicity"))
     if mop:
-        mop = mop.strip()
         mop_instance, _ = ModeOfPathogenicity.objects.get_or_create(
-            mode_of_pathogenicity=mop,
-        )
-    else:
-        mop_instance = None
+                mode_of_pathogenicity=mop,
+            )
 
-    penetrance = region.get("penetrance")
+    penetrance = _handle_nulls_and_blanks_from_json(region.get("penetrance"))
     if penetrance:
         penetrance_instance, _ = Penetrance.objects.get_or_create(
             penetrance=penetrance,
         )
-    else:
-        penetrance_instance = None
 
     return moi_instance, mop_instance, penetrance_instance
 
@@ -245,7 +263,7 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
             penetrance_instance,
         ) = _populate_nullable_gene_and_regions_fields(single_region)
 
-        haplo = single_region.get("haploinsufficiency_score")
+        haplo = _handle_nulls_and_blanks_from_json(single_region.get("haploinsufficiency_score"))
         if haplo:
             haplo_instance, _ = Haploinsufficiency.objects.get_or_create(
                 haploinsufficiency=haplo,
@@ -253,7 +271,7 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
         else:
             haplo_instance = None
 
-        triplo = single_region.get("triplosensitivity_score")
+        triplo = _handle_nulls_and_blanks_from_json(single_region.get("triplosensitivity_score"))
         if triplo:
             triplo_instance, _ = Triplosensitivity.objects.get_or_create(
                 triplosensitivity=triplo,
