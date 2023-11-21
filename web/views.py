@@ -1309,6 +1309,8 @@ def review(request) -> None:
         "active",
     )
 
+    print(panel_gene) # TODO: remove
+
     for pg in panel_gene:
         pg_history = (
             PanelGeneHistory.objects.filter(panel_gene_id=pg["id"])
