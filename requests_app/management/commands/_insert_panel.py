@@ -39,17 +39,17 @@ def _populate_nullable_gene_and_regions_fields(
     region: dict,
 ) -> tuple[ModeOfInheritance | None, ModeOfPathogenicity | None, Penetrance | None]:
     """
-    Handles extracting fields which can be nullable.
-    Make these in the db where they exist, but DON'T make them in the db if they are None.
+    Handles extracting fields which are commonly nullable, and are common to both gene
+    and region-parsing.
+    Where the fields exist, make them in the db.
     Strips leading and trailing spaces for strings.
-    Here to save some lines of code.
 
-    :param: region or gene - a dictionary containing attributes such as moi, mop, e.t.c. Values
+    :param: region (or gene) - a dictionary containing attributes such as moi, mop, e.t.c. Values
     might be null
 
     :return: moi_instance, a ModeOfInheritance instance, or None if not applicable
     :return: mop_instance, a ModeOfPathogenicity instance, or None if not applicable
-    :returnL penetrance, a Penetrance instance, or None if not applicable
+    :return: penetrance, a Penetrance instance, or None if not applicable
     """
     inheritance = region.get("mode_of_inheritance")
     if inheritance:
