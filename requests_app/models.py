@@ -173,11 +173,6 @@ class TestDirectoryRelease(models.Model):
         verbose_name="date from td file", max_length=255, null=False
     )
 
-    created = models.DateTimeField(
-        verbose_name="created in Eris",
-        auto_now_add=True,
-    )
-
     class Meta:
         db_table = "td_release"
 
