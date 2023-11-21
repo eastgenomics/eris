@@ -866,18 +866,18 @@ class PanelGene(models.Model):
         ModeOfInheritance,
         verbose_name="Mode of inheritance ID",
         on_delete=models.CASCADE,
+        null=True,
     )
 
     mop = models.ForeignKey(
         ModeOfPathogenicity,
         verbose_name="Mode of pathogenicity ID",
         on_delete=models.CASCADE,
+        null=True,
     )
 
     penetrance = models.ForeignKey(
-        Penetrance,
-        verbose_name="Penetrance ID",
-        on_delete=models.CASCADE,
+        Penetrance, verbose_name="Penetrance ID", on_delete=models.CASCADE, null=True
     )
 
     justification = models.TextField(
@@ -1023,30 +1023,32 @@ class Region(models.Model):  # TODO: work out how to split out by transcript
         ModeOfInheritance,
         verbose_name="Mode of inheritance ID",
         on_delete=models.PROTECT,
+        null=True,
     )
 
     mop = models.ForeignKey(
         ModeOfPathogenicity,
         verbose_name="Mode of pathogenicity ID",
         on_delete=models.PROTECT,
+        null=True,
     )
 
     penetrance = models.ForeignKey(
-        Penetrance,
-        verbose_name="Penetrance ID",
-        on_delete=models.PROTECT,
+        Penetrance, verbose_name="Penetrance ID", on_delete=models.PROTECT, null=True
     )
 
     haplo = models.ForeignKey(
         Haploinsufficiency,
         verbose_name="Haploinsufficiency ID",
         on_delete=models.PROTECT,
+        null=True,
     )
 
     triplo = models.ForeignKey(
         Triplosensitivity,
         verbose_name="Triplosensitivity ID",
         on_delete=models.PROTECT,
+        null=True,
     )
 
     overlap = models.ForeignKey(

@@ -251,7 +251,7 @@ class TestInsertRegions_PreexistingRegion(TestCase):
 
         self.moi = ModeOfInheritance.objects.create(mode_of_inheritance="TEST VALUE")
 
-        self.mop = ModeOfPathogenicity.objects.create(mode_of_pathogenicity=None)
+        self.mop = None
 
         self.variant_type = VariantType.objects.create(variant_type="cnv_test")
 
@@ -261,9 +261,9 @@ class TestInsertRegions_PreexistingRegion(TestCase):
 
         self.overlap = RequiredOverlap.objects.create(required_overlap=600)
 
-        self.penetrance = Penetrance.objects.create(penetrance=None)
+        self.penetrance = None
 
-        self.triplosensitivity = Triplosensitivity.objects.create(triplosensitivity="")
+        self.triplosensitivity = None
 
         self.reference_genome = ReferenceGenome.objects.create(
             reference_genome="GRCh38"
@@ -277,12 +277,12 @@ class TestInsertRegions_PreexistingRegion(TestCase):
             start=3725055,
             end=3880120,
             moi=self.moi,
-            mop_id=self.mop.id,
+            mop_id=self.mop,
             vartype=self.variant_type,
-            confidence_id=self.confidence.id,
+            confidence=self.confidence,
             haplo=self.haploinsufficiency,
             overlap=self.overlap,
-            penetrance_id=self.penetrance.id,
+            penetrance=self.penetrance,
             triplo=self.triplosensitivity,
             type="region",
         )
@@ -382,7 +382,7 @@ class TestInsertRegions_PreexistingLink(TestCase):
 
         self.moi = ModeOfInheritance.objects.create(mode_of_inheritance="TEST VALUE")
 
-        self.mop = ModeOfPathogenicity.objects.create(mode_of_pathogenicity=None)
+        self.mop = None
 
         self.variant_type = VariantType.objects.create(variant_type="cnv_test")
 
@@ -392,9 +392,9 @@ class TestInsertRegions_PreexistingLink(TestCase):
 
         self.overlap = RequiredOverlap.objects.create(required_overlap=600)
 
-        self.penetrance = Penetrance.objects.create(penetrance=None)
+        self.penetrance = None
 
-        self.triplosensitivity = Triplosensitivity.objects.create(triplosensitivity="")
+        self.triplosensitivity = None
 
         self.reference_genome = ReferenceGenome.objects.create(
             reference_genome="GRCh38"
@@ -408,12 +408,12 @@ class TestInsertRegions_PreexistingLink(TestCase):
             start=3725055,
             end=3880120,
             moi=self.moi,
-            mop_id=self.mop.id,
+            mop=self.mop,
             vartype=self.variant_type,
             confidence_id=self.confidence.id,
             haplo=self.haploinsufficiency,
             overlap=self.overlap,
-            penetrance_id=self.penetrance.id,
+            penetrance=self.penetrance,
             triplo=self.triplosensitivity,
             type="region",
         )
@@ -479,6 +479,7 @@ class TestInsertRegions_PreexistingLink(TestCase):
         regions = Region.objects.all()
 
         errors += len_check_wrapper(regions, "regions", 2)
+
         errors += value_check_wrapper(
             regions[0].name, "name of first region", self.first_region.name
         )  # the pre-populated value will show first
