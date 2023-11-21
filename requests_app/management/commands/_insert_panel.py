@@ -35,9 +35,7 @@ from .panelapp import PanelClass, SuperPanelClass
 from django.db import transaction
 
 
-def _handle_nulls_and_blanks_from_json(
-        json_field: str | None
-) -> str | None:
+def _handle_nulls_and_blanks_from_json(json_field: str | None) -> str | None:
     """
     For an attribute extracted from the genes and regions sections
     of the PanelApp API call - check it isn't some variety of none-type data.
@@ -80,14 +78,14 @@ def _populate_nullable_gene_and_regions_fields(
     inheritance = _handle_nulls_and_blanks_from_json(region.get("mode_of_inheritance"))
     if inheritance:
         moi_instance, _ = ModeOfInheritance.objects.get_or_create(
-                mode_of_inheritance=inheritance
-            )
+            mode_of_inheritance=inheritance
+        )
 
     mop = _handle_nulls_and_blanks_from_json(region.get("mode_of_pathogenicity"))
     if mop:
         mop_instance, _ = ModeOfPathogenicity.objects.get_or_create(
-                mode_of_pathogenicity=mop,
-            )
+            mode_of_pathogenicity=mop,
+        )
 
     penetrance = _handle_nulls_and_blanks_from_json(region.get("penetrance"))
     if penetrance:
@@ -263,7 +261,9 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
             penetrance_instance,
         ) = _populate_nullable_gene_and_regions_fields(single_region)
 
-        haplo = _handle_nulls_and_blanks_from_json(single_region.get("haploinsufficiency_score"))
+        haplo = _handle_nulls_and_blanks_from_json(
+            single_region.get("haploinsufficiency_score")
+        )
         if haplo:
             haplo_instance, _ = Haploinsufficiency.objects.get_or_create(
                 haploinsufficiency=haplo,
@@ -271,7 +271,9 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
         else:
             haplo_instance = None
 
-        triplo = _handle_nulls_and_blanks_from_json(single_region.get("triplosensitivity_score"))
+        triplo = _handle_nulls_and_blanks_from_json(
+            single_region.get("triplosensitivity_score")
+        )
         if triplo:
             triplo_instance, _ = Triplosensitivity.objects.get_or_create(
                 triplosensitivity=triplo,
