@@ -14,10 +14,11 @@ from requests_app.management.commands.history import History
 
 class TestPanelsFlaggedWhenNoLongerInTd(TestCase):
     """
-    CASE: We have list of td-file panels, some are current, some are not.
-    EXPECT: Current panels which are NOT in the td-files list should be set to current=False, pending=True,
-    and history-logged
-    Current panels which ARE in the td-files should be skipped, remaining current with no history data
+    CASE: Clinical Indication R454 used to be linked to panels 3 and 4.
+    In the newest test directory's list, R454 is only linked to panel 4.
+
+    EXPECT: Panel '3' should be set to current=False, pending=True, and history-logged.
+    Meanwhile, panel '4' should be skipped, remaining current with no history data
 
     N.B. that the case where a CiPanel IS in the td-files list, and is NOT CURRENT, shouldn't
     be possible - because we only run _flag_panels_removed_from_test_directory after we've already made entries for everything in the
@@ -58,11 +59,11 @@ class TestPanelsFlaggedWhenNoLongerInTd(TestCase):
 
     def test_flag_panels_removed_from_test_directory(self):
         """
-        CASE: We have list of td-file panels, some are current, some are not. Some are in the Panel table,
-        some are not.
-        EXPECT: Current panels which are NOT in the td-files list should be set to current=False,
-        pending=True, and history-logged
-        Current panels which ARE in the td-files should be skipped, remaining current with no history data
+        CASE: Clinical Indication R454 used to be linked to panels 3 and 4.
+        In the newest test directory's list, R454 is only linked to panel 4.
+
+        EXPECT: Panel '3' should be set to current=False, pending=True, and history-logged.
+        Meanwhile, panel '4' should be skipped, remaining current with no history data
         """
         _flag_panels_removed_from_test_directory(
             self.ci, self.current_td_panels, "test user"

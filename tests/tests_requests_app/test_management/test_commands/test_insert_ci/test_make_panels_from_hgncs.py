@@ -196,8 +196,6 @@ class TestMakePanelsFromHgncs(TestCase):
             True,
         )  # both links should be flagged for review)
 
-        # TODO: check version link made
-
         errors += len_check_wrapper(
             PanelGeneHistory.objects.all(), "panel-gene history records", 3
         )  # should have 3 history recorded HGNC:1 HGNC:2 and HGNC:3
@@ -205,8 +203,9 @@ class TestMakePanelsFromHgncs(TestCase):
         # check that test directory release links are formed
         links_with_td = CiPanelTdRelease.objects.all()
         errors += len_check_wrapper(links_with_td, "links with td", 2)
-        # errors += value_check_wrapper(links_with_td[0].td_release, "td release in link", self.td_version)
-        # errors += value_check_wrapper(links_with_td[0].ci_panel, "ci-panel in link", links[0])
+        errors += value_check_wrapper(
+            links_with_td[0].td_release, "td release in link", self.td_version
+        )
 
     # NOTE: there is no need to test backward deactivation for panel-gene in this function
     # because it makes panel based on the provided hgncs

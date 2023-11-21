@@ -46,16 +46,13 @@ def _get_most_recent_td_release_for_ci_panel(
     :return: most recent TestDirectoryRelease, or None if no db entries
     """
     # get all td_releases
-    releases = CiPanelTdRelease.objects.filter(ci_panel=ci_panel).order_by(
-        "-td_release"
-    )
+    releases = CiPanelTdRelease.objects.filter(ci_panel=ci_panel)
     if not releases:
         return None
     else:
         # get the latest release - use packaging Version to do sorting
         td_releases = [v.td_release.release for v in releases]
-        td_releases.sort(key=Version, reverse=True)
-        latest_td = str(td_releases[0])
+        latest_td = max(td_releases, key=Version)
 
         # return the instance for that release
         latest_td_instance = TestDirectoryRelease.objects.get(release=latest_td)
@@ -162,7 +159,8 @@ def provisionally_link_clinical_indication_to_panel(
     so that it shows for manual review by a user. Create a history record.
     Intended for use when you are making 'best guesses' for links based on
     previous CI-Panel links.
-    In addition, link the ci-panel to the current latest TestDirectoryRelease
+
+    In addition, link the ci-panel to the current latest TestDirectoryRelease.
 
     :param: panel_id [int], the ID for a Panel which needs linking to
     a relevant clinical indication
@@ -182,7 +180,7 @@ def provisionally_link_clinical_indication_to_panel(
 
     # attribute the pending Ci-Panel link to the current TestDirectoryRelease
     if ci_panel_instance and td_version:
-        release_link, create = CiPanelTdRelease.objects.get_or_create(
+        release_link, _ = CiPanelTdRelease.objects.get_or_create(
             ci_panel=ci_panel_instance, td_release=td_version
         )
 
@@ -444,9 +442,6 @@ def _make_panels_from_hgncs(
 
         if previous_ci_panels:  # in the case where there are old ci-panel
             for ci_panel in previous_ci_panels:
-                latest_active_td_release = _get_most_recent_td_release_for_ci_panel(
-                    ci_panel
-                )
                 flag_clinical_indication_panel_for_review(
                     ci_panel, user
                 )  # flag for review
@@ -454,7 +449,7 @@ def _make_panels_from_hgncs(
                 # linking old ci with new panel with pending = True
                 new_clinical_indication_panel = (
                     provisionally_link_clinical_indication_to_panel(
-                        panel_instance.id, ci.id, td_source, latest_active_td_release
+                        panel_instance.id, ci.id, td_source, td_release
                     )
                 )
 
@@ -529,13 +524,12 @@ def _fetch_latest_td_version() -> str | None:
     :returns: latest_td [str], the maximum test directory version in
     the database, or None if there isn't an entry yet
     """
-    latest_tds = TestDirectoryRelease.objects.all().order_by("-release")
+    latest_tds = TestDirectoryRelease.objects.all()
     if not latest_tds:
         return None
     else:
         releases = [v.release for v in latest_tds]
-        releases.sort(key=Version, reverse=True)
-        latest = str(releases[0])
+        latest = max(releases, key=Version)
         return latest
 
 

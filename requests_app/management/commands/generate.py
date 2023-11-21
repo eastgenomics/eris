@@ -260,11 +260,20 @@ class Command(BaseCommand):
         """
         print("Creating genepanels file")
 
+        if not ClinicalIndicationPanel.objects.filter(
+            current=True, pending=False
+        ).exists():
+            # if there's no CiPanelAssociation date column, high chance Test Directory
+            # has not been imported yet.
+            raise ValueError(
+                "ClinicalIndicationPanel table is empty. "
+                "python manage.py seed td <td.json>"
+            )
+
         if not TestDirectoryRelease.objects.all().exists():
             # if there's no TestDirectoryRelease, a td has not been imported yet.
             raise ValueError(
-                "Test Directory has not yet been imported!"
-                "ClinicalIndicationPanel table is empty"
+                "Test Directory has not yet been imported! "
                 "python manage.py seed td <td.json>"
             )
 

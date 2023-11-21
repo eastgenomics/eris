@@ -343,18 +343,13 @@ def _get_most_recent_td_release_for_ci_superpanel(
     based on data which exists for earlier versions of the same R code and SuperPanel ID.
     """
     # get all td_releases
-    releases = (
-        CiSuperpanelTdRelease.objects.filter(ci_superpanel=ci_superpanel)
-        .order_by("-td_release")
-        .first()
-    )
+    releases = CiSuperpanelTdRelease.objects.filter(ci_superpanel=ci_superpanel)
     if not releases:
         return None
     else:
         # get the latest release - use packaging Version to do sorting
         td_releases = [v.td_release.release for v in releases]
-        td_releases.sort(key=Version, reverse=True)
-        latest_td = str(td_releases[0])
+        latest_td = max(td_releases, key=Version)
 
         # return the instance for that release
         latest_td_instance = TestDirectoryRelease.objects.get(release=latest_td)

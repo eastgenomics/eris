@@ -6,8 +6,8 @@ from requests_app.management.commands._insert_ci import _check_td_version_valid
 class TestCheckTdValid_ValidCases(TestCase):
     """
     Ensure that the test directory version validity checker, passes
-    when the currently-uploaded version of the td is higher than or
-    equal to the most-recent version in the database.
+    when the currently-uploaded version of the td is higher than the
+    most-recent version in the database.
     """
 
     def test_valid_case_one(self):
@@ -50,7 +50,7 @@ class TestCheckTdValid_ValidCases(TestCase):
 class TestCheckTdValid_FailingCases(TestCase):
     """
     Ensure that the test directory version validity checker, FAILS
-    when the currently-uploaded version of the td is lower than
+    when the currently-uploaded version of the td is lower than or equal to
     the most-recent version in the database.
     """
 

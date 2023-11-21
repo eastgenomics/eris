@@ -2,13 +2,11 @@ from django.test import TestCase
 from requests_app.models import (
     ClinicalIndication,
     Panel,
-    SuperPanel,
     ClinicalIndicationPanel,
-    ClinicalIndicationSuperPanel,
     TestDirectoryRelease,
     CiPanelTdRelease,
 )
-from requests_app.management.commands.utils import sortable_version
+
 from requests_app.management.commands._insert_panel import (
     _get_most_recent_td_release_for_ci_panel,
 )
@@ -19,6 +17,7 @@ class TestMostRecentRelease(TestCase):
 
     def setUp(self) -> None:
         self.first_release = TestDirectoryRelease.objects.create(release="1.0.0")
+        self.second_release = TestDirectoryRelease.objects.create(release="1.0.3")
 
         self.panel = Panel.objects.create(
             external_id="test",
@@ -39,6 +38,10 @@ class TestMostRecentRelease(TestCase):
             ci_panel=self.ci_panel, td_release=self.first_release
         )
 
-    def test_single_entry(self):
+        self.ci_panel_td_two = CiPanelTdRelease.objects.create(
+            ci_panel=self.ci_panel, td_release=self.second_release
+        )
+
+    def test_two_entries(self):
         answer = _get_most_recent_td_release_for_ci_panel(self.ci_panel)
-        assert answer.release == "1.0.0"
+        assert answer.release == "1.0.3"
