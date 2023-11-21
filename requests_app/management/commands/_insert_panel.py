@@ -255,41 +255,31 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
         ref_grch37, _ = ReferenceGenome.objects.get_or_create(reference_genome="GRCh37")
         ref_grch38, _ = ReferenceGenome.objects.get_or_create(reference_genome="GRCh38")
 
-        # attach Region record to Panel record - GRCh37 if data exists
+        # queue up start and end positions for regions - 
+        # there might be info for build 37, or build 38, or both
+        coords = []
         if single_region.get("grch37_coordinates"):
-            region_instance_build_37, _ = Region.objects.get_or_create(
-                name=single_region.get("entity_name"),
-                verbose_name=single_region.get("verbose_name"),
-                chrom=single_region.get("chromosome"),
-                reference_genome=ref_grch37,
-                start=single_region.get("grch37_coordinates")[0],
-                end=single_region.get("grch37_coordinates")[1],
-                type=single_region.get("entity_type"),
-                confidence_id=confidence_instance.id,
-                moi_id=(moi_instance.id if moi_instance else None),
-                mop_id=(mop_instance.id if mop_instance else None),
-                penetrance_id=(penetrance_instance.id if penetrance_instance else None),
-                haplo_id=(haplo_instance.id if haplo_instance else None),
-                triplo_id=(triplo_instance.id if triplo_instance else None),
-                overlap_id=overlap_instance.id,
-                vartype_id=vartype_instance.id,
-            )
-
-            PanelRegion.objects.get_or_create(
-                panel_id=panel_instance.id,
-                region_id=region_instance_build_37.id,
-                defaults={"justification": "PanelApp"},
-            )
-
-        # attach Region record to Panel record - GRCh38 if it exists
+            details_37 = {}
+            details_37["start"] = single_region.get("grch37_coordinates")[0]
+            details_37["end"] = single_region.get("grch37_coordinates")[1]
+            details_37["reference"] = ref_grch37
+            coords.append(details_37)
         if single_region.get("grch38_coordinates"):
-            region_instance_build_38, _ = Region.objects.get_or_create(
+            details_38 = {}
+            details_38["start"] = single_region.get("grch38_coordinates")[0]
+            details_38["end"] = single_region.get("grch38_coordinates")[1]
+            details_38["reference"] = ref_grch38
+            coords.append(details_38)
+        
+        # for each available build - attach Region record to Panel record
+        for coord in coords:
+            region, _ = Region.objects.get_or_create(
                 name=single_region.get("entity_name"),
                 verbose_name=single_region.get("verbose_name"),
                 chrom=single_region.get("chromosome"),
-                reference_genome=ref_grch38,
-                start=single_region.get("grch38_coordinates")[0],
-                end=single_region.get("grch38_coordinates")[1],
+                reference_genome=coord["reference"],
+                start=coord["start"],
+                end=coord["end"],
                 type=single_region.get("entity_type"),
                 confidence_id=confidence_instance.id,
                 moi_id=(moi_instance.id if moi_instance else None),
@@ -303,7 +293,7 @@ def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
 
             PanelRegion.objects.get_or_create(
                 panel_id=panel_instance.id,
-                region_id=region_instance_build_38.id,
+                region_id=region.id,
                 defaults={"justification": "PanelApp"},
             )
         # TODO: backward deactivation for PanelRegion, with history logging
