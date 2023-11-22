@@ -147,21 +147,13 @@ class TestDirectoryRelease(models.Model):
     Defines a test directory release.
     """
 
-    release = models.TextField(
-        verbose_name="test directory release", null=False
-    )
+    release = models.TextField(verbose_name="test directory release", null=False)
 
-    td_source = models.TextField(
-        verbose_name="test directory source", null=False
-    )
+    td_source = models.TextField(verbose_name="test directory source", null=False)
 
-    config_source = models.TextFieldField(
-        verbose_name="config source", null=False
-    )
+    config_source = models.TextFieldField(verbose_name="config source", null=False)
 
-    td_date = models.TextField(
-        verbose_name="date from td file", null=False
-    )
+    td_date = models.TextField(verbose_name="date from td file", null=False)
 
     class Meta:
         db_table = "td_release"
