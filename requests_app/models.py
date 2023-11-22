@@ -536,6 +536,7 @@ class GeneHgncReleaseHistory(models.Model):
 
     note = models.TextField(
         verbose_name="Note",
+
     )
 
     user = models.TextField(
