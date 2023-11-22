@@ -107,7 +107,7 @@ def _fetch_latest_signed_off_version_based_on_panel_id(panel_id: int) -> str:
         ][0]["version"]
     except Exception as e:
         raise Exception(
-            f"Cound not fetch latest signed off panel based on panel id {panel_id}. Error: {e}"
+            f"Could not fetch latest signed off panel based on panel id {panel_id}. Error: {e}"
         )
 
 
