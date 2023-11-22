@@ -729,9 +729,9 @@ class GeneHgncReleaseHistory(models.Model):
         auto_now_add=True,
     )
 
-    note = models.CharField(
+    note = models.TextField(
         verbose_name="Note",
-        max_length=255,
+
     )
 
     user = models.CharField(
