@@ -500,7 +500,7 @@ def panel_insert_controller(
     # currently, only handle Panel/SuperPanel if the panel data is from
     # PanelApp
     for panel in panels:
-        panel_instance, _ = _insert_panel_data_into_db(panel, user)
+        _insert_panel_data_into_db(panel, user)
 
     for superpanel in superpanels:
         child_panel_instances = []
