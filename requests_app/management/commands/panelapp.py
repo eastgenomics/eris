@@ -40,9 +40,10 @@ class SuperPanelClass:
         self.types: list[dict] = []
         [setattr(self, key, a[key]) for key in a]
 
-        self.child_panels = self.create_component_panels(self.genes, self.regions)
+        self.child_panels: list[PanelClass] = []
+        self._create_component_panels()
 
-    def create_component_panels(self, genes, regions):
+    def _create_component_panels(self) -> None:
         """
         Parse out component-panels from the API call.
         In a normal panel, the genes and regions are nested under the panel's
@@ -51,53 +52,19 @@ class SuperPanelClass:
         each constituent gene or region, so we need to reorder everything
         in parsing.
         """
-        panels = []
+        children_panel_ids = set([g["panel"]["id"] for g in self.genes])
 
-        for gene in genes:
-            parent_panel = gene["panel"]
-            panel_id = parent_panel["id"]
-            # fetch this Panel if its in the panel-list already, otherwise,
-            # make it
-            component_panel = next((x for x in panels if x.id == panel_id), None)
-            if component_panel:
-                # append gene to the list associated with this panel
-                component_panel.genes.append(gene)
-            else:
-                # create panel and append gene info to it
-                component_panel = PanelClass()
-                component_panel.id = panel_id
-                component_panel.name = parent_panel["name"]
-                component_panel.version = parent_panel["version"]
-                # currently only use SuperPanelClass for PanelApp
-                component_panel.panel_source = "PanelApp"
-                # add this gene to the panel
-                component_panel.genes.append(gene)
-                panels.append(component_panel)
+        # NOTE: the returned panel from Superpanel API is not the latest signed off version
+        # thus we will need to first query the latest signed off version based on the panel id
+        # then fetch the panel data based onthe panel id and panel version
 
-        for region in regions:
-            parent_panel = region["panel"]
-            panel_id = parent_panel["id"]
-            # TODO: how does this handle region(s) duplicated from multiple
-            # panels?
-            # fetch this Panel if its in the panel-list already, otherwise,
-            # make it
-            component_panel = next((x for x in panels if x.id == panel_id), None)
-            if component_panel:
-                # append region to the list associated with this panel
-                component_panel.regions.append(region)
-            else:
-                # create panel and append region info to it
-                component_panel = PanelClass()
-                component_panel.id = panel_id
-                component_panel.name = parent_panel["name"]
-                component_panel.version = parent_panel["version"]
+        for panel_id in children_panel_ids:
+            latest_signed_off_version = (
+                _fetch_latest_signed_off_version_based_on_panel_id(panel_id)
+            )
+            panel, _ = get_panel(panel_id, latest_signed_off_version)
 
-                # currently only use SuperPanelClass for PanelApp
-                component_panel.panel_source = "PanelApp"
-                # add this region to the panel
-                component_panel.regions.append(region)
-                panels.append(component_panel)
-        return panels
+            self.child_panels.append(panel)
 
 
 def _get_all_panel(signed_off: bool = True) -> list[dict]:
@@ -133,19 +100,29 @@ def _get_all_panel(signed_off: bool = True) -> list[dict]:
     return all_panels
 
 
-def _check_superpanel_status(response: requests.Response) -> bool:
+def _fetch_latest_signed_off_version_based_on_panel_id(panel_id: int) -> str:
+    try:
+        return requests.get(f"{PANELAPP_API_URL}signedoff/?panel_id={panel_id}").json()[
+            "results"
+        ][0]["version"]
+    except Exception as e:
+        raise Exception(
+            f"Cound not fetch latest signed off panel based on panel id {panel_id}. Error: {e}"
+        )
+
+
+def _check_superpanel_status(response: dict[str, str]) -> bool:
     """
     From the response data for a PanelApp panel API request,
     work out whether the panel is a standard panel or superpanel.
     Returns True if superpanel, otherwise False.
     """
-    is_superpanel = False
-    data = response.json()
-    for i in data["types"]:
-        if i["name"] == "Super Panel":
-            is_superpanel = True
 
-    return is_superpanel
+    for row in response.get("types", []):
+        if row["name"].strip().upper() == "SUPER PANEL":
+            return True
+
+    return False
 
 
 def get_panel(
@@ -173,7 +150,7 @@ def get_panel(
         )
         exit(1)
 
-    is_superpanel = _check_superpanel_status(response)
+    is_superpanel = _check_superpanel_status(response.json())
 
     if not is_superpanel:
         return PanelClass(**response.json()), is_superpanel
