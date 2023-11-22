@@ -5,8 +5,7 @@ class ReferenceGenome(models.Model):
     """Defines the reference genome builds"""
 
     reference_genome = models.TextField(
-        verbose_name="reference genome build",
-        null=False
+        verbose_name="reference genome build", null=False
     )
 
     class Meta:
@@ -20,16 +19,12 @@ class Panel(models.Model):
     """Defines a single internal panel"""
 
     # this is the PanelApp Panel id itself
-    external_id = models.TextField(
-        verbose_name="external panel id", null=True
-    )
+    external_id = models.TextField(verbose_name="external panel id", null=True)
 
     # metadata
     panel_name = models.TextField(verbose_name="Panel Name")
 
-    panel_source = models.TextField(
-        verbose_name="panel source"
-    )
+    panel_source = models.TextField(verbose_name="panel source")
 
     panel_version = models.TextField(
         verbose_name="panel version",
@@ -77,9 +72,7 @@ class SuperPanel(models.Model):
     """
 
     # this is the PanelApp Panel id itself
-    external_id = models.TextField(
-        verbose_name="external panel id", null=True
-    )
+    external_id = models.TextField(verbose_name="external panel id", null=True)
 
     # metadata
     panel_name = models.TextField(verbose_name="Superpanel Name")
@@ -154,13 +147,9 @@ class ClinicalIndication(models.Model):
 
     r_code = models.TextField(verbose_name="r code")
 
-    name = models.TextField(
-        verbose_name="clinical indication name"
-    )
+    name = models.TextField(verbose_name="clinical indication name")
 
-    test_method = models.TextField(
-        verbose_name="test method"
-    )
+    test_method = models.TextField(verbose_name="test method")
 
     pending = models.BooleanField(
         verbose_name="pending activation",
@@ -396,9 +385,7 @@ class Confidence(models.Model):
     """Defines the confidence level with which a gene or region is
     associated with a panel"""
 
-    confidence_level = models.TextField(
-        verbose_name="Confidence level", null=True
-    )
+    confidence_level = models.TextField(verbose_name="Confidence level", null=True)
 
     class Meta:
         db_table = "confidence"
@@ -463,13 +450,9 @@ class Gene(models.Model):
 
     hgnc_id = models.TextField(verbose_name="HGNC id", unique=True)
 
-    gene_symbol = models.TextField(
-        verbose_name="Gene Symbol", null=True
-    )
+    gene_symbol = models.TextField(verbose_name="Gene Symbol", null=True)
 
-    alias_symbols = models.TextField(
-        verbose_name="Alias Symbols", null=True
-    )
+    alias_symbols = models.TextField(verbose_name="Alias Symbols", null=True)
 
     class Meta:
         db_table = "gene"
@@ -484,9 +467,7 @@ class HgncRelease(models.Model):
     Defines a particular release of HGNC, the source of gene IDs, symbols, and aliases
     """
 
-    hgnc_release = models.TextField(
-        verbose_name="Hgnc Release", unique=True
-    )
+    hgnc_release = models.TextField(verbose_name="Hgnc Release", unique=True)
 
     created = models.DateTimeField(
         verbose_name="created",
@@ -634,9 +615,7 @@ class TranscriptFile(models.Model):
         default=None,
     )
 
-    file_type = models.TextField(
-        verbose_name="File type", null=True, default=None
-    )
+    file_type = models.TextField(verbose_name="File type", null=True, default=None)
 
     class Meta:
         db_table = "transcript_file"
@@ -735,9 +714,7 @@ class GffRelease(models.Model):
     transcripts. Release versions must be unique for a given reference genome.
     """
 
-    gff_release = models.TextField(
-        verbose_name="Gff Release", unique=True
-    )
+    gff_release = models.TextField(verbose_name="Gff Release", unique=True)
 
     reference_genome = models.ForeignKey(
         ReferenceGenome,
@@ -804,9 +781,7 @@ class TranscriptGffReleaseHistory(models.Model):
         auto_now_add=True,
     )
 
-    note = models.TextField(
-        verbose_name="Note"
-    )
+    note = models.TextField(verbose_name="Note")
 
     user = models.TextField(
         verbose_name="user",
@@ -959,9 +934,7 @@ class RequiredOverlap(models.Model):
 class VariantType(models.Model):
     """Defines the type of variant"""
 
-    variant_type = models.TextField(
-        verbose_name="Variant type", null=True
-    )
+    variant_type = models.TextField(verbose_name="Variant type", null=True)
 
     class Meta:
         db_table = "variant_type"
@@ -974,7 +947,7 @@ class Region(models.Model):  # TODO: work out how to split out by transcript
     """Defines a single region (CNV)"""
 
     name = models.TextField(verbose_name="Region name")
-    verbose_name = models.TestField(verbose_name="Region verbose name")
+    verbose_name = models.TextField(verbose_name="Region verbose name")
 
     chrom = models.TextField(verbose_name="Chromosome")
 
@@ -1062,9 +1035,7 @@ class PanelRegion(models.Model):
         on_delete=models.PROTECT,
     )
 
-    justification = models.TextField(
-        verbose_name="Justification"
-                )
+    justification = models.TextField(verbose_name="Justification")
 
     class Meta:
         db_table = "panel_region"
