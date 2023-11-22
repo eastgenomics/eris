@@ -232,6 +232,7 @@ class ClinicalIndicationPanel(models.Model):
     a new association between Clinical Indication and new version of
     Panel might be made
     """
+
     # foreign keys
     clinical_indication = models.ForeignKey(
         ClinicalIndication,
@@ -268,20 +269,8 @@ class ClinicalIndicationSuperPanel(models.Model):
 
     e.g. Normally when importing new Test Directory
     a new association between Clinical Indication and new version of
-    Panel might be made
+    a SuperPanel might be made
     """
-
-    # creation date
-    created = models.DateTimeField(
-        verbose_name="created",
-        auto_now_add=True,
-    )
-
-    last_updated = models.DateTimeField(
-        verbose_name="last updated",
-        null=True,
-        auto_now=True,
-    )
 
     # foreign keys
     clinical_indication = models.ForeignKey(
