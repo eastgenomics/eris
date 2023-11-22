@@ -232,13 +232,6 @@ class ClinicalIndicationPanel(models.Model):
     a new association between Clinical Indication and new version of
     Panel might be made
     """
-    #TODO: remove last_updated?
-    last_updated = models.DateTimeField(
-        verbose_name="last updated",
-        null=True,
-        auto_now=True,
-    )
-
     # foreign keys
     clinical_indication = models.ForeignKey(
         ClinicalIndication,
@@ -435,33 +428,6 @@ class CiPanelTdReleaseHistory(models.Model):
 
     class Meta:
         db_table = "ci_panel_td_history"
-
-    def __str__(self):
-        return str(self.id)
-
-
-class CiSuperpanelTdRelease(models.Model):
-    """
-    Link a ClinicalIndication-Superpanel link, to those test directory releases
-    which contain it. For example, clinical indication 'R009' might be linked to superpanel
-    ID '10' in version 3 of the test directory, and also in version 4 of the test directory,
-    making 2 entries in this CiSuperpanelTdRelease table
-    """
-
-    ci_superpanel = models.ForeignKey(
-        ClinicalIndicationSuperPanel,
-        verbose_name="Clinical Indication-SuperPanel link",
-        on_delete=models.PROTECT,
-    )
-
-    td_release = models.ForeignKey(
-        TestDirectoryRelease,
-        verbose_name="Test directory release",
-        on_delete=models.PROTECT,
-    )
-
-    class Meta:
-        db_table = "clinical_indication_superpanel_td_release"
 
     def __str__(self):
         return str(self.id)
