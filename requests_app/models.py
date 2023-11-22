@@ -152,6 +152,69 @@ class PanelSuperPanel(models.Model):
         return str(self.id)
 
 
+class TestDirectoryRelease(models.Model):
+    """
+    Defines a test directory release.
+    """
+
+    release = models.CharField(
+        verbose_name="test directory release", max_length=255, null=False
+    )
+
+    td_source = models.CharField(
+        verbose_name="test directory source", max_length=255, null=False
+    )
+
+    config_source = models.CharField(
+        verbose_name="config source", max_length=255, null=False
+    )
+
+    td_date = models.CharField(
+        verbose_name="date from td file", max_length=255, null=False
+    )
+
+    class Meta:
+        db_table = "td_release"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class TestDirectoryReleaseHistory(models.Model):
+    """
+    For adding information about when new tds were added, and by who
+    """
+
+    td_release = models.ForeignKey(
+        TestDirectoryRelease,
+        verbose_name="TD release",
+        on_delete=models.PROTECT,
+    )
+
+    # creation date
+    created = models.DateTimeField(
+        verbose_name="created",
+        auto_now_add=True,
+    )
+
+    note = models.CharField(
+        verbose_name="note",
+        max_length=255,
+    )
+
+    user = models.CharField(
+        verbose_name="user",
+        max_length=255,
+        null=True,
+    )
+
+    class Meta:
+        db_table = "test_directory_release_history"
+
+    def __str__(self):
+        return str(self.id)
+
+
 class ClinicalIndication(models.Model):
     """Defines a single clinical indication"""
 
@@ -195,19 +258,6 @@ class ClinicalIndicationPanel(models.Model):
     a new association between Clinical Indication and new version of
     Panel might be made
     """
-
-    # metadata
-    config_source = models.TextField(
-        verbose_name="config source",
-        max_length=255,
-        null=True,
-    )
-
-    td_version = models.CharField(
-        verbose_name="test directory version",
-        max_length=255,
-        null=True,
-    )
 
     # creation date
     created = models.DateTimeField(
@@ -259,19 +309,6 @@ class ClinicalIndicationSuperPanel(models.Model):
     a new association between Clinical Indication and new version of
     Panel might be made
     """
-
-    # metadata
-    config_source = models.TextField(
-        verbose_name="config source",
-        max_length=255,
-        null=True,
-    )
-
-    td_version = models.CharField(
-        verbose_name="test directory version",
-        max_length=255,
-        null=True,
-    )
 
     # creation date
     created = models.DateTimeField(
@@ -373,6 +410,130 @@ class ClinicalIndicationSuperPanelHistory(models.Model):
 
     class Meta:
         db_table = "clinical_indication_superpanel_history"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class CiPanelTdRelease(models.Model):
+    """
+    Link a ClinicalIndication-Panel link, to those test directory releases
+    which contain it. For example, clinical indication 'R001' might be linked to panel
+    ID '5' in version 3 of the test directory, and also in version 4 of the test directory,
+    making 2 entries in this CiPanelTdRelease table
+    """
+
+    ci_panel = models.ForeignKey(
+        ClinicalIndicationPanel,
+        verbose_name="Clinical Indication-Panel link",
+        on_delete=models.PROTECT,
+    )
+
+    td_release = models.ForeignKey(
+        TestDirectoryRelease,
+        verbose_name="Test directory release",
+        on_delete=models.PROTECT,
+    )
+
+    class Meta:
+        db_table = "clinical_indication_panel_td_release"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class CiPanelTdReleaseHistory(models.Model):
+    """
+    Tracks the history of links made between a CiPanel
+    and a Test Directory Release
+    """
+
+    cip_td = models.ForeignKey(
+        CiPanelTdRelease,
+        verbose_name="Clinical Indication Panel - Test Directory Release link",
+        on_delete=models.PROTECT,
+    )
+
+    created = models.DateTimeField(
+        verbose_name="created",
+        auto_now_add=True,
+    )
+
+    note = models.CharField(
+        verbose_name="Note",
+        max_length=255,
+    )
+
+    user = models.CharField(
+        verbose_name="user",
+        max_length=255,
+        null=True,
+    )
+
+    class Meta:
+        db_table = "ci_panel_td_history"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class CiSuperpanelTdRelease(models.Model):
+    """
+    Link a ClinicalIndication-Superpanel link, to those test directory releases
+    which contain it. For example, clinical indication 'R009' might be linked to superpanel
+    ID '10' in version 3 of the test directory, and also in version 4 of the test directory,
+    making 2 entries in this CiSuperpanelTdRelease table
+    """
+
+    ci_superpanel = models.ForeignKey(
+        ClinicalIndicationSuperPanel,
+        verbose_name="Clinical Indication-SuperPanel link",
+        on_delete=models.PROTECT,
+    )
+
+    td_release = models.ForeignKey(
+        TestDirectoryRelease,
+        verbose_name="Test directory release",
+        on_delete=models.PROTECT,
+    )
+
+    class Meta:
+        db_table = "clinical_indication_superpanel_td_release"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class CiSuperpanelTdReleaseHistory(models.Model):
+    """
+    Tracks the history of links made between a CiSuperpanel
+    and a Test Directory Release
+    """
+
+    cip_td = models.ForeignKey(
+        CiSuperpanelTdRelease,
+        verbose_name="Clinical Indication SuperPanel - Test Directory Release link",
+        on_delete=models.PROTECT,
+    )
+
+    created = models.DateTimeField(
+        verbose_name="created",
+        auto_now_add=True,
+    )
+
+    note = models.CharField(
+        verbose_name="Note",
+        max_length=255,
+    )
+
+    user = models.CharField(
+        verbose_name="user",
+        max_length=255,
+        null=True,
+    )
+
+    class Meta:
+        db_table = "ci_superpanel_td_history"
 
     def __str__(self):
         return str(self.id)
@@ -570,7 +731,6 @@ class GeneHgncReleaseHistory(models.Model):
 
     note = models.TextField(
         verbose_name="Note",
-
     )
 
     user = models.CharField(
