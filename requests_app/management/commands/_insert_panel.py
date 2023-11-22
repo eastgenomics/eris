@@ -497,14 +497,16 @@ def panel_insert_controller(
     input from the API
     :param: user [str], the user initiating this
     """
-    # currently, only handle Panel/SuperPanel if the panel data is from
-    # PanelApp
+    # currently, we only handle Panel/SuperPanel if the panel data is from
+    # PanelApp, hence adding the source manually
     for panel in panels:
         _insert_panel_data_into_db(panel, user)
 
     for superpanel in superpanels:
         child_panel_instances = []
         for panel in superpanel.child_panels:
+            panel.panel_source = "PanelApp"  # manual addition of source
+
             child_panel_instance, _ = _insert_panel_data_into_db(panel, user)
             child_panel_instances.append(child_panel_instance)
         _insert_superpanel_into_db(superpanel, child_panel_instances, user)

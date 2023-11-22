@@ -245,9 +245,11 @@ class Command(BaseCommand):
                 panel_data.panel_source = "PanelApp"  # manual addition of source
 
                 if is_superpanel:
+                    panels = []
                     superpanels = [panel_data]
                 else:
                     panels = [panel_data]
+                    superpanels = []
 
             if not test_mode:
                 # not printing amounts because there are some duplicates now,
