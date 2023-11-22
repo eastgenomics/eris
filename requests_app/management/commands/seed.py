@@ -107,6 +107,7 @@ class Command(BaseCommand):
             "--td_release",
             type=str,
             help="The documented release version of the test directory file",
+            required=True
         )
 
         td.add_argument(
