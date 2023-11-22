@@ -4,8 +4,9 @@ from django.db import models
 class ReferenceGenome(models.Model):
     """Defines the reference genome builds"""
 
-    reference_genome = models.CharField(
-        verbose_name="reference genome build", max_length=255, null=False
+    reference_genome = models.TextField(
+        verbose_name="reference genome build",
+        null=False
     )
 
     class Meta:
@@ -19,21 +20,19 @@ class Panel(models.Model):
     """Defines a single internal panel"""
 
     # this is the PanelApp Panel id itself
-    external_id = models.CharField(
-        verbose_name="external panel id", max_length=255, null=True
+    external_id = models.TextField(
+        verbose_name="external panel id", null=True
     )
 
     # metadata
-    panel_name = models.CharField(verbose_name="Panel Name", max_length=255)
+    panel_name = models.TextField(verbose_name="Panel Name")
 
-    panel_source = models.CharField(
-        verbose_name="panel source",
-        max_length=255,
+    panel_source = models.TextField(
+        verbose_name="panel source"
     )
 
-    panel_version = models.CharField(
+    panel_version = models.TextField(
         verbose_name="panel version",
-        max_length=255,
         null=True,
     )
 
@@ -78,21 +77,19 @@ class SuperPanel(models.Model):
     """
 
     # this is the PanelApp Panel id itself
-    external_id = models.CharField(
-        verbose_name="external panel id", max_length=255, null=True
+    external_id = models.TextField(
+        verbose_name="external panel id", null=True
     )
 
     # metadata
-    panel_name = models.CharField(verbose_name="Superpanel Name", max_length=255)
+    panel_name = models.TextField(verbose_name="Superpanel Name")
 
-    panel_source = models.CharField(
+    panel_source = models.TextField(
         verbose_name="superpanel source",
-        max_length=255,
     )
 
-    panel_version = models.CharField(
+    panel_version = models.TextField(
         verbose_name="superpanel version",
-        max_length=255,
         null=True,
     )
 
@@ -155,16 +152,14 @@ class PanelSuperPanel(models.Model):
 class ClinicalIndication(models.Model):
     """Defines a single clinical indication"""
 
-    r_code = models.CharField(verbose_name="r code", max_length=255)
+    r_code = models.TextField(verbose_name="r code")
 
     name = models.TextField(
-        verbose_name="clinical indication name",
-        max_length=255,
+        verbose_name="clinical indication name"
     )
 
-    test_method = models.CharField(
-        verbose_name="test method",
-        max_length=255,
+    test_method = models.TextField(
+        verbose_name="test method"
     )
 
     pending = models.BooleanField(
@@ -199,13 +194,11 @@ class ClinicalIndicationPanel(models.Model):
     # metadata
     config_source = models.TextField(
         verbose_name="config source",
-        max_length=255,
         null=True,
     )
 
-    td_version = models.CharField(
+    td_version = models.TextField(
         verbose_name="test directory version",
-        max_length=255,
         null=True,
     )
 
@@ -263,13 +256,11 @@ class ClinicalIndicationSuperPanel(models.Model):
     # metadata
     config_source = models.TextField(
         verbose_name="config source",
-        max_length=255,
         null=True,
     )
 
-    td_version = models.CharField(
+    td_version = models.TextField(
         verbose_name="test directory version",
-        max_length=255,
         null=True,
     )
 
@@ -328,14 +319,12 @@ class ClinicalIndicationPanelHistory(models.Model):
         auto_now_add=True,
     )
 
-    note = models.CharField(
+    note = models.TextField(
         verbose_name="note",
-        max_length=255,
     )
 
-    user = models.CharField(
+    user = models.TextField(
         verbose_name="user",
-        max_length=255,
         null=True,
     )
 
@@ -360,14 +349,12 @@ class ClinicalIndicationSuperPanelHistory(models.Model):
         auto_now_add=True,
     )
 
-    note = models.CharField(
+    note = models.TextField(
         verbose_name="note",
-        max_length=255,
     )
 
-    user = models.CharField(
+    user = models.TextField(
         verbose_name="user",
-        max_length=255,
         null=True,
     )
 
@@ -389,14 +376,12 @@ class ClinicalIndicationTestMethodHistory(models.Model):
         auto_now_add=True,
     )
 
-    note = models.CharField(
+    note = models.TextField(
         verbose_name="Note",
-        max_length=255,
     )
 
-    user = models.CharField(
+    user = models.TextField(
         verbose_name="user",
-        max_length=255,
         null=True,
     )
 
@@ -411,8 +396,8 @@ class Confidence(models.Model):
     """Defines the confidence level with which a gene or region is
     associated with a panel"""
 
-    confidence_level = models.CharField(
-        verbose_name="Confidence level", max_length=20, null=True
+    confidence_level = models.TextField(
+        verbose_name="Confidence level", null=True
     )
 
     class Meta:
@@ -426,7 +411,7 @@ class Penetrance(models.Model):
     """Defines the penetrance of the associated phenotype in the
     context of the associated clinical indication"""
 
-    penetrance = models.CharField(verbose_name="Penetrance", max_length=255, null=True)
+    penetrance = models.TextField(verbose_name="Penetrance", null=True)
 
     class Meta:
         db_table = "penetrance"
@@ -439,8 +424,8 @@ class ModeOfInheritance(models.Model):
     """Defines the mode of inheritance of the associated phenotype in
     the context of the associated clinical indication"""
 
-    mode_of_inheritance = models.CharField(
-        verbose_name="Mode of inheritance", max_length=255, null=True
+    mode_of_inheritance = models.TextField(
+        verbose_name="Mode of inheritance", null=True
     )
 
     class Meta:
@@ -455,8 +440,8 @@ class ModeOfPathogenicity(models.Model):
     """Defines the mode of pathogenicity of the associated phenotype in
     the context of the associated clinical indication"""
 
-    mode_of_pathogenicity = models.CharField(
-        verbose_name="Mode of pathogenicity", max_length=255, null=True
+    mode_of_pathogenicity = models.TextField(
+        verbose_name="Mode of pathogenicity", null=True
     )
 
     class Meta:
@@ -476,14 +461,14 @@ class Gene(models.Model):
     :field: alias_symbols
     """
 
-    hgnc_id = models.CharField(verbose_name="HGNC id", max_length=20, unique=True)
+    hgnc_id = models.TextField(verbose_name="HGNC id", unique=True)
 
-    gene_symbol = models.CharField(
-        verbose_name="Gene Symbol", max_length=255, null=True
+    gene_symbol = models.TextField(
+        verbose_name="Gene Symbol", null=True
     )
 
-    alias_symbols = models.CharField(
-        verbose_name="Alias Symbols", max_length=255, null=True
+    alias_symbols = models.TextField(
+        verbose_name="Alias Symbols", null=True
     )
 
     class Meta:
@@ -499,8 +484,8 @@ class HgncRelease(models.Model):
     Defines a particular release of HGNC, the source of gene IDs, symbols, and aliases
     """
 
-    hgnc_release = models.CharField(
-        verbose_name="Hgnc Release", max_length=255, unique=True
+    hgnc_release = models.TextField(
+        verbose_name="Hgnc Release", unique=True
     )
 
     created = models.DateTimeField(
@@ -568,14 +553,12 @@ class GeneHgncReleaseHistory(models.Model):
         auto_now_add=True,
     )
 
-    note = models.CharField(
+    note = models.TextField(
         verbose_name="Note",
-        max_length=255,
     )
 
-    user = models.CharField(
+    user = models.TextField(
         verbose_name="user",
-        max_length=255,
         null=True,
     )
 
@@ -592,9 +575,8 @@ class TranscriptSource(models.Model):
     e.g. MANE Select, MANE Plus Clinical, HGMD
     """
 
-    source = models.CharField(
+    source = models.TextField(
         verbose_name="Transcript Source",
-        max_length=255,
         default=None,
     )
 
@@ -618,8 +600,8 @@ class TranscriptRelease(models.Model):
         default=None,
     )
 
-    release = models.CharField(
-        verbose_name="Transcript Release", max_length=255, null=True, default=None
+    release = models.TextField(
+        verbose_name="Transcript Release", null=True, default=None
     )
 
     created = models.DateTimeField(
@@ -646,15 +628,14 @@ class TranscriptFile(models.Model):
     for example, MANE release 1.0
     """
 
-    file_id = models.CharField(
+    file_id = models.TextField(
         verbose_name="File ID in external storage (DNAnexus)",
-        max_length=255,
         null=True,
         default=None,
     )
 
-    file_type = models.CharField(
-        verbose_name="File type", max_length=255, null=True, default=None
+    file_type = models.TextField(
+        verbose_name="File type", null=True, default=None
     )
 
     class Meta:
@@ -685,7 +666,7 @@ class TranscriptReleaseTranscriptFile(models.Model):
 class Transcript(models.Model):
     """Defines a single transcript by RefSeq ID"""
 
-    transcript = models.CharField(verbose_name="Transcript", max_length=255, null=True)
+    transcript = models.TextField(verbose_name="Transcript", null=True)
 
     gene = models.ForeignKey(Gene, verbose_name="Gene id", on_delete=models.PROTECT)
 
@@ -754,8 +735,8 @@ class GffRelease(models.Model):
     transcripts. Release versions must be unique for a given reference genome.
     """
 
-    gff_release = models.CharField(
-        verbose_name="Gff Release", max_length=255, unique=True
+    gff_release = models.TextField(
+        verbose_name="Gff Release", unique=True
     )
 
     reference_genome = models.ForeignKey(
@@ -823,14 +804,12 @@ class TranscriptGffReleaseHistory(models.Model):
         auto_now_add=True,
     )
 
-    note = models.CharField(
-        verbose_name="Note",
-        max_length=255,
+    note = models.TextField(
+        verbose_name="Note"
     )
 
-    user = models.CharField(
+    user = models.TextField(
         verbose_name="user",
-        max_length=255,
         null=True,
     )
 
@@ -915,14 +894,12 @@ class PanelGeneHistory(models.Model):
         auto_now_add=True,
     )
 
-    note = models.CharField(
+    note = models.TextField(
         verbose_name="Note",
-        max_length=255,
     )
 
-    user = models.CharField(
+    user = models.TextField(
         verbose_name="user",
-        max_length=255,
         null=True,
     )
 
@@ -937,8 +914,8 @@ class Haploinsufficiency(models.Model):
     """Defines the haploinsufficiency score of the associated phenotype
     in the context of the associated clinical indication"""
 
-    haploinsufficiency = models.CharField(
-        verbose_name="Haploinsufficiency score", max_length=255, null=True
+    haploinsufficiency = models.TextField(
+        verbose_name="Haploinsufficiency score", null=True
     )
 
     class Meta:
@@ -953,8 +930,8 @@ class Triplosensitivity(models.Model):
     """Defines the triplosensitivity score of the associated phenotype
     in the context of the associated clinical indication"""
 
-    triplosensitivity = models.CharField(
-        verbose_name="Triplosensitivity score", max_length=255, null=True
+    triplosensitivity = models.TextField(
+        verbose_name="Triplosensitivity score", null=True
     )
 
     class Meta:
@@ -968,8 +945,8 @@ class Triplosensitivity(models.Model):
 class RequiredOverlap(models.Model):
     """GEL internal field relating to CNV detection method"""
 
-    required_overlap = models.CharField(
-        verbose_name="Required percent overlap", max_length=255, null=True
+    required_overlap = models.TextField(
+        verbose_name="Required percent overlap", null=True
     )
 
     class Meta:
@@ -982,8 +959,8 @@ class RequiredOverlap(models.Model):
 class VariantType(models.Model):
     """Defines the type of variant"""
 
-    variant_type = models.CharField(
-        verbose_name="Variant type", max_length=255, null=True
+    variant_type = models.TextField(
+        verbose_name="Variant type", null=True
     )
 
     class Meta:
@@ -996,10 +973,10 @@ class VariantType(models.Model):
 class Region(models.Model):  # TODO: work out how to split out by transcript
     """Defines a single region (CNV)"""
 
-    name = models.CharField(verbose_name="Region name", max_length=255)
-    verbose_name = models.CharField(verbose_name="Region verbose name", max_length=255)
+    name = models.TextField(verbose_name="Region name")
+    verbose_name = models.TestField(verbose_name="Region verbose name")
 
-    chrom = models.CharField(verbose_name="Chromosome", max_length=255)
+    chrom = models.TextField(verbose_name="Chromosome")
 
     reference_genome = models.ForeignKey(
         ReferenceGenome,
@@ -1007,11 +984,11 @@ class Region(models.Model):  # TODO: work out how to split out by transcript
         on_delete=models.PROTECT,
     )
 
-    start = models.CharField(verbose_name="Region start", max_length=255, null=True)
+    start = models.TextField(verbose_name="Region start", null=True)
 
-    end = models.CharField(verbose_name="Region end", max_length=255, null=True)
+    end = models.TextField(verbose_name="Region end", null=True)
 
-    type = models.CharField(verbose_name="Region type", max_length=255)
+    type = models.TextField(verbose_name="Region type")
 
     confidence = models.ForeignKey(
         Confidence,
@@ -1086,9 +1063,8 @@ class PanelRegion(models.Model):
     )
 
     justification = models.TextField(
-        verbose_name="Justification",
-        max_length=255,
-    )
+        verbose_name="Justification"
+                )
 
     class Meta:
         db_table = "panel_region"
@@ -1106,10 +1082,10 @@ class RegionAnnotation(models.Model):
         on_delete=models.PROTECT,
     )
 
-    attribute = models.TextField(verbose_name="Attribute", max_length=255)
-    value = models.TextField(verbose_name="Value", max_length=255)
+    attribute = models.TextField(verbose_name="Attribute")
+    value = models.TextField(verbose_name="Value")
     timestamp = models.DateTimeField(verbose_name="Timestamp")
-    source = models.TextField(verbose_name="Source", max_length=255)
+    source = models.TextField(verbose_name="Source")
 
     class Meta:
         db_table = "region_annotation"
