@@ -202,25 +202,6 @@ class ClinicalIndication(models.Model):
 
     name = models.TextField(verbose_name="clinical indication name")
 
-    user = models.TextField(
-        verbose_name="user",
-        null=True,
-    )
-
-    class Meta:
-        db_table = "test_directory_release_history"
-
-    def __str__(self):
-        return str(self.id)
-
-
-class ClinicalIndication(models.Model):
-    """Defines a single clinical indication"""
-
-    r_code = models.TextField(verbose_name="r code")
-
-    name = models.TextField(verbose_name="clinical indication name")
-
     test_method = models.TextField(verbose_name="test method")
 
     pending = models.BooleanField(
@@ -251,13 +232,7 @@ class ClinicalIndicationPanel(models.Model):
     a new association between Clinical Indication and new version of
     Panel might be made
     """
-
-    # creation date
-    created = models.DateTimeField(
-        verbose_name="created",
-        auto_now_add=True,
-    )
-
+    #TODO: remove last_updated?
     last_updated = models.DateTimeField(
         verbose_name="last updated",
         null=True,
@@ -465,67 +440,6 @@ class CiPanelTdReleaseHistory(models.Model):
         return str(self.id)
 
 
-class CiPanelTdRelease(models.Model):
-    """
-    Link a ClinicalIndication-Panel link, to those test directory releases
-    which contain it. For example, clinical indication 'R001' might be linked to panel
-    ID '5' in version 3 of the test directory, and also in version 4 of the test directory,
-    making 2 entries in this CiPanelTdRelease table
-    """
-
-    ci_panel = models.ForeignKey(
-        ClinicalIndicationPanel,
-        verbose_name="Clinical Indication-Panel link",
-        on_delete=models.PROTECT,
-    )
-
-    td_release = models.ForeignKey(
-        TestDirectoryRelease,
-        verbose_name="Test directory release",
-        on_delete=models.PROTECT,
-    )
-
-    class Meta:
-        db_table = "clinical_indication_panel_td_release"
-
-    def __str__(self):
-        return str(self.id)
-
-
-class CiPanelTdReleaseHistory(models.Model):
-    """
-    Tracks the history of links made between a CiPanel
-    and a Test Directory Release
-    """
-
-    cip_td = models.ForeignKey(
-        CiPanelTdRelease,
-        verbose_name="Clinical Indication Panel - Test Directory Release link",
-        on_delete=models.PROTECT,
-    )
-
-    created = models.DateTimeField(
-        verbose_name="created",
-        auto_now_add=True,
-    )
-
-    note = models.TextField(
-        verbose_name="Note",
-    )
-
-    user = models.TextField(
-        verbose_name="user",
-        max_length=255,
-        null=True,
-    )
-
-    class Meta:
-        db_table = "ci_panel_td_history"
-
-    def __str__(self):
-        return str(self.id)
-
-
 class CiSuperpanelTdRelease(models.Model):
     """
     Link a ClinicalIndication-Superpanel link, to those test directory releases
@@ -548,40 +462,6 @@ class CiSuperpanelTdRelease(models.Model):
 
     class Meta:
         db_table = "clinical_indication_superpanel_td_release"
-
-    def __str__(self):
-        return str(self.id)
-
-
-class CiSuperpanelTdReleaseHistory(models.Model):
-    """
-    Tracks the history of links made between a CiSuperpanel
-    and a Test Directory Release
-    """
-
-    cip_td = models.ForeignKey(
-        CiSuperpanelTdRelease,
-        verbose_name="Clinical Indication SuperPanel - Test Directory Release link",
-        on_delete=models.PROTECT,
-    )
-
-    created = models.DateTimeField(
-        verbose_name="created",
-        auto_now_add=True,
-    )
-
-    note = models.TextField(
-        verbose_name="Note",
-        max_length=255,
-    )
-
-    user = models.TextField(
-        verbose_name="user",
-        null=True,
-    )
-
-    class Meta:
-        db_table = "ci_superpanel_td_history"
 
     def __str__(self):
         return str(self.id)
