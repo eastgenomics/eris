@@ -151,7 +151,7 @@ class TestDirectoryRelease(models.Model):
 
     td_source = models.TextField(verbose_name="test directory source", null=False)
 
-    config_source = models.TextFieldField(verbose_name="config source", null=False)
+    config_source = models.TextField(verbose_name="config source", null=False)
 
     td_date = models.TextField(verbose_name="date from td file", null=False)
 
@@ -513,7 +513,7 @@ class CiPanelTdReleaseHistory(models.Model):
         verbose_name="Note",
     )
 
-    user = models.TextF(
+    user = models.TextField(
         verbose_name="user",
         max_length=255,
         null=True,
