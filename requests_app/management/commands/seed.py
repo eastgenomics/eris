@@ -201,6 +201,7 @@ class Command(BaseCommand):
             "--refgenome",
             type=str,
             help="Reference Genome",
+            required=True,
         )
 
     def handle(self, *args, **kwargs) -> None:
