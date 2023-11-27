@@ -1012,39 +1012,6 @@ class PanelGeneHistory(models.Model):
     def __str__(self):
         return str(self.id)
 
-
-class Haploinsufficiency(models.Model):
-    """Defines the haploinsufficiency score of the associated phenotype
-    in the context of the associated clinical indication"""
-
-    haploinsufficiency = models.TextField(
-        verbose_name="Haploinsufficiency score", null=True
-    )
-
-    class Meta:
-        db_table = "haploinsufficiency"
-        verbose_name_plural = "haploinsufficiencies"
-
-    def __str__(self):
-        return str(self.id)
-
-
-class Triplosensitivity(models.Model):
-    """Defines the triplosensitivity score of the associated phenotype
-    in the context of the associated clinical indication"""
-
-    triplosensitivity = models.TextField(
-        verbose_name="Triplosensitivity score", null=True
-    )
-
-    class Meta:
-        db_table = "triplosensitivity"
-        verbose_name_plural = "triplosensitivities"
-
-    def __str__(self):
-        return str(self.id)
-
-
 class VariantType(models.Model):
     """Defines the type of variant"""
 
