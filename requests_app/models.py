@@ -942,6 +942,7 @@ class PanelGene(models.Model):
         Confidence,
         verbose_name="Confidence ID",
         on_delete=models.CASCADE,
+        null=True,
     )
 
     moi = models.ForeignKey(

@@ -426,10 +426,10 @@ class TestRetrieveUnknownMetadataRecords(TestCase):
 
     conf, moi, mop, pen = _retrieve_unknown_metadata_records()
 
-    assert conf.confidence_level == None
-    assert moi.mode_of_inheritance == None
-    assert mop.mode_of_pathogenicity == None
-    assert pen.penetrance == None
+    assert not conf
+    assert not moi
+    assert not mop
+    assert not pen
 
 
 class TestMakeProvisionalTestMethodChange(TestCase):
