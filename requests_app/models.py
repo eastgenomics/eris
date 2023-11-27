@@ -1045,20 +1045,6 @@ class Triplosensitivity(models.Model):
         return str(self.id)
 
 
-class RequiredOverlap(models.Model):
-    """GEL internal field relating to CNV detection method"""
-
-    required_overlap = models.TextField(
-        verbose_name="Required percent overlap", null=True
-    )
-
-    class Meta:
-        db_table = "required_overlap"
-
-    def __str__(self):
-        return str(self.id)
-
-
 class VariantType(models.Model):
     """Defines the type of variant"""
 
