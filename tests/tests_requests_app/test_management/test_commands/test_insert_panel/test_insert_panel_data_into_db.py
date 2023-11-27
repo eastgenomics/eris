@@ -15,7 +15,6 @@ from requests_app.models import (
     ClinicalIndication,
     ClinicalIndicationPanel,
     PanelGene,
-    PanelRegion,
     TestDirectoryRelease,
     TestDirectoryReleaseHistory,
 )
@@ -49,12 +48,12 @@ class TestInsertDataIntoDB(TestCase):
             current=True,
         )
 
-    def test_that_a_new_panel_will_be_inserted_together_with_its_gene_and_region(
+    def test_that_a_new_panel_will_be_inserted_together_with_its_gene(
         self,
     ):
         """
         test that the core function of `insert_data_to_db` works
-        - this includes calling `insert_gene` and `insert_region` functions
+        - this includes calling the `insert_gene` function
         """
         errors = []
 
