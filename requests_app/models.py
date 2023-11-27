@@ -1012,6 +1012,7 @@ class PanelGeneHistory(models.Model):
     def __str__(self):
         return str(self.id)
 
+
 class VariantType(models.Model):
     """Defines the type of variant"""
 
