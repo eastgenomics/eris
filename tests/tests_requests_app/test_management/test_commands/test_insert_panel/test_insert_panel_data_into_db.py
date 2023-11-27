@@ -15,7 +15,6 @@ from requests_app.models import (
     ClinicalIndication,
     ClinicalIndicationPanel,
     PanelGene,
-    PanelRegion,
     TestDirectoryRelease,
     TestDirectoryReleaseHistory,
 )
@@ -49,12 +48,12 @@ class TestInsertDataIntoDB(TestCase):
             current=True,
         )
 
-    def test_that_a_new_panel_will_be_inserted_together_with_its_gene_and_region(
+    def test_that_a_new_panel_will_be_inserted_together_with_its_gene(
         self,
     ):
         """
         test that the core function of `insert_data_to_db` works
-        - this includes calling `insert_gene` and `insert_region` functions
+        - this includes calling the `insert_gene` function
         """
         errors = []
 
@@ -112,19 +111,6 @@ class TestInsertDataIntoDB(TestCase):
                 "panel-gene attached",
                 "21497",
             )  # assert that the second panel that is inserted is attached to gene hgnc-id 21497 through PanelGene
-
-        attached_region = PanelRegion.objects.filter(panel_id=panels[1].id).values(
-            "region_id__name"
-        )
-
-        errors += len_check_wrapper(attached_region, "panel-region", 1)
-
-        if attached_region:
-            errors += value_check_wrapper(
-                attached_region[0]["region_id__name"],
-                "panel-region attached",
-                "test region",
-            )  # assert that the second panel is attached to region 'test region'
 
         assert not errors, errors
 

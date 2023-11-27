@@ -5,7 +5,7 @@ Abbreviations:
 - PA: PanelApp (website at https://panelapp.genomicsengland.co.uk/)
 - TD: NHS England National Genomic Test Directory (website at https://www.england.nhs.uk/publication/national-genomic-test-directories/)
 
-Descriptions of the various gene and region metadata attributes can be found in the online PanelApp handbook at https://panelapp.genomicsengland.co.uk/media/files/PanelApp_Handbook_V18_120210506.pdf.
+Descriptions of the various gene metadata attributes can be found in the online PanelApp handbook at https://panelapp.genomicsengland.co.uk/media/files/PanelApp_Handbook_V18_120210506.pdf.
 
 # Python
 Please note this app requires Python version 3.10

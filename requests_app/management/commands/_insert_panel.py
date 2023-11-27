@@ -13,14 +13,7 @@ from requests_app.models import (
     ModeOfInheritance,
     ModeOfPathogenicity,
     PanelGene,
-    Haploinsufficiency,
-    Triplosensitivity,
-    RequiredOverlap,
-    VariantType,
-    Region,
     PanelGeneHistory,
-    PanelRegion,
-    ReferenceGenome,
     TestDirectoryRelease,
     CiPanelTdRelease,
     CiSuperpanelTdRelease,
@@ -33,7 +26,6 @@ from ._insert_ci import (
     flag_clinical_indication_superpanel_for_review,
     provisionally_link_clinical_indication_to_panel,
     provisionally_link_clinical_indication_to_superpanel,
-    _get_most_recent_td_release_for_ci_panel,
 )
 from .panelapp import PanelClass, SuperPanelClass
 from django.db import transaction
@@ -42,7 +34,7 @@ from packaging.version import Version
 
 def _handle_nulls_and_blanks_from_json(json_field: str | None) -> str | None:
     """
-    For an attribute extracted from the genes and regions sections
+    For an attribute extracted from the genes section
     of the PanelApp API call - check it isn't some variety of none-type data.
     Make it into None if it's none-type.
     Otherwise return a string with leading/trailing whitespace cut out.
@@ -60,16 +52,15 @@ def _handle_nulls_and_blanks_from_json(json_field: str | None) -> str | None:
         return None
 
 
-def _populate_nullable_gene_and_regions_fields(
-    region: dict,
+def _populate_nullable_gene_fields(
+    gene: dict,
 ) -> tuple[ModeOfInheritance | None, ModeOfPathogenicity | None, Penetrance | None]:
     """
-    Handles extracting fields which are commonly nullable, and are common to both gene
-    and region-parsing.
+    Handles extracting fields which are commonly nullable and seen in gene parsing.
     Where the fields exist, make them in the db.
     Strips leading and trailing spaces for strings.
 
-    :param: region (or gene) - a dictionary containing attributes such as moi, mop, e.t.c. Values
+    :param: gene - a dictionary containing attributes such as moi, mop, e.t.c. Values
     might be null
 
     :return: moi_instance, a ModeOfInheritance instance, or None if not applicable
@@ -80,19 +71,19 @@ def _populate_nullable_gene_and_regions_fields(
     mop_instance = None
     penetrance_instance = None
 
-    inheritance = _handle_nulls_and_blanks_from_json(region.get("mode_of_inheritance"))
+    inheritance = _handle_nulls_and_blanks_from_json(gene.get("mode_of_inheritance"))
     if inheritance:
         moi_instance, _ = ModeOfInheritance.objects.get_or_create(
             mode_of_inheritance=inheritance
         )
 
-    mop = _handle_nulls_and_blanks_from_json(region.get("mode_of_pathogenicity"))
+    mop = _handle_nulls_and_blanks_from_json(gene.get("mode_of_pathogenicity"))
     if mop:
         mop_instance, _ = ModeOfPathogenicity.objects.get_or_create(
             mode_of_pathogenicity=mop,
         )
 
-    penetrance = _handle_nulls_and_blanks_from_json(region.get("penetrance"))
+    penetrance = _handle_nulls_and_blanks_from_json(gene.get("penetrance"))
     if penetrance:
         penetrance_instance, _ = Penetrance.objects.get_or_create(
             penetrance=penetrance,
@@ -159,8 +150,8 @@ def _insert_gene(
                 continue  # if panel-gene doesn't exist in db then we don't care about this gene with confidence level < 3
             else:
                 pass  # if gene is confidence level 3 then we move on
-        except TypeError:
-            # the confidence_level is None or some other type that can't be converted to float
+        except (ValueError, TypeError) as e:
+            # the confidence_level is an alphabetical, None, or some other type that can't be converted to float
             print(
                 f"For panel {str(panel.name)}, skipping gene without confidence "
                 f"information: {str(gene_data['gene_name'])}"
@@ -187,7 +178,7 @@ def _insert_gene(
             moi_instance,
             mop_instance,
             penetrance_instance,
-        ) = _populate_nullable_gene_and_regions_fields(single_gene)
+        ) = _populate_nullable_gene_fields(single_gene)
 
         pg_instance, pg_created = PanelGene.objects.get_or_create(
             panel_id=panel_instance.id,
@@ -237,100 +228,30 @@ def _insert_gene(
                 pg_instance.save()
 
 
-def _insert_regions(panel: PanelClass, panel_instance: Panel) -> None:
+def _get_most_recent_td_release_for_ci_panel(
+    ci_panel: ClinicalIndicationPanel,
+) -> TestDirectoryRelease | None:
     """
-    Function to insert region component of Panel into database.
-    A separate Region is made for each reference genome
+    For a clinical indication-panel link, find the most-recent active test directory release.
+    Return it, or 'none' if it fails.
+    Used in cases where an inferred link is being made between a new CI and a new Panel,
+    based on data which exists for earlier versions of the same R code and Panel ID.
 
-    :param panel: PanelClass object
-    :param panel_instance: Panel object
+    :param ci_panel: the ClinicalIndicationPanel for which we want the most recent td release
+    :return: most recent TestDirectoryRelease, or None if no db entries
     """
+    # get all td_releases
+    releases = CiPanelTdRelease.objects.filter(ci_panel=ci_panel)
+    if not releases:
+        return None
+    else:
+        # get the latest release - use packaging Version to do sorting
+        td_releases = [v.td_release.release for v in releases]
+        latest_td = max(td_releases, key=Version)
 
-    # for each panel region, populate the region attribute models
-    for single_region in panel.regions:
-        confidence_instance, _ = Confidence.objects.get_or_create(
-            confidence_level=single_region.get("confidence_level"),
-        )
-
-        vartype_instance, _ = VariantType.objects.get_or_create(
-            variant_type=single_region.get("type_of_variants"),
-        )
-
-        overlap_instance, _ = RequiredOverlap.objects.get_or_create(
-            required_overlap=single_region.get("required_overlap_percentage"),
-        )
-
-        (
-            moi_instance,
-            mop_instance,
-            penetrance_instance,
-        ) = _populate_nullable_gene_and_regions_fields(single_region)
-
-        haplo = _handle_nulls_and_blanks_from_json(
-            single_region.get("haploinsufficiency_score")
-        )
-        if haplo:
-            haplo_instance, _ = Haploinsufficiency.objects.get_or_create(
-                haploinsufficiency=haplo,
-            )
-        else:
-            haplo_instance = None
-
-        triplo = _handle_nulls_and_blanks_from_json(
-            single_region.get("triplosensitivity_score")
-        )
-        if triplo:
-            triplo_instance, _ = Triplosensitivity.objects.get_or_create(
-                triplosensitivity=triplo,
-            )
-        else:
-            triplo_instance = None
-
-        ref_grch37, _ = ReferenceGenome.objects.get_or_create(reference_genome="GRCh37")
-        ref_grch38, _ = ReferenceGenome.objects.get_or_create(reference_genome="GRCh38")
-
-        # queue up start and end positions for regions -
-        # there might be info for build 37, or build 38, or both
-        coords = []
-        if single_region.get("grch37_coordinates"):
-            details_37 = {}
-            details_37["start"] = single_region.get("grch37_coordinates")[0]
-            details_37["end"] = single_region.get("grch37_coordinates")[1]
-            details_37["reference"] = ref_grch37
-            coords.append(details_37)
-        if single_region.get("grch38_coordinates"):
-            details_38 = {}
-            details_38["start"] = single_region.get("grch38_coordinates")[0]
-            details_38["end"] = single_region.get("grch38_coordinates")[1]
-            details_38["reference"] = ref_grch38
-            coords.append(details_38)
-
-        # for each available build - attach Region record to Panel record
-        for coord in coords:
-            region, _ = Region.objects.get_or_create(
-                name=single_region.get("entity_name"),
-                verbose_name=single_region.get("verbose_name"),
-                chrom=single_region.get("chromosome"),
-                reference_genome=coord["reference"],
-                start=coord["start"],
-                end=coord["end"],
-                type=single_region.get("entity_type"),
-                confidence_id=confidence_instance.id,
-                moi_id=(moi_instance.id if moi_instance else None),
-                mop_id=(mop_instance.id if mop_instance else None),
-                penetrance_id=(penetrance_instance.id if penetrance_instance else None),
-                haplo_id=(haplo_instance.id if haplo_instance else None),
-                triplo_id=(triplo_instance.id if triplo_instance else None),
-                overlap_id=overlap_instance.id,
-                vartype_id=vartype_instance.id,
-            )
-
-            PanelRegion.objects.get_or_create(
-                panel_id=panel_instance.id,
-                region_id=region.id,
-                defaults={"justification": "PanelApp"},
-            )
-        # TODO: backward deactivation for PanelRegion, with history logging
+        # return the instance for that release
+        latest_td_instance = TestDirectoryRelease.objects.get(release=latest_td)
+        return latest_td_instance
 
 
 def _get_most_recent_td_release_for_ci_superpanel(
@@ -361,7 +282,7 @@ def _insert_panel_data_into_db(panel: PanelClass, user: str) -> Panel:
     Insert data from a parsed JSON a panel record, into the database.
     Controls creation and flagging of new and old CI-Panel links,
     where the Panel version has changed.
-    Controls creation of genes and regions.
+    Controls creation of genes.
 
     :param: panel [PanelClass], parsed panel input from the API
     :param: user [str], the user initiating this change
@@ -410,10 +331,8 @@ def _insert_panel_data_into_db(panel: PanelClass, user: str) -> Panel:
             )
 
     # attach each Gene record to the Panel record,
-    # whether it was created just now or was already in the database,
-    # and populate region attribute models
+    # whether it was created just now or was already in the database
     _insert_gene(panel, panel_instance, created)
-    _insert_regions(panel, panel_instance)
 
     return panel_instance, created
 
