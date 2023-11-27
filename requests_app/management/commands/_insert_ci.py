@@ -282,9 +282,7 @@ def _retrieve_superpanel_from_pa_id(pa_id: str) -> SuperPanel | None:
     return panel_instance
 
 
-def _retrieve_unknown_metadata_records() -> (
-    tuple[None, None, None, None]
-):
+def _retrieve_unknown_metadata_records() -> tuple[None, None, None, None]:
     """
     Set unknown metadata records, as used when making panels from HGNCs, to None
     :returns:
@@ -344,7 +342,7 @@ def _make_panels_from_hgncs(
     unique_td_source: str = f"{td_source} + {config_source} + {td_release.td_date}"
 
     conf, moi, mop, pen = _retrieve_unknown_metadata_records()
-    
+
     panel_name = ",".join(sorted(hgnc_list))
 
     # create Panel record only when HGNC is different
