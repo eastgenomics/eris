@@ -17,10 +17,6 @@ from requests_app.models import (
     ClinicalIndicationSuperPanel,
     ClinicalIndicationSuperPanelHistory,
     Gene,
-    Confidence,
-    Penetrance,
-    ModeOfInheritance,
-    ModeOfPathogenicity,
     PanelGene,
     ClinicalIndicationPanelHistory,
     ClinicalIndicationTestMethodHistory,
@@ -287,25 +283,20 @@ def _retrieve_superpanel_from_pa_id(pa_id: str) -> SuperPanel | None:
 
 
 def _retrieve_unknown_metadata_records() -> (
-    tuple[Confidence, ModeOfInheritance, ModeOfPathogenicity, Penetrance]
+    tuple[None, None, None, None]
 ):
     """
-    Retrieve additional metadata records for PanelGene records
-
+    Set unknown metadata records, as used when making panels from HGNCs, to None
     :returns:
-        conf [Confidence record]
-        moi [ModeOfInheritance record]
-        mop [ModeOfPathogenicity record]
-        pen [Penetrance record]
+        conf: None
+        moi: None
+        mop: None
+        pen: None
     """
-
-    conf, _ = Confidence.objects.get_or_create(confidence_level=None)
-
-    moi, _ = ModeOfInheritance.objects.get_or_create(mode_of_inheritance=None)
-
-    mop, _ = ModeOfPathogenicity.objects.get_or_create(mode_of_pathogenicity=None)
-
-    pen, _ = Penetrance.objects.get_or_create(penetrance=None)
+    conf = None
+    moi = None
+    mop = None
+    pen = None
 
     return conf, moi, mop, pen
 
@@ -386,10 +377,10 @@ def _make_panels_from_hgncs(
         pg_instance, created = PanelGene.objects.get_or_create(
             panel_id=panel_instance.id,
             gene_id=gene_instance.id,
-            confidence_id=conf.id,
-            moi_id=moi.id,
-            mop_id=mop.id,
-            penetrance_id=pen.id,
+            confidence=conf,
+            moi=moi,
+            mop=mop,
+            penetrance=pen,
             active=True,  # this should be True because it's linking HGNC panel to HGNC
             defaults={
                 "justification": unique_td_source,
