@@ -510,7 +510,7 @@ class ClinicalIndicationTestMethodHistory(models.Model):
 
 
 class Confidence(models.Model):
-    """Defines the confidence level with which a gene or region is
+    """Defines the confidence level with which a gene is
     associated with a panel"""
 
     confidence_level = models.TextField(verbose_name="Confidence level", null=True)
@@ -1066,128 +1066,6 @@ class VariantType(models.Model):
 
     class Meta:
         db_table = "variant_type"
-
-    def __str__(self):
-        return str(self.id)
-
-
-class Region(models.Model):  # TODO: work out how to split out by transcript
-    """Defines a single region (CNV)"""
-
-    name = models.TextField(verbose_name="Region name")
-    verbose_name = models.TextField(verbose_name="Region verbose name")
-
-    chrom = models.TextField(verbose_name="Chromosome")
-
-    reference_genome = models.ForeignKey(
-        ReferenceGenome,
-        verbose_name="reference genome",
-        on_delete=models.PROTECT,
-    )
-
-    start = models.TextField(verbose_name="Region start", null=True)
-
-    end = models.TextField(verbose_name="Region end", null=True)
-
-    type = models.TextField(verbose_name="Region type")
-
-    confidence = models.ForeignKey(
-        Confidence,
-        verbose_name="Confidence level ID",
-        on_delete=models.PROTECT,
-    )
-
-    moi = models.ForeignKey(
-        ModeOfInheritance,
-        verbose_name="Mode of inheritance ID",
-        on_delete=models.PROTECT,
-        null=True,
-    )
-
-    mop = models.ForeignKey(
-        ModeOfPathogenicity,
-        verbose_name="Mode of pathogenicity ID",
-        on_delete=models.PROTECT,
-        null=True,
-    )
-
-    penetrance = models.ForeignKey(
-        Penetrance, verbose_name="Penetrance ID", on_delete=models.PROTECT, null=True
-    )
-
-    haplo = models.ForeignKey(
-        Haploinsufficiency,
-        verbose_name="Haploinsufficiency ID",
-        on_delete=models.PROTECT,
-        null=True,
-    )
-
-    triplo = models.ForeignKey(
-        Triplosensitivity,
-        verbose_name="Triplosensitivity ID",
-        on_delete=models.PROTECT,
-        null=True,
-    )
-
-    overlap = models.ForeignKey(
-        RequiredOverlap,
-        verbose_name="Required overlap ID",
-        on_delete=models.PROTECT,
-    )
-
-    vartype = models.ForeignKey(
-        VariantType,
-        verbose_name="Variant type ID",
-        on_delete=models.PROTECT,
-    )
-
-    class Meta:
-        db_table = "region"
-
-    def __str__(self):
-        return str(self.id)
-
-
-class PanelRegion(models.Model):
-    """Class to link Panel and Region"""
-
-    region = models.ForeignKey(
-        Region,
-        verbose_name="Region ID",
-        on_delete=models.PROTECT,
-    )
-
-    panel = models.ForeignKey(
-        Panel,
-        verbose_name="Panel ID",
-        on_delete=models.PROTECT,
-    )
-
-    justification = models.TextField(verbose_name="Justification")
-
-    class Meta:
-        db_table = "panel_region"
-
-    def __str__(self):
-        return str(self.id)
-
-
-class RegionAnnotation(models.Model):
-    """Define an annotation for a region"""
-
-    region = models.ForeignKey(
-        Region,
-        verbose_name="Region ID",
-        on_delete=models.PROTECT,
-    )
-
-    attribute = models.TextField(verbose_name="Attribute")
-    value = models.TextField(verbose_name="Value")
-    timestamp = models.DateTimeField(verbose_name="Timestamp")
-    source = models.TextField(verbose_name="Source")
-
-    class Meta:
-        db_table = "region_annotation"
 
     def __str__(self):
         return str(self.id)

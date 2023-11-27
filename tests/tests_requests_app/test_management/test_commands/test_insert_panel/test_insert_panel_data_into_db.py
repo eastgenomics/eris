@@ -113,19 +113,6 @@ class TestInsertDataIntoDB(TestCase):
                 "21497",
             )  # assert that the second panel that is inserted is attached to gene hgnc-id 21497 through PanelGene
 
-        attached_region = PanelRegion.objects.filter(panel_id=panels[1].id).values(
-            "region_id__name"
-        )
-
-        errors += len_check_wrapper(attached_region, "panel-region", 1)
-
-        if attached_region:
-            errors += value_check_wrapper(
-                attached_region[0]["region_id__name"],
-                "panel-region attached",
-                "test region",
-            )  # assert that the second panel is attached to region 'test region'
-
         assert not errors, errors
 
     def test_that_previous_clinical_indication_panel_is_flagged_when_panel_version_change(
