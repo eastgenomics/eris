@@ -5,7 +5,6 @@
 from django.db import transaction
 from packaging.version import Version
 
-from .utils import sortable_version, normalize_version
 from .history import History
 
 from requests_app.models import (
@@ -31,32 +30,6 @@ from requests_app.models import (
     CiSuperpanelTdRelease,
     CiSuperpanelTdReleaseHistory,
 )
-
-
-def _get_most_recent_td_release_for_ci_panel(
-    ci_panel: ClinicalIndicationPanel,
-) -> TestDirectoryRelease | None:
-    """
-    For a clinical indication-panel link, find the most-recent active test directory release.
-    Return it, or 'none' if it fails.
-    Used in cases where an inferred link is being made between a new CI and a new Panel,
-    based on data which exists for earlier versions of the same R code and Panel ID.
-
-    :param ci_panel: the ClinicalIndicationPanel for which we want the most recent td release
-    :return: most recent TestDirectoryRelease, or None if no db entries
-    """
-    # get all td_releases
-    releases = CiPanelTdRelease.objects.filter(ci_panel=ci_panel)
-    if not releases:
-        return None
-    else:
-        # get the latest release - use packaging Version to do sorting
-        td_releases = [v.td_release.release for v in releases]
-        latest_td = max(td_releases, key=Version)
-
-        # return the instance for that release
-        latest_td_instance = TestDirectoryRelease.objects.get(release=latest_td)
-        return latest_td_instance
 
 
 def _backward_deactivate(indications: list[dict], user: str) -> None:

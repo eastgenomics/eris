@@ -15,6 +15,7 @@ from requests_app.models import (
     PanelGene,
     PanelGeneHistory,
     TestDirectoryRelease,
+    CiPanelTdRelease,
     CiSuperpanelTdRelease,
 )
 
@@ -25,7 +26,6 @@ from ._insert_ci import (
     flag_clinical_indication_superpanel_for_review,
     provisionally_link_clinical_indication_to_panel,
     provisionally_link_clinical_indication_to_superpanel,
-    _get_most_recent_td_release_for_ci_panel,
 )
 from .panelapp import PanelClass, SuperPanelClass
 from django.db import transaction
@@ -226,6 +226,32 @@ def _insert_gene(
 
                 pg_instance.justification = "PanelApp"
                 pg_instance.save()
+
+
+def _get_most_recent_td_release_for_ci_panel(
+    ci_panel: ClinicalIndicationPanel,
+) -> TestDirectoryRelease | None:
+    """
+    For a clinical indication-panel link, find the most-recent active test directory release.
+    Return it, or 'none' if it fails.
+    Used in cases where an inferred link is being made between a new CI and a new Panel,
+    based on data which exists for earlier versions of the same R code and Panel ID.
+
+    :param ci_panel: the ClinicalIndicationPanel for which we want the most recent td release
+    :return: most recent TestDirectoryRelease, or None if no db entries
+    """
+    # get all td_releases
+    releases = CiPanelTdRelease.objects.filter(ci_panel=ci_panel)
+    if not releases:
+        return None
+    else:
+        # get the latest release - use packaging Version to do sorting
+        td_releases = [v.td_release.release for v in releases]
+        latest_td = max(td_releases, key=Version)
+
+        # return the instance for that release
+        latest_td_instance = TestDirectoryRelease.objects.get(release=latest_td)
+        return latest_td_instance
 
 
 def _get_most_recent_td_release_for_ci_superpanel(
