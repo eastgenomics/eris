@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",  # for static files
     # custom apps
     "requests_app.apps.RequestsAppConfig",
+    "variant_db.apps.VariantDbConfig",
     "web.apps.WebConfig",
 ]
 
