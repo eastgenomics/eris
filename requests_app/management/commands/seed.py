@@ -6,10 +6,10 @@ import os
 import json
 import re
 
-from ._insert_panel import panel_insert_controller
+from ._insert_panel import bulk_panel_insert_controller, single_panel_insert_controller
 from ._parse_transcript import seed_transcripts
 from ._insert_ci import insert_test_directory_data
-from .panelapp import get_panel, PanelClass, fetch_all_panels
+from .panelapp import get_panel, PanelClass, fetch_all_signed_off_panels
 
 
 from django.core.management.base import BaseCommand
@@ -209,7 +209,6 @@ class Command(BaseCommand):
         specified source, then calls inserter to insert cleaned data
         into the database."""
 
-        test_mode: bool = kwargs.get("debug", False)
         command: str = kwargs.get("command")
 
         assert command, "Please specify command: panelapp / td / transcript"
@@ -223,17 +222,16 @@ class Command(BaseCommand):
             panel_version: str = kwargs.get("version")
 
             if panel_id == "all":
-                panels, superpanels = fetch_all_panels()
+                panels, superpanels = fetch_all_signed_off_panels()
+
+                # correct superpanel children where needed, and insert panel data into database
+                bulk_panel_insert_controller(panels, superpanels, user)
+                print("Done.")
+
             else:
+                # Seeding single panel or superpanel
                 if not panel_id:
                     raise ValueError("Please specify panel id")
-
-                if not panel_version:
-                    print("Getting latest panel version")
-                else:
-                    print(
-                        f"Getting panel id {panel_id} / panel version {panel_version}"
-                    )
 
                 # parse data from requested current PanelApp panels
                 panel_data, is_superpanel = get_panel(panel_id, panel_version)
@@ -243,23 +241,11 @@ class Command(BaseCommand):
                         f"Fetching panel id: {panel_id} version: {panel_version} failed"
                     )
                     raise ValueError("Panel specified does not exist")
+                
                 panel_data.panel_source = "PanelApp"  # manual addition of source
 
-                if is_superpanel:
-                    panels = []
-                    superpanels = [panel_data]
-                else:
-                    panels = [panel_data]
-                    superpanels = []
-
-            if not test_mode:
-                # not printing amounts because there are some duplicates now,
-                # due to how superpanels work
                 print(f"Importing panels into database...")
-
-                # insert panel data into database
-                panel_insert_controller(panels, superpanels, user)
-
+                single_panel_insert_controller(panel_data, is_superpanel, user)
                 print("Done.")
 
         # python manage.py seed td <input_json> --td_release <td_release_version> <Y/N>
@@ -276,8 +262,7 @@ class Command(BaseCommand):
             with open(input_directory) as reader:
                 json_data = json.load(reader)
 
-            if not test_mode:
-                insert_test_directory_data(json_data, td_release, force)
+            insert_test_directory_data(json_data, td_release, force)
 
         # python manage.py seed transcript --hgnc <path> --hgnc_release <str> --mane <path>
         # --mane_ext_id <str> --mane_release <str> --gff <path> --gff_release <str> --g2refseq <path>

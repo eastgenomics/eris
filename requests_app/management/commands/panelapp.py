@@ -69,7 +69,9 @@ class SuperPanelClass:
 
 def _get_all_panel(signed_off: bool = True) -> list[dict]:
     """
-    Function to get all signed off panels
+    Function to get all panels
+    Fetches signed-off panels by default, but can be called with signed_off=False to get
+    the most recent panels instead.
 
     :param signed_off: boolean to get signed off panels
 
@@ -165,9 +167,9 @@ def get_panel(
         return SuperPanelClass(**response.json()), is_superpanel
 
 
-def fetch_all_panels() -> tuple[list[PanelClass], list[SuperPanelClass]]:
+def fetch_all_signed_off_panels() -> tuple[list[PanelClass], list[SuperPanelClass]]:
     """
-    Function to get all signed off panels
+    Function to get all signed off panels and superpanels.
 
     :return: list of PanelClass objects
     :return: list of SuperPanelClass objects
@@ -182,7 +184,7 @@ def fetch_all_panels() -> tuple[list[PanelClass], list[SuperPanelClass]]:
         panel_id = panel["id"]
         panel_version = panel.get("version")
 
-        # fetching specific signed-off version
+        # fetch the most recent signed-off data for each panel
         panel_data, is_superpanel = get_panel(panel_id, panel_version)
 
         if panel_data:
