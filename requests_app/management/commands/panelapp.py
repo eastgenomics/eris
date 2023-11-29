@@ -152,6 +152,13 @@ def get_panel(
 
     is_superpanel = _check_superpanel_status(response.json())
 
+    if version and is_superpanel:
+        # do NOT allow specific versions to be requested for superpanels
+        # this is because the API does not support correct linking of legacy superpanels with child-panels
+        raise ValueError("Aborting because specific versions of superpanels cannot be requested - "
+                         "to get the most-recently signed-off superpanel, please run the command again without"
+                         "a version")
+
     if not is_superpanel:
         return PanelClass(**response.json()), is_superpanel
     else:
