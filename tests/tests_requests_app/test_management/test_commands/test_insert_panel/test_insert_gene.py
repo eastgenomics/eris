@@ -75,6 +75,103 @@ class TestInsertGene_NewGene(TestCase):
             panel_version="1.15",
         )
 
+    def test_skip_if_no_gene_data_in_panel(self):
+        """
+        CASE: The PanelClass made from the PanelApp API has no genes
+        EXPECT: No Genes made for this panel. No errors raised.
+        """
+        errors = []  # list of errors to be reported at the end
+
+        test_panel = PanelClass(
+            id="1141",
+            name="Acute rhabdomyolyosis",
+            version="1.15",
+            panel_source="PanelApp",
+            genes=[],  # note no genes
+            regions=[],
+        )
+
+        # run the function under test
+        _insert_gene(test_panel, self.first_panel, True)
+
+        # there should be no genes added into test db
+        new_genes = Gene.objects.all()
+        errors += len_check_wrapper(new_genes, "gene", 0)
+
+        assert not errors, errors
+
+    def test_print_error_and_skip_if_non_numeric_confidence_level(self):
+        """
+        CASE: The PanelClass from the PanelApp API contains a gene with a non-float-convertible
+        confidence, e.g. null, alphabetical string.
+        EXPECT: An error message prints for the gene and it is skipped.
+        """
+        errors = []
+
+        test_panel = PanelClass(
+            id="1141",
+            name="Acute rhabdomyolyosis",
+            version="1.15",
+            panel_source="PanelApp",
+            genes=[
+                {
+                    "gene_data": {
+                        "hgnc_id": 21497,
+                        "gene_name": "acyl-CoA dehydrogenase family member 9",
+                        "gene_symbol": "ACAD9",
+                        "alias": ["NPD002", "MGC14452"],
+                    },
+                    "confidence_level": "nonsense",  # note the confidence level doesn't convert to numeric
+                }
+            ],
+            regions=[],
+        )
+
+        # run the function under test
+        _insert_gene(test_panel, self.first_panel, True)
+
+        # there should be no genes added into test db
+        new_genes = Gene.objects.all()
+        errors += len_check_wrapper(new_genes, "gene", 0)
+
+        assert not errors, errors
+
+    def test_print_error_and_skip_if_no_confidence_level(self):
+        """
+        CASE: The PanelClass from the PanelApp API contains a gene with a non-float-convertible
+        confidence, e.g. null, alphabetical string.
+        EXPECT: An error message prints for the gene and it is skipped.
+        """
+        errors = []
+
+        test_panel = PanelClass(
+            id="1141",
+            name="Acute rhabdomyolyosis",
+            version="1.15",
+            panel_source="PanelApp",
+            genes=[
+                {
+                    "gene_data": {
+                        "hgnc_id": 21497,
+                        "gene_name": "acyl-CoA dehydrogenase family member 9",
+                        "gene_symbol": "ACAD9",
+                        "alias": ["NPD002", "MGC14452"],
+                    },
+                    "confidence_level": None,  # note no confidence level
+                }
+            ],
+            regions=[],
+        )
+
+        # run the function under test
+        _insert_gene(test_panel, self.first_panel, True)
+
+        # there should be no genes added into test db
+        new_genes = Gene.objects.all()
+        errors += len_check_wrapper(new_genes, "gene", 0)
+
+        assert not errors, errors
+
     def test_new_panel_linked_to_acceptable_gene(self):
         """
         Test that `insert_gene` function will create

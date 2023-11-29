@@ -34,18 +34,18 @@ class TestTranscriptAdded_FromScratch(TestCase):
 
         self.select_release = TranscriptRelease.objects.create(
             source=select,
-            external_release_version="version_3",
+            release="version_3",
             reference_genome=ref_genome,
         )
 
         self.plus_release = TranscriptRelease.objects.create(
             source=plus,
-            external_release_version="version_3",
+            release="version_3",
             reference_genome=ref_genome,
         )
 
         self.hgmd_release = TranscriptRelease.objects.create(
-            source=hgmd, external_release_version="v2", reference_genome=ref_genome
+            source=hgmd, release="v2", reference_genome=ref_genome
         )
 
     def test_new_transcript(self):
@@ -113,34 +113,34 @@ class TestTranscriptAdded_PreexistingReleases(TestCase):
 
         self.select_old = TranscriptRelease.objects.create(
             source=select,
-            external_release_version="version_3",
+            release="version_3",
             reference_genome=ref_genome,
         )
 
         self.plus_old = TranscriptRelease.objects.create(
             source=plus,
-            external_release_version="version_3",
+            release="version_3",
             reference_genome=ref_genome,
         )
 
         self.hgmd_old = TranscriptRelease.objects.create(
-            source=hgmd, external_release_version="v2", reference_genome=ref_genome
+            source=hgmd, release="v2", reference_genome=ref_genome
         )
 
         self.select_new = TranscriptRelease.objects.create(
             source=select,
-            external_release_version="version_4",
+            release="version_4",
             reference_genome=ref_genome,
         )
 
         self.plus_new = TranscriptRelease.objects.create(
             source=plus,
-            external_release_version="version_4",
+            release="version_4",
             reference_genome=ref_genome,
         )
 
         self.hgmd_new = TranscriptRelease.objects.create(
-            source=hgmd, external_release_version="v3", reference_genome=ref_genome
+            source=hgmd, release="v3", reference_genome=ref_genome
         )
 
         self.select_old_link = TranscriptReleaseTranscript.objects.create(

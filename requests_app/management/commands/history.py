@@ -19,6 +19,9 @@ class History:
     def clinical_indication_panel_created() -> str:
         return f"ClinicalIndicationPanel record created"
 
+    def clinical_indication_superpanel_created() -> str:
+        return f"ClinicalIndicationSuperPanel record created"
+
     # modification
     def panel_gene_metadata_changed(
         field: str,
@@ -27,12 +30,12 @@ class History:
     ) -> str:
         return f"PanelGene metadata {field} changed from {old_value} to {new_value}"
 
-    def clinical_indication_panel_metadata_changed(
-        field: str,
-        old_value: str,
+    def clinical_indication_panel_new_td_link(
         new_value: str,
     ) -> str:
-        return f"ClinicalIndicationPanel metadata {field} changed from {old_value} to {new_value}"
+        return (
+            f"ClinicalIndicationPanel linked to new test directory release: {new_value}"
+        )
 
     def clinical_indication_metadata_changed(
         field: str, old_value: str, new_value: str
@@ -63,3 +66,36 @@ class History:
 
     def panel_gene_reverted(user) -> str:
         return f"PanelGene reverted by {user}"
+
+    # test directory history
+    def td_added() -> str:
+        return f"New td version added"
+
+    def panel_ci_autolink() -> str:
+        return f"Panel has automatically been linked to an existing ClinicalIndication - test directory version applied automatically"
+
+    def td_panel_ci_autolink(new_td) -> str:
+        return f"Panel-ClinicalIndication linked to a new TestDirectoryRelease {new_td}"
+
+    def td_superpanel_ci_autolink(new_td) -> str:
+        return f"SuperPanel-ClinicalIndication linked to a new TestDirectoryRelease {new_td}"
+
+    # gene/HGNC releases
+    def gene_hgnc_release_approved_symbol_change(old_value: str, new_value: str) -> str:
+        return f"HGNC approved symbol has changed from {old_value} to {new_value}"
+
+    def gene_hgnc_release_alias_symbol_change(old_value: str, new_value: str) -> str:
+        return f"HGNC alias symbol has changed from {old_value} to {new_value}"
+
+    def gene_hgnc_release_new() -> str:
+        return f"HGNC gene has been added for the first time"
+
+    def gene_hgnc_release_present() -> str:
+        return f"HGNC gene is present in this release"
+
+    # transcript/gff releases
+    def tx_gff_release_new() -> str:
+        return f"Transcript added from a GFF release for the first time"
+
+    def tx_gff_release_present() -> str:
+        return f"Transcript is present in this release"
