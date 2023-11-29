@@ -106,11 +106,11 @@ class Variant(models.Model):
     position = models.IntegerField(verbose_name="Variant Position")
 
     ref = models.TextField(
-        verbose_name="Reference variant allele", max_size=255
+        verbose_name="Reference variant allele"
     )  # what's the maximum variant size?
 
     alt = models.TextField(
-        verbose_name="Alternative variant allele", max_size=255
+        verbose_name="Alternative variant allele"
     )  # see above
 
     class Meta:
@@ -123,7 +123,7 @@ class Variant(models.Model):
 class ClinvarAlleleOrigin(models.Model):
     """Records clinvar allele origins"""
 
-    category = models.TextField(verbose_name="Allele origin", max_size=255)
+    category = models.TextField(verbose_name="Allele origin")
 
     class Meta:
         db_table = "clinvar_allele_origin"
@@ -135,11 +135,11 @@ class ClinvarAlleleOrigin(models.Model):
 class ClinvarSubmission(models.Model):
     """Records clinvar submissions"""
 
-    scv_id = models.TextField(verbose_name="SCV ID", max_size=255)
+    scv_id = models.TextField(verbose_name="SCV ID")
 
-    scv_id_version = models.TextField(verbose_name="SCV ID version", max_size=255)
+    scv_id_version = models.TextField(verbose_name="SCV ID version")
 
-    submission_id = models.TextField(verbose_name="ClinVar submission ID", max_size=255)
+    submission_id = models.TextField(verbose_name="ClinVar submission ID")
 
     submission_date = models.DateTimeField(verbose_name="Submission timestamp")
 
