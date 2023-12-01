@@ -31,7 +31,7 @@ class TestCheckRegressions_OldHgncRelease(TestCase):
         )
 
         self.reference_genome = ReferenceGenome.objects.create(
-            reference_genome="GRCh37"
+            name="GRCh37"
         )
 
         # pre-populate releases
@@ -102,7 +102,7 @@ class TestCheckRegressions_NoReleasesYet(TestCase):
 
     def setUp(self) -> None:
         self.reference_genome = ReferenceGenome.objects.create(
-            reference_genome="GRCh38"
+            name="GRCh38"
         )
 
     def test_fresh_db(self):

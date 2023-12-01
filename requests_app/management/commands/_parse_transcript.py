@@ -1011,7 +1011,7 @@ def seed_transcripts(
     # check reference genome makes sense, fetch it
     reference_genome_str = _parse_reference_genome(reference_genome)
     reference_genome, _ = ReferenceGenome.objects.get_or_create(
-        reference_genome=reference_genome_str
+        name=name_str
     )
 
     # throw errors if the release versions are older than those already in the db

@@ -32,7 +32,7 @@ class TestAddTranscriptWithGff_NewTranscript(TestCase):
         self.transcript_name = "NM04582.5"
 
         self.ref_genome, _ = ReferenceGenome.objects.get_or_create(
-            reference_genome="GRCh37"
+            name="GRCh37"
         )
 
         self.gff_release, _ = GffRelease.objects.get_or_create(
@@ -101,7 +101,7 @@ class TestAddTranscriptWithGff_ExistingTranscripts(TestCase):
         self.transcript_name = "NM04582.5"
 
         self.ref_genome, _ = ReferenceGenome.objects.get_or_create(
-            reference_genome="GRCh37"
+            name="GRCh37"
         )
 
         self.gff_release, _ = GffRelease.objects.get_or_create(
