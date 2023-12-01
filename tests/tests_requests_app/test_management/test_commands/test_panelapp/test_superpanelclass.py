@@ -14,6 +14,7 @@ def mocked_requests_get_superpanel(filename):
     as its json payload.
     Lets you avoid actually calling the real PanelApp API.
     """
+
     class MockResponse:
         def __init__(self):
             self.json_data = json.load(open(filename))

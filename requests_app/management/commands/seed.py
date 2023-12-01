@@ -241,7 +241,7 @@ class Command(BaseCommand):
                         f"Fetching panel id: {panel_id} version: {panel_version} failed"
                     )
                     raise ValueError("Panel specified does not exist")
-                
+
                 panel_data.panel_source = "PanelApp"  # manual addition of source
 
                 print(f"Importing panels into database...")
