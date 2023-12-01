@@ -410,7 +410,8 @@ def bulk_panel_insert_controller(
     """
     Carries out coordination of panel creation from the 'all' command - Panels and SuperPanels are
     handled differently in the database.
-    This function assumes that the most recent signed-off version is wanted for every 
+    This function assumes that the most recent signed-off version is wanted for every panel
+    and superpanel
 
     :param: panels [list[PanelClass]], a list of parsed panel input from the API
     :param: superpanels [list[SuperPanel]], a list of parsed superpanel
@@ -420,16 +421,13 @@ def bulk_panel_insert_controller(
     # currently, we only handle Panel/SuperPanel if the panel data is from
     # PanelApp, hence adding the source manually
     for panel in panels:
+        panel.panel_source = "PanelApp"  # manual addition of source
         _insert_panel_data_into_db(panel, user)
 
     for superpanel in superpanels:
         child_panel_instances = []
         for panel in superpanel.child_panels:
             panel.panel_source = "PanelApp"  # manual addition of source
-
-            #TODO: check that we have the most recent signed-off version of the child-panels:
-            # correct them if not
-
             child_panel_instance, _ = _insert_panel_data_into_db(panel, user)
             child_panel_instances.append(child_panel_instance)
         _insert_superpanel_into_db(superpanel, child_panel_instances, user)
@@ -452,15 +450,10 @@ def single_panel_insert_controller(
     # PanelApp, hence adding the source manually
     if not is_superpanel:
         _insert_panel_data_into_db(panel, user)
-
     else:
         child_panel_instances = []
         for child_panel in panel.child_panels:
             child_panel.panel_source = "PanelApp"  # manual addition of source
-            
-            #TODO: check that we have the most recent signed-off version of the child-panels:
-            # correct them if not
-
             child_panel_instance, _ = _insert_panel_data_into_db(panel, user)
             child_panel_instances.append(child_panel_instance)
         _insert_superpanel_into_db(panel, child_panel_instances, user)
