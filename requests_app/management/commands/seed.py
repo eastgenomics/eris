@@ -227,9 +227,10 @@ class Command(BaseCommand):
             panel_id: str = kwargs.get("panel")
             panel_version: str = kwargs.get("version")
 
+            panels = []
+            superpanels = []
+
             if panel_id == "all":
-                panels = []
-                superpanels = []
                 for panel, is_superpanel in _get_all_signed_off_panels:
                     if is_superpanel:
                         superpanels.append(panel)
@@ -249,9 +250,8 @@ class Command(BaseCommand):
                     panel_data, is_superpanel = get_specific_version_panel(
                         panel_id, panel_version
                     )
-                    if (
-                        is_superpanel
-                    ):  # do NOT allow specific versions to be requested for superpanels
+                    if is_superpanel: 
+                        # do NOT allow specific versions to be requested for superpanels
                         # this is because the API does not support correct linking of legacy superpanels with child-panels
                         raise ValueError(
                             "Aborting because specific versions of superpanels cannot be requested -"
@@ -278,14 +278,16 @@ class Command(BaseCommand):
                     )
                     raise ValueError("Panel specified does not exist")
 
-                panel_data.panel_source = "PanelApp"  # manual addition of source
-
-                print(f"Importing panels into database...")
-                if is_superpanel:
-                    panel_insert_controller([], [panel], user)
                 else:
-                    panel_insert_controller([panel], [], user)
-                print("Done.")
+                    panel_data.panel_source = "PanelApp"  # manual addition of source
+
+                    print(f"Importing panels into database...")
+                    if is_superpanel:
+                        superpanels.append(panel_data)
+                    else:
+                        panels.append(panel_data)
+                    panel_insert_controller(panels, superpanels, user)
+                    print("Done.")
 
         # python manage.py seed td <input_json> --td_release <td_release_version> <Y/N>
         elif command == "td":
