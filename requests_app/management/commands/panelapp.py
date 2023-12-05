@@ -1,7 +1,7 @@
 import requests
 import json
 
-from panel_requests.settings import PANELAPP_API_URL
+from core.settings import PANELAPP_API_URL
 
 
 class PanelClass:
