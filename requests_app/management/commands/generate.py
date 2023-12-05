@@ -17,6 +17,7 @@ import datetime as dt
 from django.core.management.base import BaseCommand
 from .utils import normalize_version, parse_hgnc
 from panel_requests.settings import HGNC_IDS_TO_OMIT
+from _parse_transcript import _parse_reference_genome
 
 ACCEPTABLE_COMMANDS = ["genepanels", "g2t"]
 
@@ -336,14 +337,15 @@ class Command(BaseCommand):
                 data = "\t".join(row)
                 f.write(f"{data}\n")
 
-    def _generate_g2t(self, output_directory) -> None:
+    def _generate_g2t(self, output_directory, ref_genome) -> None:
         """
         Main function to generate g2t.tsv
 
         :param output_directory: output directory
+        :param ref_genome: reference genome version
         """
-
-        print("Creating g2t file")
+        # TODO: factor in reference genome in db searches
+        print("Creating g2t file for reference genome: " + str(ref_genome))
 
         current_datetime = dt.datetime.today().strftime("%Y%m%d")
 
@@ -389,10 +391,9 @@ class Command(BaseCommand):
         Command line handler for python manage.py generate
         e.g.
         python manage.py generate genepanels --hgnc <hgnc dump>
-        python manage.py generate g2t --output <output directory>
+        python manage.py generate g2t --ref_genome <reference genome> --output <output directory>
 
         """
-
         cmd = kwargs.get("command")
 
         # determine if command is valid
@@ -402,7 +403,7 @@ class Command(BaseCommand):
                 "Accepted commands: {}".format(ACCEPTABLE_COMMANDS)
             )
 
-        # determine if output directory is specified
+        # for either command: determine the output directory
         if not kwargs["output"]:
             output_directory = os.getcwd()
             print(
@@ -415,18 +416,19 @@ class Command(BaseCommand):
                 )
             output_directory = kwargs["output"]
 
-        # if command is genepanels, then check if hgnc dump is specified
-        if cmd == "genepanels" and not kwargs["hgnc"]:
-            raise ValueError(
-                "No HGNC dump specified e.g. python manage.py generate genepanels --hgnc <path to hgnc dump>"
-            )
+        # checking args if command is genepanels:
+        if cmd == "genepanels":
+            # then check if hgnc dump is specified
+            if not kwargs["hgnc"]:
+                raise ValueError(
+                    "No HGNC dump specified e.g. python manage.py generate genepanels --hgnc <path to hgnc dump>"
+                )
 
-        # validate if HGNC file given is valid
-        if kwargs.get("hgnc") and not self._validate_hgnc(kwargs["hgnc"]):
-            raise ValueError(f'HGNC file: {kwargs["hgnc"]} not valid')
+            # validate HGNC file
+            if not self._validate_hgnc(kwargs["hgnc"]):
+                raise ValueError(f'HGNC file: {kwargs["hgnc"]} not valid')
 
-        # if command is genepanels, then parse hgnc dump and generate genepanels.tsv
-        if cmd == "genepanels" and kwargs.get("hgnc"):
+            # generate genepanels.tsv
             rnas = parse_hgnc(kwargs["hgnc"])
 
             self._generate_genepanels(rnas, output_directory)
@@ -434,7 +436,14 @@ class Command(BaseCommand):
             print(f"Genepanel file created at {output_directory}")
 
         # if command is g2t, then generate g2t.tsv
-        if cmd == "g2t":
-            self._generate_g2t(output_directory)
+        elif cmd == "g2t":
+            # get the reference genome and standardise it. Error out if this fails.
+            if not kwargs["ref_genome"]:
+                raise ValueError(
+                    "No reference genome specified, e.g. python manage.py generate g2t --ref_genome GRCh37"
+                )
+            parsed_genome = _parse_reference_genome(kwargs.get("ref_genome"))
+            
+            self._generate_g2t(output_directory, parsed_genome)
 
             print(f"g2t file created at {output_directory}")

@@ -111,14 +111,22 @@ Include columns:
 - Approved Name
 
 Without output pathway specified:
-python manage.py genepanels --hgnc <hgnc dump path>
+```
+python manage.py genepanels --hgnc testing_files/hgnc_dump_23052023.txt
+```
 With output pathway specified:
-python manage.py generate genepanels --hgnc testing_files/hgnc_dump_23052023.txt --output /home/jason/github/eris/testing_files
+``````
+python manage.py generate genepanels --hgnc testing_files/hgnc_dump_23052023.txt --output <output pathway>
 ```
 
 ## Generate g2t	
+Without output pathway specified:
 ```
-python manage.py generate g2t --output <output pathway>
+python manage.py generate g2t --ref_genome GRCh37
+```
+With output pathway specified:
+```
+python manage.py generate g2t --ref_genome GRCh37 --output <output pathway>
 ```
 
 # Running unit tests
