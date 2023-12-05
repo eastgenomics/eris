@@ -64,24 +64,17 @@ class SuperPanelClass:
             self.child_panels.append(panel)
 
 
-def _get_all_panel(signed_off: bool = True) -> list[dict]:
+def _get_all_signed_off_panels() -> list[dict]:
     """
-    Function to get all panels
-    Fetches signed-off panels by default, but can be called with signed_off=False to get
-    the most recent panels instead.
-
-    :param signed_off: boolean to get signed off panels
+    Fetches all signed-off panels
 
     :return: list of panels (dict)
     """
     all_panels = []
 
-    if signed_off:
-        panelapp_url = f"{PANELAPP_API_URL}signedoff?format=json"
-    else:
-        panelapp_url = f"{PANELAPP_API_URL}?format=json"
+    panelapp_url = f"{PANELAPP_API_URL}signedoff?format=json"
 
-    # panelapp return a paginated response
+    # panelapp returns a paginated response
     # if next is not None, there's more data to fetch
     while panelapp_url:
         response = requests.get(panelapp_url)
@@ -92,7 +85,8 @@ def _get_all_panel(signed_off: bool = True) -> list[dict]:
             exit(1)
 
         data = response.json()
-        all_panels += data["results"]  # append to all_panels
+        is_superpanel = _check_superpanel_status(data)
+        all_panels += tuple(data["results"], is_superpanel)  # append to all_panels
         panelapp_url = data["next"]  # here we keep fetching until next is None
 
     return all_panels
@@ -185,31 +179,31 @@ def get_specific_version_panel(
         return SuperPanelClass(**response.json()), is_superpanel
 
 
-def fetch_all_signed_off_panels() -> tuple[list[PanelClass], list[SuperPanelClass]]:
-    """
-    Function to get all signed off panels and superpanels.
+# def fetch_all_signed_off_panels() -> tuple[list[PanelClass], list[SuperPanelClass]]:
+#     """
+#     Function to get all signed off panels and superpanels.
 
-    :return: list of PanelClass objects
-    :return: list of SuperPanelClass objects
-    """
+#     :return: list of PanelClass objects
+#     :return: list of SuperPanelClass objects
+#     """
 
-    print("Fetching all PanelApp panels...")
+#     print("Fetching all PanelApp panels...")
 
-    panels: list[PanelClass] = []
-    superpanels: list[SuperPanelClass] = []
+#     panels: list[PanelClass] = []
+#     superpanels: list[SuperPanelClass] = []
 
-    for panel in _get_all_panel():
-        panel_id = panel["id"]
+#     for panel in _get_all_signed_off_panels():
+#         panel_id = panel["id"]
 
-        # fetch the most recent signed-off data for each panel
-        panel_version = _fetch_latest_signed_off_version_based_on_panel_id(panel_id)
-        panel_data, is_superpanel = get_specific_version_panel(panel_id, panel_version)
+#         # fetch the most recent signed-off data for each panel
+#         panel_version = _fetch_latest_signed_off_version_based_on_panel_id(panel_id)
+#         panel_data, is_superpanel = get_specific_version_panel(panel_id, panel_version)
 
-        if panel_data:
-            panel_data.panel_source = "PanelApp"
-            if is_superpanel:
-                superpanels.append(panel_data)
-            else:
-                panels.append(panel_data)
+#         if panel_data:
+#             panel_data.panel_source = "PanelApp"
+#             if is_superpanel:
+#                 superpanels.append(panel_data)
+#             else:
+#                 panels.append(panel_data)
 
-    return panels, superpanels
+#     return panels, superpanels

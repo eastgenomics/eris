@@ -6,11 +6,12 @@ import os
 import json
 import re
 
-from ._insert_panel import bulk_panel_insert_controller, single_panel_insert_controller
+from ._insert_panel import panel_insert_controller, single_panel_insert_controller
 from ._parse_transcript import seed_transcripts
 from ._insert_ci import insert_test_directory_data
 from .panelapp import (
-    fetch_all_signed_off_panels,
+    _get_all_signed_off_panels,
+    _check_superpanel_status,
     get_specific_version_panel,
     _fetch_latest_signed_off_version_based_on_panel_id,
     get_latest_version_panel,
@@ -227,10 +228,15 @@ class Command(BaseCommand):
             panel_version: str = kwargs.get("version")
 
             if panel_id == "all":
-                panels, superpanels = fetch_all_signed_off_panels()
-
+                panels = []
+                superpanels = []
+                for panel, is_superpanel in _get_all_signed_off_panels:
+                    if is_superpanel:
+                        superpanels.append(panel)
+                    else:
+                        panels.append(panel)
                 # correct superpanel children where needed, and insert panel data into database
-                bulk_panel_insert_controller(panels, superpanels, user)
+                panel_insert_controller(panels, superpanels, user)
                 print("Done.")
 
             else:
@@ -275,7 +281,10 @@ class Command(BaseCommand):
                 panel_data.panel_source = "PanelApp"  # manual addition of source
 
                 print(f"Importing panels into database...")
-                single_panel_insert_controller(panel_data, is_superpanel, user)
+                if is_superpanel:
+                    panel_insert_controller([], [panel], user)
+                else:
+                    panel_insert_controller([panel], [], user)
                 print("Done.")
 
         # python manage.py seed td <input_json> --td_release <td_release_version> <Y/N>

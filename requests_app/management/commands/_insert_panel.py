@@ -404,7 +404,7 @@ def _insert_superpanel_into_db(
     return superpanel, created
 
 
-def bulk_panel_insert_controller(
+def panel_insert_controller(
     panels: list[PanelClass], superpanels: list[SuperPanelClass], user: str
 ):
     """
@@ -431,29 +431,3 @@ def bulk_panel_insert_controller(
             child_panel_instance, _ = _insert_panel_data_into_db(panel, user)
             child_panel_instances.append(child_panel_instance)
         _insert_superpanel_into_db(superpanel, child_panel_instances, user)
-
-
-def single_panel_insert_controller(
-    panel: PanelClass | SuperPanelClass, is_superpanel: bool, user: str
-):
-    """
-    Carries out coordination of a single panel or superpanel.
-    Will insert a panel into the database as-is.
-    For superpanels, will ensure that all the child-panels are the most recent signed-off
-    version.
-
-    :param: panel [PanelClass | SuperPanelClass], parsed panel/superpanel input from the API
-    :param: is_superpanel [bool], whether this is a superpanel or not
-    :param: user [str], the user initiating this
-    """
-    # currently, we only handle Panel/SuperPanel if the panel data is from
-    # PanelApp, hence adding the source manually
-    if not is_superpanel:
-        _insert_panel_data_into_db(panel, user)
-    else:
-        child_panel_instances = []
-        for child_panel in panel.child_panels:
-            child_panel.panel_source = "PanelApp"  # manual addition of source
-            child_panel_instance, _ = _insert_panel_data_into_db(panel, user)
-            child_panel_instances.append(child_panel_instance)
-        _insert_superpanel_into_db(panel, child_panel_instances, user)
