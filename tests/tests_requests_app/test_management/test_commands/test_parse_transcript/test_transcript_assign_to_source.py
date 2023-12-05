@@ -1,6 +1,5 @@
 from django.test import TestCase
 
-import pandas as pd
 
 
 from requests_app.management.commands._parse_transcript import (

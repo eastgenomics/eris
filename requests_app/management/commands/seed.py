@@ -9,7 +9,7 @@ import re
 from ._insert_panel import panel_insert_controller
 from ._parse_transcript import seed_transcripts
 from ._insert_ci import insert_test_directory_data
-from .panelapp import get_panel, PanelClass, fetch_all_panels
+from .panelapp import get_panel, fetch_all_panels
 
 
 from django.core.management.base import BaseCommand
@@ -253,7 +253,7 @@ class Command(BaseCommand):
             if not test_mode:
                 # not printing amounts because there are some duplicates now,
                 # due to how superpanels work
-                print(f"Importing panels into database...")
+                print("Importing panels into database...")
 
                 # insert panel data into database
                 panel_insert_controller(panels, superpanels, user)

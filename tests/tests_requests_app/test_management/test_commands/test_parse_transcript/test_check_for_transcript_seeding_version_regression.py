@@ -1,7 +1,5 @@
-from typing import Any
 from django.test import TestCase
 
-import numpy as np
 
 from requests_app.models import (
     HgncRelease,
@@ -10,7 +8,6 @@ from requests_app.models import (
     TranscriptSource,
     ReferenceGenome,
 )
-from requests_app.management.commands.history import History
 from requests_app.management.commands._parse_transcript import (
     _check_for_transcript_seeding_version_regression,
 )
@@ -67,7 +64,7 @@ class TestCheckRegressions_OldHgncRelease(TestCase):
         new_mane = "2"
         new_hgmd = "2.1"
 
-        with self.assertRaises(ValueError) as err:
+        with self.assertRaises(ValueError):
             _check_for_transcript_seeding_version_regression(
                 new_hgnc, new_gff, new_mane, new_hgmd, self.reference_genome
             )
@@ -83,7 +80,7 @@ class TestCheckRegressions_OldHgncRelease(TestCase):
         new_mane = "2"
         new_hgmd = "1.9.0"  # too old, uses subversioning
 
-        with self.assertRaises(ValueError) as err:
+        with self.assertRaises(ValueError):
             _check_for_transcript_seeding_version_regression(
                 new_hgnc, new_gff, new_mane, new_hgmd, self.reference_genome
             )

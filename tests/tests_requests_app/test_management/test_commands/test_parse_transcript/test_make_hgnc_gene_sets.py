@@ -1,20 +1,11 @@
 from django.test import TestCase
-import numpy as np
 
-from requests_app.management.commands.history import History
 from requests_app.management.commands._parse_transcript import (
     _make_hgnc_gene_sets,
     _resolve_alias,
 )
-from tests.tests_requests_app.test_management.test_commands.test_insert_ci.test_insert_test_directory_data import (
-    len_check_wrapper,
-    value_check_wrapper,
-)
 from requests_app.models import (
     Gene,
-    HgncRelease,
-    GeneHgncRelease,
-    GeneHgncReleaseHistory,
 )
 
 
@@ -112,5 +103,5 @@ class TestResolveAlias(TestCase):
     def test_resolve_alias(self):
         assert _resolve_alias(["Test", "One"]) == "One,Test"
         assert _resolve_alias(["One", "Test"]) == "One,Test"
-        assert _resolve_alias([""]) == None
-        assert _resolve_alias(["", ""]) == None
+        assert _resolve_alias([""]) is None
+        assert _resolve_alias(["", ""]) is None

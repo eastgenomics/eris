@@ -173,7 +173,7 @@ class TestAddTranscriptWithGff_ExistingTranscripts(TestCase):
             transcript=self.transcript, gff_release=self.gff_release
         )
 
-        tx = _add_transcript_to_db_with_gff_release(
+        _add_transcript_to_db_with_gff_release(
             self.gene,
             self.transcript_name,
             self.ref_genome,

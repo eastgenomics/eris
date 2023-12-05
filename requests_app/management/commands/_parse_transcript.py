@@ -2,7 +2,6 @@ import datetime as dt
 import pandas as pd
 import collections
 import re
-import numpy as np
 from django.db import transaction
 from packaging.version import Version
 
@@ -385,7 +384,7 @@ def _sanity_check_cols_exist(
     """
     errors = []
     for x_col in needed_cols:
-        if not x_col in df.columns:
+        if x_col not in df.columns:
             errors.append(
                 f"Missing column {x_col} from {filename} file - please check the file"
             )

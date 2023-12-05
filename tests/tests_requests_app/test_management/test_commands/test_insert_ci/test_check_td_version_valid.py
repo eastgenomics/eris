@@ -65,7 +65,7 @@ class TestCheckTdValid_FailingCases(TestCase):
 
         expected_err = f"TD version {td_upload} is less than or the same as"
         f" the version currently in the db, {latest_in_db}."
-        f" Abandoning import."
+        " Abandoning import."
 
         with self.assertRaisesRegex(Exception, expected_err):
             _check_td_version_valid(td_upload, latest_in_db, False)
@@ -80,7 +80,7 @@ class TestCheckTdValid_FailingCases(TestCase):
 
         expected_err = f"TD version {td_upload} is less than or the same as"
         f" the version currently in the db, {latest_in_db}."
-        f" Abandoning import."
+        " Abandoning import."
 
         with self.assertRaisesRegex(Exception, expected_err):
             _check_td_version_valid(td_upload, latest_in_db, False)
@@ -95,7 +95,7 @@ class TestCheckTdValid_FailingCases(TestCase):
 
         expected_err = f"TD version {td_upload} is less than or the same as"
         f" the version currently in the db, {latest_in_db}."
-        f" Abandoning import."
+        " Abandoning import."
 
         with self.assertRaisesRegex(Exception, expected_err):
             _check_td_version_valid(td_upload, latest_in_db, False)

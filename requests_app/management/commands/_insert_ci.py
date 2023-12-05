@@ -517,7 +517,7 @@ def _update_ci_panel_tables_with_new_ci(
         # will still be one ci-panel link instead of two being created
         previous_panel_id = clinical_indication_panel.panel_id
 
-        new_clinical_indication_panel = provisionally_link_clinical_indication_to_panel(
+        provisionally_link_clinical_indication_to_panel(
             previous_panel_id, ci_instance.id, user, td_version
         )
 
@@ -553,7 +553,7 @@ def _update_ci_superpanel_tables_with_new_ci(
         # this might be duplicated down the line when panel is created
         # but if old panel and new panel are the same, we expect that there
         # will still be one ci-panel link instead of two being created
-        new_clinical_indication_superpanel = (
+        (
             provisionally_link_clinical_indication_to_superpanel(
                 clinical_indication_superpanel.superpanel, ci_instance, user, td_version
             )
@@ -767,7 +767,7 @@ def _add_td_release_to_db(
         config_source=config_source,
     )
 
-    td_history = TestDirectoryReleaseHistory.objects.create(
+    TestDirectoryReleaseHistory.objects.create(
         td_release=td, user=user, note=History.td_added()
     )
     return td

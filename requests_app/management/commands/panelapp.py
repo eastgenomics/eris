@@ -1,5 +1,4 @@
 import requests
-import json
 
 from panel_requests.settings import PANELAPP_API_URL
 

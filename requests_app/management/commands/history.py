@@ -14,13 +14,13 @@ class History:
 
     # creation
     def panel_gene_created() -> str:
-        return f"PanelGene record created"
+        return "PanelGene record created"
 
     def clinical_indication_panel_created() -> str:
-        return f"ClinicalIndicationPanel record created"
+        return "ClinicalIndicationPanel record created"
 
     def clinical_indication_superpanel_created() -> str:
-        return f"ClinicalIndicationSuperPanel record created"
+        return "ClinicalIndicationSuperPanel record created"
 
     # modification
     def panel_gene_metadata_changed(
@@ -69,10 +69,10 @@ class History:
 
     # test directory history
     def td_added() -> str:
-        return f"New td version added"
+        return "New td version added"
 
     def panel_ci_autolink() -> str:
-        return f"Panel has automatically been linked to an existing ClinicalIndication - test directory version applied automatically"
+        return "Panel has automatically been linked to an existing ClinicalIndication - test directory version applied automatically"
 
     def td_panel_ci_autolink(new_td) -> str:
         return f"Panel-ClinicalIndication linked to a new TestDirectoryRelease {new_td}"
@@ -88,14 +88,14 @@ class History:
         return f"HGNC alias symbol has changed from {old_value} to {new_value}"
 
     def gene_hgnc_release_new() -> str:
-        return f"HGNC gene has been added for the first time"
+        return "HGNC gene has been added for the first time"
 
     def gene_hgnc_release_present() -> str:
-        return f"HGNC gene is present in this release"
+        return "HGNC gene is present in this release"
 
     # transcript/gff releases
     def tx_gff_release_new() -> str:
-        return f"Transcript added from a GFF release for the first time"
+        return "Transcript added from a GFF release for the first time"
 
     def tx_gff_release_present() -> str:
-        return f"Transcript is present in this release"
+        return "Transcript is present in this release"
