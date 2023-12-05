@@ -15,7 +15,7 @@ from .utils.utils import Genepanel
 
 from requests_app.management.commands.history import History
 from requests_app.management.commands.utils import parse_hgnc, normalize_version
-from panel_requests.settings import HGNC_IDS_TO_OMIT
+from core.settings import HGNC_IDS_TO_OMIT
 from requests_app.management.commands._insert_ci import insert_test_directory_data
 
 from requests_app.models import (
