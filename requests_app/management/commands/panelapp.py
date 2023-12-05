@@ -85,7 +85,6 @@ def _get_all_panel(signed_off: bool = True) -> list[dict]:
     # if next is not None, there's more data to fetch
     while panelapp_url:
         response = requests.get(panelapp_url)
-
         if response.status_code != 200:
             print(
                 f"Aborting because API returned a non-200 exit code: {response.status_code} {response.reason}"
@@ -130,10 +129,10 @@ def _check_superpanel_status(response: dict[str, str]) -> bool:
 
 
 def get_latest_version_panel(
-        panel_num: int
+    panel_num: int,
 ) -> tuple[PanelClass | SuperPanelClass, bool]:
     """
-    Function to get LATEST version of a panel, 
+    Function to get LATEST version of a panel,
     regardless of whether it's signed off or not
 
     :param panel_num: panel number
@@ -143,7 +142,6 @@ def get_latest_version_panel(
     """
     panel_url = f"{PANELAPP_API_URL}{panel_num}/?format=json"
     response = requests.get(panel_url)
-
     if response.status_code != 200:
         print(
             f"Aborting because API returned a non-200 exit code: {response.status_code}"
@@ -171,7 +169,6 @@ def get_specific_version_panel(
     :return: is_superpanel - True if panel is a superpanel, False otherwise
     """
     panel_url = f"{PANELAPP_API_URL}{panel_num}/?version={version}&format=json"
-
     response = requests.get(panel_url)
 
     if response.status_code != 200:
