@@ -51,18 +51,15 @@ class SuperPanelClass:
         But for superpanels, we find the panels by looking in 'panel' under
         each constituent gene or region, so we need to reorder everything
         in parsing.
+        In addition: we need to find LATEST SIGNED OFF versions of each child-panel
         """
         children_panel_ids = set([g["panel"]["id"] for g in self.genes])
-
-        # NOTE: the returned panel from Superpanel API is not the latest signed off version
-        # thus we will need to first query the latest signed off version based on the panel id
-        # then fetch the panel data based onthe panel id and panel version
 
         for panel_id in children_panel_ids:
             latest_signed_off_version = (
                 _fetch_latest_signed_off_version_based_on_panel_id(panel_id)
             )
-            panel, _ = get_panel(panel_id, latest_signed_off_version)
+            panel, _ = get_specific_version_panel(panel_id, latest_signed_off_version)
 
             self.child_panels.append(panel)
 
@@ -103,6 +100,11 @@ def _get_all_panel(signed_off: bool = True) -> list[dict]:
 
 
 def _fetch_latest_signed_off_version_based_on_panel_id(panel_id: int) -> str:
+    """
+    Fetch the latest signed-off version of a panel from PanelApp, based on its ID.
+    :param: panel_id, a string
+    :return: latest signed-off version of the panel, as a string
+    """
     try:
         return requests.get(f"{PANELAPP_API_URL}signedoff/?panel_id={panel_id}").json()[
             "results"
@@ -127,22 +129,19 @@ def _check_superpanel_status(response: dict[str, str]) -> bool:
     return False
 
 
-def get_panel(
-    panel_num: int, version: float = None
+def get_latest_version_panel(
+        panel_num: int
 ) -> tuple[PanelClass | SuperPanelClass, bool]:
     """
-    Function to get individual panel and panel version
+    Function to get LATEST version of a panel, 
+    regardless of whether it's signed off or not
 
     :param panel_num: panel number
-    :param version: panel version
 
     :return: PanelClass object or SuperPanelClass
     :return: is_superpanel - True if panel is a superpanel, False otherwise
     """
-    if version:
-        panel_url = f"{PANELAPP_API_URL}{panel_num}/?version={version}&format=json"
-    else:
-        panel_url = f"{PANELAPP_API_URL}{panel_num}/?format=json"
+    panel_url = f"{PANELAPP_API_URL}{panel_num}/?format=json"
 
     response = requests.get(panel_url)
 
@@ -154,14 +153,35 @@ def get_panel(
 
     is_superpanel = _check_superpanel_status(response.json())
 
-    if version and is_superpanel:
-        # do NOT allow specific versions to be requested for superpanels
-        # this is because the API does not support correct linking of legacy superpanels with child-panels
-        raise ValueError(
-            "Aborting because specific versions of superpanels cannot be requested - "
-            "to get the most-recently signed-off superpanel, please run the command again without"
-            "a version"
+    if not is_superpanel:
+        return PanelClass(**response.json()), is_superpanel
+    else:
+        return SuperPanelClass(**response.json()), is_superpanel
+
+
+def get_specific_version_panel(
+    panel_num: int, version: float
+) -> tuple[PanelClass | SuperPanelClass, bool]:
+    """
+    Function to get a specific version of an individual PanelApp panel,
+    from the PanelAppAPI
+    :param panel_num: panel number
+    :param version: panel version
+
+    :return: PanelClass object or SuperPanelClass
+    :return: is_superpanel - True if panel is a superpanel, False otherwise
+    """
+    panel_url = f"{PANELAPP_API_URL}{panel_num}/?version={version}&format=json"
+
+    response = requests.get(panel_url)
+
+    if response.status_code != 200:
+        print(
+            f"Aborting because API returned a non-200 exit code: {response.status_code}"
         )
+        exit(1)
+
+    is_superpanel = _check_superpanel_status(response.json())
 
     if not is_superpanel:
         return PanelClass(**response.json()), is_superpanel
@@ -184,10 +204,10 @@ def fetch_all_signed_off_panels() -> tuple[list[PanelClass], list[SuperPanelClas
 
     for panel in _get_all_panel():
         panel_id = panel["id"]
-        panel_version = panel.get("version")
 
         # fetch the most recent signed-off data for each panel
-        panel_data, is_superpanel = get_panel(panel_id, panel_version)
+        panel_version = _fetch_latest_signed_off_version_based_on_panel_id(panel_id)
+        panel_data, is_superpanel = get_specific_version_panel(panel_id, panel_version)
 
         if panel_data:
             panel_data.panel_source = "PanelApp"

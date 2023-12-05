@@ -9,7 +9,7 @@ import re
 from ._insert_panel import bulk_panel_insert_controller, single_panel_insert_controller
 from ._parse_transcript import seed_transcripts
 from ._insert_ci import insert_test_directory_data
-from .panelapp import get_panel, PanelClass, fetch_all_signed_off_panels
+from .panelapp import fetch_all_signed_off_panels, get_specific_version_panel, _fetch_latest_signed_off_version_based_on_panel_id, get_latest_version_panel
 
 
 from django.core.management.base import BaseCommand
@@ -233,8 +233,25 @@ class Command(BaseCommand):
                 if not panel_id:
                     raise ValueError("Please specify panel id")
 
-                # parse data from requested current PanelApp panels
-                panel_data, is_superpanel = get_panel(panel_id, panel_version)
+                if panel_version:
+                    # parse data from requested current PanelApp panels
+                    panel_data, is_superpanel = get_specific_version_panel(panel_id, panel_version)
+                    if is_superpanel: # do NOT allow specific versions to be requested for superpanels
+                        # this is because the API does not support correct linking of legacy superpanels with child-panels
+                        raise ValueError(
+                            "Aborting because specific versions of superpanels cannot be requested -"
+                            " to get the most-recently signed-off superpanel, please run the command again without"
+                            " a version"
+                        )
+                else:
+                    if is_superpanel:
+                        # find latest signed-off superpanel version to use
+                        latest_signedoff_panel_version = _fetch_latest_signed_off_version_based_on_panel_id(panel_id)
+                        panel_data, is_superpanel = get_specific_version_panel(panel_id, latest_signedoff_panel_version)
+                    else:
+                        # find latest panel version to use, REGARDLESS of whether it's signed off or not
+                        latest_panel_version = get_latest_version_panel(panel_id)
+                        panel_data, is_superpanel = get_specific_version_panel(panel_id, latest_panel_version)
 
                 if not panel_data:
                     print(
