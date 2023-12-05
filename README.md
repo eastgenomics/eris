@@ -112,11 +112,11 @@ Include columns:
 
 Without output pathway specified:
 ```
-python manage.py genepanels --hgnc testing_files/hgnc_dump_23052023.txt
+python manage.py generate genepanels --hgnc testing_files/hgnc_dump_20230606_1.txt
 ```
 With output pathway specified:
 ``````
-python manage.py generate genepanels --hgnc testing_files/hgnc_dump_23052023.txt --output <output pathway>
+python manage.py generate genepanels --hgnc testing_files/hgnc_dump_20230606_1.txt --output <output pathway>
 ```
 
 ## Generate g2t	

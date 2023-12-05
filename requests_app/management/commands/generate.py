@@ -4,6 +4,8 @@ python manage.py generate --help
 from requests_app.models import (
     ClinicalIndicationPanel,
     ClinicalIndicationSuperPanel,
+    CiPanelTdRelease,
+    CiSuperpanelTdRelease,
     PanelSuperPanel,
     PanelGene,
     Transcript,
@@ -17,7 +19,8 @@ import datetime as dt
 from django.core.management.base import BaseCommand
 from .utils import normalize_version, parse_hgnc
 from panel_requests.settings import HGNC_IDS_TO_OMIT
-from _parse_transcript import _parse_reference_genome
+from ._parse_transcript import _parse_reference_genome
+from ._insert_ci import _fetch_latest_td_version
 
 ACCEPTABLE_COMMANDS = ["genepanels", "g2t"]
 
@@ -57,11 +60,13 @@ class Command(BaseCommand):
 
         return True
 
-    def _get_relevant_ci_panels(self) -> tuple[dict[str, list], set]:
+    def _get_relevant_ci_panels(self, td_release) -> tuple[dict[str, list], set]:
         """
         Retrieve relevant panels and CI-panels from the database
         These will be output in the final file.
         Returns CI panels and a list of relevant panels.
+
+        :param: td_release, the TestDirectoryRelease table entry for the most-recent test dir version
 
         :return: ci_panels, a dict containing R codes as keys, with lists
         of clinical indication-panel information provided as keys
@@ -71,25 +76,28 @@ class Command(BaseCommand):
 
         ci_panels = collections.defaultdict(list)
 
-        for row in ClinicalIndicationPanel.objects.filter(
-            current=True, pending=False
+        # find Ci-Panels linked to the latest test directory
+        for row in CiPanelTdRelease.objects.filter(
+            td_release=td_release, ci_panel__current=True, ci_panel__pending=False
         ).values(
-            "clinical_indication_id__r_code",
-            "clinical_indication_id__name",
-            "panel_id",
-            "panel_id__panel_name",
-            "panel_id__panel_version",
+            "ci_panel__clinical_indication__r_code",
+            "ci_panel__clinical_indication_id__name",
+            "ci_panel__panel__external_id",
+            "ci_panel__panel__panel_name",
+            "ci_panel__panel__panel_version",
         ):
-            relevant_panels.add(row["panel_id"])
-            ci_panels[row["clinical_indication_id__r_code"]].append(row)
+            relevant_panels.add(row["ci_panel__panel__external_id"])
+            ci_panels[row["ci_panel__clinical_indication__r_code"]].append(row)
 
         return ci_panels, relevant_panels
 
-    def _get_relevant_ci_superpanels(self) -> tuple[dict[str, list], list]:
+    def _get_relevant_ci_superpanels(self, td_release) -> tuple[dict[str, list], list]:
         """
         Retrieve relevant superpanels and CI-superpanels from the database
         These will be output in the final file.
         Returns CI superpanels and a list of relevant superpanels.
+
+        :param: td_release, the TestDirectoryRelease table entry for the most-recent test dir version
 
         :return: ci_superpanels, a dict containing R codes as keys, with lists
         of clinical indication-superpanel information provided as keys
@@ -99,17 +107,19 @@ class Command(BaseCommand):
 
         ci_panels = collections.defaultdict(list)
 
-        for row in ClinicalIndicationSuperPanel.objects.filter(
-            current=True, pending=False
+        for row in CiSuperpanelTdRelease.objects.filter(
+            td_release=td_release,
+            ci_superpanel__current=True,
+            ci_superpanel__pending=False,
         ).values(
-            "clinical_indication__r_code",
-            "clinical_indication__name",
-            "superpanel__pk",
-            "superpanel__panel_name",
-            "superpanel__panel_version",
+            "ci_superpanel__clinical_indication__r_code",
+            "ci_superpanel__clinical_indication__name",
+            "ci_superpanel__superpanel__pk",
+            "ci_superpanel__superpanel__panel_name",
+            "ci_superpanel__superpanel__panel_version",
         ):
-            relevant_panels.add(row["superpanel__pk"])
-            ci_panels[row["clinical_indication__r_code"]].append(row)
+            relevant_panels.add(row["ci_superpanel__superpanel__pk"])
+            ci_panels[row["ci_superpanel__clinical_indication__r_code"]].append(row)
 
         return ci_panels, relevant_panels
 
@@ -182,8 +192,8 @@ class Command(BaseCommand):
             # for each clinical indication
             for panel_dict in panel_list:
                 # for each panel associated with that clinical indication
-                panel_id: str = panel_dict["panel_id"]
-                ci_name: str = panel_dict["clinical_indication_id__name"]
+                panel_id: str = panel_dict["ci_panel__panel__external_id"]
+                ci_name: str = panel_dict["ci_panel__clinical_indication_id__name"]
                 for hgnc in panel_genes[panel_id]:
                     # for each gene associated with that panel
                     if hgnc in HGNC_IDS_TO_OMIT or hgnc in rnas:
@@ -226,8 +236,8 @@ class Command(BaseCommand):
                 print(panel_dict.keys())
 
                 # for each panel associated with that clinical indication
-                panel_id: str = panel_dict["superpanel__pk"]
-                ci_name: str = panel_dict["clinical_indication__name"]
+                panel_id: str = panel_dict["ci_superpanel__superpanel__pk"]
+                ci_name: str = panel_dict["ci_superpanel__clinical_indication__name"]
 
                 for hgnc in panel_genes[panel_id]:
                     # for each gene associated with that panel
@@ -236,14 +246,16 @@ class Command(BaseCommand):
 
                     # process the panel version
                     panel_version: str = (
-                        normalize_version(panel_dict["superpanel__panel_version"])
-                        if panel_dict["superpanel__panel_version"]
+                        normalize_version(
+                            panel_dict["ci_superpanel__superpanel__panel_version"]
+                        )
+                        if panel_dict["ci_superpanel__superpanel__panel_version"]
                         else "1.0"
                     )
                     results.append(
                         [
                             f"{r_code}_{ci_name}",
-                            f"{panel_dict['superpanel__panel_name']}_"
+                            f"{panel_dict['ci_superpanel__superpanel__panel_name']}_"
                             f"{panel_version}",
                             hgnc,
                         ]
@@ -315,8 +327,15 @@ class Command(BaseCommand):
         if errors:
             raise ValueError(errors)
 
-        ci_panels, relevant_panels = self._get_relevant_ci_panels()
-        ci_superpanels, relevant_superpanels = self._get_relevant_ci_superpanels()
+        latest_td_release_ver = _fetch_latest_td_version()
+        latest_td_instance = TestDirectoryRelease.objects.get(
+            release=latest_td_release_ver
+        )
+
+        ci_panels, relevant_panels = self._get_relevant_ci_panels(latest_td_instance)
+        ci_superpanels, relevant_superpanels = self._get_relevant_ci_superpanels(
+            latest_td_instance
+        )
 
         panel_genes = self._get_relevant_panel_genes(relevant_panels)
         superpanel_genes = self._get_relevant_superpanel_genes(relevant_superpanels)
