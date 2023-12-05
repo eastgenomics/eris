@@ -1,4 +1,4 @@
-# panel_requests
+# core
 
 Abbreviations:
 - CI: clinical indication

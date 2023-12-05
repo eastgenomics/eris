@@ -19,7 +19,7 @@ services:
     platform: linux/amd64
     image: eris-web:1.0
     build: .
-    command: bash -c "python manage.py collectstatic --noinput && gunicorn panel_requests.wsgi:application --bind :8009"
+    command: bash -c "python manage.py collectstatic --noinput && gunicorn core.wsgi:application --bind :8009"
     env_file:
       - .env # change to relative path when docker compose build
     volumes:
