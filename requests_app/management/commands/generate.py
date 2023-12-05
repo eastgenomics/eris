@@ -250,17 +250,16 @@ class Command(BaseCommand):
         results = sorted(results, key=lambda x: [x[0], x[1], x[2]])
         return results
 
-    def _generate_genepanels(self, rnas: set, output_directory: str) -> None:
+    def _block_genepanels_if_db_not_ready(self) -> str | None:
         """
-        Main function to generate genepanel.tsv
-        Runs sanity checks, then calls a formatter if these pass
-        Outputs formatted data
-        :param rnas: set of rnas
-        :param output_directory: output directory
+        Check that there's no Pending data in tables linking CIs to panels, 
+        and check that the db contains at least some Clinical Indications.
+        If this is the case, return a formatted error message.
+        If there are no issues, return None.
+        
+        :return: error - string or None
         """
-        print("Creating genepanels file")
         errors = []
-
         if not ClinicalIndicationPanel.objects.filter(
             current=True, pending=False
         ).exists():
@@ -297,7 +296,23 @@ class Command(BaseCommand):
         # if any errors - raise them
         if errors:
             msg = "; ".join(errors)
-            raise ValueError(msg)
+            return msg
+        else:
+            return None
+
+    def _generate_genepanels(self, rnas: set, output_directory: str) -> None:
+        """
+        Main function to generate genepanel.tsv, a file containing every clinical indications' genes
+        Runs sanity checks, then calls a formatter if these pass
+        Outputs the data as a csv, with columns: clinical indication, source panel, and HGNC gene ID.
+        :param rnas: set of rnas
+        :param output_directory: output directory
+        """
+        print("Creating genepanels file")
+
+        errors = self._block_genepanels_if_db_not_ready()
+        if errors:
+            raise ValueError(errors)
 
         ci_panels, relevant_panels = self._get_relevant_ci_panels()
         ci_superpanels, relevant_superpanels = self._get_relevant_ci_superpanels()
