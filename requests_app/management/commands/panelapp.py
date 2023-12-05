@@ -142,7 +142,6 @@ def get_latest_version_panel(
     :return: is_superpanel - True if panel is a superpanel, False otherwise
     """
     panel_url = f"{PANELAPP_API_URL}{panel_num}/?format=json"
-
     response = requests.get(panel_url)
 
     if response.status_code != 200:

@@ -244,14 +244,15 @@ class Command(BaseCommand):
                             " a version"
                         )
                 else:
+                    # we start by assuming we have a standard panel, and getting the most-recent version
+                    # but if we find out it's a superpanel, we make a second call, to get the latest
+                    # signed-off version instead
+                    latest_panel_version = get_latest_version_panel(panel_id)
+                    panel_data, is_superpanel = get_specific_version_panel(panel_id, latest_panel_version)
                     if is_superpanel:
                         # find latest signed-off superpanel version to use
                         latest_signedoff_panel_version = _fetch_latest_signed_off_version_based_on_panel_id(panel_id)
                         panel_data, is_superpanel = get_specific_version_panel(panel_id, latest_signedoff_panel_version)
-                    else:
-                        # find latest panel version to use, REGARDLESS of whether it's signed off or not
-                        latest_panel_version = get_latest_version_panel(panel_id)
-                        panel_data, is_superpanel = get_specific_version_panel(panel_id, latest_panel_version)
 
                 if not panel_data:
                     print(
