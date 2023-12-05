@@ -57,9 +57,13 @@ class TestMakeHgncGeneSets_AllScenarios(TestCase):
             "HGNC:400": "JKL1",
             "HGNC:600": "PQR1",
         }  # HGNC:600 is new to this release, and not in the db
+
+        # NOTE: currently we drop any NA in the dataframe further up the food chain thus a np.nan
+        # in the dict is no longer a scenario
+
         hgnc_id_to_alias = {
             "HGNC:100": ["Alias", "One"],
-            "HGNC:200": [np.nan],  # HGNC:200 alias change
+            "HGNC:200": ["DEF2"],  # HGNC:200 alias change
             "HGNC:300": [
                 "not_Alias",
                 "Three",
@@ -80,30 +84,33 @@ class TestMakeHgncGeneSets_AllScenarios(TestCase):
             {"hgnc_id": "HGNC:600", "symbol": "PQR1", "alias": "Alias,Six"},
         )
         self.assertDictEqual(
-            hgnc_symbol_changed["HGNC:100"], {"new": "new_symbol", "old": "ABC1"}
+            hgnc_symbol_changed["HGNC:100"], {"new": "NEW_SYMBOL", "old": "ABC1"}
         )
         self.assertDictEqual(
-            hgnc_symbol_changed["HGNC:300"], {"new": "not_GHI1", "old": "GHI1"}
+            hgnc_symbol_changed["HGNC:300"], {"new": "NOT_GHI1", "old": "GHI1"}
         )
         self.assertDictEqual(
-            hgnc_alias_changed["HGNC:200"], {"new": None, "old": "Alias,Two"}
+            hgnc_alias_changed["HGNC:200"], {"new": "DEF2", "old": "Alias,Two"}
         )
         self.assertDictEqual(
             hgnc_alias_changed["HGNC:300"],
-            {"new": "not_Alias,Three", "old": "Alias,Three"},
+            {
+                "new": ",".join(sorted(hgnc_id_to_alias["HGNC:300"])),
+                "old": "Alias,Three",
+            },
         )
+        # NOTE: we now sort alias so that order of alias symbols no longer matter
         assert unchanged == ["HGNC:400"]
 
 
 class TestResolveAlias(TestCase):
     """
-    Check that common alias name scenarios are correctly parsed into
-    either None or a joined string
+    CASE: Provide a list of alias symbols (empty string included)
+    EXPECT: sorted alias symbols. If list is empty return None
     """
 
     def test_resolve_alias(self):
-        assert _resolve_alias(None) == None
-        assert _resolve_alias([None]) == None
-        assert _resolve_alias([np.nan]) == None
-        assert _resolve_alias(["Test", "One"]) == "Test,One"
+        assert _resolve_alias(["Test", "One"]) == "One,Test"
         assert _resolve_alias(["One", "Test"]) == "One,Test"
+        assert _resolve_alias([""]) == None
+        assert _resolve_alias(["", ""]) == None

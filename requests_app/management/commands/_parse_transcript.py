@@ -287,7 +287,9 @@ def _resolve_alias(start_alias: list[str]) -> str | None:
         return None
 
     # sort, deduplicate, and strip whitespace
-    aliases = sorted(list(set([alias.strip() for alias in start_alias])))
+    aliases = sorted(
+        list(set([alias.strip() for alias in start_alias if alias.strip()]))
+    )
 
     if not aliases:
         return None
