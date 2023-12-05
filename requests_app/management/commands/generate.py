@@ -253,11 +253,11 @@ class Command(BaseCommand):
 
     def _block_genepanels_if_db_not_ready(self) -> str | None:
         """
-        Check that there's no Pending data in tables linking CIs to panels, 
+        Check that there's no Pending data in tables linking CIs to panels,
         and check that the db contains at least some Clinical Indications.
         If this is the case, return a formatted error message.
         If there are no issues, return None.
-        
+
         :return: error - string or None
         """
         errors = []
@@ -443,7 +443,7 @@ class Command(BaseCommand):
                     "No reference genome specified, e.g. python manage.py generate g2t --ref_genome GRCh37"
                 )
             parsed_genome = _parse_reference_genome(kwargs.get("ref_genome"))
-            
+
             self._generate_g2t(output_directory, parsed_genome)
 
             print(f"g2t file created at {output_directory}")
