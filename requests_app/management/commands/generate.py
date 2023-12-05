@@ -7,6 +7,7 @@ from requests_app.models import (
     PanelSuperPanel,
     PanelGene,
     Transcript,
+    TestDirectoryRelease,
 )
 import os
 import csv
@@ -258,33 +259,45 @@ class Command(BaseCommand):
         :param output_directory: output directory
         """
         print("Creating genepanels file")
+        errors = []
 
         if not ClinicalIndicationPanel.objects.filter(
             current=True, pending=False
         ).exists():
             # if there's no CiPanelAssociation date column, high chance Test Directory
             # has not been imported yet.
-            raise ValueError(
-                "Test Directory has not yet been imported!"
-                "ClinicalIndicationPanel table is empty"
+            errors.append(
+                "ClinicalIndicationPanel table is empty, run: "
+                "python manage.py seed td <td.json>"
+            )
+
+        if not TestDirectoryRelease.objects.all().exists():
+            # if there's no TestDirectoryRelease, a td has not been imported yet.
+            errors.append(
+                "Test Directory has not yet been imported, run: "
                 "python manage.py seed td <td.json>"
             )
 
         # block generation of genepanel.tsv if ANY data is awaiting review (pending=True)
         if ClinicalIndicationPanel.objects.filter(pending=True).exists():
-            raise ValueError(
+            errors.append(
                 "Some ClinicalIndicationPanel table values require manual review. "
-                "Please resolve these through the review platform and try again."
+                "Please resolve these through the review platform and try again"
             )
 
         # block generation of genepanel.tsv if ANY data is awaiting review
         # (pending=True)
         if ClinicalIndicationSuperPanel.objects.filter(pending=True).exists():
-            raise ValueError(
+            errors.append(
                 "Some ClinicalIndicationSuperPanel table values require "
                 "manual review. Please resolve these through the review "
-                "platform and try again."
+                "platform and try again"
             )
+
+        # if any errors - raise them
+        if errors:
+            msg = "; ".join(errors)
+            raise ValueError(msg)
 
         ci_panels, relevant_panels = self._get_relevant_ci_panels()
         ci_superpanels, relevant_superpanels = self._get_relevant_ci_superpanels()

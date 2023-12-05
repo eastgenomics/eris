@@ -19,6 +19,8 @@ from requests_app.models import (
     ClinicalIndication,
     ClinicalIndicationSuperPanel,
     ClinicalIndicationSuperPanelHistory,
+    TestDirectoryRelease,
+    TestDirectoryReleaseHistory,
 )
 from requests_app.management.commands.utils import sortable_version, normalize_version
 from requests_app.management.commands.history import History
@@ -145,9 +147,9 @@ class TestInsertSuperpanelVersionChange(TestCase):
             r_code="Rtest", name="test_CI", test_method="NGS"
         )
 
+        self.td_version = TestDirectoryRelease.objects.create(release="5")
+
         self.ci_old_superpanel_link = ClinicalIndicationSuperPanel.objects.create(
-            config_source="td",
-            td_version="5",
             superpanel=self.old_superpanel,
             clinical_indication=self.ci,
             current=True,
@@ -265,9 +267,9 @@ class TestInsertSuperpanelNameChange(TestCase):
             r_code="Rtest", name="test_CI", test_method="NGS"
         )
 
+        self.td_version = TestDirectoryRelease.objects.create(release="5")
+
         self.ci_old_superpanel_link = ClinicalIndicationSuperPanel.objects.create(
-            config_source="td",
-            td_version="5",
             superpanel=self.old_superpanel,
             clinical_indication=self.ci,
             current=True,
@@ -369,9 +371,9 @@ class TestInsertSuperpanelUnchanged(TestCase):
             r_code="Rtest", name="test_CI", test_method="NGS"
         )
 
+        self.td_version = TestDirectoryRelease.objects.create(release="5")
+
         self.ci_old_superpanel_link = ClinicalIndicationSuperPanel.objects.create(
-            config_source="td",
-            td_version="5",
             superpanel=self.old_superpanel,
             clinical_indication=self.ci,
             current=True,

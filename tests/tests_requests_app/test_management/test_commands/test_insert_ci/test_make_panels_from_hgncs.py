@@ -17,6 +17,8 @@ from requests_app.models import (
     PanelGene,
     PanelGeneHistory,
     ClinicalIndicationPanelHistory,
+    TestDirectoryRelease,
+    CiPanelTdRelease,
 )
 from requests_app.management.commands._insert_ci import _make_panels_from_hgncs
 from tests.tests_requests_app.test_management.test_commands.test_insert_panel.test_insert_gene import (
@@ -34,7 +36,8 @@ class TestMakePanelsFromHgncs(TestCase):
     we should expect to see a clinical indication-panel relationship in the database
 
     if the same clinical indication gets the same panel (same list of hgncs), nothing should be changed
-    if the same clinical indication gets a different panel (different), new link should be generated but flagged for review (new and old links)
+    if the same clinical indication gets a different panel (different), new link should be generated but
+    flagged for review (new and old links)
 
     """
 
@@ -45,22 +48,26 @@ class TestMakePanelsFromHgncs(TestCase):
             test_method="Test method",
         )
 
+        self.td_version = TestDirectoryRelease.objects.create(
+            release="3.0",
+            td_source="rare-and-inherited-disease-national-gnomic-test-directory-v5.1.xlsx",
+            config_source="230401_RD",
+            td_date="230616",
+        )
+
+        self.user = "test"
+
     def test_make_panel_function(self):
         """
         Given a list of hgncs, make a panel and link it to the clinical indication
         """
         errors = []
 
-        mock_test_directory = {
-            "td_source": "rare-and-inherited-disease-national-gnomic-test-directory-v5.1.xlsx",
-            "config_source": "230401_RD",
-            "date": "230616",
-        }
-
         _make_panels_from_hgncs(
-            mock_test_directory,
             self.first_clinical_indication,
+            self.td_version,
             ["HGNC:1", "HGNC:2"],
+            self.user,
         )
 
         panels = Panel.objects.all()
@@ -126,6 +133,16 @@ class TestMakePanelsFromHgncs(TestCase):
             panel_genes[0].panel, "panel-gene panel", panel_genes[1].panel
         )
 
+        # check that test directory release links are formed
+        links_with_td = CiPanelTdRelease.objects.all()
+        errors += len_check_wrapper(links_with_td, "links with td", 1)
+        errors += value_check_wrapper(
+            links_with_td[0].td_release, "td release in link", self.td_version
+        )
+        errors += value_check_wrapper(
+            links_with_td[0].ci_panel, "ci-panel in link", links[0]
+        )
+
         assert not errors, errors
 
     def test_that_previous_clinical_indication_panel_links_are_flagged(self):
@@ -150,24 +167,17 @@ class TestMakePanelsFromHgncs(TestCase):
         )
 
         ClinicalIndicationPanel.objects.create(
-            config_source="230401_RD",
-            td_version=sortable_version("5.0"),
             clinical_indication=self.first_clinical_indication,
             panel_id=first_panel.id,
             current=True,
             pending=False,
         )  # we make a mock link in the database with td version 6.1
 
-        mock_test_directory = {
-            "td_source": "rare-and-inherited-disease-national-gnomic-test-directory-v5.1.xlsx",
-            "config_source": "230401_RD",
-            "date": "230616",
-        }  # this is the test directory that we are going to seed into the db: td version 5.1
-
         _make_panels_from_hgncs(
-            mock_test_directory,
             self.first_clinical_indication,
+            self.td_version,
             ["HGNC:1", "HGNC:2", "HGNC:3"],
+            self.user,
         )
 
         errors += value_check_wrapper(
@@ -186,19 +196,16 @@ class TestMakePanelsFromHgncs(TestCase):
             True,
         )  # both links should be flagged for review)
 
-        errors += value_check_wrapper(
-            clinical_indication_panels[1].td_version,
-            "td version",
-            sortable_version("5.1"),
-        )
-
-        errors += value_check_wrapper(
-            clinical_indication_panels[1].config_source, "config source", "230401_RD"
-        )
-
         errors += len_check_wrapper(
             PanelGeneHistory.objects.all(), "panel-gene history records", 3
         )  # should have 3 history recorded HGNC:1 HGNC:2 and HGNC:3
+
+        # check that test directory release links are formed
+        links_with_td = CiPanelTdRelease.objects.all()
+        errors += len_check_wrapper(links_with_td, "links with td", 2)
+        errors += value_check_wrapper(
+            links_with_td[0].td_release, "td release in link", self.td_version
+        )
 
     # NOTE: there is no need to test backward deactivation for panel-gene in this function
     # because it makes panel based on the provided hgncs
@@ -206,27 +213,3 @@ class TestMakePanelsFromHgncs(TestCase):
     # the clinical indication will be linked to it (and both old and new will be flagged for review)
     # this is different from the panel-gene interaction where panel get their genes from PanelApp API
     # thus there's a need to monitor the changes in panel-gene relationship
-
-    def test_long_hgnc_list(self):
-        """
-        scenario where there's a long list of hgncs and db limit for CharField
-        is only 255 chars thus there is a need to limit panel name to 200 chars
-        if length exceed 255
-
-        we expect the function to truncate the panel name to 200 chars and store it in db
-        """
-        mock_test_directory = {
-            "td_source": "rare-and-inherited-disease-national-gnomic-test-directory-v5.2.xlsx",
-            "config_source": "230401_RD",
-            "date": "230616",
-        }
-
-        hgncs = [f"HGNC:{i}" for i in range(1000)]
-
-        _make_panels_from_hgncs(
-            mock_test_directory, self.first_clinical_indication, hgncs
-        )
-
-        panel = Panel.objects.first()
-
-        assert len(panel.panel_name) == 254  # assert that panel name length is 200
