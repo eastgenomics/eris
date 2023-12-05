@@ -1427,7 +1427,7 @@ def genepanel(request):
     """
 
     # TODO: hard-coded, will become an upload file in the future
-    rnas = parse_hgnc("testing_files/hgnc_dump_20230606_1.txt")
+    rnas = parse_hgnc("testing_files/eris/hgnc_dump_20230606_1.txt")
 
     ci_panels = collections.defaultdict(list)
     panel_genes = collections.defaultdict(list)
