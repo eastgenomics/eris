@@ -41,7 +41,7 @@ python manage.py seed panelapp <panel or superpanel id> <panel or superpanel ver
   - This option is NOT AVAILABLE for superpanels, which will raise an error and cancel.
 - If you don't provide a version:
   - For Panels, the most-recent version is retrieved, regardless of whether or not it is the latest signed-off version.
-  - For Superpanels, the most-recent SIGNED OFF version is retrieved.
+  - For Superpanels, the most-recent SIGNED OFF version is retrieved. In addition, the most recent signed-off versions of its child panels are retrieved.
 
   
 ### 2. Insert data from the National Genomic Test Directory
