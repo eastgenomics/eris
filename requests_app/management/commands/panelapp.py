@@ -66,7 +66,8 @@ class SuperPanelClass:
 
 def _get_all_signed_off_panels() -> list[dict]:
     """
-    Fetches all signed-off panels
+    Fetches all signed-off panels from the PanelApp API
+    The panels have not yet been converted to PanelClass or SuperPanelClass objects
 
     :return: list of panels (dict)
     """
@@ -85,8 +86,7 @@ def _get_all_signed_off_panels() -> list[dict]:
             exit(1)
 
         data = response.json()
-        is_superpanel = _check_superpanel_status(data)
-        all_panels += tuple(data["results"], is_superpanel)  # append to all_panels
+        all_panels += data["results"]  # append to all_panels
         panelapp_url = data["next"]  # here we keep fetching until next is None
 
     return all_panels
@@ -179,31 +179,30 @@ def get_specific_version_panel(
         return SuperPanelClass(**response.json()), is_superpanel
 
 
-# def fetch_all_signed_off_panels() -> tuple[list[PanelClass], list[SuperPanelClass]]:
-#     """
-#     Function to get all signed off panels and superpanels.
+def process_all_signed_off_panels() -> tuple[list[PanelClass], list[SuperPanelClass]]:
+    """
+    Function to get all signed off panels and superpanels.
 
-#     :return: list of PanelClass objects
-#     :return: list of SuperPanelClass objects
-#     """
+    :return: list of PanelClass objects
+    :return: list of SuperPanelClass objects
+    """
 
-#     print("Fetching all PanelApp panels...")
+    print("Fetching all PanelApp panels...")
 
-#     panels: list[PanelClass] = []
-#     superpanels: list[SuperPanelClass] = []
+    panels: list[PanelClass] = []
+    superpanels: list[SuperPanelClass] = []
 
-#     for panel in _get_all_signed_off_panels():
-#         panel_id = panel["id"]
+    for panel in _get_all_signed_off_panels():
+        panel_id = panel["id"]
+        panel_version = panel.get("version")
 
-#         # fetch the most recent signed-off data for each panel
-#         panel_version = _fetch_latest_signed_off_version_based_on_panel_id(panel_id)
-#         panel_data, is_superpanel = get_specific_version_panel(panel_id, panel_version)
+        # fetching specific signed-off version
+        panel_data, is_superpanel = get_specific_version_panel(panel_id, panel_version)
+        if panel_data:
+            panel_data.panel_source = "PanelApp"
+            if is_superpanel:
+                superpanels.append(panel_data)
+            else:
+                panels.append(panel_data)
 
-#         if panel_data:
-#             panel_data.panel_source = "PanelApp"
-#             if is_superpanel:
-#                 superpanels.append(panel_data)
-#             else:
-#                 panels.append(panel_data)
-
-#     return panels, superpanels
+    return panels, superpanels

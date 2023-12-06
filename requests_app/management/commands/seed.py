@@ -6,12 +6,11 @@ import os
 import json
 import re
 
-from ._insert_panel import panel_insert_controller, single_panel_insert_controller
+from ._insert_panel import panel_insert_controller
 from ._parse_transcript import seed_transcripts
 from ._insert_ci import insert_test_directory_data
 from .panelapp import (
-    _get_all_signed_off_panels,
-    _check_superpanel_status,
+    process_all_signed_off_panels,
     get_specific_version_panel,
     _fetch_latest_signed_off_version_based_on_panel_id,
     get_latest_version_panel,
@@ -231,11 +230,7 @@ class Command(BaseCommand):
             superpanels = []
 
             if panel_id == "all":
-                for panel, is_superpanel in _get_all_signed_off_panels:
-                    if is_superpanel:
-                        superpanels.append(panel)
-                    else:
-                        panels.append(panel)
+                panels, superpanels = process_all_signed_off_panels()
                 # correct superpanel children where needed, and insert panel data into database
                 panel_insert_controller(panels, superpanels, user)
                 print("Done.")
