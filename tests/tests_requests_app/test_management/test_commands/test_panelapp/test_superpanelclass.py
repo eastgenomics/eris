@@ -8,20 +8,13 @@ import json
 from requests_app.management.commands.panelapp import SuperPanelClass
 
 
-def returns_example_superpanel():
-    """
-    Calls a known API endpoint for a superpanel
-    and returns response.json()
-    """
-    api_url = "https://panelapp.genomicsengland.co.uk/api/v1/panels/"
-    panel_num = "465"
-    version = "19.155"
-    panel_url = f"{api_url}{panel_num}/?version={version}&format=json"
-    response = requests.get(panel_url)
-    return response.json()
-
-
 def mocked_requests_get_superpanel(filename):
+    """
+    Makes a pretend API response which contains some file contents
+    as its json payload.
+    Lets you avoid actually calling the real PanelApp API.
+    """
+
     class MockResponse:
         def __init__(self):
             self.json_data = json.load(open(filename))
