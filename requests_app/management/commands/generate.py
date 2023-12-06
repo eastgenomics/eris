@@ -10,6 +10,7 @@ from requests_app.models import (
     PanelGene,
     Transcript,
     TestDirectoryRelease,
+    ReferenceGenome
 )
 import os
 import csv
@@ -17,6 +18,7 @@ import collections
 import datetime as dt
 
 from django.core.management.base import BaseCommand
+from django.core.exceptions import ObjectDoesNotExist
 from .utils import normalize_version, parse_hgnc
 from panel_requests.settings import HGNC_IDS_TO_OMIT
 from ._parse_transcript import _parse_reference_genome
@@ -361,31 +363,32 @@ class Command(BaseCommand):
         Main function to generate g2t.tsv
 
         :param output_directory: output directory
-        :param ref_genome: reference genome version
+        :param ref_genome: ReferenceGenome instance
         """
-        # TODO: factor in reference genome in db searches
         print("Creating g2t file for reference genome: " + str(ref_genome))
 
+
         current_datetime = dt.datetime.today().strftime("%Y%m%d")
+
+        # We need all transcripts which are linked to the correct reference genome,
+        # and are marked as clinical in the most up-to-date transcript sources
+
+        results = (
+                Transcript.objects.order_by("gene_id")
+                .filter(reference_genome=ref_genome)
+                .values("gene_id__hgnc_id", "transcript", "source")
+            )
 
         with open(
             f"{output_directory}/{current_datetime}_g2t.tsv", "w", newline=""
         ) as f:
             writer = csv.writer(f, delimiter="\t", lineterminator="\n")
-            for row in (
-                Transcript.objects.order_by("gene_id")
-                .all()
-                .values("gene_id__hgnc_id", "transcript", "source")
-            ):
-                hgnc_id = row["gene_id__hgnc_id"]
-                transcript = row["transcript"]
-                source = row.get("source")
-
+            for row in results:
                 writer.writerow(
                     [
-                        hgnc_id,
-                        transcript,
-                        "clinical_transcript" if source else "not_clinical_transcript",
+                        results["gene_id__hgnc_id"],
+                        results["transcript"],
+                        "clinical_transcript" if results.get("source") else "not_clinical_transcript",
                     ]
                 )
 
@@ -462,7 +465,11 @@ class Command(BaseCommand):
                     "No reference genome specified, e.g. python manage.py generate g2t --ref_genome GRCh37"
                 )
             parsed_genome = _parse_reference_genome(kwargs.get("ref_genome"))
+            try:
+                ref_genome = ReferenceGenome.objects.get(reference_genome=parsed_genome)
+            except ObjectDoesNotExist:
+                print("Aborting g2t: reference genome does not exist in the database")
 
-            self._generate_g2t(output_directory, parsed_genome)
+            self._generate_g2t(output_directory, ref_genome)
 
             print(f"g2t file created at {output_directory}")
