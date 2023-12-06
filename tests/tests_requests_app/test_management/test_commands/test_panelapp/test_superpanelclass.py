@@ -62,7 +62,6 @@ class TestSuperPanelClass(TestCase):
         )
         superpanel = SuperPanelClass(**json_response)
 
-        print([p.id for p in superpanel.child_panels])
         assert set([p.id for p in superpanel.child_panels]) == set(
             [66, 79, 185, 207, 225, 232, 235]
         )
