@@ -20,13 +20,30 @@ python manage.py migrate requests_app
 
 ## Populate the database
 ### 1. Insert data from PanelApp
-The generic command for this is:
+You can choose to seed all panels, or to seed specified panels by their PanelApp IDs.
+Note that panels can be either standard panels, or superpanels. Superpanels are collections of standard panels, and contain all the genes contained by each of those standard panels.
+
+To seed all panels, the generic command is:
 ```
 python manage.py seed panelapp all
 ```
-- This command retrieves all signed-off panels from the PanelApp API, parses the data, and inserts it into the appropriate database models.
+- This command retrieves all signed-off panels and superpanels from the PanelApp API, parses the data, and inserts it into the appropriate database models.
+- For each signed-off superpanel, the most recently signed-off version of every child panel will also be retrieved.
 - It can be executed as-is and has no variable arguments.
 
+To seed specified versions of panels, the command is:
+```
+python manage.py seed panelapp <panel or superpanel id> <panel or superpanel version>
+```
+- The version argument is optional.
+- If you provide a version:
+  - For a standard panel: that particular user-specified version of the panel will be fetched from PanelApp. Note that you can add a non-signed-off version of a panel in this way.
+  - This option is NOT AVAILABLE for superpanels, which will raise an error and cancel.
+- If you don't provide a version:
+  - For Panels, the most-recent version is retrieved, regardless of whether or not it is the latest signed-off version.
+  - For Superpanels, the most-recent SIGNED OFF version is retrieved. In addition, the most recent signed-off versions of its child panels are retrieved.
+
+  
 ### 2. Insert data from the National Genomic Test Directory
 The generic command for this is:
 ```
