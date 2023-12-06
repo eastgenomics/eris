@@ -230,8 +230,8 @@ class Command(BaseCommand):
             superpanels = []
 
             if panel_id == "all":
+                # Seeding every panel and superpanel in PanelApp
                 panels, superpanels = process_all_signed_off_panels()
-                # correct superpanel children where needed, and insert panel data into database
                 panel_insert_controller(panels, superpanels, user)
                 print("Done.")
 
@@ -245,7 +245,7 @@ class Command(BaseCommand):
                     panel_data, is_superpanel = get_specific_version_panel(
                         panel_id, panel_version
                     )
-                    if is_superpanel: 
+                    if is_superpanel:
                         # do NOT allow specific versions to be requested for superpanels
                         # this is because the API does not support correct linking of legacy superpanels with child-panels
                         raise ValueError(

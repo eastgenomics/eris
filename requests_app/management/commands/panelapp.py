@@ -67,7 +67,8 @@ class SuperPanelClass:
 def _get_all_signed_off_panels() -> list[dict]:
     """
     Fetches all signed-off panels from the PanelApp API
-    The panels have not yet been converted to PanelClass or SuperPanelClass objects
+    Handles weird pagination in PanelApp
+    The panels have NOT YET been converted to PanelClass or SuperPanelClass objects
 
     :return: list of panels (dict)
     """
@@ -181,10 +182,11 @@ def get_specific_version_panel(
 
 def process_all_signed_off_panels() -> tuple[list[PanelClass], list[SuperPanelClass]]:
     """
-    Function to get all signed off panels and superpanels.
+    Function to process all signed off panels and superpanels,
+    starting by getting information from _get_all_signed_off_panels()
 
-    :return: list of PanelClass objects
-    :return: list of SuperPanelClass objects
+    :return: a list of PanelClass objects
+    :return: a list of SuperPanelClass objects
     """
 
     print("Fetching all PanelApp panels...")
