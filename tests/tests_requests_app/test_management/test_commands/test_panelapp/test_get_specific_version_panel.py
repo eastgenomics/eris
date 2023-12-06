@@ -28,7 +28,7 @@ class TestGetPanel_ErrorsNot200(TestCase):
                     # patch over the internally-called 'requests.get'
                     mock_request_get.return_value.json_data = json.load(
                         open(
-                            "testing_files/panelapp_api_mocks/superpanel_842_v13.4.json"
+                            "testing_files/eris/panelapp_api_mocks/superpanel_842_v13.4.json"
                         )
                     )
                     mock_request_get.return_value.status_code = 500
