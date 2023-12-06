@@ -226,9 +226,6 @@ class Command(BaseCommand):
             panel_id: str = kwargs.get("panel")
             panel_version: str = kwargs.get("version")
 
-            panels = []
-            superpanels = []
-
             if panel_id == "all":
                 # Seeding every panel and superpanel in PanelApp
                 panels, superpanels = process_all_signed_off_panels()
@@ -260,6 +257,9 @@ class Command(BaseCommand):
                     panel_data, is_superpanel = get_latest_version_panel(panel_id)
                     if is_superpanel:
                         # find latest signed-off superpanel version to use
+                        print(
+                            "Superpanel detected - fetching latest signed-off version"
+                        )
                         latest_signedoff_panel_version = (
                             _fetch_latest_signed_off_version_based_on_panel_id(panel_id)
                         )
