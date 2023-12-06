@@ -278,10 +278,9 @@ class Command(BaseCommand):
 
                     print(f"Importing panels into database...")
                     if is_superpanel:
-                        superpanels.append(panel_data)
+                        panel_insert_controller([], [panel_data], user)
                     else:
-                        panels.append(panel_data)
-                    panel_insert_controller(panels, superpanels, user)
+                        panel_insert_controller([panel_data], [], user)
                     print("Done.")
 
         # python manage.py seed td <input_json> --td_release <td_release_version> <Y/N>

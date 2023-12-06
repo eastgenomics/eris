@@ -123,19 +123,16 @@ def _check_superpanel_status(response: dict[str, str]) -> bool:
     return False
 
 
-def get_latest_version_panel(
-    panel_num: int,
-) -> tuple[PanelClass | SuperPanelClass, bool]:
+def get_panel_from_url(panel_url) -> tuple[PanelClass | SuperPanelClass, bool]:
     """
-    Function to get LATEST version of a panel,
-    regardless of whether it's signed off or not
+    Get response from a PanelApp URL, handle error codes,
+    work out whether the result is a panel or superpanel,
+    and parse/return it appropriately.
 
-    :param panel_num: panel number
-
+    :param: panel_url, a pre-formatted URL for PanelApp
     :return: PanelClass object or SuperPanelClass
     :return: is_superpanel - True if panel is a superpanel, False otherwise
     """
-    panel_url = f"{PANELAPP_API_URL}{panel_num}/?format=json"
     response = requests.get(panel_url)
     if response.status_code != 200:
         print(
@@ -149,35 +146,40 @@ def get_latest_version_panel(
         return PanelClass(**response.json()), is_superpanel
     else:
         return SuperPanelClass(**response.json()), is_superpanel
+
+
+def get_latest_version_panel(
+    panel_num: int,
+) -> tuple[PanelClass | SuperPanelClass, bool]:
+    """
+    Function to get LATEST version of a panel,
+    regardless of whether it's signed off or not.
+    Wraps get_panel_from_url() in a way which makes it easier to keep track of which API URL endpoints are used.
+
+    :param panel_num: panel number
+    :return: PanelClass object or SuperPanelClass
+    :return: is_superpanel - True if panel is a superpanel, False otherwise
+    """
+    panel_url = f"{PANELAPP_API_URL}{panel_num}/?format=json"
+    panel, is_superpanel = get_panel_from_url(panel_url)
+    return panel, is_superpanel
 
 
 def get_specific_version_panel(
     panel_num: int, version: float
 ) -> tuple[PanelClass | SuperPanelClass, bool]:
     """
-    Function to get a specific version of an individual PanelApp panel,
-    from the PanelAppAPI
+    Function to get a specific version of an individual PanelApp panel, from the PanelAppAPI
+    Wraps get_panel_from_url() in a way which makes it easier to keep track of which API URL endpoints are used.
+
     :param panel_num: panel number
     :param version: panel version
-
     :return: PanelClass object or SuperPanelClass
     :return: is_superpanel - True if panel is a superpanel, False otherwise
     """
     panel_url = f"{PANELAPP_API_URL}{panel_num}/?version={version}&format=json"
-    response = requests.get(panel_url)
-
-    if response.status_code != 200:
-        print(
-            f"Aborting because API returned a non-200 exit code: {response.status_code}"
-        )
-        exit(1)
-
-    is_superpanel = _check_superpanel_status(response.json())
-
-    if not is_superpanel:
-        return PanelClass(**response.json()), is_superpanel
-    else:
-        return SuperPanelClass(**response.json()), is_superpanel
+    panel, is_superpanel = get_panel_from_url(panel_url)
+    return panel, is_superpanel
 
 
 def process_all_signed_off_panels() -> tuple[list[PanelClass], list[SuperPanelClass]]:
