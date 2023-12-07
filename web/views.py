@@ -216,7 +216,7 @@ def clinical_indication(request, ci_id: int):
     active_panel_ids = [
         cip["panel_id"]
         for cip in ci_panels
-        if cip["current"] == True and cip["pending"] == False
+        if cip["current"] is True and cip["pending"] is False
     ]
 
     # converting version to readable format

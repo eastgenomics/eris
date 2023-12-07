@@ -70,12 +70,12 @@ class TestBackwardDeactivation(TestCase):
 
         self.first_clinical_indication_panel.refresh_from_db()
 
-        assert self.first_clinical_indication_panel.pending == True
+        assert self.first_clinical_indication_panel.pending is True
         assert (
             ClinicalIndicationPanelHistory.objects.count() == 1
         )  # there should be one history recorded
         assert (
-            self.first_clinical_indication_panel.current == False
+            self.first_clinical_indication_panel.current is False
         )  # active status should be False
 
     def test_that_link_will_not_be_flagged_if_exist(self):
@@ -94,9 +94,9 @@ class TestBackwardDeactivation(TestCase):
 
         self.first_clinical_indication_panel.refresh_from_db()
 
-        assert self.first_clinical_indication_panel.pending == False
+        assert self.first_clinical_indication_panel.pending is False
         assert (
-            self.first_clinical_indication_panel.current == True
+            self.first_clinical_indication_panel.current is True
         )  # link should still be active
 
 
@@ -134,8 +134,8 @@ class TestFlagClinicalIndicationPanelForReview(TestCase):
 
         self.first_clinical_indication_panel.refresh_from_db()
 
-        assert self.first_clinical_indication_panel.pending == True
-        assert self.first_clinical_indication_panel.current == False
+        assert self.first_clinical_indication_panel.pending is True
+        assert self.first_clinical_indication_panel.current is False
 
         assert (
             ClinicalIndicationPanelHistory.objects.count() == 1
@@ -243,7 +243,7 @@ class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
 
         # check that the ci-panel is set to pending
         with self.subTest():
-            assert self.first_clinical_indication_panel.pending == True
+            assert self.first_clinical_indication_panel.pending is True
 
         # test that a release was linked to the ci-panel
         with self.subTest():
@@ -268,7 +268,7 @@ class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
             assert ClinicalIndicationPanel.objects.count() == 2  # one new link created
             new_link = ClinicalIndicationPanel.objects.last()
 
-            assert new_link.pending == True  # new link should be flagged for review
+            assert new_link.pending is True  # new link should be flagged for review
 
         # test that a release was linked to the ci-panel
         with self.subTest():
@@ -414,7 +414,7 @@ class TestRetrievePanelFromPanelID(TestCase):
         """
         panel = _retrieve_panel_from_pa_id(999)
 
-        assert panel == None
+        assert panel is None
 
 
 class TestRetrieveUnknownMetadataRecords(TestCase):
@@ -454,7 +454,7 @@ class TestMakeProvisionalTestMethodChange(TestCase):
         assert (
             self.first_clinical_indication.test_method == "Test method 2"
         )  # test method updated for clinical indication
-        assert self.first_clinical_indication.pending == True  # flagged for review
+        assert self.first_clinical_indication.pending is True  # flagged for review
 
         assert (
             ClinicalIndicationTestMethodHistory.objects.count() == 1

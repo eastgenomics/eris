@@ -150,7 +150,7 @@ def _insert_gene(
                 continue  # if panel-gene doesn't exist in db then we don't care about this gene with confidence level < 3
             else:
                 pass  # if gene is confidence level 3 then we move on
-        except (ValueError, TypeError) as e:
+        except (ValueError, TypeError):
             # the confidence_level is an alphabetical, None, or some other type that can't be converted to float
             print(
                 f"For panel {str(panel.name)}, skipping gene without confidence "
@@ -166,7 +166,9 @@ def _insert_gene(
             hgnc_id=hgnc_id,
             defaults={
                 "gene_symbol": gene_symbol,
-                "alias_symbols": ",".join(alias_symbols),
+                "alias_symbols": ",".join(sorted(alias_symbols))
+                if alias_symbols
+                else None,
             },
         )
 

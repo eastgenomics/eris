@@ -40,11 +40,11 @@ class TestGetOrCreate_CreateNew(TestCase):
         poss_symbols = ["ROR2", "TEST_SYMBOL"]
         poss_aliases = [None, "TEST, ALIAS"]
         for i in range(0, 2, 1):
-            if not post_run_genes[i].gene_symbol in poss_symbols:
+            if post_run_genes[i].gene_symbol not in poss_symbols:
                 errors.append(
                     f"Post run gene {post_run_genes[i].gene_symbol} not in {poss_symbols}"
                 )
-            if not post_run_genes[i].alias_symbols in poss_aliases:
+            if post_run_genes[i].alias_symbols not in poss_aliases:
                 errors.append(
                     f"Post run gene {post_run_genes[i].alias_symbols} not in {poss_aliases}"
                 )
