@@ -1,5 +1,4 @@
 from django.test import TestCase
-import numpy as np
 
 from requests_app.models import (
     Gene,

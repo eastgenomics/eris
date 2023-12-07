@@ -8,7 +8,6 @@ Tested scenario:
 
 from django.test import TestCase
 
-from requests_app.management.commands.utils import sortable_version
 from requests_app.models import (
     ClinicalIndication,
     Panel,

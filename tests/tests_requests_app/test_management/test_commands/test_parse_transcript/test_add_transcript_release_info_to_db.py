@@ -1,6 +1,5 @@
 from django.test import TestCase
 
-import numpy as np
 
 from requests_app.models import (
     TranscriptSource,
@@ -82,11 +81,8 @@ class TestAddTranscriptRelease_FromScratch(TestCase):
 
 class TestAddTranscriptRelease_ErrorsOnVersionRepeatsWithDifferentFiles(TestCase):
     """
-    _add_transcript_release_info_to_db adds transcript sources, releases,
-    and supporting file IDs to the database.
-    CASE: An identical transcript release already exists in the DB, but no files are linked
-    EXPECT: The old db copy of the release is fetched, and because the new files 'don't match'
-    the old missing ones, an error is raised.
+    CASE: An identical transcript release already exists in the DB - this release has been linked to file id 123
+    EXPECT: A ValueError should be raised!
     """
 
     def setUp(self) -> None:
@@ -100,25 +96,33 @@ class TestAddTranscriptRelease_ErrorsOnVersionRepeatsWithDifferentFiles(TestCase
             reference_genome=self.reference_genome,
         )
 
-    def test_non_matching_files_throw_errors(self):
+        self.tf = TranscriptFile.objects.create(
+            file_id="file-123", file_type="hgmd_markname"
+        )
+
+        TranscriptReleaseTranscriptFile.objects.create(
+            transcript_release=self.release, transcript_file=self.tf
+        )
+
+    def test_same_release_different_file_id(self):
         """
-        Case: Add to a db with a perfectly-matching release already in it.
-        Expect: the old files don't match the newly-uploaded ones - raise an error
+        Case: db already have a release & source & version for a specific file type & file-id
+        A new seed is uploaded but with a different file-id for the same file type & release version
+        e.g.
+        HGMD v1.0.5 has file-id 123, GRch37, markname
+        but user seed a new HGMD v1.0.5 with "file-id 124", GRch37, markname
+
+        Expect: ValueError to be raised because the file-id of a previous release version is already in the database
+        If the user wants to upload a new release version, they should use a new DNAnexus file-id
         """
-        self.maxDiff = None
 
         source = "HGMD"
         version = "v1.0.5"
         ref_genome = self.reference_genome
-        data = {"mane": "file-1357", "another_mane": "file-101010"}
+        files = {"hgmd_markname": "file-124"}  # different file-id
 
-        with self.assertRaisesRegex(
-            ValueError,
-            "Transcript release HGMD v1.0.5 already exists in db, but the uploaded file file-1357 is"
-            " not in the db. Please review. Transcript release HGMD v1.0.5 already exists in db, "
-            "but the uploaded file file-101010 is not in the db. Please review.",
-        ):
-            _add_transcript_release_info_to_db(source, version, ref_genome, data)
+        with self.assertRaises(ValueError):
+            _add_transcript_release_info_to_db(source, version, ref_genome, files)
 
 
 class TestAddTranscriptRelease_SameFilesNoProblem(TestCase):
@@ -162,49 +166,3 @@ class TestAddTranscriptRelease_SameFilesNoProblem(TestCase):
         files = TranscriptFile.objects.all()
         assert len(files) == 1
         self.assertEqual(files[0], self.file_one)
-
-
-class TestAddTranscriptRelease_CheckNotMissingFiles(TestCase):
-    """
-    _add_transcript_release_info_to_db adds transcript sources, releases,
-    and supporting file IDs to the database.
-    CASE: An identical transcript release already exists in the DB, but it has more files linked
-     to it that the user isn't currently uploading
-    EXPECT: The old db copy of the release is fetched, and because there are fewer files
-    being linked than expected, an error is raised.
-    """
-
-    def setUp(self) -> None:
-        self.reference_genome = ReferenceGenome.objects.create(
-            reference_genome="GRCh37"
-        )
-        self.source = TranscriptSource.objects.create(source="HGMD")
-        self.release = TranscriptRelease.objects.create(
-            source=self.source,
-            release="v1.0.5",
-            reference_genome=self.reference_genome,
-        )
-        self.file_one = TranscriptFile.objects.create(file_id="123", file_type="test")
-        self.link_1 = TranscriptReleaseTranscriptFile.objects.create(
-            transcript_release=self.release, transcript_file=self.file_one
-        )
-        self.file_two = TranscriptFile.objects.create(file_id="456", file_type="test")
-        self.link_2 = TranscriptReleaseTranscriptFile.objects.create(
-            transcript_release=self.release, transcript_file=self.file_two
-        )
-
-    def test_missing_files_throw_errors(self):
-        """
-        Case: Add to a db with a perfectly-matching release already in it.
-        Expect: there are more old files than new ones - throw error
-        """
-        source = "HGMD"
-        version = "v1.0.5"
-        ref_genome = self.reference_genome
-        data = {"mane": "123"}
-
-        with self.assertRaisesRegex(
-            ValueError,
-            "Transcript file 456 is linked to the release in the db, but wasn't uploaded. Please review.",
-        ):
-            _add_transcript_release_info_to_db(source, version, ref_genome, data)

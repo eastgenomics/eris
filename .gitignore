@@ -16,3 +16,4 @@ env
 .env
 .ruff_cache
 .DS_Store
+htmlcov

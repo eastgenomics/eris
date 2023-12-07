@@ -10,8 +10,7 @@ superpanel name or version change in PanelApp API
 """
 
 from django.test import TestCase
-import unittest
-from requests_app.management.commands.panelapp import PanelClass, SuperPanelClass
+from requests_app.management.commands.panelapp import SuperPanelClass
 from requests_app.models import (
     Panel,
     SuperPanel,
@@ -20,10 +19,8 @@ from requests_app.models import (
     ClinicalIndicationSuperPanel,
     ClinicalIndicationSuperPanelHistory,
     TestDirectoryRelease,
-    TestDirectoryReleaseHistory,
 )
-from requests_app.management.commands.utils import sortable_version, normalize_version
-from requests_app.management.commands.history import History
+from requests_app.management.commands.utils import sortable_version
 from requests_app.management.commands._insert_panel import _insert_superpanel_into_db
 
 from .test_insert_gene import len_check_wrapper, value_check_wrapper

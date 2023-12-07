@@ -28,7 +28,6 @@ from requests_app.models import (
     CiPanelTdRelease,
 )
 from requests_app.management.commands._insert_ci import insert_test_directory_data
-from requests_app.management.commands.utils import sortable_version
 from tests.tests_requests_app.test_management.test_commands.test_insert_panel.test_insert_gene import (
     len_check_wrapper,
     value_check_wrapper,
@@ -283,7 +282,7 @@ class TestInsertTestDirectoryData(TestCase):
         errors += value_check_wrapper(
             all(
                 [
-                    ci_panel["pending"] == True
+                    ci_panel["pending"] is True
                     for ci_panel in clinical_indication_panels
                 ],
             ),
@@ -404,7 +403,7 @@ class TestInsertTestDirectoryData(TestCase):
             self.clinical_indication.test_method == "WES or Large Panel"
         )  # test method changed
         assert (
-            self.clinical_indication.pending == True
+            self.clinical_indication.pending is True
         )  # flagged for review due to the change in test method
 
         assert (
@@ -685,4 +684,4 @@ class TestInsertTestDirectoryData(TestCase):
         clinical_indication_panels = ClinicalIndicationPanel.objects.all()
 
         assert len(clinical_indication_panels) == 1
-        assert clinical_indication_panels[0].pending == True  # flagged for review
+        assert clinical_indication_panels[0].pending is True  # flagged for review

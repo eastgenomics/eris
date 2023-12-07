@@ -1,18 +1,9 @@
 from django.test import TestCase
 
 from requests_app.models import (
-    PanelGene,
-    Panel,
-    SuperPanel,
-    ClinicalIndication,
-    ClinicalIndicationPanel,
-    ClinicalIndicationSuperPanel,
     TestDirectoryRelease,
-    CiPanelTdRelease,
-    CiSuperpanelTdRelease,
 )
 from requests_app.management.commands._insert_ci import _fetch_latest_td_version
-from requests_app.management.commands.utils import sortable_version
 
 
 class TestFetchLatestTdVersion_FullDb(TestCase):

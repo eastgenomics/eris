@@ -1,5 +1,4 @@
 import requests
-import json
 
 from core.settings import PANELAPP_API_URL
 

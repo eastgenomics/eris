@@ -1,7 +1,5 @@
 from django.test import TestCase
 import requests
-from unittest.mock import MagicMock
-import numpy as np
 import json
 
 
@@ -47,7 +45,7 @@ class TestSuperPanelClass(TestCase):
         assert superpanel.id == 465
         assert superpanel.name == "Other rare neuromuscular disorders"
         assert superpanel.version == "19.155"
-        assert superpanel.panel_source == None
+        assert superpanel.panel_source is None
 
     def test_children_panel_ids_retrieved_in_superpanel_is_correct(self):
         """
