@@ -831,6 +831,7 @@ class TranscriptReleaseTranscript(models.Model):
 
     class Meta:
         db_table = "transcript_release_link"
+        unique_together = ["transcript", "release"]
 
     def __str__(self):
         return str(self.id)

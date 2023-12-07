@@ -9,6 +9,8 @@ from requests_app.models import (
     PanelSuperPanel,
     PanelGene,
     Transcript,
+    TranscriptRelease,
+    TranscriptReleaseTranscript,
     TestDirectoryRelease,
     ReferenceGenome
 )
@@ -21,7 +23,7 @@ from django.core.management.base import BaseCommand
 from django.core.exceptions import ObjectDoesNotExist
 from .utils import normalize_version, parse_hgnc
 from core.settings import HGNC_IDS_TO_OMIT
-from ._parse_transcript import _parse_reference_genome
+from ._parse_transcript import _parse_reference_genome, _get_latest_transcript_release
 from ._insert_ci import _fetch_latest_td_version
 
 ACCEPTABLE_COMMANDS = ["genepanels", "g2t"]
@@ -358,39 +360,92 @@ class Command(BaseCommand):
                 data = "\t".join(row)
                 f.write(f"{data}\n")
 
+
+    def get_current_transcript_clinical_status_for_g2t(self,
+                                                       transcript: Transcript,
+                                                       mane_select: TranscriptRelease, 
+                                                       mane_plus: TranscriptRelease,
+                                                       hgmd: TranscriptRelease
+                                                       ) -> bool | None:
+        """
+        Finds out whether a transcript is clinical or not, in the most-recent transcript releases.
+        For each release, find entries for the transcript in the linking table.
+        If any of the links are default_clinical=True, this transcript is a 'clinical transcript'
+        Otherwise, this transcript is marked as 'not clinical transcript'
+
+        :param transcript: Transcript instance
+        :param mane_select: the latest MANE Select TranscriptRelease
+        :param mane_plus: the latest MANE Plus Clinical TranscriptRelease
+        :param hgmd: the latest HGMC TranscriptRelease
+        :return: a boolean of whether the transcript is clinical or not (or None if there's no data)
+        """
+        mane_select_link = TranscriptReleaseTranscript.objects.filter(transcript_id=transcript.id,
+                                                                      release_id=mane_select.id)
+        mane_plus_link = TranscriptReleaseTranscript.objects.filter(transcript_id=transcript.id,
+                                                                    release_id=mane_plus.id)
+        hgmd_link = TranscriptReleaseTranscript.objects.filter(transcript_id=transcript.id,
+                                                               release_id=hgmd.id)
+
+        # if there is no data for the transcript at all, return None
+        poss_links = [mane_select_link, mane_plus_link, hgmd_link]
+        if all(link is None for link in poss_links):
+            return None
+        else:
+            # if any of the transcript links is set to default clinical, return True
+            # note we assume 0 or 1 result only, because in the TranscriptReleaseTranscript model,
+            # transcript and release are 'unique_together'
+            clinical = False
+            for link in poss_links:
+                if link and link[0].default_clinical:
+                    clinical = True
+            return clinical
+  
+
     def _generate_g2t(self, output_directory, ref_genome) -> None:
         """
         Main function to generate g2t.tsv
+        Calls the function to get all current transcripts, then formats and writes it to file.
 
         :param output_directory: output directory
         :param ref_genome: ReferenceGenome instance
         """
-        print("Creating g2t file for reference genome: " + str(ref_genome))
-
-
         current_datetime = dt.datetime.today().strftime("%Y%m%d")
+        print(f"Creating g2t file for reference genome {ref_genome.reference_genome} at {current_datetime}")
+
+        # We need the latest releases of the transcript clinical status information
+        latest_select = _get_latest_transcript_release("MANE Select", ref_genome)
+        latest_plus_clinical = _get_latest_transcript_release(
+            "MANE Plus Clinical", ref_genome
+        )
+        latest_hgmd = _get_latest_transcript_release("HGMD", ref_genome)
+
+        if None in [latest_select, latest_plus_clinical, latest_hgmd]:
+            raise ValueError("One or more transcript releases (MANE or HGMD) have not yet been"
+                             " added to the database, so clinical status can't be assessed - aborting")
 
         # We need all transcripts which are linked to the correct reference genome,
         # and are marked as clinical in the most up-to-date transcript sources
-
-        results = (
+        ref_genome_transcripts = (
                 Transcript.objects.order_by("gene_id")
                 .filter(reference_genome=ref_genome)
-                .values("gene_id__hgnc_id", "transcript", "source")
             )
 
-        with open(
-            f"{output_directory}/{current_datetime}_g2t.tsv", "w", newline=""
-        ) as f:
-            writer = csv.writer(f, delimiter="\t", lineterminator="\n")
-            for row in results:
-                writer.writerow(
-                    [
-                        results["gene_id__hgnc_id"],
-                        results["transcript"],
-                        "clinical_transcript" if results.get("source") else "not_clinical_transcript",
-                    ]
+        # Append per-transcript results to a list-of-dictionaries
+        results = []
+
+        for transcript in ref_genome_transcripts:
+            clinical_status = self.get_current_transcript_clinical_status_for_g2t(
+                transcript, latest_select, latest_plus_clinical, latest_hgmd
                 )
+            transcript_data = {"hgnc_id": transcript.gene_id__hgnc_id,
+                               "transcript": transcript.transcript,
+                               "clinical": clinical_status}
+            results.append(transcript_data)
+
+        # Write out results
+        with open(f"{output_directory}/{current_datetime}_g2t.tsv", "w", newline="") as out_file:
+            writer = csv.DictWriter(out_file, delimiter="\t", lineterminator="\n")
+            writer.writerows(results)
 
     def add_arguments(self, parser) -> None:
         """
