@@ -977,7 +977,7 @@ def _check_for_transcript_seeding_version_regression(
 
     error = "\n".join(
         [
-            f"Provided {source} version {input_version} is a lower version than v{latest_db_versions[source]} in the db"
+            f"Provided {source} version {input_version} is a lower version than v{str(latest_db_versions[source])} in the db"
             for source, input_version in input_versions.items()
             if latest_db_versions[source] and Version(input_version) < latest_db_versions[source]
         ]

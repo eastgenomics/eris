@@ -59,15 +59,19 @@ class TestCheckRegressions_OldHgncRelease(TestCase):
         is too old.
         EXPECT: Exception raised with an error for the HGNC release
         """
-        new_hgnc = "1"
+        new_hgnc = "1"  # this one is higher
         new_gff = "1.0"
         new_mane = "2"
         new_hgmd = "2.1"
 
-        with self.assertRaises(ValueError):
+        expected_error = "Abandoning input:\nProvided HGNC version 1 is a lower version than v2 in the db"
+
+        with self.assertRaises(ValueError) as e:
             _check_for_transcript_seeding_version_regression(
                 new_hgnc, new_gff, new_mane, new_hgmd, self.reference_genome
             )
+
+        self.assertEquals(str(e.exception), expected_error)
 
     def test_multiple_old_releases(self):
         """
