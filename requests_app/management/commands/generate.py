@@ -12,7 +12,7 @@ from requests_app.models import (
     TranscriptRelease,
     TranscriptReleaseTranscript,
     TestDirectoryRelease,
-    ReferenceGenome
+    ReferenceGenome,
 )
 import os
 import csv
@@ -358,12 +358,13 @@ class Command(BaseCommand):
                 data = "\t".join(row)
                 f.write(f"{data}\n")
 
-    def get_current_transcript_clinical_status_for_g2t(self,
-                                                       transcript: Transcript,
-                                                       mane_select: TranscriptRelease, 
-                                                       mane_plus: TranscriptRelease,
-                                                       hgmd: TranscriptRelease
-                                                       ) -> bool | None:
+    def get_current_transcript_clinical_status_for_g2t(
+        self,
+        transcript: Transcript,
+        mane_select: TranscriptRelease,
+        mane_plus: TranscriptRelease,
+        hgmd: TranscriptRelease,
+    ) -> bool | None:
         """
         Finds out whether a transcript is clinical or not, in the most-recent transcript releases.
         For each release, find entries for the transcript in the linking table.
@@ -376,12 +377,15 @@ class Command(BaseCommand):
         :param hgmd: the latest HGMC TranscriptRelease
         :return: a boolean of whether the transcript is clinical or not (or None if there's no data)
         """
-        mane_select_link = TranscriptReleaseTranscript.objects.filter(transcript_id=transcript.id,
-                                                                      release_id=mane_select.id)
-        mane_plus_link = TranscriptReleaseTranscript.objects.filter(transcript_id=transcript.id,
-                                                                    release_id=mane_plus.id)
-        hgmd_link = TranscriptReleaseTranscript.objects.filter(transcript_id=transcript.id,
-                                                               release_id=hgmd.id)
+        mane_select_link = TranscriptReleaseTranscript.objects.filter(
+            transcript_id=transcript.id, release_id=mane_select.id
+        )
+        mane_plus_link = TranscriptReleaseTranscript.objects.filter(
+            transcript_id=transcript.id, release_id=mane_plus.id
+        )
+        hgmd_link = TranscriptReleaseTranscript.objects.filter(
+            transcript_id=transcript.id, release_id=hgmd.id
+        )
 
         # if there is no data for the transcript at all, return None
         poss_links = [mane_select_link, mane_plus_link, hgmd_link]
@@ -396,7 +400,6 @@ class Command(BaseCommand):
                 if link and link[0].default_clinical:
                     clinical = True
             return clinical
-  
 
     def _generate_g2t(self, output_directory, ref_genome) -> None:
         """
@@ -407,7 +410,9 @@ class Command(BaseCommand):
         :param ref_genome: ReferenceGenome instance
         """
         start = dt.datetime.now().strftime("%H:%M:%S")
-        print(f"Creating g2t file for reference genome {ref_genome.reference_genome} at {start}")
+        print(
+            f"Creating g2t file for reference genome {ref_genome.reference_genome} at {start}"
+        )
 
         # We need the latest releases of the transcript clinical status information
         latest_select = _get_latest_transcript_release("MANE Select", ref_genome)
@@ -417,15 +422,16 @@ class Command(BaseCommand):
         latest_hgmd = _get_latest_transcript_release("HGMD", ref_genome)
 
         if None in [latest_select, latest_plus_clinical, latest_hgmd]:
-            raise ValueError("One or more transcript releases (MANE or HGMD) have not yet been"
-                             " added to the database, so clinical status can't be assessed - aborting")
+            raise ValueError(
+                "One or more transcript releases (MANE or HGMD) have not yet been"
+                " added to the database, so clinical status can't be assessed - aborting"
+            )
 
         # We need all transcripts which are linked to the correct reference genome,
         # and are marked as clinical in the most up-to-date transcript sources
-        ref_genome_transcripts = (
-                Transcript.objects.order_by("gene_id")
-                .filter(reference_genome=ref_genome)
-            )
+        ref_genome_transcripts = Transcript.objects.order_by("gene_id").filter(
+            reference_genome=ref_genome
+        )
 
         # Append per-transcript results to a list-of-dictionaries
         results = []
@@ -433,17 +439,23 @@ class Command(BaseCommand):
         for transcript in ref_genome_transcripts:
             clinical_status = self.get_current_transcript_clinical_status_for_g2t(
                 transcript, latest_select, latest_plus_clinical, latest_hgmd
-                )
-            transcript_data = {"hgnc_id": transcript.gene.hgnc_id,
-                               "transcript": transcript.transcript,
-                               "clinical": clinical_status}
+            )
+            transcript_data = {
+                "hgnc_id": transcript.gene.hgnc_id,
+                "transcript": transcript.transcript,
+                "clinical": clinical_status,
+            }
             results.append(transcript_data)
 
         # Write out results
         file_time = dt.datetime.today().strftime("%Y%m%d")
         keys = results[0].keys()
-        with open(f"{output_directory}/{file_time}_g2t.tsv", "w", newline="") as out_file:
-            writer = csv.DictWriter(out_file, delimiter="\t", lineterminator="\n", fieldnames=keys)
+        with open(
+            f"{output_directory}/{file_time}_g2t.tsv", "w", newline=""
+        ) as out_file:
+            writer = csv.DictWriter(
+                out_file, delimiter="\t", lineterminator="\n", fieldnames=keys
+            )
             writer.writerows(results)
 
     def add_arguments(self, parser) -> None:
@@ -522,13 +534,12 @@ class Command(BaseCommand):
                     "No reference genome specified, e.g. python manage.py generate g2t --ref_genome GRCh37"
                 )
             parsed_genome = _parse_reference_genome(kwargs.get("ref_genome"))
-            
+
             try:
                 # if the genome is valid, run the controller function, _generate_g2t
                 genome = ReferenceGenome.objects.get(reference_genome=parsed_genome)
                 self._generate_g2t(output_directory, genome)
                 end = dt.datetime.now().strftime("%H:%M:%S")
-                print(f"g2t file created at {output_directory} at {end}")    
+                print(f"g2t file created at {output_directory} at {end}")
             except ObjectDoesNotExist:
                 print("Aborting g2t: reference genome does not exist in the database")
-

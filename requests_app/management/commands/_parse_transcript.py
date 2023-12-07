@@ -929,11 +929,7 @@ def _get_latest_transcript_release(
         reference_genome=ref_genome
     )
 
-    return (
-        max([Version(v.release) for v in tx_releases])
-        if tx_releases
-        else Version("0.0a")
-    )
+    latest = max([Version(v.release) for v in tx_releases]) if tx_releases else None
 
 
 def _check_for_transcript_seeding_version_regression(
@@ -979,7 +975,8 @@ def _check_for_transcript_seeding_version_regression(
         [
             f"Provided {source} version {input_version} is a lower version than v{str(latest_db_versions[source])} in the db"
             for source, input_version in input_versions.items()
-            if latest_db_versions[source] and Version(input_version) < latest_db_versions[source]
+            if latest_db_versions[source]
+            and Version(input_version) < latest_db_versions[source]
         ]
     )
 
@@ -1080,7 +1077,7 @@ def seed_transcripts(
     # add all this information to the database
     tx_starting = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"Start adding transcripts: {tx_starting}")
-    
+
     for hgnc_id, transcripts in gff.items():
         gene = Gene.objects.get(hgnc_id=hgnc_id)
         # get deduplicated transcripts
