@@ -1,4 +1,4 @@
-"""panel_requests URL Configuration
+"""Core URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/3.2/topics/http/urls/
@@ -18,7 +18,7 @@ from django.urls import path, include
 
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.views.generic.base import RedirectView
-from panel_requests.settings import ERIS_SERVER
+from core.settings import ERIS_SERVER
 
 urlpatterns = [
     path("admin/", admin.site.urls),
