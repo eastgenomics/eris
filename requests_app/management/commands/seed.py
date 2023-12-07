@@ -129,7 +129,7 @@ class Command(BaseCommand):
             "--hgnc",
             type=str,
             help="Path to hgnc dump .txt file",
-            default="testing_files/hgnc_dump_20230613.txt",
+            default="testing_files/eris/hgnc_dump_20230613.txt",
         )
         transcript.add_argument(
             "--hgnc_release",
@@ -141,7 +141,7 @@ class Command(BaseCommand):
             "--mane",
             type=str,
             help="Path to mane .csv file",
-            default="testing_files/mane_grch37.csv",
+            default="testing_files/eris/mane_grch37.csv",
         )
         transcript.add_argument(
             "--mane_ext_id",
@@ -159,7 +159,7 @@ class Command(BaseCommand):
             "--gff",
             type=str,
             help="Path to parsed gff .tsv file",
-            default="testing_files/GCF_000001405.25_GRCh37.p13_genomic.exon_5bp_v2.0.0.tsv",
+            default="testing_files/eris/GCF_000001405.25_GRCh37.p13_genomic.exon_5bp_v2.0.0.tsv",
         )
         transcript.add_argument(
             "--gff_release",
@@ -171,7 +171,7 @@ class Command(BaseCommand):
             "--g2refseq",
             type=str,
             help="Path to gene2refseq csv file",
-            default="testing_files/gene2refseq_202306131409.csv",
+            default="testing_files/eris/gene2refseq_202306131409.csv",
         )
         transcript.add_argument(
             "--g2refseq_ext_id",
@@ -183,7 +183,7 @@ class Command(BaseCommand):
             "--markname",
             type=str,
             help="Path to markname csv file",
-            default="testing_files/markname_202306131409.csv",
+            default="testing_files/eris/markname_202306131409.csv",
         )
         transcript.add_argument(
             "--markname_ext_id",

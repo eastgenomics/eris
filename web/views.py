@@ -15,7 +15,7 @@ from .utils.utils import Genepanel
 
 from requests_app.management.commands.history import History
 from requests_app.management.commands.utils import parse_hgnc, normalize_version
-from panel_requests.settings import HGNC_IDS_TO_OMIT
+from core.settings import HGNC_IDS_TO_OMIT
 from requests_app.management.commands._insert_ci import insert_test_directory_data
 
 from requests_app.models import (
@@ -1427,7 +1427,7 @@ def genepanel(request):
     """
 
     # TODO: hard-coded, will become an upload file in the future
-    rnas = parse_hgnc("testing_files/hgnc_dump_20230606_1.txt")
+    rnas = parse_hgnc("testing_files/eris/hgnc_dump_20230606_1.txt")
 
     ci_panels = collections.defaultdict(list)
     panel_genes = collections.defaultdict(list)

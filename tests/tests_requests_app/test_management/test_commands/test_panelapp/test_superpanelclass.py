@@ -40,7 +40,7 @@ class TestSuperPanelClass(TestCase):
         """
         # mocked-out API call
         json_response = mocked_requests_get_superpanel(
-            "testing_files/panelapp_api_mocks/superpanel_api_example_most_genes_removed.json"
+            "testing_files/eris/panelapp_api_mocks/superpanel_api_example_most_genes_removed.json"
         )
         superpanel = SuperPanelClass(**json_response)
 
@@ -58,7 +58,7 @@ class TestSuperPanelClass(TestCase):
 
         # mocked-out API call
         json_response = mocked_requests_get_superpanel(
-            "testing_files/panelapp_api_mocks/superpanel_api_mock.json"
+            "testing_files/eris/panelapp_api_mocks/superpanel_api_mock.json"
         )
         superpanel = SuperPanelClass(**json_response)
 

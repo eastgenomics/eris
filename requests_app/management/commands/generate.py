@@ -20,7 +20,7 @@ import datetime as dt
 from django.core.management.base import BaseCommand
 from django.core.exceptions import ObjectDoesNotExist
 from .utils import normalize_version, parse_hgnc
-from panel_requests.settings import HGNC_IDS_TO_OMIT
+from core.settings import HGNC_IDS_TO_OMIT
 from ._parse_transcript import _parse_reference_genome
 from ._insert_ci import _fetch_latest_td_version
 
