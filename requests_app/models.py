@@ -595,7 +595,7 @@ class HgncRelease(models.Model):
     Defines a particular release of HGNC, the source of gene IDs, symbols, and aliases
     """
 
-    hgnc_release = models.TextField(verbose_name="Hgnc Release", unique=True)
+    release = models.TextField(verbose_name="Hgnc Release", unique=True)
 
     created = models.DateTimeField(
         verbose_name="created",
@@ -843,7 +843,7 @@ class GffRelease(models.Model):
     transcripts. Release versions must be unique for a given reference genome.
     """
 
-    gff_release = models.TextField(verbose_name="Gff Release", unique=True)
+    release = models.TextField(verbose_name="Gff Release", unique=True)
 
     reference_genome = models.ForeignKey(
         ReferenceGenome,
@@ -859,7 +859,7 @@ class GffRelease(models.Model):
 
     class Meta:
         db_table = "gff_release"
-        unique_together = ["gff_release", "reference_genome"]
+        unique_together = ["release", "reference_genome"]
 
     def __str__(self):
         return str(self.id)
