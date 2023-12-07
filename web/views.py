@@ -23,6 +23,7 @@ from requests_app.models import (
     Panel,
     ClinicalIndicationPanel,
     ClinicalIndicationPanelHistory,
+    CiPanelTdRelease,
     ClinicalIndicationTestMethodHistory,
     PanelGene,
     PanelGeneHistory,
@@ -79,16 +80,6 @@ def panel(request, panel_id: int):
         return render(
             request,
             "web/info/panel.html",
-            {
-                "panel": None,
-                "ci_panels": [],
-                "cis": [],
-                "ci_history": [],
-                "pgs": [],
-                "transcripts": [],
-                "panel_pending_approval": None,
-                "ci_panel_pending_approval": None,
-            },
         )
 
     panel.panel_version = (
@@ -100,38 +91,17 @@ def panel(request, panel_id: int):
         ClinicalIndicationPanel
     ] = ClinicalIndicationPanel.objects.filter(
         panel_id=panel.id,
+    ).values(
+        "id",
+        "current",
+        "pending",
+        "clinical_indication_id",
+        "clinical_indication_id__name",
+        "clinical_indication_id__r_code",
     )
-
-    # converting ci-panel version to readable format
-    for cip in ci_panels:
-        cip.td_version = normalize_version(cip.td_version)
-
-    # fetch associated cis
-    cis: QuerySet[ClinicalIndication] = ClinicalIndication.objects.filter(
-        id__in=[cp.clinical_indication_id for cp in ci_panels],
-    )
-
-    # fetch ci-panels history
-    ci_panels_history: QuerySet[
-        ClinicalIndicationPanelHistory
-    ] = ClinicalIndicationPanelHistory.objects.filter(
-        clinical_indication_panel_id__in=[cp.id for cp in ci_panels]
-    ).order_by(
-        "-id"
-    )
-
-    # fetch ci-test-method history
-    ci_test_method_history: QuerySet[
-        ClinicalIndicationTestMethodHistory
-    ] = ClinicalIndicationTestMethodHistory.objects.filter(
-        clinical_indication_id__in=[c.id for c in cis],
-    )
-
-    # combine ci-panels history and ci-test-method history
-    agg_history = list(chain(ci_test_method_history, ci_panels_history))
 
     # fetch genes associated with panel
-    pgs: QuerySet[dict] = (
+    panel_genes: QuerySet[dict] = (
         PanelGene.objects.filter(panel_id=panel_id)
         .values(
             "gene_id",
@@ -142,32 +112,14 @@ def panel(request, panel_id: int):
         .order_by("gene_id__gene_symbol")
     )
 
-    # fetch all transcripts associated with genes in panel
-    all_transcripts: QuerySet[Transcript] = (
-        TranscriptReleaseTranscript.objects.filter(
-            transcript_id__gene_id__in=[p["gene_id"] for p in pgs]
-        )
-        .values(
-            "transcript_id__gene_id__hgnc_id",
-            "transcript_id__transcript",
-            "release_id__source_id__source",
-            "default_clinical",
-        )
-        .order_by("transcript_id__gene_id__hgnc_id", "release_id__source_id__source")
-    )
-
     return render(
         request,
         "web/info/panel.html",
         {
             "panel": panel,
             "ci_panels": ci_panels,
-            "cis": cis,
-            "ci_history": agg_history,
-            "pgs": pgs,
-            "transcripts": all_transcripts,
-            "panel_pending_approval": panel.pending,
-            "ci_panel_pending_approval": any([cp.pending for cp in ci_panels]),
+            "panel_genes": panel_genes,
+            "ci_panel_pending_approval": any([cp["pending"] for cp in ci_panels]),
         },
     )
 
@@ -185,69 +137,25 @@ def clinical_indication(request, ci_id: int):
     try:
         ci: ClinicalIndication = ClinicalIndication.objects.get(id=ci_id)
     except ClinicalIndication.DoesNotExist:
-        return render(
-            request,
-            "web/info/clinical.html",
-            {
-                "ci": None,
-                "ci_panels": [],
-                "panels": [],
-                "ci_history": [],
-                "panel_genes": {},
-                "transcripts": [],
-                "ci_pending_approval": None,
-                "ci_panel_pending_approval": None,
-            },
-        )
+        return render(request, "web/info/clinical_indication.html")
 
     # fetch ci-panels
     # might have multiple panels but only one active
-    ci_panels: QuerySet[ClinicalIndicationPanel] = (
-        ClinicalIndicationPanel.objects.filter(
-            clinical_indication_id=ci_id,
-        )
-        .values(
-            "id",
-            "current",
-            "pending",
-            "config_source",
-            "td_version",
-            "created",
-            "last_updated",
-            "clinical_indication_id",
-            "panel_id",
-            "panel_id__panel_name",
-        )
-        .order_by("-pending")
-    )
-
-    active_panel_ids = [
-        cip["panel_id"]
-        for cip in ci_panels
-        if cip["current"] == True and cip["pending"] == False
-    ]
-
-    # converting version to readable format
-    for cip in ci_panels:
-        cip["td_version"] = normalize_version(cip["td_version"])
-
-    # fetch panels
-    # there might be multiple panels due to multiple ci-panel links
-    panels: QuerySet[Panel] = Panel.objects.filter(
-        id__in=[cp["panel_id"] for cp in ci_panels]
-    )
-
-    # fetch ci-panels history
-    ci_panels_history: QuerySet[
-        ClinicalIndicationPanelHistory
-    ] = ClinicalIndicationPanelHistory.objects.filter(
-        clinical_indication_panel_id__in=[cp["id"] for cp in ci_panels]
-    ).order_by(
-        "-id"
+    ci_panels: QuerySet[
+        ClinicalIndicationPanel
+    ] = ClinicalIndicationPanel.objects.filter(
+        clinical_indication_id=ci_id,
+    ).values(
+        "id",
+        "current",
+        "pending",
+        "clinical_indication_id",
+        "panel_id",
+        "panel_id__panel_name",
     )
 
     # fetch ci-test-method history
-    ci_test_method_history: QuerySet[
+    test_method_history: QuerySet[
         ClinicalIndicationTestMethodHistory
     ] = ClinicalIndicationTestMethodHistory.objects.filter(
         clinical_indication_id=ci_id
@@ -255,20 +163,10 @@ def clinical_indication(request, ci_id: int):
         "-id"
     )
 
-    # combine ci-panels history and ci-test-method history
-    agg_history = list(chain(ci_test_method_history, ci_panels_history))
-
     return render(
         request,
-        "web/info/clinical.html",
-        {
-            "ci": ci,
-            "ci_panels": ci_panels,
-            "panels": panels,
-            "ci_history": agg_history,
-            "ci_pending_approval": ci.pending,
-            "ci_panel_pending_approval": any([cp["pending"] for cp in ci_panels]),
-        },
+        "web/info/clinical_indication.html",
+        {"ci": ci, "ci_panels": ci_panels, "tm_history": test_method_history},
     )
 
 
@@ -537,9 +435,7 @@ def add_ci_panel(request, ci_id: int):
         )
 
 
-def _get_clinical_indication_panel_history() -> (
-    QuerySet[ClinicalIndicationPanelHistory]
-):
+def _get_clinical_indication_panel_history():
     """
     Function to fetch clinical indication panel history with limit
 
@@ -862,39 +758,38 @@ def clinical_indication_panels(request):
     Shows all clinical indication panel links
     """
 
-    # fetch all ci-panel links
-    cips: QuerySet[ClinicalIndicationPanel] = ClinicalIndicationPanel.objects.values(
-        "td_version",
-        "current",
-        "pending",
-        "clinical_indication_id",
-        "clinical_indication_id__name",
-        "clinical_indication_id__r_code",
-        "panel_id",
-        "panel_id__panel_name",
-        "panel_id__panel_version",
-        "panel_id__external_id",
-        "created",
-        "config_source",
-    ).order_by("clinical_indication_id__name")
+    # TODO: ClinicalIndicationSuperPanel?
+    clinical_indication_panels = CiPanelTdRelease.objects.values(
+        "td_release_id__release",
+        "td_release_id__td_source",
+        "td_release_id__config_source",
+        "td_release_id__td_date",
+        "ci_panel_id",
+        "ci_panel_id__current",
+        "ci_panel_id__pending",
+        "ci_panel_id__clinical_indication_id__r_code",
+        "ci_panel_id__clinical_indication_id__name",
+        "ci_panel_id__clinical_indication_id",
+        "ci_panel_id__panel_id",
+        "ci_panel_id__panel_id__panel_name",
+        "ci_panel_id__panel_id__panel_version",
+    ).order_by("ci_panel_id__clinical_indication_id__name")
 
     unique_r_codes: set[str] = set()
 
     # normalize panel and test directory version
-    for cip in cips:
-        cip["td_version"] = normalize_version(cip["td_version"])
-        cip["panel_id__panel_version"] = normalize_version(
-            cip["panel_id__panel_version"]
+    for cp in clinical_indication_panels:
+        cp["ci_panel_id__panel_id__panel_version"] = normalize_version(
+            cp["ci_panel_id__panel_id__panel_version"]
         )
 
-        r_code = cip["clinical_indication_id__r_code"]
-        current = cip["current"]
+        r_code = cp["ci_panel_id__clinical_indication_id__r_code"]
 
         # clinical indication - panel is active but another active
         # same clinical indication - panel link also exists
-        if current:
+        if cp["ci_panel_id__current"]:
             if r_code in unique_r_codes:  # duplicate
-                cip["duplicate"] = True
+                cp["duplicate"] = True
             else:
                 # keep a record of all unique clinical indication - panel link
                 unique_r_codes.add(r_code)
@@ -902,9 +797,7 @@ def clinical_indication_panels(request):
     return render(
         request,
         "web/info/clinical_indication_panels.html",
-        {
-            "cips": cips,
-        },
+        {"cips": clinical_indication_panels},
     )
 
 
@@ -1309,7 +1202,7 @@ def review(request) -> None:
         "active",
     )
 
-    print(panel_gene) # TODO: remove
+    print(panel_gene)  # TODO: remove
 
     for pg in panel_gene:
         pg_history = (
@@ -1349,22 +1242,11 @@ def gene(request, gene_id: int) -> None:
     try:
         gene = Gene.objects.get(id=gene_id)
     except Gene.DoesNotExist:
-        return render(
-            request,
-            "web/info/gene.html",
-            {"gene": None, "panels": [], "transcripts": []},
-        )
+        return render(request, "web/info/gene.html")
 
     associated_panels = PanelGene.objects.filter(gene_id=gene_id).values(
         "panel_id__panel_name",
-        "panel_id__panel_version",
         "panel_id",
-        "panel_id__external_id",
-        "panel_id__panel_source",
-        "panel_id__test_directory",
-        "panel_id__custom",
-        "panel_id__created",
-        "panel_id__pending",
         "active",
     )
 
@@ -1564,7 +1446,7 @@ def genes(request):
     )
 
 
-def genetotranscript(request):
+def genetotranscript(request): # TODO:
     """
     g2t page where user can view all genes and its associated transcripts
     there is a form to allow user to upload g2t to specified dnanexus project
