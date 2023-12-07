@@ -87,7 +87,7 @@ class TestCheckRegressions_OldHgncRelease(TestCase):
         new_mane = "2"
         new_hgmd = "1.9.0"  # too old, uses subversioning
 
-        expected_err = "Abandoning input because: hgnc release is a lower version than 2; gff release is a lower version than 1.0"
+        expected_err = "Abandoning input because: hgnc release is a lower version than 2; hgmd release is a lower version than 2"
         with self.assertRaises(ValueError) as err:
             _check_for_transcript_seeding_version_regression(
                 new_hgnc, new_gff, new_mane, new_hgmd, self.reference_genome

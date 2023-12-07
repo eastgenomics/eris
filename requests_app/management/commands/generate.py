@@ -532,4 +532,3 @@ class Command(BaseCommand):
             except ObjectDoesNotExist:
                 print("Aborting g2t: reference genome does not exist in the database")
 
-            

@@ -930,18 +930,18 @@ def _check_for_transcript_seeding_version_regression(
     latest_gff = _get_latest_gff_release(reference_genome)
 
     # for MANE need to check both Select and Plus Clinical to find the max
-    latest_select = _get_latest_transcript_release("MANE Select", reference_genome).release
+    latest_select = _get_latest_transcript_release("MANE Select", reference_genome)
     latest_plus_clinical = _get_latest_transcript_release(
         "MANE Plus Clinical", reference_genome
-    ).release
+    )
     if latest_plus_clinical and latest_select:
-        manes = [latest_plus_clinical, latest_select]
+        manes = [latest_plus_clinical.release, latest_select.release]
         manes.sort(key=Version, reverse=True)
         latest_mane = str(manes[0])
     else:
         latest_mane = None
 
-    latest_hgmd = _get_latest_transcript_release("HGMD", reference_genome).release
+    latest_hgmd = _get_latest_transcript_release("HGMD", reference_genome)
 
     too_old = {}
 
@@ -954,10 +954,10 @@ def _check_for_transcript_seeding_version_regression(
             too_old["gff release"] = latest_gff
     if latest_mane:
         if Version(str(mane_release)) < Version(latest_mane):
-            too_old["hgnc release"] = latest_hgnc
+            too_old["mane release"] = latest_mane
     if latest_hgmd:
-        if Version(str(hgmd_release)) < Version(latest_hgmd):
-            too_old["gff release"] = latest_gff
+        if Version(str(hgmd_release)) < Version(latest_hgmd.release):
+            too_old["hgmd release"] = latest_hgmd.release
 
     if too_old:
         error = "; ".join(
