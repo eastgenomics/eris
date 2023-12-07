@@ -9,7 +9,12 @@ import re
 from ._insert_panel import panel_insert_controller
 from ._parse_transcript import seed_transcripts
 from ._insert_ci import insert_test_directory_data
-from .panelapp import get_panel, fetch_all_panels
+from .panelapp import (
+    process_all_signed_off_panels,
+    get_specific_version_panel,
+    _fetch_latest_signed_off_version_based_on_panel_id,
+    get_latest_version_panel,
+)
 
 
 from django.core.management.base import BaseCommand
@@ -124,7 +129,7 @@ class Command(BaseCommand):
             "--hgnc",
             type=str,
             help="Path to hgnc dump .txt file",
-            default="testing_files/hgnc_dump_20230613.txt",
+            default="testing_files/eris/hgnc_dump_20230613.txt",
         )
         transcript.add_argument(
             "--hgnc_release",
@@ -136,7 +141,7 @@ class Command(BaseCommand):
             "--mane",
             type=str,
             help="Path to mane .csv file",
-            default="testing_files/mane_grch37.csv",
+            default="testing_files/eris/mane_grch37.csv",
         )
         transcript.add_argument(
             "--mane_ext_id",
@@ -154,7 +159,7 @@ class Command(BaseCommand):
             "--gff",
             type=str,
             help="Path to parsed gff .tsv file",
-            default="testing_files/GCF_000001405.25_GRCh37.p13_genomic.exon_5bp_v2.0.0.tsv",
+            default="testing_files/eris/GCF_000001405.25_GRCh37.p13_genomic.exon_5bp_v2.0.0.tsv",
         )
         transcript.add_argument(
             "--gff_release",
@@ -166,7 +171,7 @@ class Command(BaseCommand):
             "--g2refseq",
             type=str,
             help="Path to gene2refseq csv file",
-            default="testing_files/gene2refseq_202306131409.csv",
+            default="testing_files/eris/gene2refseq_202306131409.csv",
         )
         transcript.add_argument(
             "--g2refseq_ext_id",
@@ -178,7 +183,7 @@ class Command(BaseCommand):
             "--markname",
             type=str,
             help="Path to markname csv file",
-            default="testing_files/markname_202306131409.csv",
+            default="testing_files/eris/markname_202306131409.csv",
         )
         transcript.add_argument(
             "--markname_ext_id",
@@ -209,7 +214,6 @@ class Command(BaseCommand):
         specified source, then calls inserter to insert cleaned data
         into the database."""
 
-        test_mode: bool = kwargs.get("debug", False)
         command: str = kwargs.get("command")
 
         assert command, "Please specify command: panelapp / td / transcript"
@@ -223,42 +227,61 @@ class Command(BaseCommand):
             panel_version: str = kwargs.get("version")
 
             if panel_id == "all":
-                panels, superpanels = fetch_all_panels()
+                # Seeding every panel and superpanel in PanelApp
+                panels, superpanels = process_all_signed_off_panels()
+                panel_insert_controller(panels, superpanels, user)
+                print("Done.")
+
             else:
+                # Seeding single panel or superpanel
                 if not panel_id:
                     raise ValueError("Please specify panel id")
 
-                if not panel_version:
-                    print("Getting latest panel version")
-                else:
-                    print(
-                        f"Getting panel id {panel_id} / panel version {panel_version}"
+                if panel_version:
+                    # parse data from requested current PanelApp panels
+                    panel_data, is_superpanel = get_specific_version_panel(
+                        panel_id, panel_version
                     )
-
-                # parse data from requested current PanelApp panels
-                panel_data, is_superpanel = get_panel(panel_id, panel_version)
+                    if is_superpanel:
+                        # do NOT allow specific versions to be requested for superpanels
+                        # this is because the API does not support correct linking of legacy superpanels with child-panels
+                        raise ValueError(
+                            "Aborting because specific versions of superpanels cannot be requested -"
+                            " to get the most-recently signed-off superpanel, please run the command again without"
+                            " a version"
+                        )
+                else:
+                    # we start by assuming we have a standard panel, and getting the most-recent version
+                    # but if we find out it's a superpanel, we make a second call, to get the latest
+                    # signed-off version instead
+                    panel_data, is_superpanel = get_latest_version_panel(panel_id)
+                    if is_superpanel:
+                        # find latest signed-off superpanel version to use
+                        print(
+                            "Superpanel detected - fetching latest signed-off version"
+                        )
+                        latest_signedoff_panel_version = (
+                            _fetch_latest_signed_off_version_based_on_panel_id(panel_id)
+                        )
+                        panel_data, is_superpanel = get_specific_version_panel(
+                            panel_id, latest_signedoff_panel_version
+                        )
 
                 if not panel_data:
                     print(
                         f"Fetching panel id: {panel_id} version: {panel_version} failed"
                     )
                     raise ValueError("Panel specified does not exist")
-                panel_data.panel_source = "PanelApp"  # manual addition of source
 
-                if is_superpanel:
-                    superpanels = [panel_data]
                 else:
-                    panels = [panel_data]
+                    panel_data.panel_source = "PanelApp"  # manual addition of source
 
-            if not test_mode:
-                # not printing amounts because there are some duplicates now,
-                # due to how superpanels work
-                print("Importing panels into database...")
-
-                # insert panel data into database
-                panel_insert_controller(panels, superpanels, user)
-
-                print("Done.")
+                    print(f"Importing panels into database...")
+                    if is_superpanel:
+                        panel_insert_controller([], [panel_data], user)
+                    else:
+                        panel_insert_controller([panel_data], [], user)
+                    print("Done.")
 
         # python manage.py seed td <input_json> --td_release <td_release_version> <Y/N>
         elif command == "td":
@@ -274,8 +297,7 @@ class Command(BaseCommand):
             with open(input_directory) as reader:
                 json_data = json.load(reader)
 
-            if not test_mode:
-                insert_test_directory_data(json_data, td_release, force)
+            insert_test_directory_data(json_data, td_release, force)
 
         # python manage.py seed transcript --hgnc <path> --hgnc_release <str> --mane <path>
         # --mane_ext_id <str> --mane_release <str> --gff <path> --gff_release <str> --g2refseq <path>
