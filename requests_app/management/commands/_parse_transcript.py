@@ -878,14 +878,14 @@ def _get_latest_gff_release(ref_genome: ReferenceGenome) -> str | None:
 
 def _get_latest_transcript_release(
     source: str, ref_genome: ReferenceGenome
-) -> str | None:
+) -> TranscriptRelease | None:
     """
     Get the latest release in the TranscriptRelease table for a given source
     and reference genome. Return None if the table has no matching results.
 
     :param source: a source string such as 'HGMD', 'MANE Plus Clinical' or 'MANE Select'
     :param reference_genome: a ReferenceGenome object corresponding to user input
-    :returns: string of latest transcript release or None if no database matches
+    :returns: the latest TranscriptRelease, or None if no database matches
     """
     db_results = (
         TranscriptRelease.objects.filter(source__source=source)
@@ -898,7 +898,12 @@ def _get_latest_transcript_release(
         db_results_list = [v.release for v in db_results]
         db_results_list.sort(key=Version, reverse=True)
         latest = str(db_results_list[0])
-        return latest
+        latest_result = TranscriptRelease.objects.get(
+            source__source=source,
+            reference_genome=ref_genome,
+            release=latest
+        )
+        return latest_result
 
 
 def _check_for_transcript_seeding_version_regression(
@@ -925,10 +930,10 @@ def _check_for_transcript_seeding_version_regression(
     latest_gff = _get_latest_gff_release(reference_genome)
 
     # for MANE need to check both Select and Plus Clinical to find the max
-    latest_select = _get_latest_transcript_release("MANE Select", reference_genome)
+    latest_select = _get_latest_transcript_release("MANE Select", reference_genome).release
     latest_plus_clinical = _get_latest_transcript_release(
         "MANE Plus Clinical", reference_genome
-    )
+    ).release
     if latest_plus_clinical and latest_select:
         manes = [latest_plus_clinical, latest_select]
         manes.sort(key=Version, reverse=True)
@@ -936,7 +941,7 @@ def _check_for_transcript_seeding_version_regression(
     else:
         latest_mane = None
 
-    latest_hgmd = _get_latest_transcript_release("HGMD", reference_genome)
+    latest_hgmd = _get_latest_transcript_release("HGMD", reference_genome).release
 
     too_old = {}
 
@@ -1054,6 +1059,7 @@ def seed_transcripts(
     # add all this information to the database
     tx_starting = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"Start adding transcripts: {tx_starting}")
+    
     for hgnc_id, transcripts in gff.items():
         gene = Gene.objects.get(hgnc_id=hgnc_id)
         # get deduplicated transcripts

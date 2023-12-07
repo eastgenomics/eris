@@ -237,8 +237,6 @@ class Command(BaseCommand):
         for r_code, panel_list in ci_panels.items():
             # for each clinical indication
             for panel_dict in panel_list:
-                print(panel_dict.keys())
-
                 # for each panel associated with that clinical indication
                 panel_id: str = panel_dict["ci_superpanel__superpanel__pk"]
                 ci_name: str = panel_dict["ci_superpanel__clinical_indication__name"]
@@ -360,7 +358,6 @@ class Command(BaseCommand):
                 data = "\t".join(row)
                 f.write(f"{data}\n")
 
-
     def get_current_transcript_clinical_status_for_g2t(self,
                                                        transcript: Transcript,
                                                        mane_select: TranscriptRelease, 
@@ -409,8 +406,8 @@ class Command(BaseCommand):
         :param output_directory: output directory
         :param ref_genome: ReferenceGenome instance
         """
-        current_datetime = dt.datetime.today().strftime("%Y%m%d")
-        print(f"Creating g2t file for reference genome {ref_genome.reference_genome} at {current_datetime}")
+        start = dt.datetime.now().strftime("%H:%M:%S")
+        print(f"Creating g2t file for reference genome {ref_genome.reference_genome} at {start}")
 
         # We need the latest releases of the transcript clinical status information
         latest_select = _get_latest_transcript_release("MANE Select", ref_genome)
@@ -437,14 +434,16 @@ class Command(BaseCommand):
             clinical_status = self.get_current_transcript_clinical_status_for_g2t(
                 transcript, latest_select, latest_plus_clinical, latest_hgmd
                 )
-            transcript_data = {"hgnc_id": transcript.gene_id__hgnc_id,
+            transcript_data = {"hgnc_id": transcript.gene.hgnc_id,
                                "transcript": transcript.transcript,
                                "clinical": clinical_status}
             results.append(transcript_data)
 
         # Write out results
-        with open(f"{output_directory}/{current_datetime}_g2t.tsv", "w", newline="") as out_file:
-            writer = csv.DictWriter(out_file, delimiter="\t", lineterminator="\n")
+        file_time = dt.datetime.today().strftime("%Y%m%d")
+        keys = results[0].keys()
+        with open(f"{output_directory}/{file_time}_g2t.tsv", "w", newline="") as out_file:
+            writer = csv.DictWriter(out_file, delimiter="\t", lineterminator="\n", fieldnames=keys)
             writer.writerows(results)
 
     def add_arguments(self, parser) -> None:
@@ -459,6 +458,9 @@ class Command(BaseCommand):
         # mandatory for genepanels generation but not for g2t
 
         parser.add_argument("--hgnc")
+
+        # optional parser for reference genome
+        parser.add_argument("--ref_genome")
 
         # optional parser for output directory
         parser.add_argument("--output")
@@ -514,17 +516,20 @@ class Command(BaseCommand):
 
         # if command is g2t, then generate g2t.tsv
         elif cmd == "g2t":
-            # get the reference genome and standardise it. Error out if this fails.
+            # get the reference genome and standardise it
             if not kwargs["ref_genome"]:
                 raise ValueError(
                     "No reference genome specified, e.g. python manage.py generate g2t --ref_genome GRCh37"
                 )
             parsed_genome = _parse_reference_genome(kwargs.get("ref_genome"))
+            
             try:
-                ref_genome = ReferenceGenome.objects.get(reference_genome=parsed_genome)
+                # if the genome is valid, run the controller function, _generate_g2t
+                genome = ReferenceGenome.objects.get(reference_genome=parsed_genome)
+                self._generate_g2t(output_directory, genome)
+                end = dt.datetime.now().strftime("%H:%M:%S")
+                print(f"g2t file created at {output_directory} at {end}")    
             except ObjectDoesNotExist:
                 print("Aborting g2t: reference genome does not exist in the database")
 
-            self._generate_g2t(output_directory, ref_genome)
-
-            print(f"g2t file created at {output_directory}")
+            
