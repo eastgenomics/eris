@@ -1,7 +1,5 @@
 #!usr/bin/env python
 
-# TODO: deal with PA ids which aren't in the db (looking at you 489) - Panel has been retired!
-
 from django.db import transaction
 from packaging.version import Version
 
