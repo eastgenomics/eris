@@ -16,7 +16,7 @@ import datetime as dt
 
 from django.core.management.base import BaseCommand
 from .utils import normalize_version, parse_hgnc
-from panel_requests.settings import HGNC_IDS_TO_OMIT
+from core.settings import HGNC_IDS_TO_OMIT
 
 ACCEPTABLE_COMMANDS = ["genepanels", "g2t"]
 
