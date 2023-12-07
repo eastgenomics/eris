@@ -921,6 +921,7 @@ def _get_latest_gff_release(ref_genome: ReferenceGenome) -> GffRelease | None:
     else:
         return None
 
+
 def _get_latest_transcript_release(
     source: str, ref_genome: ReferenceGenome
 ) -> TranscriptRelease | None:
@@ -938,15 +939,19 @@ def _get_latest_transcript_release(
 
     latest = max([Version(v.release) for v in tx_releases]) if tx_releases else None
 
-    # A 'unique_together' constraint on "source", "release", "reference_genome" means 
+    # A 'unique_together' constraint on "source", "release", "reference_genome" means
     # we'll either get 1 result or none
-    latest_tx = TranscriptRelease.objects.filter(source__source=source).filter(
-        reference_genome=ref_genome).filter(release=latest)
+    latest_tx = (
+        TranscriptRelease.objects.filter(source__source=source)
+        .filter(reference_genome=ref_genome)
+        .filter(release=latest)
+    )
     if latest_tx:
         return latest_tx[0]
     else:
         return None
-        
+
+
 def _check_for_transcript_seeding_version_regression(
     hgnc_release: str,
     gff_release: str,
@@ -973,7 +978,7 @@ def _check_for_transcript_seeding_version_regression(
         "HGMD": hgmd_release,
     }
 
-    #TODO: this works but make it more sensible
+    # TODO: this works but make it more sensible
     # find the latest releases in the db
     select = _get_latest_transcript_release("MANE Select", reference_genome)
     plus = _get_latest_transcript_release("MANE Plus Clinical", reference_genome)

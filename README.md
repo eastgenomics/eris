@@ -138,11 +138,11 @@ python manage.py generate genepanels --hgnc testing_files/eris/hgnc_dump_2305202
 ## Generate g2t	
 Without output pathway specified:
 ```
-python manage.py generate g2t --ref_genome GRCh37
+python manage.py generate g2t --ref_genome <ref_genome>
 ```
 With output pathway specified:
 ```
-python manage.py generate g2t --ref_genome GRCh37 --output <output pathway>
+python manage.py generate g2t --ref_genome <ref_genome> --output <output pathway>
 ```
 
 # Running unit tests
