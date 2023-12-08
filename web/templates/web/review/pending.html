@@ -4,46 +4,54 @@
 <div class="container mb-5">
     <!-- Success notification -->
     {% if action_cip or action_ci or action_panel or action_pg %}
-        <!-- Depending on what has been approved, show relevant notice -->
-        <!-- Clinical Indication Panel -->
-        {% if action_cip %}
-            {% if approve_bool %}
-            <div class="alert alert-success" role="alert">
-                <a href="{% url 'clinical_indication' action_cip.clinical_indication_id %}">{{ action_cip.clinical_indication_id__r_code }} {{ action_cip.clinical_indication_id__name }}</a> to <a href="{% url 'panel' action_cip.panel_id %}">{{ action_cip.panel_id__panel_name }} v{{ action_cip.panel_id__panel_version }}</a> has been approved!
-            </div>
-            {% else %}
-            <div class="alert alert-danger" role="alert">
-                <a href="{% url 'clinical_indication' action_cip.clinical_indication_id %}">{{ action_cip.clinical_indication_id__r_code }} {{ action_cip.clinical_indication_id__name }}</a> to <a href="{% url 'panel' action_cip.panel_id %}">{{ action_cip.panel_id__panel_name }} v{{ action_cip.panel_id__panel_version }}</a> has been reverted!
-            </div>
-            {% endif %}
-        <!-- Clinical Indication -->
-        {% elif action_ci %}
-            {% if approve_bool %}
-            <div class="alert alert-success" role="alert">
-                <a href="{% url 'clinical_indication' action_ci.id %}">{{ action_ci.name }}</a> has been approved!
-            </div>
-            {% else %}
-            <div class="alert alert-danger" role="alert">
-                Clinical Indication has been removed!
-            </div>
-            {% endif %}
-        <!-- Panel -->
-        {% elif action_panel %}
-            {% if approve_bool %}
-            <div class="alert alert-success" role="alert">
-                <a href="{% url 'panel' action_panel.id %}">{{ action_panel.panel_name }}</a> has been approved!
-            </div>
-            {% else %}
-            <div class="alert alert-danger" role="alert">
-                Panel has been removed!
-            </div>
-            {% endif %}
-        <!-- Panel Gene -->
-        {% elif action_pg %}
-            <div class="alert alert-success" role="alert">
-                Link between <a href="{{ action_pg.panel_id }}">{{ action_pg.panel_id__panel_name }}</a> and <a href="{{ action_pg.gene_id }}">{{ action_pg.gene_id__hgnc_id }}</a> now set to active status: {{ action_pg.active}}!
-            </div>
-        {% endif %}
+    <!-- Depending on what has been approved, show relevant notice -->
+    <!-- Clinical Indication Panel -->
+    {% if action_cip %}
+    {% if approve_bool %}
+    <div class="alert alert-success" role="alert">
+        <a href="{% url 'clinical_indication' action_cip.clinical_indication_id %}">{{
+            action_cip.clinical_indication_id__r_code }} {{ action_cip.clinical_indication_id__name }}</a> to <a
+            href="{% url 'panel' action_cip.panel_id %}">{{ action_cip.panel_id__panel_name }} v{{
+            action_cip.panel_id__panel_version }}</a> has been approved!
+    </div>
+    {% else %}
+    <div class="alert alert-danger" role="alert">
+        <a href="{% url 'clinical_indication' action_cip.clinical_indication_id %}">{{
+            action_cip.clinical_indication_id__r_code }} {{ action_cip.clinical_indication_id__name }}</a> to <a
+            href="{% url 'panel' action_cip.panel_id %}">{{ action_cip.panel_id__panel_name }} v{{
+            action_cip.panel_id__panel_version }}</a> has been reverted!
+    </div>
+    {% endif %}
+    <!-- Clinical Indication -->
+    {% elif action_ci %}
+    {% if approve_bool %}
+    <div class="alert alert-success" role="alert">
+        <a href="{% url 'clinical_indication' action_ci.id %}">{{ action_ci.name }}</a> has been approved!
+    </div>
+    {% else %}
+    <div class="alert alert-danger" role="alert">
+        Clinical Indication has been removed!
+    </div>
+    {% endif %}
+    <!-- Panel -->
+    {% elif action_panel %}
+    {% if approve_bool %}
+    <div class="alert alert-success" role="alert">
+        <a href="{% url 'panel' action_panel.id %}">{{ action_panel.panel_name }}</a> has been approved!
+    </div>
+    {% else %}
+    <div class="alert alert-danger" role="alert">
+        Panel has been removed!
+    </div>
+    {% endif %}
+    <!-- Panel Gene -->
+    {% elif action_pg %}
+    <div class="alert alert-success" role="alert">
+        Link between <a href="{% url 'panel' action_pg.panel_id %}">{{ action_pg.panel_id__panel_name }}</a> and <a
+            href="{% url 'gene' action_pg.gene_id %}">{{ action_pg.gene_id__hgnc_id }}</a> now set to active status: {{
+        action_pg.active}}!
+    </div>
+    {% endif %}
     {% endif %}
     <!-- End notification -->
     <!-- Title -->
@@ -66,15 +74,15 @@
             {% if panels %}
             <table class="table table-bordered shadow">
                 <thead>
-                  <tr>
-                    <th scope="col">Panel Name</th>
-                    <th scope="col">Panel Version</th>
-                    <th scope="col">External ID</th>
-                    <th scope="col">Action</th>
-                  </tr>
+                    <tr>
+                        <th scope="col">Panel Name</th>
+                        <th scope="col">Panel Version</th>
+                        <th scope="col">External ID</th>
+                        <th scope="col">Action</th>
+                    </tr>
                 </thead>
                 <tbody>
-                {% for panel in panels %}
+                    {% for panel in panels %}
                     <tr>
                         <td><a href="{% url 'panel' panel.id %}">{{ panel.panel_name }}</a></td>
                         <td>{{ panel.panel_version }}</td>
@@ -83,21 +91,25 @@
                             <div class="d-flex justify-content-around">
                                 <form action="{% url 'review' %}" method="POST">
                                     {% csrf_token %}
-                                    <input type="text" class="form-control visually-hidden" name="panel_id" value="{{ panel.id }}">
-                                    <input type="text" class="form-control visually-hidden" name="action" value="approve_panel">
+                                    <input type="text" class="form-control visually-hidden" name="panel_id"
+                                        value="{{ panel.id }}">
+                                    <input type="text" class="form-control visually-hidden" name="action"
+                                        value="approve_panel">
                                     <button type="submit" class="btn btn-success btn-sm">Approve</button>
                                 </form>
                                 <!-- ignoring action on ci-panel link -->
                                 <form action="{% url 'review' %}" method="POST">
                                     {% csrf_token %}
-                                    <input type="text" class="form-control visually-hidden" name="panel_id" value="{{ panel.id }}">
-                                    <input type="text" class="form-control visually-hidden" name="action" value="remove_panel">
+                                    <input type="text" class="form-control visually-hidden" name="panel_id"
+                                        value="{{ panel.id }}">
+                                    <input type="text" class="form-control visually-hidden" name="action"
+                                        value="remove_panel">
                                     <button type="submit" class="btn btn-danger btn-sm">Remove</button>
-                                </form>   
+                                </form>
                             </div>
                         </td>
                     </tr>
-                {% endfor %}
+                    {% endfor %}
                 </tbody>
             </table>
             {% else %}
@@ -115,47 +127,53 @@
             {% if cis %}
             <table class="table table-bordered shadow">
                 <thead>
-                  <tr>
-                    <th scope="col">Clinical Indication</th>
-                    <th scope="col">R Code</th>
-                    <th scope="col">Changes</th>
-                    <th scope="col">Action</th>
-                  </tr>
+                    <tr>
+                        <th scope="col">Clinical Indication</th>
+                        <th scope="col">R Code</th>
+                        <th scope="col">Changes</th>
+                        <th scope="col">Action</th>
+                    </tr>
                 </thead>
                 <tbody>
-                {% for ci in cis %}
+                    {% for ci in cis %}
                     <tr>
                         <td><a href="{% url 'clinical_indication' ci.id %}">{{ ci.name }}</a></td>
                         <td>{{ ci.r_code }}</td>
                         {% if ci.reason.note %}
-                            <td>{{ ci.reason.note }}</td>
+                        <td>{{ ci.reason.note }}</td>
                         {% else %}
-                            <td>{{ ci.reason }}</td>
+                        <td>{{ ci.reason }}</td>
                         {% endif %}
                         <td>
                             <div class="d-flex justify-content-around">
                                 <form action="{% url 'review' %}" method="POST">
                                     {% csrf_token %}
-                                    <input type="text" class="form-control visually-hidden" name="ci_id" value="{{ ci.id }}">
-                                    <input type="text" class="form-control visually-hidden" name="action" value="approve_ci">
+                                    <input type="text" class="form-control visually-hidden" name="ci_id"
+                                        value="{{ ci.id }}">
+                                    <input type="text" class="form-control visually-hidden" name="action"
+                                        value="approve_ci">
                                     <button type="submit" class="btn btn-success btn-sm">Approve</button>
                                 </form>
                                 <!-- ignoring action on ci-panel link -->
                                 <form action="{% url 'review' %}" method="POST">
                                     {% csrf_token %}
-                                    <input type="text" class="form-control visually-hidden" name="ci_id" value="{{ ci.id }}">
+                                    <input type="text" class="form-control visually-hidden" name="ci_id"
+                                        value="{{ ci.id }}">
                                     {% if ci.reason == 'New' %}
-                                    <input type="text" class="form-control visually-hidden" name="test_method" value="false">
+                                    <input type="text" class="form-control visually-hidden" name="test_method"
+                                        value="false">
                                     {% else %}
-                                    <input type="text" class="form-control visually-hidden" name="test_method" value="true">
+                                    <input type="text" class="form-control visually-hidden" name="test_method"
+                                        value="true">
                                     {% endif %}
-                                    <input type="text" class="form-control visually-hidden" name="action" value="remove_ci">
+                                    <input type="text" class="form-control visually-hidden" name="action"
+                                        value="remove_ci">
                                     <button type="submit" class="btn btn-danger btn-sm">Remove</button>
-                                </form>   
+                                </form>
                             </div>
                         </td>
                     </tr>
-                {% endfor %}
+                    {% endfor %}
                 </tbody>
             </table>
             {% else %}
@@ -173,18 +191,22 @@
             {% if cips %}
             <table class="table table-bordered shadow">
                 <thead>
-                  <tr>
-                    <th scope="col">Clinical Indication</th>
-                    <th scope="col">Panel</th>
-                    <th scope="col">Pending</th>
-                    <th class="col">Action</th>
-                  </tr>
+                    <tr>
+                        <th scope="col">Clinical Indication</th>
+                        <th scope="col">Panel</th>
+                        <th scope="col">Pending</th>
+                        <th class="col">Action</th>
+                    </tr>
                 </thead>
                 <tbody>
-                {% for cip in cips %}
+                    {% for cip in cips %}
                     <tr>
-                        <td><span class="badge text-bg-primary">{{ cip.clinical_indication_id__r_code }}</span>&nbsp;&nbsp;<a href="{% url 'clinical_indication' cip.clinical_indication_id %}">{{ cip.clinical_indication_id__name }}</a></td>
-                        <td><a href="{% url 'panel' cip.panel_id %}">{{ cip.panel_id__panel_name }}</a> <span class="badge text-bg-info">v{{ cip.panel_id__panel_version }}</span></td>
+                        <td><span class="badge text-bg-primary">{{ cip.clinical_indication_id__r_code
+                                }}</span>&nbsp;&nbsp;<a
+                                href="{% url 'clinical_indication' cip.clinical_indication_id %}">{{
+                                cip.clinical_indication_id__name }}</a></td>
+                        <td><a href="{% url 'panel' cip.panel_id %}">{{ cip.panel_id__panel_name }}</a> <span
+                                class="badge text-bg-info">v{{ cip.panel_id__panel_version }}</span></td>
                         {% if cip.current %}
                         <td><span class="badge text-bg-success">Activation</span></td>
                         {% else %}
@@ -195,21 +217,25 @@
                                 <!-- approving new ci-panel link -->
                                 <form action="{% url 'review' %}" method="POST">
                                     {% csrf_token %}
-                                    <input type="text" class="form-control visually-hidden" name="cip_id" value="{{ cip.id }}">
-                                    <input type="text" class="form-control visually-hidden" name="action" value="approve_cip">
+                                    <input type="text" class="form-control visually-hidden" name="cip_id"
+                                        value="{{ cip.id }}">
+                                    <input type="text" class="form-control visually-hidden" name="action"
+                                        value="approve_cip">
                                     <button type="submit" class="btn btn-success btn-sm">Approve</button>
                                 </form>
                                 <!-- ignoring action on ci-panel link -->
                                 <form action="{% url 'review' %}" method="POST">
                                     {% csrf_token %}
-                                    <input type="text" class="form-control visually-hidden" name="cip_id" value="{{ cip.id }}">
-                                    <input type="text" class="form-control visually-hidden" name="action" value="revert_cip">
+                                    <input type="text" class="form-control visually-hidden" name="cip_id"
+                                        value="{{ cip.id }}">
+                                    <input type="text" class="form-control visually-hidden" name="action"
+                                        value="revert_cip">
                                     <button type="submit" class="btn btn-danger btn-sm">Revert</button>
-                                </form>                                
+                                </form>
                             </div>
                         </td>
                     </tr>
-                {% endfor %}
+                    {% endfor %}
                 </tbody>
             </table>
             {% else %}
@@ -227,18 +253,19 @@
             {% if panel_gene %}
             <table class="table table-bordered shadow">
                 <thead>
-                  <tr>
-                    <th scope="col">Panel</th>
-                    <th scope="col">Gene</th>
-                    <th scope="col">Reason</th>
-                    <th scope="col">Pending</th>
-                    <th scope="col">Action</th>
-                  </tr>
+                    <tr>
+                        <th scope="col">Panel</th>
+                        <th scope="col">Gene</th>
+                        <th scope="col">Reason</th>
+                        <th scope="col">Pending</th>
+                        <th scope="col">Action</th>
+                    </tr>
                 </thead>
                 <tbody>
-                {% for pg in panel_gene %}
+                    {% for pg in panel_gene %}
                     <tr>
-                        <td class="text-break text-wrap" style="max-width: 17em;"><a href="{% url 'panel' pg.panel_id %}">{{ pg.panel_id__panel_name }}</a></td>
+                        <td class="text-break text-wrap" style="max-width: 17em;"><a
+                                href="{% url 'panel' pg.panel_id %}">{{ pg.panel_id__panel_name }}</a></td>
                         <td><a href="{% url 'gene' pg.gene_id %}">{{ pg.gene_id__hgnc_id }}</a></td>
                         <td>{{ pg.reason }}</td>
                         {% if pg.active %}
@@ -251,21 +278,25 @@
                                 <!-- approving new ci-panel link -->
                                 <form action="{% url 'review' %}" method="POST">
                                     {% csrf_token %}
-                                    <input type="text" class="form-control visually-hidden" name="pg_id" value="{{ pg.id }}">
-                                    <input type="text" class="form-control visually-hidden" name="action" value="approve_pg">
+                                    <input type="text" class="form-control visually-hidden" name="pg_id"
+                                        value="{{ pg.id }}">
+                                    <input type="text" class="form-control visually-hidden" name="action"
+                                        value="approve_pg">
                                     <button type="submit" class="btn btn-success btn-sm">Approve</button>
                                 </form>
                                 <!-- ignoring action on ci-panel link -->
                                 <form action="{% url 'review' %}" method="POST">
                                     {% csrf_token %}
-                                    <input type="text" class="form-control visually-hidden" name="pg_id" value="{{ pg.id }}">
-                                    <input type="text" class="form-control visually-hidden" name="action" value="revert_pg">
+                                    <input type="text" class="form-control visually-hidden" name="pg_id"
+                                        value="{{ pg.id }}">
+                                    <input type="text" class="form-control visually-hidden" name="action"
+                                        value="revert_pg">
                                     <button type="submit" class="btn btn-warning btn-sm">Revert</button>
-                                </form>                                
+                                </form>
                             </div>
                         </td>
                     </tr>
-                {% endfor %}
+                    {% endfor %}
                 </tbody>
             </table>
             {% else %}
