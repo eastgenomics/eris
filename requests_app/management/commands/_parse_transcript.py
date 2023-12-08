@@ -978,23 +978,18 @@ def _check_for_transcript_seeding_version_regression(
         "HGMD": hgmd_release,
     }
 
-    # TODO: this works but make it more sensible
     # find the latest releases in the db
     select = _get_latest_transcript_release("MANE Select", reference_genome)
     plus = _get_latest_transcript_release("MANE Plus Clinical", reference_genome)
-    if not select and not plus:
+
+    # pick whichever of select or plus has the highest version (or 'select' if both are the same)
+    # just return None if there aren't versions for either
+    if None not in [select, plus]:
+        max_mane = (select if Version(select.release) >= Version(plus.release) else plus)
+    elif not select and not plus:
         max_mane = None
-    elif not select and plus:
-        max_mane = plus
-    elif not plus and select:
-        max_mane = select
     else:
-        if Version(select.release) > Version(plus.release):
-            max_mane = select
-        elif Version(plus.release) > Version(select.release):
-            max_mane = plus
-        elif Version(select.release) == Version(plus.release):
-            max_mane = select
+        max_mane = (select if select else plus)
 
     latest_db_versions = {
         "HGNC": _get_latest_hgnc_release(),
