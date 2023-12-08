@@ -985,11 +985,11 @@ def _check_for_transcript_seeding_version_regression(
     # pick whichever of select or plus has the highest version (or 'select' if both are the same)
     # just return None if there aren't versions for either
     if None not in [select, plus]:
-        max_mane = (select if Version(select.release) >= Version(plus.release) else plus)
+        max_mane = select if Version(select.release) >= Version(plus.release) else plus
     elif not select and not plus:
         max_mane = None
     else:
-        max_mane = (select if select else plus)
+        max_mane = select if select else plus
 
     latest_db_versions = {
         "HGNC": _get_latest_hgnc_release(),

@@ -138,10 +138,10 @@ class TestCurrentTranscript_NoLinks(TestCase):
             source_id=self.hgmd_source.id,
         )
 
-    def test_no_data(self):
+    def test_no_transcript_data(self):
         """
         CASE: A transcript isn't present in the most recent versions of sources
-        EXPECT: Return True, for clinical, and MANE Select, for source
+        EXPECT: Return None for clinical
         """
         cmd = Command()
         clinical = cmd.get_current_transcript_clinical_status_for_g2t(
