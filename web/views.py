@@ -14,7 +14,10 @@ from .forms import ClinicalIndicationForm, PanelForm, GeneForm
 from .utils.utils import Genepanel
 
 from requests_app.management.commands.history import History
-from requests_app.management.commands.utils import parse_hgnc, normalize_version
+from requests_app.management.commands.utils import (
+    parse_excluded_hgncs_from_file,
+    normalize_version,
+)
 from core.settings import HGNC_IDS_TO_OMIT
 from requests_app.management.commands._insert_ci import insert_test_directory_data
 
@@ -1427,7 +1430,7 @@ def genepanel(request):
     """
 
     # TODO: hard-coded, will become an upload file in the future
-    rnas = parse_hgnc("testing_files/eris/hgnc_dump_20230606_1.txt")
+    rnas = parse_excluded_hgncs_from_file("testing_files/eris/hgnc_dump_20230606_1.txt")
 
     ci_panels = collections.defaultdict(list)
     panel_genes = collections.defaultdict(list)

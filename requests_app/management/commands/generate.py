@@ -18,12 +18,17 @@ import os
 import csv
 import collections
 import datetime as dt
+import pandas as pd
 
 from django.core.management.base import BaseCommand
 from django.core.exceptions import ObjectDoesNotExist
-from .utils import normalize_version, parse_hgnc
+from .utils import normalize_version, parse_excluded_hgncs_from_file
 from core.settings import HGNC_IDS_TO_OMIT
-from ._parse_transcript import _parse_reference_genome, _get_latest_transcript_release
+from ._parse_transcript import (
+    _parse_reference_genome,
+    _get_latest_transcript_release,
+    _sanity_check_cols_exist,
+)
 from ._insert_ci import _fetch_latest_td_version
 
 ACCEPTABLE_COMMANDS = ["genepanels", "g2t"]
@@ -42,25 +47,21 @@ class Command(BaseCommand):
         """
         return os.path.exists(path)
 
-    def _validate_hgnc(self, file_path: str) -> bool:
+    def _validate_hgnc(self, file_path: str) -> bool | None:
         """
-        Validate if hgnc file is valid
+        Validate hgnc file. Returns True if it passes all asserts and has a valid filepath.
+        Returns False or just fails out on AssertionErrors otherwise.
 
         :param file_path: path to hgnc file
 
-        :return: True if hgnc file is valid, False otherwise
+        :return: True if hgnc file is valid, False otherwise (or will AssertionError out)
         """
         if not os.path.isfile(file_path):
             return False
 
-        with open(file_path, "r") as f:
-            header: list[str] = [h.rstrip("\n") for h in f.readline().split("\t")]
-
-            assert "HGNC ID" in header, "HGNC ID column not found in HGNC dump"
-            assert "Locus type" in header, "Locus Type column not found in HGNC dump"
-            assert (
-                "Approved name" in header
-            ), "Approved Name column not found in HGNC dump"
+        hgnc = pd.read_csv(file_path, delimiter="\t")
+        needed_cols = ["HGNC ID", "Locus type", "Approved name"]
+        _sanity_check_cols_exist(hgnc, needed_cols, "HGNC")
 
         return True
 
@@ -192,7 +193,7 @@ class Command(BaseCommand):
         Format a list of results ready for writing out to file.
         Sort the results before returning them.
 
-        :param: ci_panels, a dict linking clinical indications to panels
+        :param: ci_panels, a dict linking clinical indication R codes (keys) to panel info (values)
         :param: panel_genes, a dict linking genes to panel IDs
         :param: rnas, a set of RNAs parsed from HGNC information
 
@@ -204,7 +205,7 @@ class Command(BaseCommand):
             # for each clinical indication
             for panel_dict in panel_list:
                 # for each panel associated with that clinical indication
-                panel_id: str = panel_dict["ci_panel__panel__external_id"]
+                panel_id: str = panel_dict["ci_panel__panel_id"]
                 ci_name: str = panel_dict["ci_panel__clinical_indication_id__name"]
                 for hgnc in panel_genes[panel_id]:
                     # for each gene associated with that panel
@@ -212,19 +213,17 @@ class Command(BaseCommand):
                         continue
 
                     # process the panel version
-                    panel_version: str = (
-                        normalize_version(panel_dict["panel_id__panel_version"])
-                        if panel_dict["panel_id__panel_version"]
-                        else "1.0"
+                    panel_version: str = normalize_version(
+                        panel_dict["ci_panel__panel__panel_version"]
                     )
-                    results.append(
-                        [
-                            f"{r_code}_{ci_name}",
-                            f"{panel_dict['panel_id__panel_name']}_{panel_version}",
-                            hgnc,
-                        ]
-                    )
+                    line = [
+                        f"{r_code}_{ci_name}",
+                        f"{panel_dict['ci_panel__panel__panel_name']}_{panel_version}",
+                        hgnc,
+                    ]
+                    results.append(line)
         results = sorted(results, key=lambda x: [x[0], x[1], x[2]])
+
         return results
 
     # TODO: test
@@ -325,12 +324,12 @@ class Command(BaseCommand):
         else:
             return None
 
-    def _generate_genepanels(self, rnas: set, output_directory: str) -> None:
+    def _generate_genepanels(self, excluded_hgncs: set, output_directory: str) -> None:
         """
         Main function to generate genepanel.tsv, a file containing every clinical indications' genes
         Runs sanity checks, then calls a formatter if these pass
         Outputs the data as a csv, with columns: clinical indication, source panel, and HGNC gene ID.
-        :param rnas: set of rnas
+        :param excluded_hgncs: HGNC loci to exclude from analyses
         :param output_directory: output directory
         """
         print("Creating genepanels file")
@@ -353,10 +352,10 @@ class Command(BaseCommand):
         superpanel_genes = self._get_relevant_superpanel_genes(relevant_superpanels)
 
         panel_results = self._format_output_data_genepanels(
-            ci_panels, panel_genes, rnas
+            ci_panels, panel_genes, excluded_hgncs
         )
         superpanel_results = self._format_output_data_genesuperpanels(
-            ci_superpanels, superpanel_genes, rnas
+            ci_superpanels, superpanel_genes, excluded_hgncs
         )
 
         results = panel_results + superpanel_results
@@ -530,9 +529,9 @@ class Command(BaseCommand):
                 raise ValueError(f'HGNC file: {kwargs["hgnc"]} not valid')
 
             # generate genepanels.tsv
-            rnas = parse_hgnc(kwargs["hgnc"])
+            hgncs_to_exclude = parse_excluded_hgncs_from_file(kwargs["hgnc"])
 
-            self._generate_genepanels(rnas, output_directory)
+            self._generate_genepanels(hgncs_to_exclude, output_directory)
 
             print(f"Genepanel file created at {output_directory}")
 
