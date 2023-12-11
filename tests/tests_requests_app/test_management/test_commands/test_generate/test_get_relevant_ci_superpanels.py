@@ -1,4 +1,5 @@
 from django.test import TestCase
+import collections
 
 from requests_app.models import (
     SuperPanel,
@@ -9,8 +10,6 @@ from requests_app.models import (
 )
 from requests_app.management.commands.generate import Command
 
-
-#TODO: make this test about SuperPanels instead of Panels
 
 class TestGetRelevantCiSuperPanels_Basic(TestCase):
     def setUp(self) -> None:
@@ -74,7 +73,7 @@ class TestGetRelevantCiSuperPanels_Basic(TestCase):
             "R1": [
                 {
                     "ci_superpanel__clinical_indication__r_code": "R1",
-                    "ci_superpanel__clinical_indication_id__name": "Condition 1",
+                    "ci_superpanel__clinical_indication__name": "Condition 1",
                     "ci_superpanel__superpanel__external_id": "109",
                     "ci_superpanel__superpanel__panel_name": "First Panel",
                     "ci_superpanel__superpanel__panel_version": "5",
@@ -83,7 +82,79 @@ class TestGetRelevantCiSuperPanels_Basic(TestCase):
             "R2": [
                 {
                     "ci_superpanel__clinical_indication__r_code": "R2",
-                    "ci_superpanel__clinical_indication_id__name": "Condition 2",
+                    "ci_superpanel__clinical_indication__name": "Condition 2",
+                    "ci_superpanel__superpanel__external_id": "209",
+                    "ci_superpanel__superpanel__panel_name": "Second Panel",
+                    "ci_superpanel__superpanel__panel_version": "2",
+                }
+            ]
+        }
+
+        expected_rel_superpanels = set(["109", "209"])
+
+        self.maxDiff = None
+        self.assertDictEqual(expected_ci_superpanels, ci_superpanels)
+        self.assertEqual(expected_rel_superpanels, relevant_superpanels)
+
+
+    def test_get_relevant_ci_panels_ignore_pending_not_current(self):
+        """
+        CASE: A test directory release is linked to 2 current, not-pending CI-SuperPanels.
+        It is also linked to a non-current CI-SuperPanel and a pending CI-SuperPanel.
+        EXPECT: We get results only for the current not-pending CI-SuperPanels.
+        """
+        # Set up an old and pending Ci-SuperPanel - in addition to the current/not-pending ones
+        # in setUp
+
+        self.panel_old = SuperPanel.objects.create(
+            external_id="309",
+            panel_name="Third Panel",
+            panel_version="2",
+            test_directory=True,
+            custom=False,
+            pending=False,
+        )
+
+        self.cip_3 = ClinicalIndicationSuperPanel.objects.create(
+            clinical_indication=self.ci_1,
+            superpanel=self.panel_old,
+            current=False,
+            pending=False,
+        )
+
+        self.panel_link_pending = SuperPanel.objects.create(
+            external_id="409",
+            panel_name="Fourth Panel",
+            panel_version="2",
+            test_directory=True,
+            custom=False,
+            pending=True,
+        )
+
+        self.cip_4 = ClinicalIndicationSuperPanel.objects.create(
+            clinical_indication=self.ci_1,
+            superpanel=self.panel_link_pending,
+            current=False,
+            pending=True
+        )
+
+        cmd = Command()
+        ci_superpanels, relevant_superpanels = cmd._get_relevant_ci_superpanels(self.td_release)
+
+        expected_ci_superpanels = {
+            "R1": [
+                {
+                    "ci_superpanel__clinical_indication__r_code": "R1",
+                    "ci_superpanel__clinical_indication__name": "Condition 1",
+                    "ci_superpanel__superpanel__external_id": "109",
+                    "ci_superpanel__superpanel__panel_name": "First Panel",
+                    "ci_superpanel__superpanel__panel_version": "5",
+                }
+            ],
+            "R2": [
+                {
+                    "ci_superpanel__clinical_indication__r_code": "R2",
+                    "ci_superpanel__clinical_indication__name": "Condition 2",
                     "ci_superpanel__superpanel__external_id": "209",
                     "ci_superpanel__superpanel__panel_name": "Second Panel",
                     "ci_superpanel__superpanel__panel_version": "2",
@@ -93,5 +164,6 @@ class TestGetRelevantCiSuperPanels_Basic(TestCase):
 
         expected_rel_superpanels = set(["109", "209"])
 
-        self.assertEqual(ci_superpanels, expected_ci_superpanels)
-        self.assertEqual(relevant_superpanels, expected_rel_superpanels)
+        self.maxDiff = None
+        self.assertDictEqual(expected_ci_superpanels, ci_superpanels)
+        self.assertEqual(expected_rel_superpanels, relevant_superpanels)
