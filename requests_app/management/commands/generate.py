@@ -187,7 +187,7 @@ class Command(BaseCommand):
         return superpanel_genes
 
     def _format_output_data_genepanels(
-        self, ci_panels: dict[str, list], panel_genes: dict[int, str], rnas: set
+        self, ci_panels: dict[str, list], panel_genes: dict[int, str], excluded_hgncs: set
     ) -> list[tuple[str, str, str]]:
         """
         Format a list of results ready for writing out to file.
@@ -195,7 +195,7 @@ class Command(BaseCommand):
 
         :param: ci_panels, a dict linking clinical indication R codes (keys) to panel info (values)
         :param: panel_genes, a dict linking genes to panel IDs
-        :param: rnas, a set of RNAs parsed from HGNC information
+        :param: excluded_hgncs, a set of RNAs parsed from HGNC information
 
         :return: a list-of-lists. Each sublist contains a clinical indication,
         panel name, and panel version
@@ -209,7 +209,7 @@ class Command(BaseCommand):
                 ci_name: str = panel_dict["ci_panel__clinical_indication_id__name"]
                 for hgnc in panel_genes[panel_id]:
                     # for each gene associated with that panel
-                    if hgnc in HGNC_IDS_TO_OMIT or hgnc in rnas:
+                    if hgnc in HGNC_IDS_TO_OMIT or hgnc in excluded_hgncs:
                         continue
 
                     # process the panel version
@@ -226,9 +226,8 @@ class Command(BaseCommand):
 
         return results
 
-    # TODO: test
     def _format_output_data_genesuperpanels(
-        self, ci_panels: dict[str, list], panel_genes: dict[int, str], rnas: set
+        self, ci_panels: dict[str, list], panel_genes: dict[int, str], excluded_hgncs: set
     ) -> list[tuple[str, str, str]]:
         """
         Format a list of results ready for writing out to file.
@@ -236,7 +235,7 @@ class Command(BaseCommand):
 
         :param: ci_panels, a dict linking clinical indications to superpanels
         :param: panel_genes, a dict linking genes to superpanel IDs
-        :param: rnas, a set of RNAs parsed from HGNC information
+        :param: excluded_hgncs, a set of RNAs parsed from HGNC information
 
         :return: a list-of-lists. Each sublist contains a clinical indication,
         superpanel name, and superpanel version
@@ -246,12 +245,12 @@ class Command(BaseCommand):
             # for each clinical indication
             for panel_dict in panel_list:
                 # for each panel associated with that clinical indication
-                panel_id: str = panel_dict["ci_superpanel__superpanel__pk"]
+                panel_id: str = panel_dict["ci_superpanel__superpanel"]
                 ci_name: str = panel_dict["ci_superpanel__clinical_indication__name"]
 
                 for hgnc in panel_genes[panel_id]:
                     # for each gene associated with that panel
-                    if hgnc in HGNC_IDS_TO_OMIT or hgnc in rnas:
+                    if hgnc in HGNC_IDS_TO_OMIT or hgnc in excluded_hgncs:
                         continue
 
                     # process the panel version
@@ -273,7 +272,6 @@ class Command(BaseCommand):
         results = sorted(results, key=lambda x: [x[0], x[1], x[2]])
         return results
 
-    # TODO: test _block_genepanels
     def _block_genepanels_if_db_not_ready(self) -> str | None:
         """
         Check that there's no Pending data in tables linking CIs to panels,
