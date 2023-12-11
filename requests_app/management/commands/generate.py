@@ -74,7 +74,7 @@ class Command(BaseCommand):
 
         :return: ci_panels, a dict containing R codes as keys, with lists
         of clinical indication-panel information provided as keys
-        :return: relevant_panels [set], a set of relevant panel IDs
+        :return: relevant_panels [set], a set of relevant panel primary IDs
         """
         relevant_panels = set()
 
@@ -86,11 +86,12 @@ class Command(BaseCommand):
         ).values(
             "ci_panel__clinical_indication__r_code",
             "ci_panel__clinical_indication_id__name",
+            "ci_panel__panel_id",
             "ci_panel__panel__external_id",
             "ci_panel__panel__panel_name",
             "ci_panel__panel__panel_version",
         ):
-            relevant_panels.add(row["ci_panel__panel__external_id"])
+            relevant_panels.add(row["ci_panel__panel_id"])
             ci_panels[row["ci_panel__clinical_indication__r_code"]].append(row)
 
         return ci_panels, relevant_panels
@@ -105,7 +106,7 @@ class Command(BaseCommand):
 
         :return: ci_superpanels, a dict containing R codes as keys, with lists
         of clinical indication-superpanel information provided as keys
-        :return: relevant_panels [set], a set of relevant superpanel IDs
+        :return: relevant_panels [set], a set of relevant superpanel primary IDs
         """
         relevant_panels = set()
 
@@ -118,11 +119,12 @@ class Command(BaseCommand):
         ).values(
             "ci_superpanel__clinical_indication__r_code",
             "ci_superpanel__clinical_indication__name",
+            "ci_superpanel__superpanel",
             "ci_superpanel__superpanel__external_id",
             "ci_superpanel__superpanel__panel_name",
             "ci_superpanel__superpanel__panel_version",
         ):
-            relevant_panels.add(row["ci_superpanel__superpanel__external_id"])
+            relevant_panels.add(row["ci_superpanel__superpanel"])
             ci_panels[row["ci_superpanel__clinical_indication__r_code"]].append(row)
 
         return ci_panels, relevant_panels

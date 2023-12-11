@@ -73,6 +73,7 @@ class TestGetRelevantCiPanels_Basic(TestCase):
                 {
                     "ci_panel__clinical_indication__r_code": "R1",
                     "ci_panel__clinical_indication_id__name": "Condition 1",
+                    "ci_panel__panel_id": self.panel_1.pk,
                     "ci_panel__panel__external_id": "109",
                     "ci_panel__panel__panel_name": "First Panel",
                     "ci_panel__panel__panel_version": "5",
@@ -82,6 +83,7 @@ class TestGetRelevantCiPanels_Basic(TestCase):
                 {
                     "ci_panel__clinical_indication__r_code": "R2",
                     "ci_panel__clinical_indication_id__name": "Condition 2",
+                    "ci_panel__panel_id": self.panel_2.pk,
                     "ci_panel__panel__external_id": "209",
                     "ci_panel__panel__panel_name": "Second Panel",
                     "ci_panel__panel__panel_version": "2",
@@ -89,7 +91,7 @@ class TestGetRelevantCiPanels_Basic(TestCase):
             ],
         }
 
-        expected_rel_panels = set(["109", "209"])
+        expected_rel_panels = set([self.panel_1.pk, self.panel_2.pk])
 
         self.assertEqual(expected_ci_panels, ci_panels)
         self.assertEqual(expected_rel_panels, relevant_panels)
@@ -131,7 +133,7 @@ class TestGetRelevantCiPanels_Basic(TestCase):
             clinical_indication=self.ci_1,
             panel=self.panel_link_pending,
             current=False,
-            pending=True
+            pending=True,
         )
 
         # Run the test
@@ -144,6 +146,7 @@ class TestGetRelevantCiPanels_Basic(TestCase):
                 {
                     "ci_panel__clinical_indication__r_code": "R1",
                     "ci_panel__clinical_indication_id__name": "Condition 1",
+                    "ci_panel__panel_id": self.panel_1.pk,
                     "ci_panel__panel__external_id": "109",
                     "ci_panel__panel__panel_name": "First Panel",
                     "ci_panel__panel__panel_version": "5",
@@ -153,6 +156,7 @@ class TestGetRelevantCiPanels_Basic(TestCase):
                 {
                     "ci_panel__clinical_indication__r_code": "R2",
                     "ci_panel__clinical_indication_id__name": "Condition 2",
+                    "ci_panel__panel_id": self.panel_2.pk,
                     "ci_panel__panel__external_id": "209",
                     "ci_panel__panel__panel_name": "Second Panel",
                     "ci_panel__panel__panel_version": "2",
@@ -160,7 +164,7 @@ class TestGetRelevantCiPanels_Basic(TestCase):
             ],
         }
 
-        expected_rel_panels = set(["109", "209"])
+        expected_rel_panels = set([self.panel_1.pk, self.panel_2.pk])
 
         self.assertEqual(expected_ci_panels, ci_panels)
         self.assertEqual(expected_rel_panels, relevant_panels)
