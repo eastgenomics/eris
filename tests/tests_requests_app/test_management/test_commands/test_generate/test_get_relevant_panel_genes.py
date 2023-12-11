@@ -9,19 +9,13 @@ class TestGetRelevantPanelGenes(TestCase):
         # Make some panels, genes, and links between them
         # Some are not active, some are active
         self.gene_1 = Gene.objects.create(
-            hgnc_id="HGNC:910",
-            gene_symbol="YFG1",
-            alias_symbols="YFG,ETC"
+            hgnc_id="HGNC:910", gene_symbol="YFG1", alias_symbols="YFG,ETC"
         )
         self.gene_2 = Gene.objects.create(
-            hgnc_id="HGNC:911",
-            gene_symbol="YFG2",
-            alias_symbols="YFG"
+            hgnc_id="HGNC:911", gene_symbol="YFG2", alias_symbols="YFG"
         )
         self.gene_3 = Gene.objects.create(
-            hgnc_id="HGNC:912",
-            gene_symbol="YFG3",
-            alias_symbols=None
+            hgnc_id="HGNC:912", gene_symbol="YFG3", alias_symbols=None
         )
 
         self.panel = Panel.objects.create(
@@ -31,10 +25,10 @@ class TestGetRelevantPanelGenes(TestCase):
             panel_version="5",
             test_directory=False,
             custom=False,
-            pending=False
+            pending=False,
         )
 
-        #only some PanelGene links are active and NOT pending - one is not Active, one is Pending
+        # only some PanelGene links are active and NOT pending - one is not Active, one is Pending
         self.pg_1 = PanelGene.objects.create(
             panel=self.panel,
             gene=self.gene_1,
@@ -43,7 +37,7 @@ class TestGetRelevantPanelGenes(TestCase):
             penetrance=None,
             justification="test",
             active=True,
-            pending=False
+            pending=False,
         )
         self.pg_2 = PanelGene.objects.create(
             panel=self.panel,
@@ -52,8 +46,8 @@ class TestGetRelevantPanelGenes(TestCase):
             mop=None,
             penetrance=None,
             justification="test",
-            active=False, # note not active
-            pending=False
+            active=False,  # note not active
+            pending=False,
         )
         self.pg_3 = PanelGene.objects.create(
             panel=self.panel,
@@ -63,7 +57,7 @@ class TestGetRelevantPanelGenes(TestCase):
             penetrance=None,
             justification="test",
             active=True,
-            pending=True # note pending
+            pending=True,  # note pending
         )
 
     def test_only_active_nonpending_genes_retrieved(self):
@@ -73,11 +67,7 @@ class TestGetRelevantPanelGenes(TestCase):
         """
         cmd = Command()
 
-        expected_panel_genes = {
-            self.panel.id: [
-                "HGNC:910"
-            ]
-        }
+        expected_panel_genes = {self.panel.id: ["HGNC:910"]}
 
         actual_panel_genes = cmd._get_relevant_panel_genes([self.panel.pk])
 

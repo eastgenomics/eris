@@ -134,7 +134,7 @@ class Command(BaseCommand):
         Using a list of relevant panels,
         retrieve the genes from those panels from the PanelGene database.
         Skip genes that are Pending, or not Active.
-        
+
         :param: relevant_panels [list[int]], a set of IDs of Panel objects
         which will be used to retrieve those panels' genes from the db
         :returns: panel_genes, a dict containing panel ID as keys and
@@ -145,7 +145,7 @@ class Command(BaseCommand):
         for row in PanelGene.objects.filter(
             panel__pk__in=relevant_panels,
             active=True,
-            pending=False # only fetch active, not-pending panel-gene links
+            pending=False,  # only fetch active, not-pending panel-gene links
         ).values("gene__hgnc_id", "panel__id"):
             panel_genes[row["panel__id"]].append(row["gene__hgnc_id"])
 
@@ -176,7 +176,7 @@ class Command(BaseCommand):
                 superpanel__id=superpanel_id
             ).values("panel__id"):
                 constituent_panels.append(linked_panel["panel__id"])
-            
+
             # for the linked panels, get linked genes, link to SuperPanel's ID
             panels_genes = self._get_relevant_panel_genes(constituent_panels)
             for panel_id, genes in panels_genes.items():
