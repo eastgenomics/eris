@@ -187,7 +187,10 @@ class Command(BaseCommand):
         return superpanel_genes
 
     def _format_output_data_genepanels(
-        self, ci_panels: dict[str, list], panel_genes: dict[int, str], excluded_hgncs: set
+        self,
+        ci_panels: dict[str, list],
+        panel_genes: dict[int, str],
+        excluded_hgncs: set,
     ) -> list[tuple[str, str, str]]:
         """
         Format a list of results ready for writing out to file.
@@ -227,7 +230,10 @@ class Command(BaseCommand):
         return results
 
     def _format_output_data_genesuperpanels(
-        self, ci_panels: dict[str, list], panel_genes: dict[int, str], excluded_hgncs: set
+        self,
+        ci_panels: dict[str, list],
+        panel_genes: dict[int, str],
+        excluded_hgncs: set,
     ) -> list[tuple[str, str, str]]:
         """
         Format a list of results ready for writing out to file.
