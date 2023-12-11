@@ -118,11 +118,11 @@ class Command(BaseCommand):
         ).values(
             "ci_superpanel__clinical_indication__r_code",
             "ci_superpanel__clinical_indication__name",
-            "ci_superpanel__superpanel__pk",
+            "ci_superpanel__superpanel__external_id",
             "ci_superpanel__superpanel__panel_name",
             "ci_superpanel__superpanel__panel_version",
         ):
-            relevant_panels.add(row["ci_superpanel__superpanel__pk"])
+            relevant_panels.add(row["ci_superpanel__superpanel__external_id"])
             ci_panels[row["ci_superpanel__clinical_indication__r_code"]].append(row)
 
         return ci_panels, relevant_panels
