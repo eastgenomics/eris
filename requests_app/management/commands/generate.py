@@ -155,9 +155,9 @@ class Command(BaseCommand):
         self, relevant_superpanels: list[int]
     ) -> dict[int, str]:
         """
-        Using a list of relevant superpanels,
-        first find the constituent panels,
+        Using a list of relevant superpanels, first find the constituent panels,
         then retrieve the genes from those panels from the PanelGene database.
+
         Returns a dict where the key is the superpanel's ID and the values are
         lists of genes.
 
@@ -166,20 +166,22 @@ class Command(BaseCommand):
         :returns: superpanel_genes, a dict containing superpanel ID as keys, and
         gene information for the child-panels in the values
         """
-        superpanel_genes = collections.defaultdict(list)
+        # set prevents duplicates
+        superpanel_genes = collections.defaultdict(set)
 
         for superpanel_id in relevant_superpanels:
+            # find all linked panels and add their ids to a list
             constituent_panels = []
-            linked_panel_list = PanelSuperPanel.objects.filter(
+            for linked_panel in PanelSuperPanel.objects.filter(
                 superpanel__id=superpanel_id
-            )
-            for i in linked_panel_list:
-                constituent_panels.append(i.panel)
+            ).values("panel__id"):
+                constituent_panels.append(linked_panel["panel__id"])
             
-            #TODO: rewrites down here will need testing!
+            # for the linked panels, get linked genes, link to SuperPanel's ID
             panels_genes = self._get_relevant_panel_genes(constituent_panels)
-            for panel in panels_genes:
-                superpanel_genes[superpanel_id].append(panel["gene_id__hgnc_id"])
+            for panel_id, genes in panels_genes.items():
+                for gene in genes:
+                    superpanel_genes[superpanel_id].add(gene)
 
         return superpanel_genes
 
