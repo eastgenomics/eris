@@ -133,7 +133,8 @@ class Command(BaseCommand):
         """
         Using a list of relevant panels,
         retrieve the genes from those panels from the PanelGene database.
-
+        Skip genes that are Pending, or not Active.
+        
         :param: relevant_panels [list[int]], a set of IDs of Panel objects
         which will be used to retrieve those panels' genes from the db
         :returns: panel_genes, a dict containing panel ID as keys and
@@ -142,10 +143,11 @@ class Command(BaseCommand):
         panel_genes = collections.defaultdict(list)
 
         for row in PanelGene.objects.filter(
-            panel_id__in=relevant_panels,
-            active=True,  # only fetch active panel-gene links
-        ).values("gene_id__hgnc_id", "panel_id"):
-            panel_genes[row["panel_id"]].append(row["gene_id__hgnc_id"])
+            panel__pk__in=relevant_panels,
+            active=True,
+            pending=False # only fetch active, not-pending panel-gene links
+        ).values("gene__hgnc_id", "panel__id"):
+            panel_genes[row["panel__id"]].append(row["gene__hgnc_id"])
 
         return panel_genes
 
@@ -167,15 +169,17 @@ class Command(BaseCommand):
         superpanel_genes = collections.defaultdict(list)
 
         for superpanel_id in relevant_superpanels:
+            constituent_panels = []
             linked_panel_list = PanelSuperPanel.objects.filter(
                 superpanel__id=superpanel_id
             )
             for i in linked_panel_list:
-                genes = PanelGene.objects.filter(panel=i.panel).values(
-                    "gene_id__hgnc_id", "panel_id"
-                )
-                for x in genes:
-                    superpanel_genes[superpanel_id].append(x["gene_id__hgnc_id"])
+                constituent_panels.append(i.panel)
+            
+            #TODO: rewrites down here will need testing!
+            panels_genes = self._get_relevant_panel_genes(constituent_panels)
+            for panel in panels_genes:
+                superpanel_genes[superpanel_id].append(panel["gene_id__hgnc_id"])
 
         return superpanel_genes
 
