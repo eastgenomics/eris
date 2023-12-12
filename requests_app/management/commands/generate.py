@@ -361,6 +361,9 @@ class Command(BaseCommand):
         )
 
         results = panel_results + superpanel_results
+        # run 'sort' again so that the panels and superpanels can be mixed in together
+        # though note due to being on strings, 'sort' isn't version-sensitive for R codes (e.g. R100 shows up before R29)
+        results = sorted(results, key=lambda x: [x[0], x[1], x[2]])
 
         current_datetime = dt.datetime.today().strftime("%Y%m%d")
 
@@ -438,8 +441,7 @@ class Command(BaseCommand):
                 " added to the database, so clinical status can't be assessed - aborting"
             )
 
-        # We need all transcripts which are linked to the correct reference genome,
-        # and are marked as clinical in the most up-to-date transcript sources
+        # We need all transcripts which are linked to the correct reference genome
         ref_genome_transcripts = Transcript.objects.order_by("gene_id").filter(
             reference_genome=ref_genome
         )
