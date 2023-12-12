@@ -1,6 +1,14 @@
 from django.test import TestCase
 
 from requests_app.management.commands.generate import Command
+from requests_app.models import (
+    Panel,
+    SuperPanel,
+    ClinicalIndication,
+    ClinicalIndicationPanel,
+    ClinicalIndicationSuperPanel,
+    TestDirectoryRelease,
+)
 
 
 class TestBlockGenepanels_BlankDb(TestCase):
@@ -13,28 +21,101 @@ class TestBlockGenepanels_BlankDb(TestCase):
         cmd = Command()
         actual_errs = cmd._block_genepanels_if_db_not_ready()
         expected_errs = (
-            "ClinicalIndicationPanel table is empty, run: python manage.py "
+            "ClinicalIndicationPanel table is empty or contains no current entries, run: python manage.py "
             "seed td <td.json>; Test Directory has not yet been imported, run: "
             "python manage.py seed td <td.json>"
         )
         self.assertEqual(expected_errs, actual_errs)
 
 
-class TestBlockGenepanels_PendingPanels(TestCase):
-    """
-    CASE: There are CI-Panel entries and TestDirectoryReleases in the db, but
-    some panels are set to pending=True
-    EXPECT: Return an error warning the user that pending panels need resolving
-    """
+class TestBlockGenepanels_PendingCiPanels(TestCase):
+    def setUp(self) -> None:
+        TestDirectoryRelease.objects.create(
+            release="8", td_source="xlsx", config_source="json", td_date="2023_04_13"
+        )
+        self.panel = Panel.objects.create(
+            external_id="5",
+            panel_source="TD",
+            panel_name="My Panel",
+            panel_version="5",
+            test_directory=True,
+            custom=False,
+            pending=False,
+        )
+        self.ci = ClinicalIndication.objects.create(
+            r_code="", name="", test_method="ngs", pending=False
+        )
+        self.cip = ClinicalIndicationPanel.objects.create(
+            panel=self.panel, clinical_indication=self.ci, current=True, pending=True
+        )
 
-    # TODO: write test case
+    def test_pending_ci_panel_errors(self):
+        """
+        CASE: There are CI-Panel entries and TestDirectoryReleases in the db, but
+        some CI-Panels are set to pending=True
+        EXPECT: Return an error warning the user that pending ci-panels need resolving
+        """
+        cmd = Command()
+        actual_err = cmd._block_genepanels_if_db_not_ready()
+        expected_err = (
+            "Some ClinicalIndicationPanel table values require manual review. "
+            "Please resolve these through the review platform and try again"
+        )
+        self.assertEqual(expected_err, actual_err)
 
 
 class TestBlockGenepanels_PendingSuperPanels(TestCase):
     """
     CASE: There are CI-Panel entries and TestDirectoryReleases in the db, but
-    some panels are set to pending=True
-    EXPECT: Return an error warning the user that pending panels need resolving
+    some CI-Superpanels are set to pending=True
+    EXPECT: Return an error warning the user that pending ci-superpanels need resolving
     """
 
-    # TODO: write test case
+    def setUp(self) -> None:
+        TestDirectoryRelease.objects.create(
+            release="8", td_source="xlsx", config_source="json", td_date="2023_04_13"
+        )
+        self.panel = Panel.objects.create(
+            external_id="5",
+            panel_source="TD",
+            panel_name="My Panel",
+            panel_version="5",
+            test_directory=True,
+            custom=False,
+            pending=False,
+        )
+        self.superpanel = SuperPanel.objects.create(
+            external_id="10",
+            panel_source="TD",
+            panel_name="My SuperPanel",
+            panel_version="2",
+            test_directory=True,
+            custom=False,
+            pending=False,
+        )
+        self.ci = ClinicalIndication.objects.create(
+            r_code="", name="", test_method="ngs", pending=False
+        )
+        self.cip = ClinicalIndicationPanel.objects.create(
+            panel=self.panel, clinical_indication=self.ci, current=True, pending=False
+        )
+        self.cisp = ClinicalIndicationSuperPanel.objects.create(
+            superpanel=self.superpanel,
+            clinical_indication=self.ci,
+            current=True,
+            pending=True,
+        )
+
+    def test_pending_ci_superpanel_errors(self):
+        """
+        CASE: There are CI-Panel entries and TestDirectoryReleases in the db, but
+        some CI-SuperPanels are set to pending=True
+        EXPECT: Return an error warning the user that pending ci-superpanels need resolving
+        """
+        cmd = Command()
+        actual_err = cmd._block_genepanels_if_db_not_ready()
+        expected_err = (
+            "Some ClinicalIndicationSuperPanel table values require manual review. "
+            "Please resolve these through the review platform and try again"
+        )
+        self.assertEqual(expected_err, actual_err)
