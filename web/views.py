@@ -543,7 +543,7 @@ def add_ci_panel(request):
             cip_instance.save()
 
             ClinicalIndicationPanelHistory.objects.create(
-                clinical_indication_id=cip_instance.id,
+                clinical_indication_panel=cip_instance.id,
                 note=History.clinical_indication_panel_created(),
             )
 
