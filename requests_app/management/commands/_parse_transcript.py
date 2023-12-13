@@ -4,6 +4,7 @@ import collections
 import re
 from django.db import transaction
 from packaging.version import Version
+import copy
 
 pd.options.mode.chained_assignment = None  # default='warn'
 import datetime
@@ -682,9 +683,7 @@ def _transcript_assign_to_source(
     # First, find the transcript in the MANE file data
     # Note that data in MANE can be Plus Clinical or Select
     mane_exact_match = [d for d in mane_data if d["RefSeq"] == tx]
-    mane_base_match = [
-        d for d in mane_data if re.sub(r"\.[\d]+$", "", d["RefSeq"]) == tx_base
-    ]
+    mane_base_match = [d for d in mane_data if d["RefSeq_versionless"] == tx]
 
     relevant_panels = PanelGene.objects.filter(gene__hgnc_id=hgnc_id)
 
@@ -987,6 +986,17 @@ def _check_for_transcript_seeding_version_regression(
     if error:
         raise ValueError("Abandoning input:\n" + error)
 
+def _add_versionless_column_to_mane_data(mane):
+    """
+    Add a column to the MANE data which contains "RefSeq" with the version stripped off
+    This helps with transcript-matching in later steps.
+
+    :param: mane, the parsed contents of the MANE reference file
+    :return: mane, but with a new column, RefSeq_versionless
+    """
+    for i in mane:
+        i["RefSeq_versionless"] = re.sub(r"\.[\d]+$", "", i["RefSeq"])
+    return mane
 
 # 'atomic' should ensure that any failure rolls back the entire attempt to seed
 # transcripts - resetting the database to its start position
@@ -1081,6 +1091,11 @@ def seed_transcripts(
     # add all this information to the database
     tx_starting = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"Start adding transcripts: {tx_starting}")
+
+    # make a 'versionless' copy of the MANE data now, rather than having to run re.sub over and 
+    # over again inside _transcript_assign_to_source
+    mane_data = _add_versionless_column_to_mane_data(mane_data)
+
     for hgnc_id, transcripts in gff.items():
         gene = Gene.objects.get(hgnc_id=hgnc_id)
         # get deduplicated transcripts
