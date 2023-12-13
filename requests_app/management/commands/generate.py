@@ -541,8 +541,10 @@ class Command(BaseCommand):
             try:
                 # if the genome is valid, run the controller function, _generate_g2t
                 genome = ReferenceGenome.objects.get(reference_genome=parsed_genome)
-                self._generate_g2t(output_directory, genome)
-                end = dt.datetime.now().strftime("%H:%M:%S")
-                print(f"g2t file created at {output_directory} at {end}")
             except ObjectDoesNotExist:
-                print("Aborting g2t: reference genome does not exist in the database")
+                raise ObjectDoesNotExist("Aborting g2t: reference genome does not exist in the database")
+                
+            self._generate_g2t(output_directory, genome)
+            end = dt.datetime.now().strftime("%H:%M:%S")
+            print(f"g2t file created at {output_directory} at {end}")
+            
