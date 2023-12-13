@@ -645,7 +645,7 @@ def _get_clin_transcript_from_hgmd_files(
 
     return hgmd_base, None
 
-
+#TODO: _transcript_assign_to_source is a major chokepoint on cProfile
 def _transcript_assign_to_source(
     tx: str,
     hgnc_id: str,
@@ -686,12 +686,14 @@ def _transcript_assign_to_source(
         d for d in mane_data if re.sub(r"\.[\d]+$", "", d["RefSeq"]) == tx_base
     ]
 
+    relevant_panels = PanelGene.objects.filter(gene__hgnc_id=hgnc_id)
+
     if mane_exact_match:
         if len(mane_exact_match) > 1:
-            # check if we really need this transcript, because there's Panel-Gene
-            # it's relevant to. If yes, throw an error, otherwise, just skip it
-            rel_panels = PanelGene.objects.filter(gene__hgnc_id=hgnc_id)
-            if len(rel_panels) != 0:
+            # this should be impossible - but has happened at least once
+            # if it happens, check if we really need this transcript, because there's Panel-Gene
+            # it's relevant to. If it's not relevant, just skip it. Otherwise throw an error
+            if len(relevant_panels) != 0:
                 raise ValueError(f"Transcript in MANE more than once: {tx}")
             else:
                 err = f"Transcript in MANE more than once, can't resolve: {tx}"
@@ -717,9 +719,8 @@ def _transcript_assign_to_source(
     # fall through to here if no exact match - see if there's a versionless match instead
     if mane_base_match:
         if len(mane_base_match) > 1:
-            rel_panels = PanelGene.objects.filter(gene__hgnc_id=hgnc_id)
-            if len(rel_panels) != 0:
-                raise ValueError(f"Versionless ranscript in MANE more than once: {tx}")
+            if len(relevant_panels) != 0:
+                raise ValueError(f"Versionless transcript in MANE more than once: {tx}")
             else:
                 err = f"Versionless transcript in MANE more than once, can't resolve: {tx}"
                 return mane_select_data, mane_plus_clinical_data, hgmd_data, err
@@ -791,7 +792,7 @@ def _link_release_to_file_id(
         transcript_release=release, transcript_file=transcript_file
     )
 
-
+#TODO: _add_transcript_release_info_to_db is the second chokepoint for time
 def _add_transcript_release_info_to_db(
     source: str,
     release_version: str,
