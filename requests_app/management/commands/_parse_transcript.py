@@ -1,14 +1,13 @@
 import datetime as dt
 import pandas as pd
+import collections
 import re
-import numpy as np
 from django.db import transaction
 from packaging.version import Version
 
 pd.options.mode.chained_assignment = None  # default='warn'
 import datetime
 
-from .utils import sortable_version
 from .history import History
 from requests_app.models import (
     Gene,
@@ -46,14 +45,14 @@ def _update_existing_gene_metadata_symbol_in_db(
 
     # queue up genes which need updating because their approved symbols have
     # changed in HGNC
-    for changed_gene, symbols in hgnc_id_to_symbol.items():
-        gene = Gene.objects.get(hgnc_id=changed_gene)
+    for hgnc_id, symbols in hgnc_id_to_symbol.items():
+        gene = Gene.objects.get(hgnc_id=hgnc_id)
         gene.gene_symbol = symbols["new"]
         gene_symbol_updates.append(gene)
 
     # bulk update the changed genes
     now = datetime.datetime.now().strftime("%H:%M:%S")
-    print(f"Start gene symbol bulk update: {now}")
+    print(f"Start bulk-updating {len(gene_symbol_updates)} gene symbols: {now}")
     Gene.objects.bulk_update(gene_symbol_updates, ["gene_symbol"])
 
     # for each changed gene, link to release and add a note
@@ -94,7 +93,7 @@ def _update_existing_gene_metadata_aliases_in_db(
         gene_alias_updates.append(gene)
 
     now = datetime.datetime.now().strftime("%H:%M:%S")
-    print(f"Start gene alias bulk update: {now}")
+    f"Start bulk-updating {len(gene_alias_updates)} gene alias: {now}"
     Gene.objects.bulk_update(gene_alias_updates, ["alias_symbols"])
 
     # for each changed gene, link to release and add a note
@@ -125,6 +124,11 @@ def _link_unchanged_genes_to_new_release(
     :param hgnc_release: a HgncRelease object of the current release
     :param str: the name of the user making the changed
     """
+
+    print(
+        f"Linking {len(unchanged_genes)} unchanged genes to new HGNC release v{hgnc_release.hgnc_release}"
+    )
+
     for hgnc_id in unchanged_genes:
         gene = Gene.objects.get(hgnc_id=hgnc_id)
 
@@ -166,7 +170,7 @@ def _add_new_genes_to_db(
         genes_to_create.append(new_gene)
 
     now = datetime.datetime.now().strftime("%H:%M:%S")
-    print(f"Start gene bulk create: {now}")
+    print(f"Start {len(new_genes)} gene bulk create: {now}")
     new_genes = Gene.objects.bulk_create(genes_to_create)
 
     # for each NEW gene, link to release and add a note
@@ -183,7 +187,7 @@ def _add_new_genes_to_db(
 
 
 def _make_hgnc_gene_sets(
-    hgnc_id_to_symbol: dict[str:str], hgnc_id_to_alias: dict[str:list]
+    hgnc_id_to_symbol: dict[str, str], hgnc_id_to_alias: dict[str, list[str]]
 ) -> tuple[list, dict, dict, list]:
     """
     Sort genes into:
@@ -211,33 +215,37 @@ def _make_hgnc_gene_sets(
 
     # for hgnc_ids which already exist in the database, get the ones which have changed
     # and ones which haven't changed
-    genes_in_db = Gene.objects.all()
-    hgnc_symbol_changed = {}
-    hgnc_alias_changed = {}
+    genes_in_db: list[Gene] = Gene.objects.all()
+    hgnc_symbol_changed = collections.defaultdict(dict)
+    hgnc_alias_changed = collections.defaultdict(dict)
 
     hgnc_unchanged = []
 
     for gene in genes_in_db:
+        hgnc_id = gene.hgnc_id
+        current_gene_symbol = (
+            gene.gene_symbol.strip().upper() if gene.gene_symbol else None
+        )  # gene symbol in current gene in db can be None
+        potential_new_gene_symbol = hgnc_id_to_symbol.get(hgnc_id)  # might be None
+
         symbol_change = False
         alias_change = False
 
         # check symbol change
-        if gene.hgnc_id in hgnc_id_to_symbol:
-            if gene.gene_symbol != hgnc_id_to_symbol[gene.hgnc_id]:
+        if potential_new_gene_symbol:
+            if current_gene_symbol != potential_new_gene_symbol.strip().upper():
                 # add to a list of symbol-changed HGNCs
-                hgnc_symbol_changed[gene.hgnc_id] = {}
                 symbol_change = True
-                hgnc_symbol_changed[gene.hgnc_id]["old"] = gene.gene_symbol
-                hgnc_symbol_changed[gene.hgnc_id]["new"] = hgnc_id_to_symbol[
-                    gene.hgnc_id
-                ]
+                hgnc_symbol_changed[gene.hgnc_id]["old"] = current_gene_symbol
+                hgnc_symbol_changed[gene.hgnc_id][
+                    "new"
+                ] = potential_new_gene_symbol.strip().upper()
 
         # check alias change
         if gene.hgnc_id in hgnc_id_to_alias:
             resolved_alias = _resolve_alias(hgnc_id_to_alias[gene.hgnc_id])
             if gene.alias_symbols != resolved_alias:
                 # add to a list of alias-changed HGNCs
-                hgnc_alias_changed[gene.hgnc_id] = {}
                 alias_change = True
                 hgnc_alias_changed[gene.hgnc_id]["old"] = gene.alias_symbols
                 hgnc_alias_changed[gene.hgnc_id]["new"] = resolved_alias
@@ -251,12 +259,12 @@ def _make_hgnc_gene_sets(
             hgnc_unchanged.append(gene.hgnc_id)
 
     # get HGNC IDs which are in the HGNC file, but not yet in db
-    new_hgncs = list(set(all_hgnc_file_entries) - set([i.hgnc_id for i in genes_in_db]))
+    new_hgncs = set(all_hgnc_file_entries) - set([i.hgnc_id for i in genes_in_db])
     new_hgncs = [
         {
             "hgnc_id": hgnc_id,
-            "symbol": (hgnc_id_to_symbol.get(hgnc_id)),
-            "alias": _resolve_alias(hgnc_id_to_alias[hgnc_id]),
+            "symbol": hgnc_id_to_symbol.get(hgnc_id),
+            "alias": _resolve_alias(hgnc_id_to_alias.get(hgnc_id)),
         }
         for hgnc_id in new_hgncs
     ]
@@ -264,7 +272,7 @@ def _make_hgnc_gene_sets(
     return new_hgncs, hgnc_symbol_changed, hgnc_alias_changed, hgnc_unchanged
 
 
-def _resolve_alias(start_alias: list) -> str | None:
+def _resolve_alias(start_alias: list[str]) -> str | None:
     """
     Joins aliases, handling the case where an alias contains pd.na
     Mostly exists because this was originally a one-liner, but I started
@@ -274,11 +282,18 @@ def _resolve_alias(start_alias: list) -> str | None:
     :param processed_alias: the alias returned as a single joined string, or, None
     if the input was blank/just np.nan values.
     """
-    if start_alias and not pd.isna(start_alias).all():
-        processed_alias = ",".join(start_alias)
-        return processed_alias
+    if not start_alias:
+        return None
 
-    return None
+    # sort, deduplicate, and strip whitespace
+    aliases = sorted(
+        list(set([alias.strip() for alias in start_alias if alias.strip()]))
+    )
+
+    if not aliases:
+        return None
+
+    return ",".join(aliases)
 
 
 def _prepare_hgnc_file(hgnc_file: str, hgnc_version: str, user: str) -> dict[str, str]:
@@ -298,21 +313,38 @@ def _prepare_hgnc_file(hgnc_file: str, hgnc_version: str, user: str) -> dict[str
 
     :return: gene symbol to hgnc id dict
     """
+    print("Preparing HGNC files")
     hgnc: pd.DataFrame = pd.read_csv(hgnc_file, delimiter="\t")
 
     needed_cols = ["HGNC ID", "Approved symbol", "Alias symbols"]
     _sanity_check_cols_exist(hgnc, needed_cols, "HGNC dump")
 
-    # prepare dictionary files
-    hgnc_symbol_to_hgnc_id = dict(zip(hgnc["Approved symbol"], hgnc["HGNC ID"]))
+    # strip whitespace as a precaution
+    hgnc["Approved symbol"] = hgnc["Approved symbol"].str.strip()
+    hgnc["HGNC ID"] = hgnc["HGNC ID"].str.strip()
 
-    hgnc_id_to_approved_symbol = dict(zip(hgnc["HGNC ID"], hgnc["Approved symbol"]))
-    hgnc_id_to_alias_symbols = (
-        hgnc.groupby("HGNC ID")["Alias symbols"].apply(list).to_dict()
+    # prepare dictionary files
+    hgnc1 = hgnc.dropna(subset=["Approved symbol"])
+    hgnc_approved_symbol_to_hgnc_id = dict(
+        zip(hgnc1["Approved symbol"], hgnc1["HGNC ID"])
+    )
+    hgnc_id_to_approved_symbol = dict(zip(hgnc1["HGNC ID"], hgnc1["Approved symbol"]))
+
+    # dataframe cleaning to drop NA values in alias symbols
+    hgnc.dropna(subset=["Alias symbols"], inplace=True)
+    hgnc["HGNC ID"] = hgnc["HGNC ID"].str.strip()  # remove whitespace in HGNC ID
+
+    hgnc_id_to_alias_symbols: dict[str, list[str]] = (
+        hgnc.groupby("HGNC ID")["Alias symbols"]
+        .agg(lambda x: x.str.split(","))
+        .to_dict()
     )
 
     # create a HGNC release
-    hgnc_release = HgncRelease.objects.create(hgnc_release=hgnc_version)
+    # the same HGNC release version can be used at different transcript seed times
+    hgnc_release, release_created = HgncRelease.objects.get_or_create(
+        hgnc_release=hgnc_version
+    )
 
     # get all possible HGNC IDs from the HGNC file, and compare to what's already in the database,
     # to sort them into those which need adding and those which need editing
@@ -322,12 +354,23 @@ def _prepare_hgnc_file(hgnc_file: str, hgnc_version: str, user: str) -> dict[str
 
     # make edits and release links to pre-existing genes, and add genes which are new in the HGNC file
     with transaction.atomic():
-        _update_existing_gene_metadata_symbol_in_db(symbol_changed, hgnc_release, user)
-        _update_existing_gene_metadata_aliases_in_db(alias_changed, hgnc_release, user)
-        _link_unchanged_genes_to_new_release(unchanged_genes, hgnc_release, user)
-        _add_new_genes_to_db(new_genes, hgnc_release, user)
+        if symbol_changed:
+            _update_existing_gene_metadata_symbol_in_db(
+                symbol_changed, hgnc_release, user
+            )
 
-    return hgnc_symbol_to_hgnc_id
+        if alias_changed:
+            _update_existing_gene_metadata_aliases_in_db(
+                alias_changed, hgnc_release, user
+            )
+
+        if release_created:  # linked unchanged only when there's new release created
+            _link_unchanged_genes_to_new_release(unchanged_genes, hgnc_release, user)
+
+        if new_genes:
+            _add_new_genes_to_db(new_genes, hgnc_release, user)
+
+    return hgnc_approved_symbol_to_hgnc_id
 
 
 def _sanity_check_cols_exist(
@@ -343,7 +386,7 @@ def _sanity_check_cols_exist(
     """
     errors = []
     for x_col in needed_cols:
-        if not x_col in df.columns:
+        if x_col not in df.columns:
             errors.append(
                 f"Missing column {x_col} from {filename} file - please check the file"
             )
@@ -729,24 +772,54 @@ def _add_gff_release_info_to_db(
     return gff_release
 
 
-def _add_transcript_release_info_to_db(
-    source: str, release_version: str, ref_genome: ReferenceGenome, files: dict
+def _link_release_to_file_id(
+    release: TranscriptRelease, file_id: str, file_type: str
 ) -> None:
+    """
+    create TranscriptFile and link to TranscriptRelease
+    through TranscriptReleaseTranscriptFile
+
+    :param release: a TranscriptRelease object
+    :param file_id: a string representing the file ID
+    :param file_type: a string representing the file type (e.g. 'MANE Select')
+    """
+    transcript_file, _ = TranscriptFile.objects.get_or_create(
+        file_id=file_id, file_type=file_type
+    )
+
+    TranscriptReleaseTranscriptFile.objects.get_or_create(
+        transcript_release=release, transcript_file=transcript_file
+    )
+
+
+def _add_transcript_release_info_to_db(
+    source: str,
+    release_version: str,
+    ref_genome: ReferenceGenome,
+    files: dict[str, str],
+) -> TranscriptRelease:
     """
     For each transcript release, make sure the source, release, and
     supporting files are added to the database.
     Note that the files parameter needs to be provided as a dict, in which keys are
     file types and values are external IDs.
-    Errors will be raised if the release is already in the database AND its linked
-    file IDs are different from what the user tried to input.
+
+    Error will be raised if the file-id is already linked to another release, source and ref genome
+    of a particular file type (e.g. MANE Select)
+
+    Example of error scenario:
+        - MANE Select release 0.92 is linked to file-id 12345 in db
+        - You uploaded MANE Select release 0.93 but with file-id 12345
+        - This will raise a ValueError because the file-id can't be both v0.92 and v0.93
 
     :param: source, the name of a source of transcript information (e.g. MANE Select)
     :param: release_version, the version of the transcript release as entered by user
     :param: ref_genome, the ReferenceGenome used for this transcript release
     :param: files, a dictionary of files used to define the contents of each release.
     For example, a HGMD release might be defined by a markname and a gene2refseq file
+
+    :return: a TranscriptRelease instance
     """
-    errors = []
 
     # look up or create the source
     source_instance, _ = TranscriptSource.objects.get_or_create(source=source)
@@ -754,65 +827,42 @@ def _add_transcript_release_info_to_db(
     # create the transcript release, or just get it
     # (this could happen if you upload an old release of 1 source, alongside a new release
     # of another source)
-    release, release_created = TranscriptRelease.objects.get_or_create(
+    tx_release, _ = TranscriptRelease.objects.get_or_create(
         source=source_instance,
         release=release_version,
         reference_genome=ref_genome,
     )
 
-    if release_created:
-        # Create the files from the dictionary provided, and link them to releases
-        for file_type, file_id in files.items():
-            file, _ = TranscriptFile.objects.get_or_create(
-                file_id=file_id, file_type=file_type
-            )
+    for file_type, file_id in files.items():
+        # NOTE: check if release, source and ref genome OF A FILE TYPE is already linked to another file-id
+        # if so, raise an error, else pass
+        # the file-id might still be linked to its previous release, source and ref genome - which is completely valid
 
-            file_release, _ = TranscriptReleaseTranscriptFile.objects.get_or_create(
-                transcript_release=release, transcript_file=file
-            )
+        tx_release_file_ids = TranscriptReleaseTranscriptFile.objects.filter(
+            transcript_release_id=tx_release.id,
+            transcript_file_id__file_type=file_type,
+        ).values("transcript_file_id__file_id", "transcript_file_id__file_type")
+        # there should only be ONE link of file-id to one RELEASE of a particular file type
 
-    else:
-        # if the release exists already, trigger an error if we are trying to link
-        # new files to the existing release. If files are unchanged, do nothing
-        for file_type, file_id in files.items():
-            existing_file = TranscriptFile.objects.filter(file_id=file_id)
-            if not existing_file:
-                errors.append(
-                    f"Transcript release {source} {release_version} "
-                    f"already exists in db, but the uploaded file {file_id} is not "
-                    f"in the db. Please review."
-                )
-            else:
-                for file in existing_file:
-                    links = TranscriptReleaseTranscriptFile.objects.filter(
-                        transcript_file=file
-                    )
-                    for x in links:
-                        if x.transcript_release != release:
-                            errors.append(
-                                f"Transcript file {file.file_id} "
-                                f"already exists in db, but with a different transcript: "
-                                f"{x.transcript_release}. Please review."
-                            )
-        # check we don't have files in the database for this release, that the user
-        # ISN'T currently adding
-        all_links_for_release = TranscriptReleaseTranscriptFile.objects.filter(
-            transcript_release=release
-        )
-        for i in all_links_for_release:
-            result = i.transcript_file.file_id
-            if result not in files.values():
-                errors.append(
-                    f"Transcript file {result} "
-                    f"is linked to the release in the db, but wasn't uploaded. "
-                    f"Please review."
+        # a different (release, source, ref genome) combination should have a different file-id
+        if tx_release_file_ids:
+            if (
+                tx_release_file_ids[0]["transcript_file_id__file_id"] != file_id
+                or tx_release_file_ids[0]["transcript_file_id__file_type"] != file_type
+            ):
+                raise ValueError(
+                    f"The provided file-id '{file_id}' and file-type '{file_type}' is already linked to another "
+                    "release, source and ref genome in the db:\n"
+                    f"Release version: {release_version}\n"
+                    f"Source: {source}.\n"
+                    f"Ref genome: {ref_genome.reference_genome}.\n"
+                    f'File type: {tx_release_file_ids[0]["transcript_file_id__file_type"]}\n'
+                    f'File id: {tx_release_file_ids[0]["transcript_file_id__file_id"]}'
                 )
 
-    if errors:
-        msg = " ".join(errors)
-        raise ValueError(msg)
+        _link_release_to_file_id(tx_release, file_id, file_type)
 
-    return release
+    return tx_release
 
 
 def _parse_reference_genome(ref_genome: str) -> str:
@@ -838,67 +888,52 @@ def _parse_reference_genome(ref_genome: str) -> str:
         )
 
 
-def _get_latest_hgnc_release() -> str | None:
+def _get_latest_hgnc_release() -> Version | None:
     """
     Get the latest release in HgncRelease, using packaging.version to handle version formatting
     which isn't 100% consistent. Return None if the table has no matching results.
 
-    :returns: string of latest HGNC release version, or None
+    :returns: latest version in database
     """
-    hgncs = HgncRelease.objects.all().order_by("-hgnc_release")
-    if not hgncs:
-        return None
-    else:
-        hgnc_releases = [v.hgnc_release for v in hgncs]
-        hgnc_releases.sort(key=Version, reverse=True)
-        latest_hgnc = str(hgnc_releases[0])
-        return latest_hgnc
+    hgncs = HgncRelease.objects.all()
+
+    return max([Version(v.hgnc_release) for v in hgncs]) if hgncs else None
 
 
-def _get_latest_gff_release(ref_genome: ReferenceGenome) -> str | None:
+def _get_latest_gff_release(ref_genome: ReferenceGenome) -> Version | None:
     """
     Get the latest GFF release in GffRelease for a given reference genome,
       using packaging.version because the version formatting
     isn't 100% consistent. Return None if the table has no matching results.
 
     :param reference_genome: a ReferenceGenome object corresponding to user input
-    :returns: string of latest GFF result in db, or None if no matches
+    :returns: latest version in database
     """
-    gffs = GffRelease.objects.filter(reference_genome=ref_genome).order_by(
-        "-gff_release"
-    )
-    if not gffs:
-        return None
-    else:
-        gff_list = [v.gff_release for v in gffs]
-        gff_list.sort(key=Version, reverse=True)
-        latest_gff = str(gff_list[0])
-        return latest_gff
+    gffs = GffRelease.objects.filter(reference_genome=ref_genome)
+
+    return max([Version(v.gff_release) for v in gffs]) if gffs else None
 
 
 def _get_latest_transcript_release(
-    source: str, ref_genome: ReferenceGenome
-) -> str | None:
+    source: Version, ref_genome: ReferenceGenome
+) -> Version:
     """
     Get the latest release in the TranscriptRelease table for a given source
     and reference genome. Return None if the table has no matching results.
 
     :param source: a source string such as 'HGMD', 'MANE Plus Clinical' or 'MANE Select'
     :param reference_genome: a ReferenceGenome object corresponding to user input
-    :returns: string of latest transcript release or None if no database matches
+    :returns: latest version in database
     """
-    db_results = (
-        TranscriptRelease.objects.filter(source__source=source)
-        .filter(reference_genome=ref_genome)
-        .order_by("-release")
+    tx_releases = TranscriptRelease.objects.filter(source__source=source).filter(
+        reference_genome=ref_genome
     )
-    if not db_results:
-        return None
-    else:
-        db_results_list = [v.release for v in db_results]
-        db_results_list.sort(key=Version, reverse=True)
-        latest = str(db_results_list[0])
-        return latest
+
+    return (
+        max([Version(v.release) for v in tx_releases])
+        if tx_releases
+        else Version("0.0a")
+    )
 
 
 def _check_for_transcript_seeding_version_regression(
@@ -919,46 +954,37 @@ def _check_for_transcript_seeding_version_regression(
     :param mane_release: user-input MANE release version
     :param hgmd_release: user-input HGMD release version
     """
+
+    input_versions = {
+        "HGNC": hgnc_release,
+        "GFF": gff_release,
+        "MANE": mane_release,
+        "HGMD": hgmd_release,
+    }
+
     # find the latest releases in the db
-    latest_hgnc = _get_latest_hgnc_release()
+    latest_db_versions = {
+        "HGNC": _get_latest_hgnc_release(),
+        "GFF": _get_latest_gff_release(reference_genome),
+        "MANE": max(
+            [
+                _get_latest_transcript_release("MANE Select", reference_genome),
+                _get_latest_transcript_release("MANE Plus Clinical", reference_genome),
+            ]
+        ),
+        "HGMD": _get_latest_transcript_release("HGMD", reference_genome),
+    }
 
-    latest_gff = _get_latest_gff_release(reference_genome)
-
-    # for MANE need to check both Select and Plus Clinical to find the max
-    latest_select = _get_latest_transcript_release("MANE Select", reference_genome)
-    latest_plus_clinical = _get_latest_transcript_release(
-        "MANE Plus Clinical", reference_genome
+    error = "\n".join(
+        [
+            f"Provided {source} version {input_version} is a lower version than v{str(latest_db_versions[source])} in the db"
+            for source, input_version in input_versions.items()
+            if latest_db_versions[source] and Version(input_version) < latest_db_versions[source]
+        ]
     )
-    if latest_plus_clinical and latest_select:
-        manes = [latest_plus_clinical, latest_select]
-        manes.sort(key=Version, reverse=True)
-        latest_mane = str(manes[0])
-    else:
-        latest_mane = None
 
-    latest_hgmd = _get_latest_transcript_release("HGMD", reference_genome)
-
-    too_old = {}
-
-    # for each release: make a sorted list of the user-provided and newest-in-database versions
-    if latest_hgnc:
-        if Version(str(hgnc_release)) < Version(latest_hgnc):
-            too_old["hgnc release"] = latest_hgnc
-    if latest_gff:
-        if Version(str(gff_release)) < Version(latest_gff):
-            too_old["gff release"] = latest_gff
-    if latest_mane:
-        if Version(str(mane_release)) < Version(latest_mane):
-            too_old["hgnc release"] = latest_hgnc
-    if latest_hgmd:
-        if Version(str(hgmd_release)) < Version(latest_hgmd):
-            too_old["gff release"] = latest_gff
-
-    if too_old:
-        error = "; ".join(
-            [f"{key} is a lower version than {value}" for key, value in too_old.items()]
-        )
-        raise ValueError("Abandoning input because: " + error)
+    if error:
+        raise ValueError("Abandoning input:\n" + error)
 
 
 # 'atomic' should ensure that any failure rolls back the entire attempt to seed
@@ -1057,8 +1083,7 @@ def seed_transcripts(
     for hgnc_id, transcripts in gff.items():
         gene = Gene.objects.get(hgnc_id=hgnc_id)
         # get deduplicated transcripts
-        transcripts = set(transcripts)
-        for tx in transcripts:
+        for tx in set(transcripts):
             # get information about how the transcript matches against MANE and HGMD
             (
                 mane_select_data,

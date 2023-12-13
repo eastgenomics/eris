@@ -141,17 +141,48 @@ def clinical_indication(request, ci_id: int):
 
     # fetch ci-panels
     # might have multiple panels but only one active
-    ci_panels: QuerySet[
-        ClinicalIndicationPanel
-    ] = ClinicalIndicationPanel.objects.filter(
-        clinical_indication_id=ci_id,
-    ).values(
-        "id",
-        "current",
-        "pending",
-        "clinical_indication_id",
-        "panel_id",
-        "panel_id__panel_name",
+    ci_panels: QuerySet[ClinicalIndicationPanel] = (
+        ClinicalIndicationPanel.objects.filter(
+            clinical_indication_id=ci_id,
+        )
+        .values(
+            "id",
+            "current",
+            "pending",
+            "config_source",
+            "td_version",
+            "created",
+            "last_updated",
+            "clinical_indication_id",
+            "panel_id",
+            "panel_id__panel_name",
+        )
+        .order_by("-pending")
+    )
+
+    active_panel_ids = [
+        cip["panel_id"]
+        for cip in ci_panels
+        if cip["current"] == True and cip["pending"] == False
+    ]
+
+    # converting version to readable format
+    for cip in ci_panels:
+        cip["td_version"] = normalize_version(cip["td_version"])
+
+    # fetch panels
+    # there might be multiple panels due to multiple ci-panel links
+    panels: QuerySet[Panel] = Panel.objects.filter(
+        id__in=[cp["panel_id"] for cp in ci_panels]
+    )
+
+    # fetch ci-panels history
+    ci_panels_history: QuerySet[
+        ClinicalIndicationPanelHistory
+    ] = ClinicalIndicationPanelHistory.objects.filter(
+        clinical_indication_panel_id__in=[cp["id"] for cp in ci_panels]
+    ).order_by(
+        "-id"
     )
 
     # fetch ci-test-method history
@@ -1444,7 +1475,7 @@ def genes(request):
     )
 
 
-def genetotranscript(request): # TODO:
+def genetotranscript(request):  # TODO:
     """
     g2t page where user can view all genes and its associated transcripts
     there is a form to allow user to upload g2t to specified dnanexus project

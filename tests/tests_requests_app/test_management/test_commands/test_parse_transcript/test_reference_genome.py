@@ -1,7 +1,5 @@
 from django.test import TestCase
 
-from unittest import mock
-import pandas as pd
 
 
 from requests_app.management.commands._parse_transcript import _parse_reference_genome
@@ -43,7 +41,7 @@ class TestParsingRefGenome(TestCase):
 
         for i in invalid:
             with self.subTest():
-                msg = f"Please provide a valid reference genome,"
+                msg = "Please provide a valid reference genome,"
                 f" such as {'; '.join(permitted_grch37)} or "
                 f"{'; '.join(permitted_grch38)} - you provided {i}"
 
