@@ -48,8 +48,8 @@
     {% elif action_pg %}
     <div class="alert alert-success" role="alert">
         Link between <a href="{% url 'panel' action_pg.panel_id %}">{{ action_pg.panel_id__panel_name }}</a> and <a
-            href="{% url 'gene' action_pg.gene_id %}">{{ action_pg.gene_id__hgnc_id }}</a> now set to active status: {{
-        action_pg.active}}!
+            href="{% url 'gene' action_pg.gene_id %}">{{action_pg.gene_id__hgnc_id}}</a> now set to active status:
+        {{action_pg.active}}!
     </div>
     {% endif %}
     {% endif %}

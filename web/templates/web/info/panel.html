@@ -66,7 +66,11 @@
                     {% for ci_panel in ci_panels %}
                     <tr>
                         <td><a href="{% url 'clinical_indication_panel' ci_panel.id %}">{{ci_panel.id}}</a></td>
-                        <td>{{ci_panel.current}}</td>
+                        {% if ci_panel.current %}
+                        <td><span class="badge text-bg-success">{{ci_panel.current}}</span></td>
+                        {% else %}
+                        <td><span class="badge text-bg-danger">{{ci_panel.current}}</span></td>
+                        {% endif %}
                         <td><a
                                 href="{% url 'clinical_indication' ci_panel.clinical_indication_id %}">{{ci_panel.clinical_indication_id__name}}</a>
                         </td>

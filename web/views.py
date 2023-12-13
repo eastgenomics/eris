@@ -205,7 +205,7 @@ def panel(request, panel_id: int):
         )
 
     else:
-        # POST method
+        # POST method (from review)
         action = request.POST.get("action")
         panel = Panel.objects.get(id=panel_id)
 
@@ -213,12 +213,10 @@ def panel(request, panel_id: int):
             panel.pending = False
             panel.save()
 
-            return redirect("panel", panel_id)
-
         elif action == "remove":
             panel.delete()
 
-            return redirect("review")
+        return redirect("review")
 
 
 def superpanel(request, superpanel_id: int):
@@ -333,7 +331,6 @@ def clinical_indication(request, ci_id: int):
             if not test_method:  # if not test method change
                 ci.delete()  # ci is newly created, so we can delete it
 
-                return redirect("review")
             else:
                 # if test method change, we need to revert it back to previous test method
                 indication_history = (
@@ -363,7 +360,7 @@ def clinical_indication(request, ci_id: int):
                 ci.test_method = previous_test_method
                 ci.save()
 
-                return redirect("clinical_indication", ci_id=ci_id)
+            return redirect("review")
 
 
 def add_clinical_indication(request):
@@ -754,13 +751,13 @@ def clinical_indication_panel(request, cip_id: str):
             if action == "activate":
                 clinical_indication_panel.current = True
                 ClinicalIndicationPanelHistory.objects.create(
-                    clinical_indication_id=cip_id,
+                    clinical_indication_panel_id=cip_id,
                     note=History.clinical_indication_panel_activated(cip_id, True),
                 )
             elif action == "deactivate":
                 clinical_indication_panel.current = False
                 ClinicalIndicationPanelHistory.objects.create(
-                    clinical_indication_id=cip_id,
+                    clinical_indication_panel_id=cip_id,
                     note=History.clinical_indication_panel_deactivated(cip_id, True),
                 )
             clinical_indication_panel.pending = True  # require manual review
@@ -770,7 +767,7 @@ def clinical_indication_panel(request, cip_id: str):
             clinical_indication_panel.pending = False
 
             ClinicalIndicationPanelHistory.objects.create(
-                clinical_indication_id=cip_id,
+                clinical_indication_panel_id=cip_id,
                 note=History.clinical_indication_panel_reverted(
                     id=cip_id,
                     old_value=clinical_indication_panel.current,
@@ -782,17 +779,13 @@ def clinical_indication_panel(request, cip_id: str):
             # action is "approve" from Review page
             clinical_indication_panel.pending = False
             ClinicalIndicationPanelHistory.objects.create(
-                clinical_indication_id=cip_id,
+                clinical_indication_panel_id=cip_id,
                 note=History.clinical_indication_panel_approved(cip_id),
-            
             )
 
         clinical_indication_panel.save()
 
-        return redirect(
-            "clinical_indication_panel",
-            cip_id=cip_id,
-        )
+        return redirect("review")
 
 
 def review(request) -> None:
@@ -808,10 +801,6 @@ def review(request) -> None:
     - PanelRegion (TODO)
     - PanelTestMethod (TODO)
     """
-
-    action_cip = None
-    action_panel = None
-    action_ci = None
     action_pg = None
 
     approve_bool = None
@@ -978,9 +967,6 @@ def review(request) -> None:
             "cis": clinical_indications,
             "cips": clinical_indication_panels,
             "panel_gene": panel_gene,
-            "action_cip": action_cip,
-            "action_ci": action_ci,
-            "action_panel": action_panel,
             "action_pg": action_pg,
             "approve_bool": approve_bool,
         },

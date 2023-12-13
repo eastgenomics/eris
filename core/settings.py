@@ -53,8 +53,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",  # for static files
     # custom apps
-    "requests_app.apps.RequestsAppConfig",
-    "web.apps.WebConfig",
+    "requests_app",
+    "web",
 ]
 
 MIDDLEWARE = [
@@ -129,17 +129,15 @@ USE_L10N = True
 
 USE_TZ = True
 
-ERIS_SERVER = os.environ.get(
-    "ERIS_SERVER", False
+LOCALHOST = os.environ.get(
+    "LOCALHOST", False
 )  # determine if eris is deployed on server and require subdirectory
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-if ERIS_SERVER:
-    STATIC_URL = "eris/static/"  # on server thus subdirectory required
-else:
-    STATIC_URL = "static/"  # for local development
+
+STATIC_URL = "static/" if LOCALHOST else "eris/static/"
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [

@@ -32,10 +32,10 @@ services:
   nginx:
     container_name: eris-nginx
     # platform: linux/amd64
-    image: eris-nginx:1.0
-    build: nginx
+    image: nginx:1.23
     volumes:
       - eris_static:/staticfiles
+      - /Users/jason/Github/eris/nginx:/etc/nginx/conf.d
     environment:
       - VIRTUAL_HOST=localhost # change based on HOST
       - VIRTUAL_PATH=/eris # change based on PATH
