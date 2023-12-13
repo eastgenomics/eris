@@ -281,14 +281,12 @@ class Command(BaseCommand):
         results = sorted(results, key=lambda x: [x[0], x[1], x[2]])
         return results
 
-    def _block_genepanels_if_db_not_ready(self) -> str | None:
+    def _block_genepanels_if_db_not_ready(self):
         """
         Check that there's no Pending data in tables linking CIs to panels,
         and check that the db contains at least some Clinical Indications.
-        If this is the case, return a formatted error message.
-        If there are no issues, return None.
-
-        :return: error - string or None
+        If this is the case, raise an error with a formatted error message.
+        If there are no issues, do nothing.
         """
         errors = []
 
@@ -318,9 +316,7 @@ class Command(BaseCommand):
         # if any errors - raise them
         if errors:
             msg = "; ".join(errors)
-            return msg
-        else:
-            return None
+            raise ValueError(msg)
 
     def _generate_genepanels(self, excluded_hgncs: set, output_directory: str) -> None:
         """
@@ -332,9 +328,7 @@ class Command(BaseCommand):
         """
         print("Creating genepanels file")
 
-        errors = self._block_genepanels_if_db_not_ready()
-        if errors:
-            raise ValueError(errors)
+        self._block_genepanels_if_db_not_ready()
 
         latest_td_release_ver = _fetch_latest_td_version()
         latest_td_instance = TestDirectoryRelease.objects.get(
