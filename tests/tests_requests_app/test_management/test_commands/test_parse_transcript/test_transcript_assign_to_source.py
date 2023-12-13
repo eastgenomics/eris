@@ -57,7 +57,8 @@ class TestTranscriptAssigner_InMane(TestCase):
         tx = "NM00004.1"
 
         mane_data = [
-            {"HGNC ID": "1234", "RefSeq": "NM00004.2", "MANE TYPE": "MANE SELECT"}
+            {"HGNC ID": "1234", "RefSeq": "NM00004.2", "RefSeq_versionless": "NM00004", 
+             "MANE TYPE": "MANE SELECT"}
         ]
         markname_hgmd = {}
         gene2refseq_hgmd = {}
@@ -108,6 +109,7 @@ class TestTranscriptAssigner_InMane(TestCase):
             {
                 "HGNC ID": "1234",
                 "RefSeq": "NM00004.2",
+                "RefSeq_versionless": "NM00004",
                 "MANE TYPE": "MANE PLUS CLINICAL",
             }
         ]
@@ -148,7 +150,7 @@ class TestTranscriptAssigner_InMane(TestCase):
         tx = "NM00004.1"
 
         mane_data = [
-            {"HGNC ID": "1234", "RefSeq": "NM00004.1", "MANE TYPE": "MANE SELECT"}
+            {"HGNC ID": "1234", "RefSeq": "NM00004.1", "RefSeq_versionless": "NM00004", "MANE TYPE": "MANE SELECT"}
         ]
         markname_hgmd = {}
         gene2refseq_hgmd = {}
@@ -198,6 +200,7 @@ class TestTranscriptAssigner_InMane(TestCase):
             {
                 "HGNC ID": "1234",
                 "RefSeq": "NM00004.1",
+                "RefSeq_versionless": "NM00004",
                 "MANE TYPE": "MANE PLUS CLINICAL",
             }
         ]

@@ -51,11 +51,13 @@ class TestBasicManeFile(TestCase):
                     "HGNC ID": "HGNC:1",
                     "MANE TYPE": "MANE SELECT",
                     "RefSeq": "NM_130786.4",
+                    "RefSeq_versionless": "NM_130786"
                 },
                 {
                     "HGNC ID": "HGNC:2",
                     "MANE TYPE": "MANE PLUS CLINICAL",
                     "RefSeq": "NM_014576.4",
+                    "RefSeq_versionless": "NM_014576",
                 },
             ]
             self.maxDiff = None

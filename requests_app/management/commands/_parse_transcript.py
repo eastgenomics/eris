@@ -430,6 +430,10 @@ def _prepare_mane_file(
 
     result_dict = min_cols.to_dict("records")
 
+    # add a versionless column - used for some transcript-matching later
+    for i in result_dict:
+        i["RefSeq_versionless"] = re.sub(r"\.[\d]+$", "", i["RefSeq"])
+
     return result_dict
 
 
@@ -669,12 +673,9 @@ def _transcript_assign_to_source(
     :return: hgmd_data, containing info from HGMD
     :return: err, error message if any
     """
+    # set up starting data
     mane_select_data = {"clinical": None, "match_base": None, "match_version": None}
-    mane_plus_clinical_data = {
-        "clinical": None,
-        "match_base": None,
-        "match_version": None,
-    }
+    mane_plus_clinical_data = {"clinical": None, "match_base": None, "match_version": None}
     hgmd_data = {"clinical": None, "match_base": None, "match_version": None}
     err = None
 
@@ -683,7 +684,7 @@ def _transcript_assign_to_source(
     # First, find the transcript in the MANE file data
     # Note that data in MANE can be Plus Clinical or Select
     mane_exact_match = [d for d in mane_data if d["RefSeq"] == tx]
-    mane_base_match = [d for d in mane_data if d["RefSeq_versionless"] == tx]
+    mane_base_match = [d for d in mane_data if d["RefSeq_versionless"] == tx_base]
 
     relevant_panels = PanelGene.objects.filter(gene__hgnc_id=hgnc_id)
 
@@ -716,28 +717,29 @@ def _transcript_assign_to_source(
             return mane_select_data, mane_plus_clinical_data, hgmd_data, err
 
     # fall through to here if no exact match - see if there's a versionless match instead
-    if mane_base_match:
+    elif mane_base_match:
         if len(mane_base_match) > 1:
             if len(relevant_panels) != 0:
                 raise ValueError(f"Versionless transcript in MANE more than once: {tx}")
             else:
                 err = f"Versionless transcript in MANE more than once, can't resolve: {tx}"
                 return mane_select_data, mane_plus_clinical_data, hgmd_data, err
-        source = mane_base_match[0]["MANE TYPE"]
-        if str(source).lower() == "mane select":
-            mane_select_data["clinical"] = True
-            mane_select_data["match_base"] = True
-            mane_select_data["match_version"] = False
-        elif str(source).lower() == "mane plus clinical":
-            mane_plus_clinical_data["clinical"] = True
-            mane_plus_clinical_data["match_base"] = True
-            mane_plus_clinical_data["match_version"] = False
-        else:
-            raise ValueError(
-                "MANE Type does not match MANE Select or MANE Plus Clinical"
-                " - check how mane_data has been set up"
-            )
-        return mane_select_data, mane_plus_clinical_data, hgmd_data, err
+        else: # exactly 1 match between the MANE base and the transcript
+            source = mane_base_match[0]["MANE TYPE"]
+            if str(source).lower() == "mane select":
+                mane_select_data["clinical"] = True
+                mane_select_data["match_base"] = True
+                mane_select_data["match_version"] = False
+            elif str(source).lower() == "mane plus clinical":
+                mane_plus_clinical_data["clinical"] = True
+                mane_plus_clinical_data["match_base"] = True
+                mane_plus_clinical_data["match_version"] = False
+            else:
+                raise ValueError(
+                    "MANE Type does not match MANE Select or MANE Plus Clinical"
+                    " - check how mane_data has been set up"
+                )
+            return mane_select_data, mane_plus_clinical_data, hgmd_data, err
 
     # hgnc id for the transcript's gene is not in MANE -
     # hgnc id for the transcript's gene is not in MANE -
@@ -986,18 +988,6 @@ def _check_for_transcript_seeding_version_regression(
     if error:
         raise ValueError("Abandoning input:\n" + error)
 
-def _add_versionless_column_to_mane_data(mane):
-    """
-    Add a column to the MANE data which contains "RefSeq" with the version stripped off
-    This helps with transcript-matching in later steps.
-
-    :param: mane, the parsed contents of the MANE reference file
-    :return: mane, but with a new column, RefSeq_versionless
-    """
-    for i in mane:
-        i["RefSeq_versionless"] = re.sub(r"\.[\d]+$", "", i["RefSeq"])
-    return mane
-
 # 'atomic' should ensure that any failure rolls back the entire attempt to seed
 # transcripts - resetting the database to its start position
 @transaction.atomic
@@ -1091,10 +1081,6 @@ def seed_transcripts(
     # add all this information to the database
     tx_starting = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"Start adding transcripts: {tx_starting}")
-
-    # make a 'versionless' copy of the MANE data now, rather than having to run re.sub over and 
-    # over again inside _transcript_assign_to_source
-    mane_data = _add_versionless_column_to_mane_data(mane_data)
 
     for hgnc_id, transcripts in gff.items():
         gene = Gene.objects.get(hgnc_id=hgnc_id)
