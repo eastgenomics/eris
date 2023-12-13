@@ -2,12 +2,13 @@ import re
 from django import forms
 
 from requests_app.models import ClinicalIndication, Panel, Gene
+from requests_app.management.commands.utils import sortable_version
 
 
 class ClinicalIndicationForm(forms.Form):
     r_code = forms.CharField(max_length=10, required=True)
     name = forms.CharField(max_length=250, required=True)
-    test_method = forms.CharField(max_length=100, required=False)
+    test_method = forms.CharField(max_length=500, required=False)
 
     def clean_r_code(self):
         r_code: str = self.cleaned_data["r_code"]
@@ -34,11 +35,11 @@ class PanelForm(forms.Form):
         panel_name: str = self.cleaned_data["panel_name"]
 
         # clean input
-        if "HGNC" in panel_name and "," in panel_name:
-            # dealing with HGNC type panel
-            panel_name = ",".join([hgnc.strip() for hgnc in panel_name.split(",")])
-        else:
-            panel_name = panel_name.strip()
+        panel_name = (
+            panel_name.strip()
+            if not ("HGNC" in panel_name and "," in panel_name)
+            else ",".join(sorted([hgnc.strip() for hgnc in panel_name.split(",")]))
+        )
 
         p = Panel.objects.filter(panel_name__iexact=panel_name)
 
@@ -49,6 +50,24 @@ class PanelForm(forms.Form):
             )
 
         return panel_name
+
+    def clean_external_id(self):
+        external_id = self.cleaned_data.get("external_id")
+        panel_version = self.cleaned_data.get("panel_version")
+
+        if not external_id and not panel_version:
+            return external_id, panel_version
+
+        p = Panel.objects.filter(
+            external_id__iexact=external_id,
+            panel_version__iexact=sortable_version(panel_version),
+        )
+
+        if p:
+            self.add_error(
+                "external_id",
+                "There is an existing panel with this external ID and version! Please modify existing entry.",
+            )
 
 
 class GeneForm(forms.Form):
@@ -70,8 +89,10 @@ class GeneForm(forms.Form):
         try:
             Gene.objects.get(hgnc_id=hgnc_id)
 
-            self.add_error("hgnc_id", "Gene with this HGNC ID already exists!")
-        except:
+            self.add_error(
+                "hgnc_id", f"Gene with HGNC ID '{hgnc_id}' already exists in db!"
+            )
+        except Gene.DoesNotExist:
             # no gene with this hgnc_id exists, that's good
             pass
 
@@ -83,7 +104,10 @@ class GeneForm(forms.Form):
         try:
             Gene.objects.get(gene_symbol=gene_symbol)
 
-            self.add_error("gene_symbol", "Gene with this gene symbol already exists!")
+            self.add_error(
+                "gene_symbol",
+                f"HGNC ID with gene symbol '{gene_symbol}' already exists!",
+            )
 
         except:
             # no gene with this gene_symbol exists, that's good

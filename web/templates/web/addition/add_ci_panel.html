@@ -2,104 +2,33 @@
 
 {% block content %}
 <div class="container mb-5 pb-5">
-    <h3>Add Clinical Indication Panel Link</h3>
-
-    <br>
-    <div class="row">
-        <div class="col"></div>
-        <!-- clinical indication detail -->
-        <div class="col-4">
-            <div class="card shadow">
-                <div class="card-body">
-                    <h5 class="card-title"><a href="{% url 'clinical_indication' ci.id %}">{{ ci.name }}</a></h5>
-                    <h6 class="card-subtitle mb-2 text-body-secondary">database id: {{ ci.id }}</h6>
-                    <p class="card-text">{{ ci.r_code }} <br> {{ ci.test_method }}</p>
-                </div>
-            </div>
-        </div>
-        <!-- end clinical indication detail -->
-        <div class="col"></div>
-    </div>
-
-    <div class="row">
-        <h3>link to...</h3>
-    </div>
-
     <div class="row">
         <div class="col">
-            <!-- form -->
-            <table class="table pt-3" id="panelTable">
-                <thead class="table-success">
-                    <tr>
-                        <th>Panel Name</th>
-                        <th>Panel Version</th>
-                        <th>PanelApp ID</th>
-                        <th>Custom</th>
-                        <th>Test Directory</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for panel in panels %}
-                    <tr>
-                        <td><a href="{% url 'panel' panel.id %}" target="_blank">{{ panel.panel_name }}</a></td>
-                        {% if panel.panel_version %}
-                            <td>{{ panel.panel_version }}</td>
-                        {% else %}
-                            <td>None</td>
-                        {% endif %}
-                        <td>{{ panel.external_id }}</td>
-                        {% if panel.custom %}
-                            <td><span class="badge text-bg-success">{{ panel.custom }}</span></td>
-                        {% else %}
-                            <td><span class="badge text-bg-danger">{{ panel.custom }}</span></td>
-                        {% endif %}
-                        {% if panel.test_directory %}
-                            <td><span class="badge text-bg-success">{{ panel.test_directory }}</span></td>
-                        {% else %}
-                            <td><span class="badge text-bg-danger">{{ panel.test_directory }}</span></td>
-                        {% endif %}
-                        {% if panel.id in linked_panels %}
-                        <td>
-                            <form action="{% url 'ci_panel_add' ci.id %}" method="post">
-                                {% csrf_token %}
-                                <input class="visually-hidden" type="text" class="form-control" name="panel_id" value="{{ panel.id }}">
-                                <input class="visually-hidden" type="text" class="form-control" name="action" value="deactivate">
-                                {% if panel.id in pending_panels %}
-                                <button type="button" class="btn btn-secondary btn-sm" disabled>Pending</button>
-                                {% else %}
-                                <button type="submit" class="btn btn-danger btn-sm">Deactivate</button>
-                                {% endif %}
-                            </form>
-                        </td>
-                        {% else %}
-                        <td>
-                            <form action="{% url 'ci_panel_add' ci.id %}" method="post">
-                                {% csrf_token %}
-                                <input class="visually-hidden" type="text" class="form-control" name="panel_id" value="{{ panel.id }}">
-                                <input class="visually-hidden" type="text" class="form-control" name="action" value="activate">
-                                {% if panel.id in pending_panels %}
-                                <button type="button" class="btn btn-secondary btn-sm" disabled>Pending</button>
-                                {% else %}
-                                <button type="submit" class="btn btn-success btn-sm">Activate</button>
-                                {% endif %}
-                            </form>
-                        </td>
-                        {% endif %}
-                    </tr>
-                    {% endfor %} 
-                </tbody>
-            </table>    
-            <!-- end form -->                
+            <h1>Add Clinical Indication Panel</h1>
         </div>
-    </div>   
-</div>
-{% endblock %}
+    </div>
 
-{% block script %}
-<script>
-    $(document).ready(function () {
-        new DataTable('#panelTable');
-    });
-</script>
+    <div class="row my-3"></div>
+
+    <form action="{% url 'cip_add' %}" method="POST">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="exampleFormControlInput1" class="form-label">Clinical Indications</label>
+            <select class="form-select" aria-label="Default select example" name="clinical_indication">
+                {% for ci in cis %}
+                <option value="{{ci.id}}">{{ci.r_code}} {{ci.name}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="exampleFormControlInput1" class="form-label">Panels</label>
+            <select class="form-select" aria-label="Default select example" name="panel">
+                {% for panel in panels %}
+                <option value="{{panel.id}}">{{panel.external_id}} {{panel.panel_name}} {{panel.panel_version}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">Submit</button>
+    </form>
+</div>
 {% endblock %}

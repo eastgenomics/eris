@@ -11,16 +11,17 @@
         </div>
     </div>
     {% endif %}
-    <br> <!-- Clinical Indication Overview -->
+    <!-- Clinical Indication Overview -->
     <div class="row">
         <div class="col">
             {% if ci %}
             <h1>{{ ci.name }}</h1>
+            <h4><span class="badge text-bg-info text-white">Clinical Indication</span></h4>
             <h4>r code: {{ ci.r_code }}</h4>
             {% if ci.test_method %}
-                <h4>test method: {{ ci.test_method }}</h4>
+            <h4>test method: {{ ci.test_method }}</h4>
             {% else %}
-                <h4>test method: None</h4>
+            <h4>test method: None</h4>
             {% endif %}
             <h5>database id: <span class="text-danger">{{ ci.id }}</span></h5>
             {% else %}
@@ -29,74 +30,87 @@
         </div>
     </div>
 
-    <br> <!-- Clinical Indication Panel Link -->
-    <h3>Clinical Indication Panel Link</h3>
-    <p class="fs-6 text-muted">all clinical indication-panel links</p>
-    <div class="row">
-        {% if ci_panels %}
-        <table class="table table-striped table-bordered">
-            <thead>
-              <tr>
-                <th scope="col">Database ID</th>
-                <th scope="col">Active</th>
-                <th scope="col">Panel</th>
-              </tr>
-            </thead>
-            <tbody>
-                {% for cip in ci_panels %}
-                <tr>
-                    <td>{{ cip.id }}</td>
-                    <td>{{ cip.current }}</td>
-                    <td><a href="{% url 'panel' cip.panel_id %}">{{ cip.panel_id__panel_name }}</a></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <div class="col">
-            <div class="alert alert-info" role="alert">
-                Nothing to show here!
-            </div>
-        </div>
-        {% endif %}
-    </div>
+    <div class="row my-3"></div>
 
-    <br> <!-- Clinical Indication Test Method History -->
-    <h3>Test Method History</h3>
-    <p class="fs-6 text-muted">all previous modiciations to test method</p>
+    <!-- Clinical Indication Panel Link -->
     <div class="row">
-        {% if tm_history %}
-        <div class="col-12">
-            <table class="table table-bordered shadow">
+        <div class="col">
+            <h3>Clinical Indication Panel Link</h3>
+            <p class="fs-6 text-muted">all clinical indication-panel links</p>
+            {% if ci_panels %}
+            <table class="table table-striped table-bordered">
                 <thead>
-                <tr>
-                    <th scope="col">Date</th>
-                    <th scope="col">Note</th>
-                    <th class="col">User</th>
-                </tr>
+                    <tr>
+                        <th scope="col">Database ID</th>
+                        <th scope="col">Active</th>
+                        <th scope="col">Panel</th>
+                    </tr>
                 </thead>
                 <tbody>
-                    {% for tm in tm_history %}
+                    {% for cip in ci_panels %}
                     <tr>
-                        <td>{{ tm.created }}</td>
-                        <td>{{ tm.note }}</td>
-                        {% if tm.user|length > 35 %}
-                        <td>{{ tm.user|truncatechars:30 }}{{ tm.user|slice:'::-1'|truncatechars:30|slice:'::-1' }}</td>
+                        <td>{{ cip.id }}</td>
+                        {% if cip.current %}
+                        <td><span class="badge text-bg-success">{{cip.current}}</span></td>
                         {% else %}
-                        <td>{{ tm.user }}</td>
+                        <td><span class="badge text-bg-danger">{{cip.current}}</span></td>
                         {% endif %}
+                        <td><a href="{% url 'panel' cip.panel_id %}">{{ cip.panel_id__panel_name }}</a></td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
-        {% else %}
-        <div class="col">
-            <div class="alert alert-info" role="alert">
-                Nothing to show here!
+            {% else %}
+            <div class="col">
+                <div class="alert alert-info" role="alert">
+                    Nothing to show here!
+                </div>
             </div>
+            {% endif %}
         </div>
-        {% endif %}
+    </div>
+
+    <div class="row my-3"></div>
+
+    <br> <!-- Clinical Indication Test Method History -->
+    <div class="row">
+        <div class="col">
+            <h3>Test Method History</h3>
+            <p class="fs-6 text-muted">all previous modiciations to test method</p>
+            {% if tm_history %}
+            <div class="col-12">
+                <table class="table table-bordered shadow">
+                    <thead>
+                        <tr>
+                            <th scope="col">Date</th>
+                            <th scope="col">Note</th>
+                            <th class="col">User</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tm in tm_history %}
+                        <tr>
+                            <td>{{ tm.created }}</td>
+                            <td>{{ tm.note }}</td>
+                            {% if tm.user|length > 35 %}
+                            <td>{{ tm.user|truncatechars:30 }}{{ tm.user|slice:'::-1'|truncatechars:30|slice:'::-1' }}
+                            </td>
+                            {% else %}
+                            <td>{{ tm.user }}</td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="col">
+                <div class="alert alert-info" role="alert">
+                    Nothing to show here!
+                </div>
+            </div>
+            {% endif %}
+        </div>
     </div>
 
 </div>

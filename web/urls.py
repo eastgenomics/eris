@@ -7,31 +7,25 @@ urlpatterns = [
     path("", views.index, name="index"),
     # info
     path("panel/<int:panel_id>/", views.panel, name="panel"),
+    path("superpanel/<int:superpanel_id>/", views.superpanel, name="superpanel"),
     path("ci/<int:ci_id>/", views.clinical_indication, name="clinical_indication"),
-    path(
-        "clinical_indication_panels",
-        views.clinical_indication_panels,
-        name="clinical_indication_panels",
-    ),
-    path("td", views.test_directory, name="td"),
     path("gene/<int:gene_id>/", views.gene, name="gene"),
+    path(
+        "cip/<int:cip_id>/",
+        views.clinical_indication_panel,
+        name="clinical_indication_panel",
+    ),
+    # seed test directory
+    path("seed", views.seed, name="seed"),
     path("genepanel/", views.genepanel, name="genepanel"),
     path("genes/", views.genes, name="genes"),
     path("g2t/", views.genetotranscript, name="g2t"),
     # addition
     path("ci/add/", views.add_clinical_indication, name="ci_add"),
     path("panel/add", views.add_panel, name="panel_add"),
-    path("ci_panel/add/<int:ci_id>", views.add_ci_panel, name="ci_panel_add"),
-    # edit
-    path("panel/<int:panel_id>/gene/edit/", views.edit_gene, name="gene_edit"),
+    path("ci_panel/add", views.add_ci_panel, name="cip_add"),
     # history
     path("history/", views.history, name="history"),
-    # deactivate clinical indication panel
-    path(
-        "clinical_indication_panel/<int:cip_id>/deactivate",
-        views.activate_or_deactivate_clinical_indication_panel,
-        name="activate_or_deactivate_clinical_indication_panel",
-    ),
     # review
     path("review/", views.review, name="review"),
 ]

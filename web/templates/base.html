@@ -8,7 +8,7 @@
     <title>Eris</title>
 
     <!-- Favicon -->
-    <link rel="favicon icon" href="{% static 'images/favicon.ico' %}"/>
+    <link rel="favicon icon" href="{% static 'images/favicon.ico' %}" />
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" type="text/css">
@@ -23,7 +23,8 @@
     <script type="text/javascript" src="{% static 'js/cdn.datatables.net_1.13.6_js_jquery.dataTables.js' %}"></script>
 
     <!-- Datatable CSS -->
-    <link rel="stylesheet" href="{% static 'css/cdn.datatables.net_1.13.6_css_jquery.dataTables.css' %}" type="text/css"/>
+    <link rel="stylesheet" href="{% static 'css/cdn.datatables.net_1.13.6_css_jquery.dataTables.css' %}"
+        type="text/css" />
 
 </head>
 
@@ -36,9 +37,6 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-                <div class="navbar-nav border-end border-start border-2">
-                    <a class="nav-link" aria-current="page" href="{% url 'clinical_indication_panels' %}">Clinical Indication Panels</a>
-                </div>
                 <div class="navbar-nav border-end border-2">
                     <a class="nav-link" aria-current="page" href="{% url 'history' %}">History</a>
                 </div>
@@ -55,7 +53,7 @@
                     <a class="nav-link" aria-current="page" href="{% url 'genes' %}">Genes</a>
                 </div>
                 <div class="navbar-nav border-end border-2">
-                    <a class="nav-link" aria-current="page" href="{% url 'td' %}">TD</a>
+                    <a class="nav-link" aria-current="page" href="{% url 'seed' %}">Seed</a>
                 </div>
             </div>
         </div>

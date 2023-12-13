@@ -6,11 +6,12 @@
         <div class="col">
             {% if gene %}
             <h1>{{ gene.hgnc_id }}</h1>
+            <h4><span class="badge text-bg-info text-white">Gene</span></h4>
             <h4>{{ gene.gene_symbol }}</h4>
             {% if gene.alias_symbols %}
-                <h4>alias symbols: {{ gene.alias_symbols }}</h4>
+            <h4>alias symbols: {{ gene.alias_symbols }}</h4>
             {% else %}
-                <h4>alias symbols: None</h4>
+            <h4>alias symbols: None</h4>
             {% endif %}
             <h4>alias name: None</h4>
             <h5>database id: {{ gene.id }}</h5>
@@ -19,17 +20,19 @@
             {% endif %}
         </div>
     </div>
-    <br>
+
+    <div class="row my-3"></div>
+
     <div class="row">
         <h3>Associated Panels</h3>
-        {% if panels %}
         <div class="col">
+            {% if panels %}
             <table class="table table-striped table-bordered">
                 <thead>
-                  <tr>
-                    <th>Panel</th>
-                    <th>Active</th>
-                  </tr>
+                    <tr>
+                        <th>Panel</th>
+                        <th>Active</th>
+                    </tr>
                 </thead>
                 <tbody>
                     {% for panel in panels %}
@@ -40,27 +43,28 @@
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
-        {% else %}
-        <div class="col">
+            {% else %}
             <div class="alert alert-info" role="alert">
                 Nothing to show here!
             </div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
 
-    <div class="row mt-2">
-        <h3 class="mt">Transcripts</h3>
+    <div class="row my-3"></div>
+
+    <div class="row">
         <div class="col">
+            <h3 class="mt">Transcripts</h3>
+            {% if transcripts %}
             <table class="table table-bordered table-striped shadow pt-2" id="transcriptTable">
                 <thead class="table-success">
-                  <tr>
-                    <th scope="col">Transcript</th>
-                    <th scope="col">Source</th>
-                    <th scope="col">Reference Genome</th>
-                    <th scope="col">Clinical</th>
-                  </tr>
+                    <tr>
+                        <th scope="col">Transcript</th>
+                        <th scope="col">Source</th>
+                        <th scope="col">Reference Genome</th>
+                        <th scope="col">Clinical</th>
+                    </tr>
                 </thead>
                 <tbody>
                     {% for transcript in transcripts %}
@@ -73,14 +77,19 @@
                         {% endif %}
                         <td>{{ transcript.release_id__reference_genome_id__reference_genome }}</td>
                         {% if transcript.default_clinical %}
-                            <td><span class="badge text-bg-success">{{ transcript.default_clinical }}</span></td>
+                        <td><span class="badge text-bg-success">{{ transcript.default_clinical }}</span></td>
                         {% else %}
-                            <td>{{ transcript.default_clinical }}</td>
+                        <td>{{ transcript.default_clinical }}</td>
                         {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            {% else %}
+            <div class="alert alert-info" role="alert">
+                Nothing to show here!
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>

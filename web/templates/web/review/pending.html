@@ -89,22 +89,18 @@
                         <td>{{ panel.external_id }}</td>
                         <td>
                             <div class="d-flex justify-content-around">
-                                <form action="{% url 'review' %}" method="POST">
+                                <form action="{% url 'panel' panel.id %}" method="POST">
                                     {% csrf_token %}
-                                    <input type="text" class="form-control visually-hidden" name="panel_id"
-                                        value="{{ panel.id }}">
                                     <input type="text" class="form-control visually-hidden" name="action"
-                                        value="approve_panel">
-                                    <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                        value="approve">
+                                    <button type="submit" class="btn btn-success">Approve</button>
                                 </form>
                                 <!-- ignoring action on ci-panel link -->
-                                <form action="{% url 'review' %}" method="POST">
+                                <form action="{% url 'panel' panel.id %}" method="POST">
                                     {% csrf_token %}
-                                    <input type="text" class="form-control visually-hidden" name="panel_id"
-                                        value="{{ panel.id }}">
                                     <input type="text" class="form-control visually-hidden" name="action"
-                                        value="remove_panel">
-                                    <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                                        value="remove">
+                                    <button type="submit" class="btn btn-danger">Remove</button>
                                 </form>
                             </div>
                         </td>
@@ -146,20 +142,16 @@
                         {% endif %}
                         <td>
                             <div class="d-flex justify-content-around">
-                                <form action="{% url 'review' %}" method="POST">
+                                <form action="{% url 'clinical_indication' ci.id %}" method="POST">
                                     {% csrf_token %}
-                                    <input type="text" class="form-control visually-hidden" name="ci_id"
-                                        value="{{ ci.id }}">
                                     <input type="text" class="form-control visually-hidden" name="action"
-                                        value="approve_ci">
+                                        value="approve">
                                     <button type="submit" class="btn btn-success btn-sm">Approve</button>
                                 </form>
                                 <!-- ignoring action on ci-panel link -->
-                                <form action="{% url 'review' %}" method="POST">
+                                <form action="{% url 'clinical_indication' ci.id %}" method="POST">
                                     {% csrf_token %}
-                                    <input type="text" class="form-control visually-hidden" name="ci_id"
-                                        value="{{ ci.id }}">
-                                    {% if ci.reason == 'New' %}
+                                    {% if ci.reason == 'NEW' %}
                                     <input type="text" class="form-control visually-hidden" name="test_method"
                                         value="false">
                                     {% else %}
@@ -167,7 +159,7 @@
                                         value="true">
                                     {% endif %}
                                     <input type="text" class="form-control visually-hidden" name="action"
-                                        value="remove_ci">
+                                        value="remove">
                                     <button type="submit" class="btn btn-danger btn-sm">Remove</button>
                                 </form>
                             </div>
@@ -201,12 +193,12 @@
                 <tbody>
                     {% for cip in cips %}
                     <tr>
-                        <td><span class="badge text-bg-primary">{{ cip.clinical_indication_id__r_code
-                                }}</span>&nbsp;&nbsp;<a
-                                href="{% url 'clinical_indication' cip.clinical_indication_id %}">{{
-                                cip.clinical_indication_id__name }}</a></td>
-                        <td><a href="{% url 'panel' cip.panel_id %}">{{ cip.panel_id__panel_name }}</a> <span
-                                class="badge text-bg-info">v{{ cip.panel_id__panel_version }}</span></td>
+                        <td><span
+                                class="badge text-bg-primary">{{cip.clinical_indication_id__r_code}}</span>&nbsp;&nbsp;<a
+                                href="{% url 'clinical_indication' cip.clinical_indication_id %}">{{cip.clinical_indication_id__name}}</a>
+                        </td>
+                        <td><a href="{% url 'panel' cip.panel_id %}">{{cip.panel_id__panel_name}}</a> <span
+                                class="badge text-bg-info">v{{cip.panel_id__panel_version}}</span></td>
                         {% if cip.current %}
                         <td><span class="badge text-bg-success">Activation</span></td>
                         {% else %}
@@ -215,21 +207,17 @@
                         <td>
                             <div class="d-flex justify-content-around">
                                 <!-- approving new ci-panel link -->
-                                <form action="{% url 'review' %}" method="POST">
+                                <form action="{% url 'clinical_indication_panel' cip.id %}" method="POST">
                                     {% csrf_token %}
-                                    <input type="text" class="form-control visually-hidden" name="cip_id"
-                                        value="{{ cip.id }}">
                                     <input type="text" class="form-control visually-hidden" name="action"
-                                        value="approve_cip">
+                                        value="approve">
                                     <button type="submit" class="btn btn-success btn-sm">Approve</button>
                                 </form>
                                 <!-- ignoring action on ci-panel link -->
-                                <form action="{% url 'review' %}" method="POST">
+                                <form action="{% url 'clinical_indication_panel' cip.id %}" method="POST">
                                     {% csrf_token %}
-                                    <input type="text" class="form-control visually-hidden" name="cip_id"
-                                        value="{{ cip.id }}">
                                     <input type="text" class="form-control visually-hidden" name="action"
-                                        value="revert_cip">
+                                        value="revert">
                                     <button type="submit" class="btn btn-danger btn-sm">Revert</button>
                                 </form>
                             </div>

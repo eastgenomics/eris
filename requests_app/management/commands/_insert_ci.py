@@ -264,7 +264,7 @@ def _retrieve_superpanel_from_pa_id(pa_id: str) -> SuperPanel | None:
     """
     Retrieve a single SuperPanel record based on PA panel id.
     We order multiple SuperPanel records by version and select the highest,
-     to account for multiple entries.
+    to account for multiple entries.
     :param: pa_id [str]: panelapp id
 
     returns:
