@@ -95,7 +95,11 @@
                 <tbody>
                     {% for cip in cips %}
                     <tr>
+                        {% if cip.superpanel %}
+                        <td><a href="{% url 'clinical_indication_superpanel' cip.id %}">{{cip.id}}</a></td>
+                        {% else %}
                         <td><a href="{% url 'clinical_indication_panel' cip.id %}">{{cip.id}}</a></td>
+                        {% endif %}
                         <td><a
                                 href="{% url 'clinical_indication' cip.clinical_indication_id %}">{{cip.clinical_indication_name}}</a>
                         </td>

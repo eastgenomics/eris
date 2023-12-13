@@ -15,6 +15,11 @@ urlpatterns = [
         views.clinical_indication_panel,
         name="clinical_indication_panel",
     ),
+    path(
+        "cisp/<int:cisp_id>/",
+        views.clinical_indication_superpanel,
+        name="clinical_indication_superpanel",
+    ),
     # seed test directory
     path("seed", views.seed, name="seed"),
     path("genepanel/", views.genepanel, name="genepanel"),

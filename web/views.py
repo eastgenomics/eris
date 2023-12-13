@@ -788,6 +788,47 @@ def clinical_indication_panel(request, cip_id: str):
         return redirect("review")
 
 
+def clinical_indication_superpanel(request, cisp_id: str):
+    """
+    Clinical indication panel page
+
+    Shows all clinical indication panel links
+    """
+
+    if request.method == "GET":
+        clinical_indication_superpanel = (
+            ClinicalIndicationSuperPanel.objects.filter(id=cisp_id)
+            .values(
+                "clinical_indication_id__r_code",
+                "clinical_indication_id__name",
+                "superpanel_id__panel_name",
+                "superpanel_id__panel_version",
+                "superpanel_id",
+                "clinical_indication_id",
+                "current",
+                "pending",
+                "id",
+            )
+            .first()
+        )
+
+        releases = CiSuperpanelTdRelease.objects.filter(
+            ci_superpanel=clinical_indication_superpanel["id"]
+        ).values(
+            "td_release_id__release",
+            "td_release_id__td_source",
+            "td_release_id__config_source",
+            "td_release_id__td_date",
+            "id",
+        )
+
+        return render(
+            request,
+            "web/info/clinical_indication_superpanel.html",
+            {"cisp": clinical_indication_superpanel, "releases": releases},
+        )
+
+
 def review(request) -> None:
     """
     Review / Pending page where user can view those links that are
