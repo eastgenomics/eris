@@ -291,13 +291,6 @@ class Command(BaseCommand):
         :return: error - string or None
         """
         errors = []
-        if not ClinicalIndicationPanel.objects.filter(current=True).exists():
-            # if there's no CiPanelAssociation date column, high chance Test Directory
-            # has not been imported yet.
-            errors.append(
-                "ClinicalIndicationPanel table is empty or contains no current entries, run: "
-                "python manage.py seed td <td.json>"
-            )
 
         if not TestDirectoryRelease.objects.all().exists():
             # if there's no TestDirectoryRelease, a td has not been imported yet.
