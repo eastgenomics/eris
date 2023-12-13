@@ -31,43 +31,32 @@ class PanelForm(forms.Form):
     panel_name = forms.CharField(max_length=250, required=True)
     panel_version = forms.CharField(max_length=10, required=False)
 
-    def clean_panel_name(self):
-        panel_name: str = self.cleaned_data["panel_name"]
+    def clean(self):
+        cleaned_data = super().clean()
+        external_id = cleaned_data.get("external_id")
+        panel_version = cleaned_data.get("panel_version")
+        panel_name: str = self.cleaned_data.get("panel_name")
 
-        # clean input
-        panel_name = (
-            panel_name.strip()
-            if not ("HGNC" in panel_name and "," in panel_name)
-            else ",".join(sorted([hgnc.strip() for hgnc in panel_name.split(",")]))
-        )
+        if panel_name:
+            p = Panel.objects.filter(panel_name__iexact=panel_name)
 
-        p = Panel.objects.filter(panel_name__iexact=panel_name)
+            if p:
+                self.add_error(
+                    "panel_name",
+                    "There is an existing panel with this name! Please modify existing entry.",
+                )
 
-        if p:
-            self.add_error(
-                "panel_name",
-                "There is an existing panel with this name! Please modify existing entry.",
+        if external_id and panel_version:
+            p = Panel.objects.filter(
+                external_id__iexact=external_id,
+                panel_version__iexact=sortable_version(panel_version),
             )
 
-        return panel_name
-
-    def clean_external_id(self):
-        external_id = self.cleaned_data.get("external_id")
-        panel_version = self.cleaned_data.get("panel_version")
-
-        if not external_id and not panel_version:
-            return external_id, panel_version
-
-        p = Panel.objects.filter(
-            external_id__iexact=external_id,
-            panel_version__iexact=sortable_version(panel_version),
-        )
-
-        if p:
-            self.add_error(
-                "external_id",
-                "There is an existing panel with this external ID and version! Please modify existing entry.",
-            )
+            if p:
+                self.add_error(
+                    "external_id",
+                    "There is an existing panel with this external ID and version! Please modify existing entry.",
+                )
 
 
 class GeneForm(forms.Form):

@@ -437,6 +437,8 @@ def add_panel(request):
         form_valid: bool = form.is_valid()
 
         if form_valid:
+            print(form.cleaned_data)
+
             # if valid, create Panel
             panel: Panel = Panel.objects.create(
                 external_id=form.cleaned_data.get("external_id"),
