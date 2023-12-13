@@ -18,14 +18,16 @@ urlpatterns = [
     # seed test directory
     path("seed", views.seed, name="seed"),
     path("genepanel/", views.genepanel, name="genepanel"),
-    path("genes/", views.genes, name="genes"),
     path("g2t/", views.genetotranscript, name="g2t"),
     # addition
     path("ci/add/", views.add_clinical_indication, name="ci_add"),
     path("panel/add", views.add_panel, name="panel_add"),
     path("ci_panel/add", views.add_ci_panel, name="cip_add"),
+    path("gene/add", views.add_gene, name="gene_add"),
     # history
     path("history/", views.history, name="history"),
     # review
     path("review/", views.review, name="review"),
+    # api
+    path("api/genes/", views.ajax_genes, name="api_genes"),
 ]

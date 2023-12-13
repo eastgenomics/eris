@@ -23,6 +23,11 @@
             {% else %}
             <h4>test method: None</h4>
             {% endif %}
+            {% if ci.pending %}
+            <h4>pending: <span class="badge text-bg-success">{{ci.pending}}</span></h4>
+            {% else %}
+            <h4>pending: <span class="badge text-bg-danger">{{ci.pending}}</span></h4>
+            {% endif %}
             <h5>database id: <span class="text-danger">{{ ci.id }}</span></h5>
             {% else %}
             <h1>Clinical Indication Does Not Exist.</h1>
@@ -49,7 +54,7 @@
                 <tbody>
                     {% for cip in ci_panels %}
                     <tr>
-                        <td>{{ cip.id }}</td>
+                        <td><a href="{% url 'clinical_indication_panel' cip.id %}">{{cip.id}}</a></td>
                         {% if cip.current %}
                         <td><span class="badge text-bg-success">{{cip.current}}</span></td>
                         {% else %}

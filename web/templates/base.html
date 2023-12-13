@@ -17,7 +17,7 @@
     <!--  https://www.color-hex.com/color-palette/1027214  -->
 
     <!-- jQuery JS -->
-    <script type="text/javascript" src="{% static 'js/code.jquery.com_jquery-3.7.1.slim.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/jquery-3.7.1.min.js' %}"></script>
 
     <!-- Datatable JS -->
     <script type="text/javascript" src="{% static 'js/cdn.datatables.net_1.13.6_js_jquery.dataTables.js' %}"></script>
@@ -40,17 +40,14 @@
                 <div class="navbar-nav border-end border-2">
                     <a class="nav-link" aria-current="page" href="{% url 'history' %}">History</a>
                 </div>
-                <div class="navbar-nav border-end border-2">
+                <!-- <div class="navbar-nav border-end border-2">
                     <a class="nav-link" aria-current="page" href="{% url 'genepanel' %}">Genepanel</a>
                 </div>
                 <div class="navbar-nav border-end border-2">
                     <a class="nav-link" aria-current="page" href="{% url 'g2t' %}">G2t</a>
-                </div>
+                </div> -->
                 <div class="navbar-nav border-end border-2">
                     <a class="nav-link" aria-current="page" href="{% url 'review' %}">Manual Review</a>
-                </div>
-                <div class="navbar-nav border-end border-2">
-                    <a class="nav-link" aria-current="page" href="{% url 'genes' %}">Genes</a>
                 </div>
                 <div class="navbar-nav border-end border-2">
                     <a class="nav-link" aria-current="page" href="{% url 'seed' %}">Seed</a>

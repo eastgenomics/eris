@@ -8,7 +8,8 @@ import datetime as dt
 from packaging.version import Version
 
 from django.shortcuts import render, redirect
-from django.db.models import QuerySet, Q
+from django.http import JsonResponse
+from django.db.models import QuerySet, Q, F
 from django.db import transaction
 
 from .forms import ClinicalIndicationForm, PanelForm, GeneForm
@@ -26,6 +27,7 @@ from requests_app.models import (
     ClinicalIndicationPanelHistory,
     ClinicalIndicationSuperPanel,
     CiPanelTdRelease,
+    CiSuperpanelTdRelease,
     ClinicalIndicationTestMethodHistory,
     PanelGene,
     PanelGeneHistory,
@@ -39,6 +41,7 @@ from requests_app.models import (
     TranscriptReleaseTranscript,
     TestDirectoryRelease,
     SuperPanel,
+    TranscriptRelease,
 )
 
 
@@ -58,14 +61,14 @@ def index(request):
     # normalize panel version
     for panel in panels:
         panel.panel_version = normalize_version(panel.panel_version)
-        panel.super_panel = False
+        panel.superpanel = False
 
     super_panels = SuperPanel.objects.all()
 
     # normalize panel version
     for sp in super_panels:
         sp.panel_version = normalize_version(sp.panel_version)
-        sp.super_panel = True
+        sp.superpanel = True
 
     all_panels = list(chain(panels, super_panels))
 
@@ -75,13 +78,40 @@ def index(request):
         "panel_id",
         "current",
         "pending",
-        "clinical_indication_id__name",
-        "panel_id__panel_name",
         "id",
+        panel_name=F("panel_id__panel_name"),
+        clinical_indication_name=F("clinical_indication_id__name"),
+    )
+
+    clinical_indication_sp = ClinicalIndicationSuperPanel.objects.values(
+        "clinical_indication_id",
+        "current",
+        "pending",
+        "id",
+        panel_id=F("superpanel_id"),
+        panel_name=F("superpanel_id__panel_name"),
+        clinical_indication_name=F("clinical_indication_id__name"),
     )
 
     # get latest test directory release for each ci-panel link
     for row in clinical_indication_panels:
+        superpanel_id = row["id"]
+
+        releases = CiSuperpanelTdRelease.objects.filter(
+            ci_superpanel_id=superpanel_id
+        ).values(
+            "td_release_id__release",
+        )
+
+        row["td_release"] = (
+            max([Version(release["td_release_id__release"]) for release in releases])
+            if releases
+            else None
+        )
+
+        row["superpanel"] = False
+
+    for row in clinical_indication_sp:
         id = row["id"]
 
         releases = CiPanelTdRelease.objects.filter(ci_panel_id=id).values(
@@ -94,6 +124,12 @@ def index(request):
             else None
         )
 
+        row["superpanel"] = True
+
+    all_clinical_indication_p_and_sp = list(
+        chain(clinical_indication_panels, clinical_indication_sp)
+    )
+
     # fetch Test Directory Releases
     td_releases = TestDirectoryRelease.objects.all()
 
@@ -103,7 +139,7 @@ def index(request):
         {
             "cis": clinical_indications,
             "panels": all_panels,
-            "cips": clinical_indication_panels,
+            "cips": all_clinical_indication_p_and_sp,
             "td_releases": td_releases,
         },
     )
@@ -493,20 +529,26 @@ def add_ci_panel(request):
         panel_id = request.POST.get("panel")
         clinical_indication_id = request.POST.get("clinical_indication")
 
-        cip_instance, created = ClinicalIndicationPanel.objects.get_or_create(
-            clinical_indication_id=clinical_indication_id,
-            panel_id=panel_id,
-            defaults={
-                "current": True,
-                "pending": True,
-            },
-        )
+        with transaction.atomic():
+            cip_instance, created = ClinicalIndicationPanel.objects.get_or_create(
+                clinical_indication_id=clinical_indication_id,
+                panel_id=panel_id,
+                defaults={
+                    "current": True,
+                    "pending": True,
+                },
+            )
 
-        # don't require review if cip already exist and pending is False
-        cip_instance.pending = (
-            False if (not cip_instance.pending and not created) else True
-        )
-        cip_instance.save()
+            # don't require review if cip already exist and pending is False
+            cip_instance.pending = (
+                False if (not cip_instance.pending and not created) else True
+            )
+            cip_instance.save()
+
+            ClinicalIndicationPanelHistory.objects.create(
+                clinical_indication_id=cip_instance.id,
+                note=History.clinical_indication_panel_created(),
+            )
 
         return redirect(
             "clinical_indication_panel",
@@ -709,15 +751,41 @@ def clinical_indication_panel(request, cip_id: str):
         clinical_indication_panel = ClinicalIndicationPanel.objects.get(id=cip_id)
 
         if action in ["activate", "deactivate"]:
-            clinical_indication_panel.current = True if action == "activate" else False
+            if action == "activate":
+                clinical_indication_panel.current = True
+                ClinicalIndicationPanelHistory.objects.create(
+                    clinical_indication_id=cip_id,
+                    note=History.clinical_indication_panel_activated(cip_id, True),
+                )
+            elif action == "deactivate":
+                clinical_indication_panel.current = False
+                ClinicalIndicationPanelHistory.objects.create(
+                    clinical_indication_id=cip_id,
+                    note=History.clinical_indication_panel_deactivated(cip_id, True),
+                )
             clinical_indication_panel.pending = True  # require manual review
         elif action == "revert":
             # action is "revert" from Review page
             clinical_indication_panel.current = not clinical_indication_panel.current
             clinical_indication_panel.pending = False
+
+            ClinicalIndicationPanelHistory.objects.create(
+                clinical_indication_id=cip_id,
+                note=History.clinical_indication_panel_reverted(
+                    id=cip_id,
+                    old_value=clinical_indication_panel.current,
+                    new_value=not clinical_indication_panel.current,
+                    review=True,
+                ),
+            )
         else:
             # action is "approve" from Review page
             clinical_indication_panel.pending = False
+            ClinicalIndicationPanelHistory.objects.create(
+                clinical_indication_id=cip_id,
+                note=History.clinical_indication_panel_approved(cip_id),
+            
+            )
 
         clinical_indication_panel.save()
 
@@ -955,7 +1023,9 @@ def gene(request, gene_id: int) -> None:
     )
 
 
-def genepanel(request):  # TODO: revisit once another PR merged
+def genepanel(
+    request,
+):  # TODO: revisit once output PR is merged because there's some function change in that PR
     """
     Genepanel page where user view R code, clinical indication name
     its associated panels and genes.
@@ -1097,14 +1167,14 @@ def genepanel(request):  # TODO: revisit once another PR merged
     )
 
 
-def genes(request):
+def add_gene(request):
     """
-    Page that display all genes present in database
-    POST request allows adding of custom gene into the database
+    url name "gene_add"
     """
-    genes = Gene.objects.all().order_by("hgnc_id")
 
-    if request.method == "POST":
+    if request.method == "GET":
+        return render(request, "web/addition/add_gene.html")
+    else:
         # parse submitted form
         form = GeneForm(request.POST)
 
@@ -1113,20 +1183,21 @@ def genes(request):
             gene_symbol: str = request.POST.get("gene_symbol").strip()
 
             # if form valid, create gene
-            Gene.objects.create(
+            gene = Gene.objects.create(
                 hgnc_id=hgnc_id.upper(),
                 gene_symbol=gene_symbol.upper(),
             )
 
-        return render(
-            request,
-            "web/addition/add_gene.html",
-            {
-                "genes": genes,
-                "errors": form.errors if not form.is_valid() else None,
-                "success": hgnc_id if form.is_valid() else None,
-            },
-        )
+            return redirect("gene", gene_id=gene.id)
+
+        else:
+            return render(
+                request,
+                "web/addition/add_gene.html",
+                {
+                    "errors": form.errors if not form.is_valid() else None,
+                },
+            )
 
     return render(
         request,
@@ -1135,131 +1206,148 @@ def genes(request):
     )
 
 
-def genetotranscript(request):  # TODO: revisit once another PR merged
+def ajax_genes(request):
     """
-    g2t page where user can view all genes and its associated transcripts
-    there is a form to allow user to upload g2t to specified dnanexus project
-    similar to the one in genepanel page
-
+    Ajax fetch call to get all genes
     """
-    success = None
+    if request.method == "GET":
+        genes = list(Gene.objects.all().order_by("hgnc_id").values())
 
-    transcripts = TranscriptReleaseTranscript.objects.values(
-        "transcript_id__gene_id__hgnc_id",
-        "transcript_id__gene_id",
-        "transcript_id__transcript",
-        "release_id__source_id__source",
-        "default_clinical",
-    )
+        return JsonResponse({"data": genes}, safe=False)
 
-    # convert to list of [hgnc-id, transcript, sources, which one is clinical]
-    hgnc_to_gene_id = {}
-    hgnc_to_txs = collections.defaultdict(list)
-    hgnc_tx_to_assessed_sources = collections.defaultdict(list)
-    hgnc_tx_to_clinical_source = collections.defaultdict(list)
 
-    for tx in transcripts:
-        hgnc = tx["transcript_id__gene_id__hgnc_id"]
-        transcript = tx["transcript_id__transcript"]
+def ajax_gene_transcripts(request, reference_genome: str):
+    if request.method == "GET":
+        # TODO: revisit once tx is sorted
 
-        if hgnc not in hgnc_to_gene_id:
-            hgnc_to_gene_id[hgnc] = tx["transcript_id__gene_id"]
+        # fetch latest transcript
+        transcripts = TranscriptReleaseTranscript.objects.values(
+            "transcript_id__gene_id__hgnc_id",
+            "transcript_id__gene_id",
+            "transcript_id__transcript",
+            "release_id__source_id__source",
+            "default_clinical",
+        )
 
-        if transcript not in hgnc_to_txs[hgnc]:
-            hgnc_to_txs[hgnc].append(transcript)
+        # convert to list of [hgnc-id, transcript, sources, which one is clinical]
+        hgnc_to_gene_id = {}
+        hgnc_to_txs = collections.defaultdict(list)
+        hgnc_tx_to_assessed_sources = collections.defaultdict(list)
+        hgnc_tx_to_clinical_source = collections.defaultdict(list)
 
-        if tx["default_clinical"]:
-            hgnc_tx_to_clinical_source[hgnc + transcript].append(
+        for tx in transcripts:
+            hgnc = tx["transcript_id__gene_id__hgnc_id"]
+            transcript = tx["transcript_id__transcript"]
+
+            if hgnc not in hgnc_to_gene_id:
+                hgnc_to_gene_id[hgnc] = tx["transcript_id__gene_id"]
+
+            if transcript not in hgnc_to_txs[hgnc]:
+                hgnc_to_txs[hgnc].append(transcript)
+
+            if tx["default_clinical"]:
+                hgnc_tx_to_clinical_source[hgnc + transcript].append(
+                    tx["release_id__source_id__source"]
+                )
+
+            hgnc_tx_to_assessed_sources[hgnc + transcript].append(
                 tx["release_id__source_id__source"]
             )
 
-        hgnc_tx_to_assessed_sources[hgnc + transcript].append(
-            tx["release_id__source_id__source"]
-        )
+        trancript_list = []
 
-    trancript_list = []
-
-    for hgnc, txs in hgnc_to_txs.items():
-        for tx in txs:
-            trancript_list.append(
-                {
-                    "gene_id": hgnc_to_gene_id[hgnc],
-                    "hgnc_id": hgnc,
-                    "tx": tx,
-                    "sources": ", ".join(
-                        hgnc_tx_to_assessed_sources.get(hgnc + tx, [])
-                    ),
-                    "clinical_sources": hgnc_tx_to_clinical_source.get(hgnc + tx, []),
-                }
-            )
-
-    if request.method == "POST":
-        project_id = request.POST.get("project_id").strip()
-        dnanexus_token = request.POST.get("dnanexus_token").strip()
-
-        try:
-            # login dnanexus
-            dx.set_security_context(
-                {
-                    "auth_token_type": "Bearer",
-                    "auth_token": dnanexus_token,
-                }
-            )
-
-            # check dnanexus login
-            dx.api.system_whoami()
-
-            # check dnanexus project id
-            dx.DXProject(project_id)
-
-            project_metadata: dict = dx.DXProject(project_id).describe()
-            project_name: str = project_metadata.get("name", "")
-
-            if project_name.startswith("001") or project_name.startswith("002"):
-                return render(
-                    request,
-                    "web/info/gene2transcript.html",
+        for hgnc, txs in hgnc_to_txs.items():
+            for tx in txs:
+                trancript_list.append(
                     {
-                        "transcripts": transcripts,
-                        "error": "Uploading to 001 or 002 project is not allowed.",
-                    },
+                        "gene_id": hgnc_to_gene_id[hgnc],
+                        "hgnc_id": hgnc,
+                        "tx": tx,
+                        "sources": ", ".join(
+                            hgnc_tx_to_assessed_sources.get(hgnc + tx, [])
+                        ),
+                        "clinical_sources": hgnc_tx_to_clinical_source.get(
+                            hgnc + tx, []
+                        ),
+                    }
                 )
 
-            current_datetime = dt.datetime.today().strftime("%Y%m%d")
 
-            # write result to dnanexus file
-            with dx.new_dxfile(
-                name=f"{current_datetime}_g2t.tsv",
-                project=project_id,
-                media_type="text/plain",
-            ) as f:
-                for row in transcripts:
-                    hgnc_id = row["gene_id__hgnc_id"]
-                    transcript = row["transcript"]
-                    source = row.get("source")
+def genetotranscript(request):
+    """
+    g2t page where it display gene and their transcripts (clinical and non-clinical)
 
-                    data = "\t".join(
-                        [hgnc_id, transcript, "clinical" if source else "non-clinical"]
-                    )
-                    data = "\t".join(
-                        [hgnc_id, transcript, "clinical" if source else "non-clinical"]
-                    )
-                    f.write(f"{data}\n")
+    NOTE: this page only display the transcript from the latest TranscriptRelease
+    as in it will only display the gene and transcripts that are suppose to make it
+    into the g2t output file.
 
-        except Exception as e:
-            return render(
-                request,
-                "web/info/gene2transcript.html",
-                {"transcripts": transcripts, "error": e},
-            )
+    For transcript of different TranscriptRelease, this should be viewed under individual
+    gene page which is more detailed
+    """
 
-        success = True
+    return render(request, "web/info/gene2transcript.html")
 
-    return render(
-        request,
-        "web/info/gene2transcript.html",
-        {"transcripts": trancript_list, "success": success},
-    )
+    # if request.method == "POST":  # TODO: revisit once tx is sorted
+    #     project_id = request.POST.get("project_id").strip()
+    #     dnanexus_token = request.POST.get("dnanexus_token").strip()
+
+    #     try:
+    #         # login dnanexus
+    #         dx.set_security_context(
+    #             {
+    #                 "auth_token_type": "Bearer",
+    #                 "auth_token": dnanexus_token,
+    #             }
+    #         )
+
+    #         # check dnanexus login
+    #         dx.api.system_whoami()
+
+    #         # check dnanexus project id
+    #         dx.DXProject(project_id)
+
+    #         project_metadata: dict = dx.DXProject(project_id).describe()
+    #         project_name: str = project_metadata.get("name", "")
+
+    #         if project_name.startswith("001") or project_name.startswith("002"):
+    #             return render(
+    #                 request,
+    #                 "web/info/gene2transcript.html",
+    #                 {
+    #                     "transcripts": transcripts,
+    #                     "error": "Uploading to 001 or 002 project is not allowed.",
+    #                 },
+    #             )
+
+    #         current_datetime = dt.datetime.today().strftime("%Y%m%d")
+
+    #         # write result to dnanexus file
+    #         with dx.new_dxfile(
+    #             name=f"{current_datetime}_g2t.tsv",
+    #             project=project_id,
+    #             media_type="text/plain",
+    #         ) as f:
+    #             for row in transcripts:
+    #                 hgnc_id = row["gene_id__hgnc_id"]
+    #                 transcript = row["transcript"]
+    #                 source = row.get("source")
+
+    #                 data = "\t".join(
+    #                     [hgnc_id, transcript, "clinical" if source else "non-clinical"]
+    #                 )
+    #                 data = "\t".join(
+    #                     [hgnc_id, transcript, "clinical" if source else "non-clinical"]
+    #                 )
+    #                 f.write(f"{data}\n")
+
+    #     except Exception as e:
+    #         return render(
+    #             request,
+    #             "web/info/gene2transcript.html",
+    #             {"transcripts": transcripts, "error": e},
+    #         )
+
+    #     success = True
 
 
 def seed(request):

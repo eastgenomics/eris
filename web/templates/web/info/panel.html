@@ -65,7 +65,7 @@
                 <tbody>
                     {% for ci_panel in ci_panels %}
                     <tr>
-                        <td>{{ci_panel.id}}</td>
+                        <td><a href="{% url 'clinical_indication_panel' ci_panel.id %}">{{ci_panel.id}}</a></td>
                         <td>{{ci_panel.current}}</td>
                         <td><a
                                 href="{% url 'clinical_indication' ci_panel.clinical_indication_id %}">{{ci_panel.clinical_indication_id__name}}</a>
