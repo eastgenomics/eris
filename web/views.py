@@ -94,7 +94,7 @@ def index(request):
     )
 
     # get latest test directory release for each ci-panel link
-    for row in clinical_indication_panels:
+    for row in clinical_indication_sp:
         superpanel_id = row["id"]
 
         releases = CiSuperpanelTdRelease.objects.filter(
@@ -109,9 +109,9 @@ def index(request):
             else None
         )
 
-        row["superpanel"] = False
+        row["superpanel"] = True
 
-    for row in clinical_indication_sp:
+    for row in clinical_indication_panels:
         id = row["id"]
 
         releases = CiPanelTdRelease.objects.filter(ci_panel_id=id).values(
@@ -124,7 +124,7 @@ def index(request):
             else None
         )
 
-        row["superpanel"] = True
+        row["superpanel"] = False
 
     all_clinical_indication_p_and_sp = list(
         chain(clinical_indication_panels, clinical_indication_sp)
