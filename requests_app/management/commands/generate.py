@@ -217,11 +217,10 @@ class Command(BaseCommand):
 
                     # process the panel version
                     panel_version: str = (
-                        normalize_version(
-                        panel_dict["ci_panel__panel__panel_version"]
-                        )
+                        normalize_version(panel_dict["ci_panel__panel__panel_version"])
                         if panel_dict["ci_panel__panel__panel_version"]
-                        else None)
+                        else None
+                    )
                     line = [
                         f"{r_code}_{ci_name}",
                         f"{panel_dict['ci_panel__panel__panel_name']}_{panel_version}",
@@ -542,9 +541,10 @@ class Command(BaseCommand):
                 # if the genome is valid, run the controller function, _generate_g2t
                 genome = ReferenceGenome.objects.get(reference_genome=parsed_genome)
             except ObjectDoesNotExist:
-                raise ObjectDoesNotExist("Aborting g2t: reference genome does not exist in the database")
-                
+                raise ObjectDoesNotExist(
+                    "Aborting g2t: reference genome does not exist in the database"
+                )
+
             self._generate_g2t(output_directory, genome)
             end = dt.datetime.now().strftime("%H:%M:%S")
             print(f"g2t file created at {output_directory} at {end}")
-            
