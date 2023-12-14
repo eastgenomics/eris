@@ -518,6 +518,7 @@ def _prepare_markname_file(markname_file: str) -> dict[str:list]:
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
 
 
+# TODO: current main chokepoint
 def _add_transcript_to_db_with_gff_release(
     gene: Gene,
     transcript: str,
@@ -560,9 +561,7 @@ def _add_transcript_to_db_with_gff_release(
     return tx
 
 
-def _add_transcript_categorisation_to_db(
-    transcript: Transcript, data: dict[TranscriptRelease : dict[str:bool]]
-) -> None:
+def _add_transcript_categorisation_to_db(data_dict: dict) -> None:
     """
     Each transcript has been searched for in different transcript release files,
     to work out whether its a default clinical transcript or not.
@@ -573,23 +572,20 @@ def _add_transcript_categorisation_to_db(
     This function stores that search information, along with the transcript-release
     link.
 
-    :param: the Transcript object
-    :param: a dictionary containing TranscriptRelease objects (generally 1 for MANE Select,
-    1 for MANE Plus Clinical and 1 for HGMD), each of which has a dictionary as its key.
-    The nested dictionary contains the keys 'match_version', 'match_base' and 'clinical'
-    which tells you whether the tx was found in the release (True/False) or not looked
-    for (None).
+    :param: a dictionary containing the keys "transcript", for which the value is a Transcript instance,
+    "release" for which the value is a TranscriptRelease instance, and "match_version" "match_base" and
+    "default_clinical", which are bools describing the status of the transcript in each release.
     """
     TranscriptReleaseTranscript.objects.bulk_create(
         [
             TranscriptReleaseTranscript(
-                transcript=transcript,
-                release=release,
-                match_version=data["match_version"],
-                match_base=data["match_base"],
-                default_clinical=data["clinical"],
+                transcript=i["transcript"],
+                release=i["release"],
+                match_version=i["match_version"],
+                match_base=i["match_base"],
+                default_clinical=i["clinical"],
             )
-            for release, data in data.items()
+            for i in data_dict
         ],
         ignore_conflicts=True,
     )
@@ -650,7 +646,7 @@ def _get_clin_transcript_from_hgmd_files(
 
     return hgmd_base, None
 
-#TODO: _transcript_assign_to_source is a major chokepoint on cProfile
+
 def _transcript_assign_to_source(
     tx: str,
     hgnc_id: str,
@@ -675,7 +671,11 @@ def _transcript_assign_to_source(
     """
     # set up starting data
     mane_select_data = {"clinical": None, "match_base": None, "match_version": None}
-    mane_plus_clinical_data = {"clinical": None, "match_base": None, "match_version": None}
+    mane_plus_clinical_data = {
+        "clinical": None,
+        "match_base": None,
+        "match_version": None,
+    }
     hgmd_data = {"clinical": None, "match_base": None, "match_version": None}
     err = None
 
@@ -724,7 +724,7 @@ def _transcript_assign_to_source(
             else:
                 err = f"Versionless transcript in MANE more than once, can't resolve: {tx}"
                 return mane_select_data, mane_plus_clinical_data, hgmd_data, err
-        else: # exactly 1 match between the MANE base and the transcript
+        else:  # exactly 1 match between the MANE base and the transcript
             source = mane_base_match[0]["MANE TYPE"]
             if str(source).lower() == "mane select":
                 mane_select_data["clinical"] = True
@@ -793,7 +793,7 @@ def _link_release_to_file_id(
         transcript_release=release, transcript_file=transcript_file
     )
 
-#TODO: _add_transcript_release_info_to_db is the second chokepoint for time
+
 def _add_transcript_release_info_to_db(
     source: str,
     release_version: str,
@@ -981,12 +981,14 @@ def _check_for_transcript_seeding_version_regression(
         [
             f"Provided {source} version {input_version} is a lower version than v{str(latest_db_versions[source])} in the db"
             for source, input_version in input_versions.items()
-            if latest_db_versions[source] and Version(input_version) < latest_db_versions[source]
+            if latest_db_versions[source]
+            and Version(input_version) < latest_db_versions[source]
         ]
     )
 
     if error:
         raise ValueError("Abandoning input:\n" + error)
+
 
 # 'atomic' should ensure that any failure rolls back the entire attempt to seed
 # transcripts - resetting the database to its start position
@@ -1080,8 +1082,9 @@ def seed_transcripts(
     # decide whether a transcript is clinical or not
     # add all this information to the database
     tx_starting = datetime.datetime.now().strftime("%H:%M:%S")
-    print(f"Start adding transcripts: {tx_starting}")
+    print(f"Start adding transcripts to db: {tx_starting}")
 
+    release_categories = []
     for hgnc_id, transcripts in gff.items():
         gene = Gene.objects.get(hgnc_id=hgnc_id)
         # get deduplicated transcripts
@@ -1105,12 +1108,30 @@ def seed_transcripts(
 
             # link all the releases to the Transcript,
             # with the dictionaries containing match information
-            releases_and_data_to_link = {
-                mane_select_rel: mane_select_data,
-                mane_plus_clinical_rel: mane_plus_clinical_data,
-                hgmd_rel: hgmd_data,
-            }
-            _add_transcript_categorisation_to_db(transcript, releases_and_data_to_link)
+            tx_data_mane_select = dict()
+            tx_data_mane_plus_clinical = dict()
+            tx_data_hgmd = dict()
+
+            tx_data_mane_select["transcript"] = tx_data_mane_plus_clinical[
+                "transcript"
+            ] = tx_data_hgmd["transcript"] = transcript
+            tx_data_mane_select["release"] = mane_select_rel
+            tx_data_mane_plus_clinical["release"] = mane_plus_clinical_rel
+            tx_data_hgmd["release"] = hgmd_rel
+
+            for key, value in mane_select_data.items():
+                tx_data_mane_select[key] = value
+            for key, value in mane_plus_clinical_data.items():
+                tx_data_mane_plus_clinical[key] = value
+            for key, value in hgmd_data.items():
+                tx_data_hgmd[key] = value
+
+            release_categories.append(tx_data_mane_select)
+            release_categories.append(tx_data_mane_plus_clinical)
+            release_categories.append(tx_data_hgmd)
+
+    print(f"Start adding transcript clinical information to db: {tx_starting}")
+    _add_transcript_categorisation_to_db(release_categories)
 
     tx_ending = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"Finished adding transcripts to db: {tx_ending}")

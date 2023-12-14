@@ -55,25 +55,31 @@ class TestTranscriptAdded_FromScratch(TestCase):
         """
         err = []  # list of errors to be reported at the end
 
-        input_mane_select = {
-            "clinical": True,
-            "match_base": True,
-            "match_version": False,
-        }
-        input_mane_plus_clinical = {
-            "clinical": None,
-            "match_base": None,
-            "match_version": None,
-        }
-        input_hgmd = {"clinical": None, "match_base": None, "match_version": None}
+        input_data = [
+            {
+                "transcript": self.tx,
+                "release": self.select_release,
+                "clinical": True,
+                "match_base": True,
+                "match_version": False,
+            },
+            {
+                "transcript": self.tx,
+                "release": self.plus_release,
+                "clinical": None,
+                "match_base": None,
+                "match_version": None,
+            },
+            {
+                "transcript": self.tx,
+                "release": self.hgmd_release,
+                "clinical": None,
+                "match_base": None,
+                "match_version": None,
+            },
+        ]
 
-        input_data = {
-            self.select_release: input_mane_select,
-            self.plus_release: input_mane_plus_clinical,
-            self.hgmd_release: input_hgmd,
-        }
-
-        _add_transcript_categorisation_to_db(self.tx, input_data)
+        _add_transcript_categorisation_to_db(input_data)
 
         tx_link = TranscriptReleaseTranscript.objects.all()
         err += len_check_wrapper(tx_link, "link", 3)
@@ -176,25 +182,31 @@ class TestTranscriptAdded_PreexistingReleases(TestCase):
         """
         err = []  # list of errors to be reported at the end
 
-        input_mane_select = {
-            "clinical": True,
-            "match_base": True,
-            "match_version": False,
-        }
-        input_mane_plus_clinical = {
-            "clinical": None,
-            "match_base": None,
-            "match_version": None,
-        }
-        input_hgmd = {"clinical": None, "match_base": None, "match_version": None}
+        input_data = [
+            {
+                "transcript": self.tx,
+                "release": self.select_new,
+                "clinical": True,
+                "match_base": True,
+                "match_version": False,
+            },
+            {
+                "transcript": self.tx,
+                "release": self.plus_new,
+                "clinical": None,
+                "match_base": None,
+                "match_version": None,
+            },
+            {
+                "transcript": self.tx,
+                "release": self.hgmd_new,
+                "clinical": None,
+                "match_base": None,
+                "match_version": None,
+            },
+        ]
 
-        input_data = {
-            self.select_new: input_mane_select,
-            self.plus_new: input_mane_plus_clinical,
-            self.hgmd_new: input_hgmd,
-        }
-
-        _add_transcript_categorisation_to_db(self.tx, input_data)
+        _add_transcript_categorisation_to_db(input_data)
 
         tx_link = TranscriptReleaseTranscript.objects.all()
         err += len_check_wrapper(tx_link, "link", 6)

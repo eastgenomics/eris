@@ -51,7 +51,7 @@ class TestBasicManeFile(TestCase):
                     "HGNC ID": "HGNC:1",
                     "MANE TYPE": "MANE SELECT",
                     "RefSeq": "NM_130786.4",
-                    "RefSeq_versionless": "NM_130786"
+                    "RefSeq_versionless": "NM_130786",
                 },
                 {
                     "HGNC ID": "HGNC:2",

@@ -1,7 +1,6 @@
 from django.test import TestCase
 
 
-
 from requests_app.management.commands._parse_transcript import _parse_reference_genome
 
 
