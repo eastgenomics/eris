@@ -10,7 +10,7 @@
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 {% for key, values in errors.items %}
                 {% for error in values %}
-                <strong>Beep!</strong> {{ error }}
+                <strong>Error!</strong> {{ error }}
                 {% if ci %}
                 <a href="{% url 'clinical_indication' ci.id %}" target="_blank">{{ ci.name }}</a>
                 {% endif %}

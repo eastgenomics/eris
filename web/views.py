@@ -1,11 +1,10 @@
-import secrets
-import string
 import collections
 import json
 from itertools import chain
 import dxpy as dx
 import datetime as dt
 from packaging.version import Version
+from django.http import HttpRequest, HttpResponse
 
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
@@ -45,7 +44,7 @@ from requests_app.models import (
 )
 
 
-def index(request):
+def index(request: HttpRequest) -> HttpResponse:
     """
     Main page. Display all clinical indications and panels
     """
@@ -145,7 +144,7 @@ def index(request):
     )
 
 
-def panel(request, panel_id: int):
+def panel(request: HttpRequest, panel_id: int) -> HttpResponse:
     """
     Panel info page when viewing single panel
     Shows everything about a panel: genes, transcripts, clinical indications, clinical indication-panel links etc
@@ -219,7 +218,7 @@ def panel(request, panel_id: int):
         return redirect("review")
 
 
-def superpanel(request, superpanel_id: int):
+def superpanel(request: HttpRequest, superpanel_id: int) -> HttpResponse:
     # fetch superpanel
     try:
         superpanel = SuperPanel.objects.get(id=superpanel_id)
@@ -269,7 +268,7 @@ def superpanel(request, superpanel_id: int):
     )
 
 
-def clinical_indication(request, ci_id: int):
+def clinical_indication(request: HttpRequest, ci_id: int) -> HttpResponse:
     """
     Clinical indication info page
     Shows everything about a clinical indication: genes, transcripts, panels, clinical indication-panel links etc
@@ -332,38 +331,39 @@ def clinical_indication(request, ci_id: int):
                 ci.delete()  # ci is newly created, so we can delete it
 
             else:
-                # if test method change, we need to revert it back to previous test method
-                indication_history = (
-                    ClinicalIndicationTestMethodHistory.objects.filter(
-                        clinical_indication_id=ci_id,
+                with transaction.atomic():
+                    # if test method change, we need to revert it back to previous test method
+                    indication_history = (
+                        ClinicalIndicationTestMethodHistory.objects.filter(
+                            clinical_indication_id=ci_id,
+                        )
+                        .order_by("-id")
+                        .first()
                     )
-                    .order_by("-id")
-                    .first()
-                )
 
-                # extract test method from "ClinicalIndication metadata test_method changed from Single gene sequencing >=10 amplicons to Small panel"
-                previous_test_method = (
-                    indication_history.note.split("to")[0].split("from")[-1].strip()
-                )
+                    # extract test method from "ClinicalIndication metadata test_method changed from Single gene sequencing >=10 amplicons to Small panel"
+                    previous_test_method = (
+                        indication_history.note.split("to")[0].split("from")[-1].strip()
+                    )
 
-                ClinicalIndicationTestMethodHistory.objects.create(
-                    clinical_indication_id=ci_id,
-                    user="online",
-                    note=History.clinical_indication_metadata_changed(
-                        "test_method",
-                        ci.test_method,
-                        previous_test_method,
-                    ),
-                )
+                    ClinicalIndicationTestMethodHistory.objects.create(
+                        clinical_indication_id=ci_id,
+                        user="online",
+                        note=History.clinical_indication_metadata_changed(
+                            "test_method",
+                            ci.test_method,
+                            previous_test_method,
+                        ),
+                    )
 
-                ci.pending = False
-                ci.test_method = previous_test_method
-                ci.save()
+                    ci.pending = False
+                    ci.test_method = previous_test_method
+                    ci.save()
 
             return redirect("review")
 
 
-def add_clinical_indication(request):
+def add_clinical_indication(request: HttpRequest) -> HttpResponse:
     """
     Add clinical indication page
     """
@@ -418,7 +418,7 @@ def add_clinical_indication(request):
             )
 
 
-def add_panel(request):
+def add_panel(request: HttpRequest) -> HttpResponse:
     """
     Add panel page
     """
@@ -437,45 +437,46 @@ def add_panel(request):
         form_valid: bool = form.is_valid()
 
         if form_valid:
-            print(form.cleaned_data)
-
-            # if valid, create Panel
-            panel: Panel = Panel.objects.create(
-                external_id=form.cleaned_data.get("external_id"),
-                panel_name=form.cleaned_data.get("panel_name"),
-                panel_version=form.cleaned_data.get("panel_version"),
-                pending=True,
-                custom=True,
-                panel_source="online",
-            )
-
-            conf, _ = Confidence.objects.get_or_create(confidence_level=None)
-            moi, _ = ModeOfInheritance.objects.get_or_create(mode_of_inheritance=None)
-            mop, _ = ModeOfPathogenicity.objects.get_or_create(
-                mode_of_pathogenicity=None
-            )
-            penetrance, _ = Penetrance.objects.get_or_create(penetrance=None)
-
-            for gene_id in selected_genes:
-                pg_instance, pg_created = PanelGene.objects.get_or_create(
-                    panel_id=panel.id,
-                    gene_id=gene_id,
-                    active=True,
-                    defaults={
-                        "confidence_id": conf.id,
-                        "moi_id": moi.id,
-                        "mop_id": mop.id,
-                        "penetrance_id": penetrance.id,
-                        "justification": "online",
-                    },
+            with transaction.atomic():
+                # if valid, create Panel
+                panel: Panel = Panel.objects.create(
+                    external_id=form.cleaned_data.get("external_id"),
+                    panel_name=form.cleaned_data.get("panel_name"),
+                    panel_version=form.cleaned_data.get("panel_version"),
+                    pending=True,
+                    custom=True,
+                    panel_source="online",
                 )
 
-                if pg_created:
-                    PanelGeneHistory.objects.create(
-                        panel_gene_id=pg_instance.id,
-                        note=History.panel_gene_created(),
-                        user="online",
+                conf, _ = Confidence.objects.get_or_create(confidence_level=None)
+                moi, _ = ModeOfInheritance.objects.get_or_create(
+                    mode_of_inheritance=None
+                )
+                mop, _ = ModeOfPathogenicity.objects.get_or_create(
+                    mode_of_pathogenicity=None
+                )
+                penetrance, _ = Penetrance.objects.get_or_create(penetrance=None)
+
+                for gene_id in selected_genes:
+                    pg_instance, pg_created = PanelGene.objects.get_or_create(
+                        panel_id=panel.id,
+                        gene_id=gene_id,
+                        active=True,
+                        defaults={
+                            "confidence_id": conf.id,
+                            "moi_id": moi.id,
+                            "mop_id": mop.id,
+                            "penetrance_id": penetrance.id,
+                            "justification": "online",
+                        },
                     )
+
+                    if pg_created:
+                        PanelGeneHistory.objects.create(
+                            panel_gene_id=pg_instance.id,
+                            note=History.panel_gene_created(),
+                            user="online",
+                        )
 
             return redirect("panel", panel_id=panel.id)
         else:
@@ -496,7 +497,7 @@ def add_panel(request):
         )
 
 
-def add_ci_panel(request):
+def add_ci_panel(request: HttpRequest) -> HttpResponse:
     """
     Add clinical indication panel page
     """
@@ -555,7 +556,7 @@ def add_ci_panel(request):
         )
 
 
-def _get_clinical_indication_panel_history():
+def _get_clinical_indication_panel_history() -> QuerySet:
     """
     Function to fetch clinical indication panel history with limit
 
@@ -580,7 +581,7 @@ def _get_clinical_indication_panel_history():
     )
 
 
-def history(request):
+def history(request: HttpRequest) -> HttpResponse:
     """
     History page for clinical indication, panel, clinical indication-panel etc.
     """
@@ -706,7 +707,7 @@ def history(request):
             )
 
 
-def clinical_indication_panel(request, cip_id: str):
+def clinical_indication_panel(request: HttpRequest, cip_id: str) -> HttpResponse:
     """
     Clinical indication panel page
 
@@ -749,48 +750,53 @@ def clinical_indication_panel(request, cip_id: str):
         action = request.POST.get("action")
         clinical_indication_panel = ClinicalIndicationPanel.objects.get(id=cip_id)
 
-        if action in ["activate", "deactivate"]:
-            if action == "activate":
-                clinical_indication_panel.current = True
+        with transaction.atomic():
+            if action in ["activate", "deactivate"]:
+                if action == "activate":
+                    clinical_indication_panel.current = True
+                    ClinicalIndicationPanelHistory.objects.create(
+                        clinical_indication_panel_id=cip_id,
+                        note=History.clinical_indication_panel_activated(cip_id, True),
+                    )
+                elif action == "deactivate":
+                    clinical_indication_panel.current = False
+                    ClinicalIndicationPanelHistory.objects.create(
+                        clinical_indication_panel_id=cip_id,
+                        note=History.clinical_indication_panel_deactivated(
+                            cip_id, True
+                        ),
+                    )
+                clinical_indication_panel.pending = True  # require manual review
+            elif action == "revert":
+                # action is "revert" from Review page
+                clinical_indication_panel.current = (
+                    not clinical_indication_panel.current
+                )
+                clinical_indication_panel.pending = False
+
                 ClinicalIndicationPanelHistory.objects.create(
                     clinical_indication_panel_id=cip_id,
-                    note=History.clinical_indication_panel_activated(cip_id, True),
+                    note=History.clinical_indication_panel_reverted(
+                        id=cip_id,
+                        old_value=clinical_indication_panel.current,
+                        new_value=not clinical_indication_panel.current,
+                        review=True,
+                    ),
                 )
-            elif action == "deactivate":
-                clinical_indication_panel.current = False
+            else:
+                # action is "approve" from Review page
+                clinical_indication_panel.pending = False
                 ClinicalIndicationPanelHistory.objects.create(
                     clinical_indication_panel_id=cip_id,
-                    note=History.clinical_indication_panel_deactivated(cip_id, True),
+                    note=History.clinical_indication_panel_approved(cip_id),
                 )
-            clinical_indication_panel.pending = True  # require manual review
-        elif action == "revert":
-            # action is "revert" from Review page
-            clinical_indication_panel.current = not clinical_indication_panel.current
-            clinical_indication_panel.pending = False
 
-            ClinicalIndicationPanelHistory.objects.create(
-                clinical_indication_panel_id=cip_id,
-                note=History.clinical_indication_panel_reverted(
-                    id=cip_id,
-                    old_value=clinical_indication_panel.current,
-                    new_value=not clinical_indication_panel.current,
-                    review=True,
-                ),
-            )
-        else:
-            # action is "approve" from Review page
-            clinical_indication_panel.pending = False
-            ClinicalIndicationPanelHistory.objects.create(
-                clinical_indication_panel_id=cip_id,
-                note=History.clinical_indication_panel_approved(cip_id),
-            )
-
-        clinical_indication_panel.save()
+            clinical_indication_panel.save()
 
         return redirect("review")
 
 
-def clinical_indication_superpanel(request, cisp_id: str):
+def clinical_indication_superpanel(request: HttpRequest, cisp_id: str) -> HttpResponse:
     """
     Clinical indication panel page
 
@@ -831,7 +837,7 @@ def clinical_indication_superpanel(request, cisp_id: str):
         )
 
 
-def review(request) -> None:
+def review(request: HttpRequest) -> HttpResponse:
     """
     Review / Pending page where user can view those links that are
     awaiting approval
@@ -1016,7 +1022,7 @@ def review(request) -> None:
     )
 
 
-def gene(request, gene_id: int) -> None:
+def gene(request: HttpRequest, gene_id: int) -> HttpResponse:
     """
     Page to view individual gene information
     - shows all the Panel associated with the gene
@@ -1053,7 +1059,7 @@ def gene(request, gene_id: int) -> None:
 
 
 def genepanel(
-    request,
+    request: HttpRequest,
 ):  # TODO: revisit once output PR is merged because there's some function change in that PR
     """
     Genepanel page where user view R code, clinical indication name
@@ -1196,9 +1202,11 @@ def genepanel(
     )
 
 
-def add_gene(request):
+def add_gene(request: HttpRequest) -> HttpResponse:
     """
     url name "gene_add"
+
+    Handle gene addition page (GET) and form submission (POST)
     """
 
     if request.method == "GET":
@@ -1228,14 +1236,8 @@ def add_gene(request):
                 },
             )
 
-    return render(
-        request,
-        "web/addition/add_gene.html",
-        {"genes": genes},
-    )
 
-
-def ajax_genes(request):
+def ajax_genes(request: HttpRequest) -> JsonResponse:
     """
     Ajax fetch call to get all genes
     """
@@ -1245,7 +1247,7 @@ def ajax_genes(request):
         return JsonResponse({"data": genes}, safe=False)
 
 
-def ajax_gene_transcripts(request, reference_genome: str):
+def ajax_gene_transcripts(request: HttpRequest, reference_genome: str) -> JsonResponse:
     if request.method == "GET":
         # TODO: revisit once tx is sorted
 
@@ -1302,7 +1304,7 @@ def ajax_gene_transcripts(request, reference_genome: str):
                 )
 
 
-def genetotranscript(request):
+def genetotranscript(request: HttpRequest) -> HttpResponse:
     """
     g2t page where it display gene and their transcripts (clinical and non-clinical)
 
@@ -1379,16 +1381,19 @@ def genetotranscript(request):
     #     success = True
 
 
-def seed(request):
+def seed(request: HttpRequest) -> HttpResponse:
     """
-    This page allows file upload (test directory json file)
-    and will insert the data into the database
+    Handle seed page:
+    Currently only handle Test Directory seed
+
+    TODO: Handle other seed (transcript)
     """
 
     error = None
 
     if request.method == "POST":
         try:
+            # if force update (True), disregard td version and continue seeding Test Directory
             force_update = request.POST.get("force")
             td_version = request.POST.get("version")
 
@@ -1407,7 +1412,3 @@ def seed(request):
             error = e
 
     return render(request, "web/info/seed.html", {"error": error})
-
-
-def panel_gene(request, panel_gene_id: int):
-    pass
