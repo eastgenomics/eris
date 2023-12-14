@@ -147,4 +147,4 @@ class TestCurrentTranscript_NoLinks(TestCase):
         clinical = cmd.get_current_transcript_clinical_status_for_g2t(
             self.transcript, self.mane_select_rel, self.mane_plus_rel, self.hgmd_rel
         )
-        assert not clinical
+        assert clinical == None

@@ -19,13 +19,14 @@ class TestBlockGenepanels_BlankDb(TestCase):
 
     def test_generate_empty_errors(self):
         cmd = Command()
-        actual_errs = cmd._block_genepanels_if_db_not_ready()
+
         expected_errs = (
-            "ClinicalIndicationPanel table is empty or contains no current entries, run: python manage.py "
-            "seed td <td.json>; Test Directory has not yet been imported, run: "
+            "Test Directory has not yet been imported, run: "
             "python manage.py seed td <td.json>"
         )
-        self.assertEqual(expected_errs, actual_errs)
+
+        with self.assertRaisesRegex(ValueError, expected_errs):
+            cmd._block_genepanels_if_db_not_ready()
 
 
 class TestBlockGenepanels_PendingCiPanels(TestCase):
@@ -56,12 +57,14 @@ class TestBlockGenepanels_PendingCiPanels(TestCase):
         EXPECT: Return an error warning the user that pending ci-panels need resolving
         """
         cmd = Command()
-        actual_err = cmd._block_genepanels_if_db_not_ready()
+
         expected_err = (
             "Some ClinicalIndicationPanel table values require manual review. "
             "Please resolve these through the review platform and try again"
         )
-        self.assertEqual(expected_err, actual_err)
+
+        with self.assertRaisesRegex(ValueError, expected_err):
+            cmd._block_genepanels_if_db_not_ready()
 
 
 class TestBlockGenepanels_PendingSuperPanels(TestCase):
@@ -113,9 +116,10 @@ class TestBlockGenepanels_PendingSuperPanels(TestCase):
         EXPECT: Return an error warning the user that pending ci-superpanels need resolving
         """
         cmd = Command()
-        actual_err = cmd._block_genepanels_if_db_not_ready()
         expected_err = (
             "Some ClinicalIndicationSuperPanel table values require manual review. "
             "Please resolve these through the review platform and try again"
         )
-        self.assertEqual(expected_err, actual_err)
+
+        with self.assertRaisesRegex(ValueError, expected_err):
+            cmd._block_genepanels_if_db_not_ready()
