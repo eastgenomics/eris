@@ -29,7 +29,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ["SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("ERIS_DEBUG", False)
+DEBUG = os.environ.get("ERIS_DEBUG", "False").upper() == "TRUE"
 
 # allowed hosts
 ALLOWED_HOSTS = [
@@ -129,9 +129,7 @@ USE_L10N = True
 
 USE_TZ = True
 
-LOCALHOST = os.environ.get(
-    "LOCALHOST", False
-)  # determine if eris is deployed on server and require subdirectory
+LOCALHOST = os.environ.get("LOCALHOST", "False").upper() == "TRUE"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
