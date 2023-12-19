@@ -518,7 +518,6 @@ def _prepare_markname_file(markname_file: str) -> dict[str:list]:
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
 
 
-# TODO: current main chokepoint
 def _add_transcript_to_db_with_gff_release(
     gene: Gene,
     transcript: str,
