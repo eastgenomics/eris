@@ -45,7 +45,7 @@ class TestUpdateExistingGeneSymbol(TestCase):
             hgnc_id="50", gene_symbol=None, alias_symbols=None
         )
 
-        self.hgnc_release = HgncRelease.objects.create(hgnc_release="hgnc_v1")
+        self.hgnc_release = HgncRelease.objects.create(release="hgnc_v1")
 
         self.user = "init_v1_user"
 
@@ -181,7 +181,7 @@ class TestUpdateExistingAliasSymbol(TestCase):
             hgnc_id="50", gene_symbol=None, alias_symbols=None
         )
 
-        self.hgnc_release = HgncRelease.objects.create(hgnc_release="hgnc_v1")
+        self.hgnc_release = HgncRelease.objects.create(release="hgnc_v1")
 
         self.user = "init_v1_user"
 

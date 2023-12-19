@@ -119,23 +119,41 @@ The arguments are as follows:
 
 
 # Generating outputs
+A series of output 'dump files' can be created from the contents of the Eris database, using the command line.
+
 ## Generate genepanel
-```
+
+Generates a text file which represents each gene in a panel or superpanel, with that panel/superpanel's linked clinical indication, on a separate line. Genes are only output if they are in panels/superpanel which currently have an active link to a clinical indication.
+
+A HGNC file is required to run 'generate genepanels'.
 Make a HGNC dump txt file here: https://www.genenames.org/download/custom/
-Include columns:
-- HGNC id
+Include the following columns:
+- HGNC ID
 - Locus Type
 - Approved Name
 
-Without output pathway specified:
-python manage.py genepanels --hgnc <hgnc dump path>
-With output pathway specified:
-python manage.py generate genepanels --hgnc testing_files/eris/hgnc_dump_23052023.txt --output /home/jason/github/eris/testing_files/eris
+To run without a specified output pathway (note that this will create the file in your current working directory):
+```
+python manage.py generate genepanels --hgnc testing_files/eris/hgnc_dump_20230606_1.txt
+```
+To run with a specified output pathway:
+```
+python manage.py generate genepanels --hgnc testing_files/eris/hgnc_dump_23052023.txt --output <output_path>
 ```
 
 ## Generate g2t	
+
+Generates a text file which represents every transcript linked to the user-selected reference genome in the Eris database, alongside its linked gene, with a column displaying whether the transcript is the 'clinical transcript' for that gene (True), whether it's not clinical for that gene (False), or whether it's not present in the most up-to-date versions of the transcript sources (None). Currently, the sources used to assign clinical status in Eris are MANE Select, MANE Plus Clinical and HGMD.
+
+Provide the reference genome as a string input. GRCh37 and GRCh38 are the currently-available options. 
+
+To run generate g2t without a specified output pathway (note that this will create the file in your current working directory):
 ```
-python manage.py generate g2t --output <output pathway>
+python manage.py generate g2t --ref_genome <ref_genome>
+```
+To run with a specified output pathway:
+```
+python manage.py generate g2t --ref_genome <ref_genome> --output <output pathway>
 ```
 
 # Running unit tests
