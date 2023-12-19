@@ -392,7 +392,7 @@ class Command(BaseCommand):
 
         # if there is no data for the transcript at all, return None
         poss_links = [mane_select_link, mane_plus_link, hgmd_link]
-        if all(link is None for link in poss_links):
+        if not any(link.exists() for link in poss_links):
             return None
         else:
             # if any of the transcript links is set to default clinical, return True
