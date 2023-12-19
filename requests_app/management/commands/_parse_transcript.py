@@ -561,7 +561,9 @@ def _add_transcript_to_db_with_gff_release(
     return tx
 
 
-def _add_transcript_categorisation_to_db(data_dict: dict) -> None:
+def _add_transcript_categorisation_to_db(
+    data_dict: dict[str : Transcript | TranscriptRelease | bool],
+) -> None:
     """
     Each transcript has been searched for in different transcript release files,
     to work out whether its a default clinical transcript or not.
@@ -686,6 +688,8 @@ def _transcript_assign_to_source(
     mane_exact_match = [d for d in mane_data if d["RefSeq"] == tx]
     mane_base_match = [d for d in mane_data if d["RefSeq_versionless"] == tx_base]
 
+    # we search to see whether the transcript's gene is actually linked to a Panel
+    # this becomes important if we have more than one MANE exact or base match
     relevant_panels = PanelGene.objects.filter(gene__hgnc_id=hgnc_id)
 
     if mane_exact_match:
@@ -719,6 +723,9 @@ def _transcript_assign_to_source(
     # fall through to here if no exact match - see if there's a versionless match instead
     elif mane_base_match:
         if len(mane_base_match) > 1:
+            # this should be impossible - but has happened at least once
+            # if it happens, check if we really need this transcript, because there's Panel-Gene
+            # it's relevant to. If it's not relevant, just skip it. Otherwise throw an error
             if len(relevant_panels) != 0:
                 raise ValueError(f"Versionless transcript in MANE more than once: {tx}")
             else:
@@ -1151,27 +1158,16 @@ def seed_transcripts(
 
             # link all the releases to the Transcript,
             # with the dictionaries containing match information
-            tx_data_mane_select = dict()
-            tx_data_mane_plus_clinical = dict()
-            tx_data_hgmd = dict()
+            for i in [mane_select_data, mane_plus_clinical_data, hgmd_data]:
+                i["transcript"] = transcript
 
-            tx_data_mane_select["transcript"] = tx_data_mane_plus_clinical[
-                "transcript"
-            ] = tx_data_hgmd["transcript"] = transcript
-            tx_data_mane_select["release"] = mane_select_rel
-            tx_data_mane_plus_clinical["release"] = mane_plus_clinical_rel
-            tx_data_hgmd["release"] = hgmd_rel
+            mane_select_data["release"] = mane_select_rel
+            mane_plus_clinical_data["release"] = mane_plus_clinical_rel
+            hgmd_data["release"] = hgmd_rel
 
-            for key, value in mane_select_data.items():
-                tx_data_mane_select[key] = value
-            for key, value in mane_plus_clinical_data.items():
-                tx_data_mane_plus_clinical[key] = value
-            for key, value in hgmd_data.items():
-                tx_data_hgmd[key] = value
-
-            release_categories.append(tx_data_mane_select)
-            release_categories.append(tx_data_mane_plus_clinical)
-            release_categories.append(tx_data_hgmd)
+            release_categories.append(mane_select_data)
+            release_categories.append(mane_plus_clinical_data)
+            release_categories.append(hgmd_data)
 
     print(f"Start adding transcript clinical information to db: {tx_starting}")
     _add_transcript_categorisation_to_db(release_categories)
