@@ -29,7 +29,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ["SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("ERIS_DEBUG", False)
+DEBUG = os.environ.get("ERIS_DEBUG", "False").upper() == "TRUE"
 
 # allowed hosts
 ALLOWED_HOSTS = [
@@ -53,8 +53,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",  # for static files
     # custom apps
-    "requests_app.apps.RequestsAppConfig",
-    "web.apps.WebConfig",
+    "requests_app",
+    "web",
 ]
 
 MIDDLEWARE = [
@@ -129,17 +129,13 @@ USE_L10N = True
 
 USE_TZ = True
 
-ERIS_SERVER = os.environ.get(
-    "ERIS_SERVER", False
-)  # determine if eris is deployed on server and require subdirectory
+LOCALHOST = os.environ.get("LOCALHOST", "False").upper() == "TRUE"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-if ERIS_SERVER:
-    STATIC_URL = "eris/static/"  # on server thus subdirectory required
-else:
-    STATIC_URL = "static/"  # for local development
+
+STATIC_URL = "static/" if LOCALHOST else "eris/static/"
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [

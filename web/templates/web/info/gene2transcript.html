@@ -1,99 +1,89 @@
 {% extends "base.html" %}
 {% load static %}
 
+<!-- TODO: Revisit this page -->
+
 {% block content %}
 <div class="container mb-5">
-    <div class="row">
+  <div class="row">
+    <div class="col">
+      <!-- Alert -->
+      {% if error %}
+      <div class="alert alert-danger" role="alert">
+        {{ error }}
+      </div>
+      {% endif %}
+
+      {% if success %}
+      <div class="alert alert-success" role="alert">
+        File Uploaded Successfully!
+      </div>
+      {% endif %}
+      <!-- End Alert -->
+      <h1>GeneToTranscripts</h1>
+
+      <!-- GenePanel Upload Form -->
+      <div class="row">
         <div class="col">
-            <h1>G2t</h1>
-        </div>
-    </div>
-    
-    <!-- Alert -->
-    {% if error %}
-    <div class="alert alert-danger" role="alert">
-      {{ error }}
-    </div>
-    {% endif %}
-
-    {% if success %}
-    <div class="alert alert-success" role="alert">
-      File Uploaded Successfully!
-    </div>
-    {% endif %}
-
-    <div id="overlay" style="position:fixed;height:100%;width:100%;top:0;left:0;background-color: #ccc;z-index:998;opacity:50%;"></div>
-    <img id="hamster"  src="{% static 'images/hamster-loader.gif' %}" alt="hamster" style="position:absolute;top:0;left:0;right:0;bottom:0;margin:auto;z-index:999"/>
-
-    <!-- GenePanel Upload Form -->
-    <div class="row mt-2">
-      <div class="col">
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Upload genes2transcripts File to DNANexus Project</h5>
-            <form action="{% url 'g2t' %}" method="POST" id="genepanelForm">
-              {% csrf_token %}
-              <div class="mb-3">
-                <label for="projectIdInput" class="form-label">DNANexus API Token</label>
-                <input type="text" class="form-control" name="dnanexus_token" aria-describedby="dnanexusTokenHelp" required>
-                <div id="dnanexusTokenHelp" class="form-text">Get this from DNANexus Settings</div>
-              </div>
-              <div class="mb-3">
-                <label for="projectIdInput" class="form-label">Project ID</label>
-                <input type="text" class="form-control" name="project_id" aria-describedby="projectIdHelp" required>
-                <div id="projectIdHelp" class="form-text">e.g. project-GV4VJ2Q46b4p7k7z7491fFZ3</div>
-              </div>
-              <button type="submit" class="btn btn-success">Upload
-                <span class="spinner-border spinner-border-sm ml-2 visually-hidden" aria-hidden="true"></span>
-              </button>
-            </form>
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Upload genes2transcripts File to DNANexus Project</h5>
+              <form action="{% url 'g2t' %}" method="POST" id="genepanelForm">
+                {% csrf_token %}
+                <div class="mb-3">
+                  <label for="projectIdInput" class="form-label">DNANexus API Token</label>
+                  <input type="text" class="form-control" name="dnanexus_token" aria-describedby="dnanexusTokenHelp"
+                    required>
+                  <div id="dnanexusTokenHelp" class="form-text">Get this from DNANexus Settings</div>
+                </div>
+                <div class="mb-3">
+                  <label for="projectIdInput" class="form-label">Project ID</label>
+                  <input type="text" class="form-control" name="project_id" aria-describedby="projectIdHelp" required>
+                  <div id="projectIdHelp" class="form-text">e.g. project-GV4VJ2Q46b4p7k7z7491fFZ3</div>
+                </div>
+                <button type="submit" class="btn btn-success">Upload
+                  <span class="spinner-border spinner-border-sm ml-2 visually-hidden" aria-hidden="true"></span>
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- GenePanel List -->
-    <div class="row mt-4">
+      <div class="row my-3"></div>
+
+      <!-- GenePanel List -->
+      <div class="row">
         <div class="col">
-            <table class="table pt-2" id="geneToTranscriptTable">
-                <thead class="table-success">
-                  <tr>
-                    <th scope="col">HGNC ID</th>
-                    <th scope="col">Transcript</th>
-                    <th scope="col">Source</th>
-                  </tr>
-                </thead>
-                <tbody>
-                    {% for transcript in transcripts %}
-                  <tr>
-                    <th><a href="{% url 'gene' transcript.gene_id %}" target="_blank">{{ transcript.gene_id__hgnc_id }}</a></th>
-                    <td>{{ transcript.transcript }}</td>
-                    <td>{{ transcript.source }}</td>
-                  </tr>
-                    {% endfor %}
-                </tbody>
-              </table>
+          <table class="table pt-2" id="geneToTranscriptTable">
+            <thead class="table-success">
+              <tr>
+                <th scope="col">HGNC ID</th>
+                <th scope="col">Transcript</th>
+                <th scope="col">Sources</th>
+                <th scoope="col">Clinical Sources</th>
+              </tr>
+            </thead>
+          </table>
         </div>
+      </div>
+
     </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block script %}
 <script>
-    setTimeout(function(){
-        $('#hamster').addClass('visually-hidden');
-        $('#overlay').addClass('visually-hidden');
-    }, 7000); // 7 seconds
+  $(document).ready(function () {
+    new DataTable('#geneToTranscriptTable');
 
-    $(document).ready(function() {
-        new DataTable('#geneToTranscriptTable');
-
-        // script to block submit button on form submission and show loading indicator
-        $('#genepanelForm').submit(function() {
-        console.log('form submitted!');
-        $(this).find('button[type="submit"]').prop('disabled', true);
-        $(this).find('button[type="submit"]').find('.visually-hidden').removeClass('visually-hidden');
-        });
+    // script to block submit button on form submission and show loading indicator
+    $('#genepanelForm').submit(function () {
+      console.log('form submitted!');
+      $(this).find('button[type="submit"]').prop('disabled', true);
+      $(this).find('button[type="submit"]').find('.visually-hidden').removeClass('visually-hidden');
     });
+  });
 </script>
 {% endblock %}

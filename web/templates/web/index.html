@@ -2,18 +2,20 @@
 
 {% block content %}
 <div class="container mb-5">
+    <!-- Clinical Indications -->
     <div class="row">
-        <div class="col-12">
+        <div class="col">
             <div class="d-flex justify-content-between mb-2">
                 <h3>Clinical Indications</h3>
-                <a class="btn btn-primary btn-sm m-2" href="{% url 'ci_add' %}" role="button">Add Clinical Indication</a>
+                <a class="btn btn-primary btn-sm m-2" href="{% url 'ci_add' %}" role="button">Add Clinical
+                    Indication</a>
             </div>
-            <table id="clinicalIndicationTable" class="table pt-2">
+            <table id="clinicalIndicationTable" class="table pt-2 table-striped table-bordered">
                 <thead class="table-success">
-                  <tr>
-                    <th>R Code</th>
-                    <th>Clinical Indication</th>
-                  </tr>
+                    <tr>
+                        <th>R Code</th>
+                        <th>Clinical Indication</th>
+                    </tr>
                 </thead>
                 <tbody>
                     {% for ci in cis %}
@@ -25,32 +27,43 @@
                 </tbody>
             </table>
         </div>
+    </div>
+
+    <div class="row my-2"></div>
+
+    <!-- Panels -->
+    <div class="row">
         <div class="col mt-3">
             <div class="d-flex justify-content-between mb-2">
                 <h3>Panels</h3>
                 <a class="btn btn-primary btn-sm m-2" href="{% url 'panel_add' %}" role="button">Add Panel</a>
             </div>
-            <table id="panelTable" class="table pt-2">
+            <table id="panelTable" class="table pt-2 table-striped table-bordered">
                 <thead class="table-success">
-                  <tr>
-                    <th>External ID</th>
-                    <th>Panel Name</th>
-                    <th>Panel Version</th>
-                  </tr>
+                    <tr>
+                        <th>External ID</th>
+                        <th>Panel Name</th>
+                        <th>Panel Version</th>
+                    </tr>
                 </thead>
                 <tbody>
-                    {% for panel in panels %}
+                    {% for row in panels %}
                     <tr>
-                        {% if panel.external_id %}
-                            <td>{{ panel.external_id }}</td>
+                        {% if row.external_id %}
+                        <td>{{ row.external_id }}</td>
                         {% else %}
-                            <td>None</td>
+                        <td>None</td>
                         {% endif %}
-                        <td><a href="{% url 'panel' panel.id %}">{{ panel.panel_name }}</a></td>
-                        {% if panel.panel_version %}
-                            <td>{{ panel.panel_version }}</td>
+                        {% if row.superpanel %}
+                        <td><a href="{% url 'superpanel' row.id %}">{{row.panel_name}}</a>&nbsp;&nbsp;<span
+                                class="badge text-bg-info">SuperPanel</span></td>
                         {% else %}
-                            <td>1.0</td>
+                        <td><a href="{% url 'panel' row.id %}">{{ row.panel_name }}</a></td>
+                        {% endif %}
+                        {% if row.panel_version %}
+                        <td>{{ row.panel_version }}</td>
+                        {% else %}
+                        <td>1.0</td>
                         {% endif %}
                     </tr>
                     {% endfor %}
@@ -58,6 +71,113 @@
             </table>
         </div>
     </div>
+
+    <div class="row my-2"></div>
+
+    <!-- Clinical Indication Panels -->
+    <div class="row">
+        <div class="col mt-3">
+            <div class="d-flex justify-content-between mb-2">
+                <h3>Clinical Indication Panels</h3>
+                <a class="btn btn-primary btn-sm m-2" href="{% url 'cip_add' %}" role="button">Add Clinical Indication
+                    Panels</a>
+            </div>
+            <table id="cipTable" class="table pt-2 table-striped table-bordered">
+                <thead class="table-success">
+                    <tr>
+                        <th>ID</th>
+                        <th>Clinical Indication</th>
+                        <th>Panel</th>
+                        <th class="text-nowrap">TD Release</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cip in cips %}
+                    <tr>
+                        {% if cip.superpanel %}
+                        <td><a href="{% url 'clinical_indication_superpanel' cip.id %}">{{cip.id}}</a></td>
+                        {% else %}
+                        <td><a href="{% url 'clinical_indication_panel' cip.id %}">{{cip.id}}</a></td>
+                        {% endif %}
+                        <td><a
+                                href="{% url 'clinical_indication' cip.clinical_indication_id %}">{{cip.clinical_indication_name}}</a>
+                        </td>
+                        {% if cip.superpanel %}
+                        <td><a href="{% url 'superpanel' cip.panel_id %}">{{cip.panel_name}}</a> <span
+                                class="badge text-bg-info">SuperPanel</span></td>
+                        {% else %}
+                        <td><a href="{% url 'panel' cip.panel_id %}">{{cip.panel_name}}</a></td>
+                        {% endif %}
+                        <td>{{cip.td_release}}</td>
+                        {% if cip.current and not cip.pending %}
+                        <td><span class="badge text-bg-success">Active</span></td>
+                        {% elif cip.current and cip.pending %}
+                        <td><span class="badge text-bg-warning">Pending</span></td>
+                        {% else %}
+                        <td><span class="badge text-bg-danger">Inactive</span></td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row my-2"></div>
+
+    <!-- TD Releases -->
+    <div class="row">
+        <div class="col mt-3">
+            <div class="d-flex justify-content-between mb-2">
+                <h3>Test Directory Releases</h3>
+            </div>
+            <table id="cipTable" class="table pt-2 table-striped table-bordered">
+                <thead class="table-success">
+                    <tr>
+                        <th>ID</th>
+                        <th>Release</th>
+                        <th>Source</th>
+                        <th>Config Source</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for release in td_releases %}
+                    <tr>
+                        <td>{{release.id}}</td>
+                        <td>{{release.release}}</td>
+                        <td>{{release.td_source}}</td>
+                        <td>{{release.config_source}}</td>
+                        <td>{{release.td_date}}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row my-2"></div>
+
+    <!-- Genes -->
+    <div class="row">
+        <div class="col">
+            <div class="d-flex justify-content-between mb-2">
+                <h3>Genes</h3>
+                <a class="btn btn-primary btn-sm m-2" href="{% url 'gene_add' %}" role="button">Add Gene</a>
+            </div>
+            <table class="table pt-2 table-striped table-bordered" id="geneTable">
+                <thead class="table-success">
+                    <tr>
+                        <th>HGNC</th>
+                        <th>Gene Symbol</th>
+                        <th>Alias Symbols</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+
 </div>
 {% endblock %}
 
@@ -66,6 +186,27 @@
     $(document).ready(function () {
         new DataTable('#clinicalIndicationTable');
         new DataTable('#panelTable');
+        new DataTable('#cipTable');
+
+        $('#geneTable').DataTable({
+            ajax: "{% url 'api_genes' %}",
+            columns: [
+                { "data": "hgnc_id" },
+                {
+                    "data": "id",
+                    "render": function (data, type, row, meta) {
+                        var id = row.id;
+                        var gene_symbol = row.gene_symbol;
+
+                        var url = "{% url 'gene' 0 %}";
+                        url = url.replace(0, id);
+                        return '<a href=' + url + '>' + gene_symbol + '</a>';;
+                    }
+                },
+                { "data": "alias_symbols" },
+            ],
+            processing: true,
+        });
     });
 </script>
 {% endblock %}

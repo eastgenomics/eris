@@ -2,33 +2,42 @@
 
 {% block content %}
 <div class="container mb-5 pb-5">
-    {% if panel_pending_approval %}
+    {% if panel.pending %}
     <div class="row">
         <div class="col">
             <div class="alert alert-warning" role="alert">
                 This panel is pending approval
-              </div>
+            </div>
         </div>
     </div>
     {% endif %}
-    <br> <!-- Panel Overview -->
+    <!-- Panel Overview -->
     <div class="row text-wrap text-break">
         <div class="col">
             {% if panel %}
             <h1>{{ panel.panel_name }}</h1>
+            <h4><span class="badge text-bg-info text-white">Panel</span></h4>
             {% if panel.external_id %}
-            <h4>external id: {{ panel.external_id }}</h4>
+            <h4>external panelapp id: {{ panel.external_id }}</h4>
             {% else %}
-            <h4>external id: None</h4>
+            <h4>external panelapp id: None</h4>
             {% endif %}
             <h4>panel source: {{ panel.panel_source }}</h4>
-            <h4>test directory: {{ panel.test_directory }}</h4>
-            {% if panel.panel_version %}
-                <h4>panel version: {{ panel.panel_version }}</h4>
+            {% if panel.test_directory %}
+            <h4>test directory: <span class="badge text-bg-success">{{panel.test_directory}}</span></h4>
             {% else %}
-                <h4>panel version: None</h4>
+            <h4>test directory: <span class="badge text-bg-danger">{{panel.test_directory}}</span></h4>
             {% endif %}
-            <h4>custom: {{ panel.custom }}</h4>
+            {% if panel.panel_version %}
+            <h4>panel version: {{ panel.panel_version }}</h4>
+            {% else %}
+            <h4>panel version: None</h4>
+            {% endif %}
+            {% if panel.custom %}
+            <h4>custom: <span class="badge text-bg-success">{{panel.custom}}</span></h4>
+            {% else %}
+            <h4>custom: <span class="badge text-bg-danger">{{panel.custom}}</span></h4>
+            {% endif %}
             <h4>created: {{ panel.created }}</h4>
             <h5>database id: <span class="text-danger">{{ panel.id }}</span></h5>
             {% else %}
@@ -37,204 +46,88 @@
         </div>
     </div>
 
-    <br> <!-- Clinical Indication Panel Link -->
-    <h3>Clinical Indication Panel Link</h3>
-    <p class="text-muted">all clinical indication linked to the panel</p>
+    <div class="row my-3"></div>
+
+    <!-- Clinical Indication Panel Link -->
     <div class="row">
-        {% for ci_panel in ci_panels %}
-        <div class="col-lg-4 col-md-8 col-sm-12">
-            <div class="card shadow">
-                <div class="card-body">
-                    <h5 class="card-title">database id: {{ ci_panel.id }}</h5>
-
-                    {% if ci_panel.current %}
-                    <h6 class="card-subtitle mb-2"><span class="badge bg-success">active</span></h6>
-                    {% else %}
-                    <h6 class="card-subtitle mb-2"><span class="badge bg-danger">inactive</span></h6>
-                    {% endif %}
-
-                    <p class="card-text">
-                        <ul class="list-group">
-                            <li class="list-group-item">config source: {{ ci_panel.config_source }}</li>
-                            <li class="list-group-item">imported by test directory version: {{ ci_panel.td_version }}</li>
-                            <li class="list-group-item">created: {{ ci_panel.created }}</li>
-                            <li class="list-group-item">last updated: {{ ci_panel.last_updated }}</li>
-                            <li class="list-group-item">link: <span class="text-danger">{{ ci_panel.panel_id }}</span> -> <span class="text-info">{{ ci_panel.clinical_indication_id }}</span></li>
-                         </ul>
-                    </p>
-                    {% if ci_panel.current %}
-                    <form action="{% url 'activate_or_deactivate_clinical_indication_panel' ci_panel.id %}" method="POST">
-                        {% csrf_token %}
-                        <input class="visually-hidden" type="text" class="form-control" name="action" value="deactivate">
-                        {% if ci_panel.pending %}
-                        <button type="button" class="btn btn-secondary btn-sm" disabled>Pending Approval</button>
-                        {% else %}
-                        <button type="submit" class="btn btn-danger btn-sm">Deactivate</button>
-                        {% endif %}
-                    </form>
-                    {% else %}
-                    <form action="{% url 'activate_or_deactivate_clinical_indication_panel' ci_panel.id %}" method="POST">
-                        {% csrf_token %}
-                        <input class="visually-hidden" type="text" class="form-control" name="action" value="activate">
-                        {% if ci_panel.pending %}
-                        <button type="button" class="btn btn-secondary btn-sm" disabled>Pending Approval</button>
-                        {% else %}
-                        <button type="submit" class="btn btn-success btn-sm">Activate</button>
-                        {% endif %}
-                    </form>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-
-    <br> <!-- Clinical Indications -->
-    <h3>Clinical Indications</h3>
-    <p class="text-muted">clinical indication linked to the panel</p>
-    <div class="row">
-        {% if cis %}
-        {% for ci in cis %}
-        <div class="col-lg-6 col-md-8 col-sm-12">
-            <div class="card shadow">
-                <div class="card-body">
-                    <h5 class="text-break"><a href="{% url 'clinical_indication' ci.id %}">{{ ci.name }}</a></h5>
-                    <h6 class="text-muted">database id: <span class="text-info">{{ ci.id }}</span></h6>
-
-                    <ul class="list-group">
-                        <li class="list-group-item">r code: {{ ci.r_code }}</li>
-                        {% if ci.test_method %}
-                        <li class="list-group-item">test method: {{ ci.test_method }}</li>
-                        {% else %}
-                        <li class="list-group-item">test method: None</li>
-                        {% endif %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-        {% else %}
         <div class="col">
-            <div class="alert alert-info" role="alert">
-                Nothing to show here!
-            </div>
-        </div>
-        {% endif %}
-    </div>
-
-    <br> <!-- Clinical Indication Test Method & Clinical Indication Panel Link Modification History -->
-    <h3>Clinical Indication Panel Modification History</h3>
-    <p class="text-muted">previous modiciations on clinical indication-panel </p>
-    <div class="row">
-        {% if ci_history %}
-        <div class="col-12">
-            <table class="table table-bordered shadow">
+            <h3>Clinical Indication Panel Link</h3>
+            <p class="text-muted">all clinical indication linked to the panel</p>
+            {% if ci_panels %}
+            <table class="table table-striped table-bordered">
                 <thead>
-                  <tr>
-                    <th scope="col">Date</th>
-                    <th scope="col">Modification</th>
-                    <th scope="col">Ci-Panel id</th>
-                  </tr>
+                    <tr>
+                        <th scope="col">Database ID</th>
+                        <th scope="col">Active</th>
+                        <th scope="col">Clinical Indication</th>
+                    </tr>
                 </thead>
                 <tbody>
-                    {% for history in ci_history %}
+                    {% for ci_panel in ci_panels %}
                     <tr>
-                        <td>{{ history.created }}</td>
-                        <td>{{ history.note }}</td>
-                        <td>{{ history.clinical_indication_panel_id }}</td>
+                        <td><a href="{% url 'clinical_indication_panel' ci_panel.id %}">{{ci_panel.id}}</a></td>
+                        {% if ci_panel.current %}
+                        <td><span class="badge text-bg-success">{{ci_panel.current}}</span></td>
+                        {% else %}
+                        <td><span class="badge text-bg-danger">{{ci_panel.current}}</span></td>
+                        {% endif %}
+                        <td><a
+                                href="{% url 'clinical_indication' ci_panel.clinical_indication_id %}">{{ci_panel.clinical_indication_id__name}}</a>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
-        {% else %}
-        <div class="col">
+            {% else %}
             <div class="alert alert-info" role="alert">
                 Nothing to show here!
             </div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
 
-    <br> <!-- Panel Genes Link -->
-    <h3>Genes</h3>
-    <div class="d-flex justify-content-between">
-        <p class="text-muted">genes associated with the panel</p>
-        {% if not panel_pending_approval and panel %}
-        <a href="{% url 'gene_edit' panel.id %}"><button type="button" class="btn btn-primary btn-sm m-1">Make Custom Panel</button></a>
-        {% endif %}
-    </div>
-    <div class="row">
-        {% if pgs %}
-        <div class="col">
-            <table id="geneTable" class="table pt-2">
-                <thead class="table-success">
-                  <tr>
-                    <th scope="col">HGNC ID</th>
-                    <th scope="col">Gene Symbol</th>
-                    <th scope="col">Active</th>
-                  </tr>
-                </thead>
-                <tbody>
-                    {% for pg in pgs %}
-                    <tr>
-                        <td><a href="{% url 'gene' pg.gene_id %}">{{ pg.gene_id__hgnc_id }}</a></td>
-                        <td>{{ pg.gene_id__gene_symbol }}</td>
-                        {% if pg.active %}
-                        <td><span class="badge text-bg-success">Active</span></td>
-                        {% else %}
-                        <td><span class="badge text-bg-danger">Inactive</span></td>
-                        {% endif %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="col">
-            <div class="alert alert-info" role="alert">
-                Nothing to show here!
-            </div>
-        </div>
-        {% endif %}
-    </div>
+    <div class="row my-3"></div>
 
-    <br> <!-- Panel Genes Link Modification History -->
-    <h3>Transcripts</h3>
-    <p class="text-muted">transcripts attached to each gene</p>
+    <!-- Panel Genes Link -->
     <div class="row">
-        {% if transcripts %}
-        <div class="col-12">
-            <table class="table pt-2" id="transcriptTable">
-                <thead class="table-success">
-                  <tr>
-                    <th scope="col">Gene</th>
-                    <th scope="col">Transcript</th>
-                    <th scope="col">Source</th>
-                  </tr>
-                </thead>
-                <tbody>
-                    {% for transcript in transcripts %}
-                    <tr>
-                        <td>{{ transcript.gene_id__hgnc_id }}</td>
-                        <td>{{ transcript.transcript }}</td>
-                        {% if transcript.source %}
-                        <td><span class="badge text-bg-success">{{ transcript.source }}</span></td>
-                        {% else %}
-                        <td>{{ transcript.source }}</td>
-                        {% endif %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
         <div class="col">
-            <div class="alert alert-info" role="alert">
-                Nothing to show here!
+            <h3>Genes</h3>
+            <div class="d-flex justify-content-between">
+                <p class="text-muted">genes associated with the panel</p>
             </div>
+            {% if panel_genes %}
+            <div class="col">
+                <table id="geneTable" class="table pt-2">
+                    <thead class="table-success">
+                        <tr>
+                            <th scope="col">HGNC ID</th>
+                            <th scope="col">Gene Symbol</th>
+                            <th scope="col">Active</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pg in panel_genes %}
+                        <tr>
+                            <td><a href="{% url 'gene' pg.gene_id %}">{{ pg.gene_id__hgnc_id }}</a></td>
+                            <td>{{ pg.gene_id__gene_symbol }}</td>
+                            {% if pg.active %}
+                            <td><span class="badge text-bg-success">Active</span></td>
+                            {% else %}
+                            <td><span class="badge text-bg-danger">Inactive</span></td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="col">
+                <div class="alert alert-info" role="alert">
+                    Nothing to show here!
+                </div>
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}
