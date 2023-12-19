@@ -970,7 +970,6 @@ def _check_for_transcript_seeding_version_regression(
     :param mane_release: user-input MANE release version
     :param hgmd_release: user-input HGMD release version
     """
-
     input_versions = {
         "HGNC": hgnc_release,
         "GFF": gff_release,
@@ -985,17 +984,33 @@ def _check_for_transcript_seeding_version_regression(
     # pick whichever of select or plus has the highest version (or 'select' if both are the same)
     # just return None if there aren't versions for either
     if None not in [select, plus]:
-        max_mane = select if Version(select.release) >= Version(plus.release) else plus
+        max_mane = select.release if Version(select.release) >= Version(plus.release) else plus.release
     elif not select and not plus:
         max_mane = None
     else:
         max_mane = select if select else plus
 
+    if _get_latest_hgnc_release():
+        latest_hgnc_release = _get_latest_hgnc_release().release
+    else:
+        latest_hgnc_release = None
+
+    if _get_latest_gff_release(reference_genome):
+        latest_gff_release = _get_latest_gff_release(reference_genome).release
+    else:
+        latest_gff_release = None
+
+    if _get_latest_transcript_release("HGMD", reference_genome):
+        latest_hgmd_release = _get_latest_transcript_release("HGMD", reference_genome).release
+    else: 
+        latest_hgmd_release = None
+    
+
     latest_db_versions = {
-        "HGNC": _get_latest_hgnc_release(),
-        "GFF": _get_latest_gff_release(reference_genome),
+        "HGNC": latest_hgnc_release,
+        "GFF": latest_gff_release,
         "MANE": max_mane,
-        "HGMD": _get_latest_transcript_release("HGMD", reference_genome),
+        "HGMD": latest_hgmd_release,
     }
 
     error = "\n".join(
@@ -1003,7 +1018,7 @@ def _check_for_transcript_seeding_version_regression(
             f"Provided {source} version {input_version} is a lower version than v{str(latest_db_versions[source])} in the db"
             for source, input_version in input_versions.items()
             if latest_db_versions[source]
-            and Version(input_version) < Version(latest_db_versions[source].release)
+            and Version(input_versions[source]) < Version(latest_db_versions[source])
         ]
     )
 
