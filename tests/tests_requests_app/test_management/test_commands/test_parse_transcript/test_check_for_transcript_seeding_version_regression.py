@@ -32,12 +32,12 @@ class TestCheckRegressions_OldHgncRelease(TestCase):
         )
 
         # pre-populate releases
-        self.hgnc = HgncRelease.objects.create(hgnc_release="2")
+        self.hgnc = HgncRelease.objects.create(release="2")
         self.gff = GffRelease.objects.create(
-            gff_release="1.0", reference_genome=self.reference_genome
+            release="1.0", reference_genome=self.reference_genome
         )
         self.gff_2 = GffRelease.objects.create(
-            gff_release="0.5", reference_genome=self.reference_genome
+            release="0.5", reference_genome=self.reference_genome
         )
         self.mane_select = TranscriptRelease.objects.create(
             release="2",
@@ -66,12 +66,10 @@ class TestCheckRegressions_OldHgncRelease(TestCase):
 
         expected_error = "Abandoning input:\nProvided HGNC version 1 is a lower version than v2 in the db"
 
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaisesRegex(ValueError, expected_error):
             _check_for_transcript_seeding_version_regression(
                 new_hgnc, new_gff, new_mane, new_hgmd, self.reference_genome
             )
-
-        self.assertEquals(str(e.exception), expected_error)
 
     def test_multiple_old_releases(self):
         """
@@ -84,7 +82,9 @@ class TestCheckRegressions_OldHgncRelease(TestCase):
         new_mane = "2"
         new_hgmd = "1.9.0"  # too old, uses subversioning
 
-        with self.assertRaises(ValueError):
+        expected_err = "Abandoning input:\nProvided HGNC version 1 is a lower version than v2 in the db\nProvided HGMD version 1.9.0 is a lower version than v2 in the db"
+
+        with self.assertRaisesRegex(ValueError, expected_err):
             _check_for_transcript_seeding_version_regression(
                 new_hgnc, new_gff, new_mane, new_hgmd, self.reference_genome
             )

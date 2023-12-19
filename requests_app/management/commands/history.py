@@ -30,6 +30,7 @@ class History:
     ) -> str:
         return f"PanelGene metadata {field} changed from {old_value} to {new_value}"
 
+    # clinical indication panel
     def clinical_indication_panel_new_td_link(
         new_value: str,
     ) -> str:
@@ -43,19 +44,42 @@ class History:
         return f"ClinicalIndication metadata {field} changed from {old_value} to {new_value}"
 
     def clinical_indication_panel_activated(
-        ci_id: str,
-        panel_id: str,
+        id: str,
         review: bool = False,
     ) -> str:
-        return f"ClinicalIndicationPanel linking clinical indication {ci_id} to panel {panel_id} activated online {'by review' if review else ''}"
+        return (
+            f"ClinicalIndicationPanel {id} activated online" + " by review"
+            if review
+            else ""
+        )
 
     def clinical_indication_panel_deactivated(
-        ci_id: str,
-        panel_id: str,
+        id: str,
         review: bool = False,
     ) -> str:
-        return f"ClinicalIndicationPanel linking clinical indication {ci_id} to panel {panel_id} deactivated online {'by review' if review else ''}"
+        return (
+            f"ClinicalIndicationPanel {id} deactivated online" + " by review"
+            if review
+            else ""
+        )
 
+    def clinical_indication_panel_reverted(
+        id: str,
+        old_value: str,
+        new_value: str,
+        review: bool = False,
+    ) -> str:
+        return (
+            f"ClinicalIndicationPanel {id} reverted from {old_value} to {new_value}"
+            + " by review"
+            if review
+            else ""
+        )
+
+    def clinical_indication_panel_approved(id: str) -> str:
+        return f"ClinicalIndicationPanel {id} approved by review"
+
+    # panel gene
     def panel_gene_flagged_due_to_confidence(
         confidence_level: str,
     ) -> str:

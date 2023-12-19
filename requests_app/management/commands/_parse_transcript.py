@@ -127,7 +127,7 @@ def _link_unchanged_genes_to_new_release(
     """
 
     print(
-        f"Linking {len(unchanged_genes)} unchanged genes to new HGNC release v{hgnc_release.hgnc_release}"
+        f"Linking {len(unchanged_genes)} unchanged genes to new HGNC release v{hgnc_release.release}"
     )
 
     for hgnc_id in unchanged_genes:
@@ -344,7 +344,7 @@ def _prepare_hgnc_file(hgnc_file: str, hgnc_version: str, user: str) -> dict[str
     # create a HGNC release
     # the same HGNC release version can be used at different transcript seed times
     hgnc_release, release_created = HgncRelease.objects.get_or_create(
-        hgnc_release=hgnc_version
+        release=hgnc_version
     )
 
     # get all possible HGNC IDs from the HGNC file, and compare to what's already in the database,
@@ -769,7 +769,7 @@ def _add_gff_release_info_to_db(
     :return gff_release: a GffRelease instance
     """
     gff_release, _ = GffRelease.objects.get_or_create(
-        gff_release=gff_release, reference_genome=reference_genome
+        release=gff_release, reference_genome=reference_genome
     )
     return gff_release
 
@@ -890,19 +890,23 @@ def _parse_reference_genome(ref_genome: str) -> str:
         )
 
 
-def _get_latest_hgnc_release() -> Version | None:
+def _get_latest_hgnc_release() -> HgncRelease | None:
     """
     Get the latest release in HgncRelease, using packaging.version to handle version formatting
     which isn't 100% consistent. Return None if the table has no matching results.
 
-    :returns: latest version in database
+    :returns: HgncRelease with latest version in database
     """
     hgncs = HgncRelease.objects.all()
 
-    return max([Version(v.hgnc_release) for v in hgncs]) if hgncs else None
+    max_release = max([Version(v.release) for v in hgncs]) if hgncs else None
+    if max_release:
+        return HgncRelease.objects.get(release=max_release)
+    else:
+        return None
 
 
-def _get_latest_gff_release(ref_genome: ReferenceGenome) -> Version | None:
+def _get_latest_gff_release(ref_genome: ReferenceGenome) -> GffRelease | None:
     """
     Get the latest GFF release in GffRelease for a given reference genome,
       using packaging.version because the version formatting
@@ -913,29 +917,41 @@ def _get_latest_gff_release(ref_genome: ReferenceGenome) -> Version | None:
     """
     gffs = GffRelease.objects.filter(reference_genome=ref_genome)
 
-    return max([Version(v.gff_release) for v in gffs]) if gffs else None
+    max_release = max([Version(v.release) for v in gffs]) if gffs else None
+    if max_release:
+        return GffRelease.objects.get(release=max_release)
+    else:
+        return None
 
 
 def _get_latest_transcript_release(
-    source: Version, ref_genome: ReferenceGenome
-) -> Version:
+    source: str, ref_genome: ReferenceGenome
+) -> TranscriptRelease | None:
     """
     Get the latest release in the TranscriptRelease table for a given source
     and reference genome. Return None if the table has no matching results.
 
     :param source: a source string such as 'HGMD', 'MANE Plus Clinical' or 'MANE Select'
     :param reference_genome: a ReferenceGenome object corresponding to user input
-    :returns: latest version in database
+    :returns: the latest TranscriptRelease, or None if no database matches
     """
     tx_releases = TranscriptRelease.objects.filter(source__source=source).filter(
         reference_genome=ref_genome
     )
 
-    return (
-        max([Version(v.release) for v in tx_releases])
-        if tx_releases
-        else Version("0.0a")
+    latest = max([Version(v.release) for v in tx_releases]) if tx_releases else None
+
+    # A 'unique_together' constraint on "source", "release", "reference_genome" means
+    # we'll either get 1 result or none
+    latest_tx = (
+        TranscriptRelease.objects.filter(source__source=source)
+        .filter(reference_genome=ref_genome)
+        .filter(release=latest)
     )
+    if latest_tx:
+        return latest_tx[0]
+    else:
+        return None
 
 
 def _check_for_transcript_seeding_version_regression(
@@ -956,7 +972,6 @@ def _check_for_transcript_seeding_version_regression(
     :param mane_release: user-input MANE release version
     :param hgmd_release: user-input HGMD release version
     """
-
     input_versions = {
         "HGNC": hgnc_release,
         "GFF": gff_release,
@@ -965,16 +980,44 @@ def _check_for_transcript_seeding_version_regression(
     }
 
     # find the latest releases in the db
+    select = _get_latest_transcript_release("MANE Select", reference_genome)
+    plus = _get_latest_transcript_release("MANE Plus Clinical", reference_genome)
+
+    # pick whichever of select or plus has the highest version (or 'select' if both are the same)
+    # just return None if there aren't versions for either
+    if None not in [select, plus]:
+        max_mane = (
+            select.release
+            if Version(select.release) >= Version(plus.release)
+            else plus.release
+        )
+    elif not select and not plus:
+        max_mane = None
+    else:
+        max_mane = select if select else plus
+
+    if _get_latest_hgnc_release():
+        latest_hgnc_release = _get_latest_hgnc_release().release
+    else:
+        latest_hgnc_release = None
+
+    if _get_latest_gff_release(reference_genome):
+        latest_gff_release = _get_latest_gff_release(reference_genome).release
+    else:
+        latest_gff_release = None
+
+    if _get_latest_transcript_release("HGMD", reference_genome):
+        latest_hgmd_release = _get_latest_transcript_release(
+            "HGMD", reference_genome
+        ).release
+    else:
+        latest_hgmd_release = None
+
     latest_db_versions = {
-        "HGNC": _get_latest_hgnc_release(),
-        "GFF": _get_latest_gff_release(reference_genome),
-        "MANE": max(
-            [
-                _get_latest_transcript_release("MANE Select", reference_genome),
-                _get_latest_transcript_release("MANE Plus Clinical", reference_genome),
-            ]
-        ),
-        "HGMD": _get_latest_transcript_release("HGMD", reference_genome),
+        "HGNC": latest_hgnc_release,
+        "GFF": latest_gff_release,
+        "MANE": max_mane,
+        "HGMD": latest_hgmd_release,
     }
 
     error = "\n".join(
@@ -982,7 +1025,7 @@ def _check_for_transcript_seeding_version_regression(
             f"Provided {source} version {input_version} is a lower version than v{str(latest_db_versions[source])} in the db"
             for source, input_version in input_versions.items()
             if latest_db_versions[source]
-            and Version(input_version) < latest_db_versions[source]
+            and Version(input_versions[source]) < Version(latest_db_versions[source])
         ]
     )
 
