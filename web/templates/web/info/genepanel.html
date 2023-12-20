@@ -37,7 +37,7 @@
       <div class="card">
         <div class="card-body">
           <h5 class="card-title">Upload GenePanel File to DNANexus Project</h5>
-          <form action="{% url 'genepanel' %}" method="POST" id="genepanelForm">
+          <form action="{% url 'genepanel' %}" method="POST" id="genepanelForm" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="mb-3">
               <label for="projectIdInput" class="form-label">DNANexus API Token</label>
@@ -49,6 +49,10 @@
               <label for="projectIdInput" class="form-label">Project ID</label>
               <input type="text" class="form-control" name="project_id" aria-describedby="projectIdHelp" required>
               <div id="projectIdHelp" class="form-text">e.g. project-GV4VJ2Q46b4p7k7z7491fFZ3</div>
+            </div>
+            <div class="mb-3">
+              <label for="formFile" class="form-label">Upload a HGNC Text File</label>
+              <input class="form-control" type="file" id="hgnc_upload" name="hgnc_upload" required>
             </div>
             <button type="submit" class="btn btn-success">Upload
               <span class="spinner-border spinner-border-sm ml-2 visually-hidden" aria-hidden="true"></span>

@@ -1,5 +1,8 @@
 import collections
 import json
+import pandas as pd
+from io import BytesIO
+from requests_app.management.commands._parse_transcript import check_missing_columns
 from itertools import chain
 import dxpy as dx
 import datetime as dt
@@ -8,6 +11,7 @@ from django.http import HttpRequest, HttpResponse
 
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
+from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.db.models import QuerySet, Q, F
 from django.db import transaction
 
@@ -1061,6 +1065,21 @@ def gene(request: HttpRequest, gene_id: int) -> HttpResponse:
     )
 
 
+def _parse_excluded_hgncs_from_bytes(file: TemporaryUploadedFile) -> set[str]:
+    try:
+        df = pd.read_csv(BytesIO(file.read()), delimiter="\t", dtype=str)
+
+        df = df[
+            df["Locus type"].str.contains("rna", case=False)
+            | df["Approved name"].str.contains("mitochondrially encoded", case=False)
+        ]
+    except Exception as e:
+        print("Error parsing file: ", e)
+        return set()
+
+    return set(df["HGNC ID"].tolist())
+
+
 def genepanel(
     request: HttpRequest,
 ) -> HttpResponse:
@@ -1073,7 +1092,7 @@ def genepanel(
     warnings = []
 
     # TODO: hard-coded, will become an upload file in the future
-    rnas = parse_excluded_hgncs_from_file("testing_files/eris/hgnc_dump_20230606_1.txt")
+    # rnas = parse_excluded_hgncs_from_file("testing_files/eris/hgnc_dump_20230606_1.txt")
 
     pending_clinical_indication_panels = ClinicalIndicationPanel.objects.filter(
         pending=True
@@ -1216,6 +1235,25 @@ def genepanel(
 
         project_id = request.POST.get("project_id").strip()
         dnanexus_token = request.POST.get("dnanexus_token").strip()
+        hgnc = request.FILES.get("hgnc_upload")
+
+        # validate hgnc columns
+        if missing_columns := check_missing_columns(
+            pd.read_csv(BytesIO(hgnc.read()), delimiter="\t"),
+            ["HGNC ID", "Locus type", "Approved name"],
+        ):
+            return render(
+                request,
+                "web/info/genepanel.html",
+                {
+                    "genepanels": genepanels,
+                    "error": "Missing columns: "
+                    + ", ".join(missing_columns)
+                    + " in HGNC file.",
+                },
+            )
+
+        rnas = _parse_excluded_hgncs_from_bytes(hgnc)
 
         try:
             # login dnanexus
