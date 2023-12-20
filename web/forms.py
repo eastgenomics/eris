@@ -1,8 +1,8 @@
 import re
 from django import forms
 
-from requests_app.models import ClinicalIndication, Panel, Gene
-from requests_app.management.commands.utils import sortable_version
+from panels_backend.models import ClinicalIndication, Panel, Gene
+from panels_backend.management.commands.utils import sortable_version
 
 
 class ClinicalIndicationForm(forms.Form):

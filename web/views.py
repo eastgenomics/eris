@@ -14,15 +14,15 @@ from django.db import transaction
 from .forms import ClinicalIndicationForm, PanelForm, GeneForm
 from .utils.utils import Genepanel
 
-from requests_app.management.commands.history import History
-from requests_app.management.commands.utils import (
+from panels_backend.management.commands.history import History
+from panels_backend.management.commands.utils import (
     parse_excluded_hgncs_from_file,
     normalize_version,
 )
 from core.settings import HGNC_IDS_TO_OMIT
-from requests_app.management.commands._insert_ci import insert_test_directory_data
+from panels_backend.management.commands._insert_ci import insert_test_directory_data
 
-from requests_app.models import (
+from panels_backend.models import (
     ClinicalIndication,
     Panel,
     ClinicalIndicationPanel,
