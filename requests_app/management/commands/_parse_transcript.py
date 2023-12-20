@@ -561,7 +561,7 @@ def _add_transcript_to_db_with_gff_release(
 
 
 def _add_transcript_categorisation_to_db(
-    data_dict: dict[str : Transcript | TranscriptRelease | bool],
+    data_dict: list[dict[str : Transcript | TranscriptRelease | bool]],
 ) -> None:
     """
     Each transcript has been searched for in different transcript release files,
