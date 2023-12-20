@@ -1,4 +1,10 @@
-# core
+# Eris
+
+Eris is a Django app, which enables the tracking and version control of clinical indications, panels, and preferred clinical transcripts for variant interpretation. It contains:
+- panels_web, a web interface for interaction with the database
+- panels_backend, which provides a command line interface for database seeding and management
+- A database, the models for which are detailed in panels_backend/models.py
+- core, containing top-level settings for Eris
 
 Abbreviations:
 - CI: clinical indication
