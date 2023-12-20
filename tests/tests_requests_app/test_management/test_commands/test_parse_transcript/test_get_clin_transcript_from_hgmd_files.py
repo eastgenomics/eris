@@ -20,7 +20,7 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
         an error is returned.
         """
         hgnc_id = "HGNC:1234"
-        markname = {1235: [5678]} # doesn't match the HGNC_ID
+        markname = {1235: [5678]}  # doesn't match the HGNC_ID
         gene2refseq = {}
 
         result, test_error = _get_clin_transcript_from_hgmd_files(

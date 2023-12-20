@@ -189,10 +189,7 @@ def _add_new_genes_to_db(
 
 def _make_hgnc_gene_sets(
     hgnc_id_to_symbol: dict[str, str], hgnc_id_to_alias: dict[str, list[str]]
-) -> tuple[list,
-           dict[str, dict[str, str]],
-           dict[str, dict[str, str]],
-           list]:
+) -> tuple[list, dict[str, dict[str, str]], dict[str, dict[str, str]], list]:
     """
     Sort genes into:
     - those which are not yet in the Gene table, but are in the HGNC release
@@ -501,7 +498,7 @@ def _prepare_gene2refseq_file(g2refseq_file: str) -> dict[str, list[list[str]]]:
     return df.groupby("hgmdID")["core_plus_version"].apply(list).to_dict()
 
 
-def _prepare_markname_file(markname_file: str) -> dict[int:list[int]]:
+def _prepare_markname_file(markname_file: str) -> dict[int : list[int]]:
     """
     Reads through markname file (from HGMD database)
     and generates a dict mapping of hgnc id to list of gene id
@@ -593,7 +590,9 @@ def _add_transcript_categorisation_to_db(
 
 
 def _get_clin_transcript_from_hgmd_files(
-    hgnc_id: str, markname: dict[int, list[int]], gene2refseq: dict[str, list[list[str]]]
+    hgnc_id: str,
+    markname: dict[int, list[int]],
+    gene2refseq: dict[str, list[list[str]]],
 ) -> tuple[str | None, str | None]:
     """
     Fetch the transcript linked to a particular gene in HGMD.
@@ -651,6 +650,7 @@ def _get_clin_transcript_from_hgmd_files(
     hgmd_base = gene2refseq[markname_gene_id][0][0]
 
     return hgmd_base, None
+
 
 def _transcript_assign_to_source(
     tx: str,
