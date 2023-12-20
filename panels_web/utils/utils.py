@@ -1,12 +1,12 @@
 """
-External python modules or scripts relavant to the web app
+External python modules or scripts relavant to the panels_web app
 """
 
 
 class Genepanel:
     """
     Genepanel class for storing genepanel information
-    Used for displaying genepanel information in the web app
+    Used for displaying genepanel information in the panels_web app
     """
 
     def __init__(

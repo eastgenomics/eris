@@ -137,7 +137,7 @@ def index(request: HttpRequest) -> HttpResponse:
 
     return render(
         request,
-        "web/index.html",
+        "panels_web/index.html",
         {
             "cis": clinical_indications,
             "panels": all_panels,
@@ -163,7 +163,7 @@ def panel(request: HttpRequest, panel_id: int) -> HttpResponse:
         except Panel.DoesNotExist:
             return render(
                 request,
-                "web/info/panel.html",
+                "panels_web/info/panel.html",
             )
 
         panel.panel_version = (
@@ -198,7 +198,7 @@ def panel(request: HttpRequest, panel_id: int) -> HttpResponse:
 
         return render(
             request,
-            "web/info/panel.html",
+            "panels_web/info/panel.html",
             {
                 "panel": panel,
                 "ci_panels": ci_panels,
@@ -228,7 +228,7 @@ def superpanel(request: HttpRequest, superpanel_id: int) -> HttpResponse:
     except SuperPanel.DoesNotExist:
         return render(
             request,
-            "web/info/superpanel.html",
+            "panels_web/info/superpanel.html",
         )
 
     superpanel.panel_version = (
@@ -262,7 +262,7 @@ def superpanel(request: HttpRequest, superpanel_id: int) -> HttpResponse:
 
     return render(
         request,
-        "web/info/superpanel.html",
+        "panels_web/info/superpanel.html",
         {
             "superpanel": superpanel,
             "cips": ci_panels,
@@ -284,7 +284,7 @@ def clinical_indication(request: HttpRequest, ci_id: int) -> HttpResponse:
         try:
             ci: ClinicalIndication = ClinicalIndication.objects.get(id=ci_id)
         except ClinicalIndication.DoesNotExist:
-            return render(request, "web/info/clinical_indication.html")
+            return render(request, "panels_web/info/clinical_indication.html")
 
         # fetch ci-panels
         # might have multiple panels but only one active
@@ -312,7 +312,7 @@ def clinical_indication(request: HttpRequest, ci_id: int) -> HttpResponse:
 
         return render(
             request,
-            "web/info/clinical_indication.html",
+            "panels_web/info/clinical_indication.html",
             {"ci": ci, "ci_panels": ci_panels, "tm_history": test_method_history},
         )
 
@@ -373,7 +373,7 @@ def add_clinical_indication(request: HttpRequest) -> HttpResponse:
     if request.method == "GET":
         return render(
             request,
-            "web/addition/add_clinical_indication.html",
+            "panels_web/addition/add_clinical_indication.html",
         )
     else:
         # form submission
@@ -413,7 +413,7 @@ def add_clinical_indication(request: HttpRequest) -> HttpResponse:
 
             return render(
                 request,
-                "web/addition/add_clinical_indication.html",
+                "panels_web/addition/add_clinical_indication.html",
                 {
                     "errors": form.errors if not form_valid else None,
                     "ci": clinical_indication,
@@ -428,7 +428,7 @@ def add_panel(request: HttpRequest) -> HttpResponse:
     genes = Gene.objects.all().order_by("hgnc_id")
 
     if request.method == "GET":
-        return render(request, "web/addition/add_panel.html", {"genes": genes})
+        return render(request, "panels_web/addition/add_panel.html", {"genes": genes})
     else:  # POST
         # form submission
         panel_name: str = request.POST.get("panel_name", "")
@@ -491,7 +491,7 @@ def add_panel(request: HttpRequest) -> HttpResponse:
 
         return render(
             request,
-            "web/addition/add_panel.html",
+            "panels_web/addition/add_panel.html",
             {
                 "panel": panel,
                 "genes": genes,
@@ -521,7 +521,7 @@ def add_ci_panel(request: HttpRequest) -> HttpResponse:
 
         return render(
             request,
-            "web/addition/add_ci_panel.html",
+            "panels_web/addition/add_ci_panel.html",
             {
                 "cis": clinical_indications,
                 "panels": panels,
@@ -602,7 +602,7 @@ def history(request: HttpRequest) -> HttpResponse:
 
         return render(
             request,
-            "web/history.html",
+            "panels_web/history.html",
             {
                 "data": cip_histories,
                 "showing": "Clinical Indication Panel",
@@ -621,7 +621,7 @@ def history(request: HttpRequest) -> HttpResponse:
 
             return render(
                 request,
-                "web/history.html",
+                "panels_web/history.html",
                 {
                     "data": panels,
                     "showing": "Panels",
@@ -633,7 +633,7 @@ def history(request: HttpRequest) -> HttpResponse:
 
             return render(
                 request,
-                "web/history.html",
+                "panels_web/history.html",
                 {
                     "data": clinical_indications,
                     "showing": "Clinical Indications",
@@ -679,7 +679,7 @@ def history(request: HttpRequest) -> HttpResponse:
 
             return render(
                 request,
-                "web/history.html",
+                "panels_web/history.html",
                 {
                     "data": cip_histories,
                     "showing": f"Clinical Indication Panel & {' + '.join([action.title() for action in actions])}"
@@ -701,7 +701,7 @@ def history(request: HttpRequest) -> HttpResponse:
 
             return render(
                 request,
-                "web/history.html",
+                "panels_web/history.html",
                 {
                     "data": panel_genes,
                     "showing": "Panel Genes",
@@ -746,7 +746,7 @@ def clinical_indication_panel(request: HttpRequest, cip_id: str) -> HttpResponse
 
         return render(
             request,
-            "web/info/clinical_indication_panel.html",
+            "panels_web/info/clinical_indication_panel.html",
             {"cip": clinical_indication_panel, "releases": releases},
         )
     else:
@@ -835,7 +835,7 @@ def clinical_indication_superpanel(request: HttpRequest, cisp_id: str) -> HttpRe
 
         return render(
             request,
-            "web/info/clinical_indication_superpanel.html",
+            "panels_web/info/clinical_indication_superpanel.html",
             {"cisp": clinical_indication_superpanel, "releases": releases},
         )
 
@@ -1013,7 +1013,7 @@ def review(request: HttpRequest) -> HttpResponse:
 
     return render(
         request,
-        "web/review/pending.html",
+        "panels_web/review/pending.html",
         {
             "panels": panels,
             "cis": clinical_indications,
@@ -1037,7 +1037,7 @@ def gene(request: HttpRequest, gene_id: int) -> HttpResponse:
     try:
         gene = Gene.objects.get(id=gene_id)
     except Gene.DoesNotExist:
-        return render(request, "web/info/gene.html")
+        return render(request, "panels_web/info/gene.html")
 
     associated_panels = PanelGene.objects.filter(gene_id=gene_id).values(
         "panel_id__panel_name",
@@ -1056,7 +1056,7 @@ def gene(request: HttpRequest, gene_id: int) -> HttpResponse:
 
     return render(
         request,
-        "web/info/gene.html",
+        "panels_web/info/gene.html",
         {"gene": gene, "panels": associated_panels, "transcripts": transcripts},
     )
 
@@ -1079,7 +1079,7 @@ def genepanel(
 
     # if there's no CiPanelAssociation date column, return empty list
     if not ClinicalIndicationPanel.objects.filter(current=True, pending=False).exists():
-        return render(request, "web/info/genepanel.html", {"genepanels": []})
+        return render(request, "panels_web/info/genepanel.html", {"genepanels": []})
 
     # fetch all relevant clinical indication and panels
     for row in ClinicalIndicationPanel.objects.filter(
@@ -1164,7 +1164,7 @@ def genepanel(
             if project_name.startswith("001") or project_name.startswith("002"):
                 return render(
                     request,
-                    "web/info/genepanel.html",
+                    "panels_web/info/genepanel.html",
                     {
                         "genepanels": list_of_genepanel,
                         "error": "Uploading to 001 or 002 project is not allowed.",
@@ -1189,7 +1189,7 @@ def genepanel(
         except Exception as e:
             return render(
                 request,
-                "web/info/genepanel.html",
+                "panels_web/info/genepanel.html",
                 {"genepanels": list_of_genepanel, "error": e},
             )
 
@@ -1197,7 +1197,7 @@ def genepanel(
 
     return render(
         request,
-        "web/info/genepanel.html",
+        "panels_web/info/genepanel.html",
         {
             "genepanels": list_of_genepanel,
             "success": success,
@@ -1213,7 +1213,7 @@ def add_gene(request: HttpRequest) -> HttpResponse:
     """
 
     if request.method == "GET":
-        return render(request, "web/addition/add_gene.html")
+        return render(request, "panels_web/addition/add_gene.html")
     else:
         # parse submitted form
         form = GeneForm(request.POST)
@@ -1233,7 +1233,7 @@ def add_gene(request: HttpRequest) -> HttpResponse:
         else:
             return render(
                 request,
-                "web/addition/add_gene.html",
+                "panels_web/addition/add_gene.html",
                 {
                     "errors": form.errors if not form.is_valid() else None,
                 },
@@ -1319,7 +1319,7 @@ def genetotranscript(request: HttpRequest) -> HttpResponse:
     gene page which is more detailed
     """
 
-    return render(request, "web/info/gene2transcript.html")
+    return render(request, "panels_web/info/gene2transcript.html")
 
     # if request.method == "POST":  # TODO: revisit once tx is sorted
     #     project_id = request.POST.get("project_id").strip()
@@ -1346,7 +1346,7 @@ def genetotranscript(request: HttpRequest) -> HttpResponse:
     #         if project_name.startswith("001") or project_name.startswith("002"):
     #             return render(
     #                 request,
-    #                 "web/info/gene2transcript.html",
+    #                 "panels_web/info/gene2transcript.html",
     #                 {
     #                     "transcripts": transcripts,
     #                     "error": "Uploading to 001 or 002 project is not allowed.",
@@ -1377,7 +1377,7 @@ def genetotranscript(request: HttpRequest) -> HttpResponse:
     #     except Exception as e:
     #         return render(
     #             request,
-    #             "web/info/gene2transcript.html",
+    #             "panels_web/info/gene2transcript.html",
     #             {"transcripts": transcripts, "error": e},
     #         )
 
@@ -1414,4 +1414,4 @@ def seed(request: HttpRequest) -> HttpResponse:
         except Exception as e:
             error = e
 
-    return render(request, "web/info/seed.html", {"error": error})
+    return render(request, "panels_web/info/seed.html", {"error": error})
