@@ -30,7 +30,7 @@ from requests_app.models import (
 
 
 def _update_existing_gene_metadata_symbol_in_db(
-    hgnc_id_to_symbol: dict[str:str], hgnc_release: HgncRelease, user: str
+    hgnc_id_to_symbol: dict[str, str], hgnc_release: HgncRelease, user: str
 ) -> None:
     """
     Function to update gene metadata in db using a hgnc dump prepared dictionary
@@ -74,7 +74,7 @@ def _update_existing_gene_metadata_symbol_in_db(
 
 
 def _update_existing_gene_metadata_aliases_in_db(
-    hgnc_id_to_alias_symbols: dict[str:str], hgnc_release: HgncRelease, user: str
+    hgnc_id_to_alias_symbols: dict[str, str], hgnc_release: HgncRelease, user: str
 ) -> None:
     """
     Function to update gene metadata in db using hgnc dump prepared dictionaries
@@ -148,7 +148,7 @@ def _link_unchanged_genes_to_new_release(
 
 
 def _add_new_genes_to_db(
-    new_genes: dict[str:str], hgnc_release: HgncRelease, user: str
+    new_genes: dict[str, str], hgnc_release: HgncRelease, user: str
 ) -> None:
     """
     If a gene exists in the HGNC file, but does NOT exist in the db, make it.
@@ -437,15 +437,12 @@ def _prepare_mane_file(
     return result_dict
 
 
-def _prepare_gff_file(gff_file: str, gff_version: str, user: str) -> dict[str, list]:
+def _prepare_gff_file(gff_file: str) -> dict[str, list[str]]:
     """
     Read through gff files (from DNANexus)
     and prepare dict of hgnc id to list of transcripts
 
     :param gff_file: gff file path
-    :param hgnc_version: a string describing the in-house-assigned release version of
-    the gff file
-    :param user: str, the user's name
 
     :return: dictionary of hgnc id to list of transcripts
     """
@@ -474,7 +471,7 @@ def _prepare_gff_file(gff_file: str, gff_version: str, user: str) -> dict[str, l
     )
 
 
-def _prepare_gene2refseq_file(g2refseq_file: str) -> dict:
+def _prepare_gene2refseq_file(g2refseq_file: str) -> dict[str, list[str]]:
     """
     Reads through gene2refseq file (from HGMD database)
     and generates a dict mapping of HGMD ID to a list which can contain [refcore, refversion],
@@ -482,7 +479,7 @@ def _prepare_gene2refseq_file(g2refseq_file: str) -> dict:
 
     :param g2refseq_file: gene2refseq file path
 
-    :return: dictionary of hgmd id to list of not "tuple" [refcore, refversion]
+    :return: dictionary of hgmd id to a list of 2 items, [refcore, refversion]
     """
 
     # read with dtype str to avoid pandas converting to int64
@@ -501,14 +498,14 @@ def _prepare_gene2refseq_file(g2refseq_file: str) -> dict:
     return df.groupby("hgmdID")["core_plus_version"].apply(list).to_dict()
 
 
-def _prepare_markname_file(markname_file: str) -> dict[str:list]:
+def _prepare_markname_file(markname_file: str) -> dict[int:list[int]]:
     """
     Reads through markname file (from HGMD database)
     and generates a dict mapping of hgnc id to list of gene id
 
     :param markname_file: markname file path
 
-    :return: dictionary of hgnc id to list of gene-id
+    :return: dictionary of hgnc id to lists of matching gene-id
     """
     markname = pd.read_csv(markname_file)
 
@@ -593,7 +590,7 @@ def _add_transcript_categorisation_to_db(
 
 
 def _get_clin_transcript_from_hgmd_files(
-    hgnc_id: str, markname: dict, gene2refseq: dict
+    hgnc_id: str, markname: dict[int, list[int]], gene2refseq: dict[str, list[str]]
 ) -> tuple[str | None, str | None]:
     """
     Fetch the transcript linked to a particular gene in HGMD.
@@ -612,16 +609,21 @@ def _get_clin_transcript_from_hgmd_files(
 
     # Error states: hgnc id not in markname table / hgmd database,
     # or hgnc id has more than one entry
-    if short_hgnc_id not in markname:
+    if int(short_hgnc_id) not in markname:
         err = f"{hgnc_id} not found in markname HGMD table"
         return None, err
 
-    if len(markname[short_hgnc_id]) > 1:
+    if len(markname[int(short_hgnc_id)]) > 1:
         err = f"{hgnc_id} has two or more entries in markname HGMD table."
         return None, err
 
-    # get the gene-id from markname table
-    markname_gene_id = markname[short_hgnc_id][0]
+    # get the gene-id from markname table.
+    # Error out if there's nothing in the position where it should be.
+    try:
+        markname_gene_id = markname[int(short_hgnc_id)][0]
+    except IndexError:
+        err = f"{hgnc_id} has no gene_id in markname table"
+        return None, err
 
     # Throw errors if the HGNC ID is None or pd.nan, if the gene ID from
     # markname isn't in gene2refseq, or if a gene has multiple entries in the
@@ -631,7 +633,7 @@ def _get_clin_transcript_from_hgmd_files(
         err = f"{hgnc_id} has no gene_id in markname table"
         return None, err
 
-    markname_gene_id = markname_gene_id.strip()
+    markname_gene_id = str(markname_gene_id).strip()
 
     if markname_gene_id not in gene2refseq:
         err = f"{hgnc_id} with gene id {markname_gene_id} not in gene2refseq table"
@@ -647,13 +649,12 @@ def _get_clin_transcript_from_hgmd_files(
 
     return hgmd_base, None
 
-
 def _transcript_assign_to_source(
     tx: str,
     hgnc_id: str,
     mane_data: list[dict],
-    markname_hgmd: dict,
-    gene2refseq_hgmd: dict,
+    markname_hgmd: dict[int, list[int]],
+    gene2refseq_hgmd: dict[str, list[str]],
 ) -> tuple[dict, dict, dict, str | None]:
     """
     Carries out the logic for deciding whether a transcript is clinical, or non-clinical.
@@ -1103,7 +1104,7 @@ def seed_transcripts(
     # files preparation - parsing the files, and adding release versioning to the database
     hgnc_symbol_to_hgnc_id = _prepare_hgnc_file(hgnc_filepath, hgnc_release, user)
     mane_data = _prepare_mane_file(mane_filepath, hgnc_symbol_to_hgnc_id)
-    gff = _prepare_gff_file(gff_filepath, gff_release, user)
+    gff = _prepare_gff_file(gff_filepath)
     gene2refseq_hgmd = _prepare_gene2refseq_file(g2refseq_filepath)
     markname_hgmd = _prepare_markname_file(markname_filepath)
 
