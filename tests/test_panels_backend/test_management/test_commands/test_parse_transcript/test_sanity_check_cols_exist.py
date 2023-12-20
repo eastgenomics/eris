@@ -2,7 +2,9 @@ from django.test import TestCase
 
 import pandas as pd
 
-from panels_backend.management.commands._parse_transcript import _sanity_check_cols_exist
+from panels_backend.management.commands._parse_transcript import (
+    _sanity_check_cols_exist,
+)
 
 
 class TestSanityCheckColsExist(TestCase):
