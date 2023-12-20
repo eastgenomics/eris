@@ -56,7 +56,7 @@ class TestSanityCheckColsExist(TestCase):
         """
         test_mane = pd.DataFrame({"Gene": [], "MANE TYPE": []})
 
-        assert check_missing_columns(test_mane, self.mane_cols, self.mane_name) == [
+        assert check_missing_columns(test_mane, self.mane_cols) == [
             "RefSeq StableID GRCh38 / GRCh37"
         ]
 
