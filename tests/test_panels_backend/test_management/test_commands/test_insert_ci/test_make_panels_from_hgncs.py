@@ -1,5 +1,5 @@
 """
-This file test the function `_make_panels_from_hgncs` in the file `requests_app/management/commands/_insert_ci.py`
+This file test the function `_make_panels_from_hgncs` in the file `panels_backend/management/commands/_insert_ci.py`
 
 Tested scenario:
 - core function of making panels from a list of hgncs and linking it to a clinical indication
@@ -8,7 +8,7 @@ Tested scenario:
 
 from django.test import TestCase
 
-from requests_app.models import (
+from panels_backend.models import (
     ClinicalIndication,
     Panel,
     ClinicalIndicationPanel,
@@ -19,8 +19,8 @@ from requests_app.models import (
     TestDirectoryRelease,
     CiPanelTdRelease,
 )
-from requests_app.management.commands._insert_ci import _make_panels_from_hgncs
-from tests.tests_requests_app.test_management.test_commands.test_insert_panel.test_insert_gene import (
+from panels_backend.management.commands._insert_ci import _make_panels_from_hgncs
+from tests.test_panels_backend.test_management.test_commands.test_insert_panel.test_insert_gene import (
     len_check_wrapper,
     value_check_wrapper,
 )
