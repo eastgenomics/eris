@@ -513,8 +513,8 @@ def _prepare_markname_file(markname_file: str) -> dict[int, list[int]]:
     _sanity_check_cols_exist(markname, needed_cols, "markname")
 
     # convert important cols to nullable integer
-    markname["hgncID"] = markname["hgncID"].astype('Int64')
-    markname["gene_id"] = markname["gene_id"].astype('Int64')
+    markname["hgncID"] = markname["hgncID"].astype("Int64")
+    markname["gene_id"] = markname["gene_id"].astype("Int64")
 
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
 
