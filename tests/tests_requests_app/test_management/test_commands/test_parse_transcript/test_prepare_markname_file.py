@@ -1,7 +1,4 @@
-import pandas as pd
-
 from django.test import TestCase
-from requests_app.models import Gene, HgncRelease
 from requests_app.management.commands._parse_transcript import _prepare_markname_file
 
 class TestPrepareMarknameFile(TestCase):

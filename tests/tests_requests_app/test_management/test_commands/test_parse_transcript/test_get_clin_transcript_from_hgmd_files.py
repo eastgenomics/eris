@@ -124,8 +124,8 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
 
     def test_gene2reqseq_entry_contains_list_of_lists(self):
         """
-        Test that if a gene's HGMD-markname ID has several transcript entries in
-        the gene2refseq table, an error is returned.
+        CASE: A gene's HGMD-markname ID has several transcript entries in the gene2refseq table
+        EXPECT: An error is returned.
         """
         hgnc_id = "HGNC:1234"
         markname = {1234: [5678]}
@@ -140,4 +140,22 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
         )
 
         assert not result
+        assert test_error == expected_err
+
+    def test_gene2reqseq_entry_is_valid(self):
+        """
+        CASE: All of the input is valid
+        EXPECT: Returns the correct transcript in HGMD, for this particular HGNC_ID
+        """
+        hgnc_id = "HGNC:1234"
+        markname = {1234: [5678]}
+        gene2refseq = {"5678": [["NM005", "1"]]}
+
+        result, test_error = _get_clin_transcript_from_hgmd_files(
+            hgnc_id, markname, gene2refseq
+        )
+
+        expected_err = None
+
+        assert result == "NM005"
         assert test_error == expected_err

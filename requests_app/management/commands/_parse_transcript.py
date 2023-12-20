@@ -474,7 +474,7 @@ def _prepare_gff_file(gff_file: str) -> dict[str, list[str]]:
     )
 
 
-def _prepare_gene2refseq_file(g2refseq_file: str) -> dict[str, list[str]]:
+def _prepare_gene2refseq_file(g2refseq_file: str) -> dict[str, list[list[str]]]:
     """
     Reads through gene2refseq file (from HGMD database)
     and generates a dict mapping of HGMD ID to a list which can contain [refcore, refversion],
@@ -593,7 +593,7 @@ def _add_transcript_categorisation_to_db(
 
 
 def _get_clin_transcript_from_hgmd_files(
-    hgnc_id: str, markname: dict[int, list[int]], gene2refseq: dict[str, list[str]]
+    hgnc_id: str, markname: dict[int, list[int]], gene2refseq: dict[str, list[list[str]]]
 ) -> tuple[str | None, str | None]:
     """
     Fetch the transcript linked to a particular gene in HGMD.
@@ -657,7 +657,7 @@ def _transcript_assign_to_source(
     hgnc_id: str,
     mane_data: list[dict],
     markname_hgmd: dict[int, list[int]],
-    gene2refseq_hgmd: dict[str, list[str]],
+    gene2refseq_hgmd: dict[str, list[list[str]]],
 ) -> tuple[dict[str, bool], dict[str, bool], dict[str, bool], str | None]:
     """
     Carries out the logic for deciding whether a transcript is clinical, or non-clinical.
