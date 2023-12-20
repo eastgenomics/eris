@@ -189,7 +189,10 @@ def _add_new_genes_to_db(
 
 def _make_hgnc_gene_sets(
     hgnc_id_to_symbol: dict[str, str], hgnc_id_to_alias: dict[str, list[str]]
-) -> tuple[list, dict, dict, list]:
+) -> tuple[list,
+           dict[str, dict[str, str]],
+           dict[str, dict[str, str]],
+           list]:
     """
     Sort genes into:
     - those which are not yet in the Gene table, but are in the HGNC release
@@ -205,8 +208,8 @@ def _make_hgnc_gene_sets(
     :param hgnc_id_to_alias_symbol: a dictionary of HGNC_ID to the list of alias symbols in the new HGNC release
 
     :return new_hgncs: a list of dicts, one per new gene, with keys 'hgnc_id' 'symbol' and 'alias'
-    :return hgnc_symbol_changed: a dict-of-dicts of genes with changed symbols, keys are hgnc_ids, the nested dict has 'old' and 'new 'aliases
-    :return hgnc_alias_changed: a dict-of-dicts of genes with changed alias, keys are hgnc_ids, the nested dict has 'old' and 'new 'aliases
+    :return hgnc_symbol_changed: a dict-of-dicts of genes with changed symbols, keys are hgnc_ids, the nested dict has 'old' and 'new' symbols
+    :return hgnc_alias_changed: a dict-of-dicts of genes with changed alias, keys are hgnc_ids, the nested dict has 'old' and 'new' aliases
     :return hgnc_unchanged: a list of HGNC IDs for genes which are in the release, but unchanged
     """
     # get every HGNC ID in the HGNC file
@@ -246,7 +249,7 @@ def _make_hgnc_gene_sets(
         if gene.hgnc_id in hgnc_id_to_alias:
             resolved_alias = _resolve_alias(hgnc_id_to_alias[gene.hgnc_id])
             if gene.alias_symbols != resolved_alias:
-                # add to a list of alias-changed HGNCs
+                # add to a collection of alias-changed HGNCs
                 alias_change = True
                 hgnc_alias_changed[gene.hgnc_id]["old"] = gene.alias_symbols
                 hgnc_alias_changed[gene.hgnc_id]["new"] = resolved_alias
@@ -655,7 +658,7 @@ def _transcript_assign_to_source(
     mane_data: list[dict],
     markname_hgmd: dict[int, list[int]],
     gene2refseq_hgmd: dict[str, list[str]],
-) -> tuple[dict, dict, dict, str | None]:
+) -> tuple[dict[str, bool], dict[str, bool], dict[str, bool], str | None]:
     """
     Carries out the logic for deciding whether a transcript is clinical, or non-clinical.
     Checks MANE first, then HGMD, to see if clinical status can be assigned
