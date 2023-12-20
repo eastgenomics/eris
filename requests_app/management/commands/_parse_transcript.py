@@ -498,7 +498,7 @@ def _prepare_gene2refseq_file(g2refseq_file: str) -> dict[str, list[list[str]]]:
     return df.groupby("hgmdID")["core_plus_version"].apply(list).to_dict()
 
 
-def _prepare_markname_file(markname_file: str) -> dict[int : list[int]]:
+def _prepare_markname_file(markname_file: str) -> dict[int, list[int]]:
     """
     Reads through markname file (from HGMD database)
     and generates a dict mapping of hgnc id to list of gene id
@@ -511,6 +511,10 @@ def _prepare_markname_file(markname_file: str) -> dict[int : list[int]]:
 
     needed_cols = ["hgncID"]
     _sanity_check_cols_exist(markname, needed_cols, "markname")
+
+    # convert important cols to nullable integer
+    markname["hgncID"] = markname["hgncID"].astype('Int64')
+    markname["gene_id"] = markname["gene_id"].astype('Int64')
 
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
 
