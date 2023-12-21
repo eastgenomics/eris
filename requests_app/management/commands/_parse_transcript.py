@@ -380,7 +380,6 @@ def check_missing_columns(df: pd.DataFrame, columns: list) -> list[str]:
 
     :param: df - a Pandas Dataframe
     :param: columns - a list of column names to check for
-    :param: filename - file name to be used in error message
 
     # NOTE: this function is also used in web view thus Assertion or raise Exception()
     has been changed to return error instead.

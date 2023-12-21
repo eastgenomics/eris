@@ -16,11 +16,10 @@ from django.db.models import QuerySet, Q, F
 from django.db import transaction
 
 from .forms import ClinicalIndicationForm, PanelForm, GeneForm
-from .utils.utils import GenePanel, GeneClass, ChildPanelClass
+from .utils.utils import WebChildPanel, WebGene, WebGenePanel
 
 from requests_app.management.commands.history import History
 from requests_app.management.commands.utils import (
-    parse_excluded_hgncs_from_file,
     normalize_version,
 )
 from core.settings import HGNC_IDS_TO_OMIT
@@ -37,7 +36,6 @@ from requests_app.models import (
     ClinicalIndicationTestMethodHistory,
     PanelGene,
     PanelGeneHistory,
-    Transcript,
     PanelSuperPanel,
     Gene,
     Confidence,
@@ -47,7 +45,6 @@ from requests_app.models import (
     TranscriptReleaseTranscript,
     TestDirectoryRelease,
     SuperPanel,
-    TranscriptRelease,
 )
 
 
@@ -1066,6 +1063,15 @@ def gene(request: HttpRequest, gene_id: int) -> HttpResponse:
 
 
 def _parse_excluded_hgncs_from_bytes(file: TemporaryUploadedFile) -> set[str]:
+    """
+    Function to parse a file containing hgnc ids that are excluded from the genepanel creation
+    This function is similar to "parse_excluded_hgncs_from_file" from
+    requests_app/management/commands/utils.py but takes different type of input
+
+    :param: file: TemporaryUploadedFile - this is an uploaded file from the front-end in bytes
+
+    :return: set[str] - a set of hgnc ids that are excluded
+    """
     try:
         df = pd.read_csv(BytesIO(file.read()), delimiter="\t", dtype=str)
 
@@ -1080,6 +1086,32 @@ def _parse_excluded_hgncs_from_bytes(file: TemporaryUploadedFile) -> set[str]:
     return set(df["HGNC ID"].tolist())
 
 
+def _add_panel_genes_to_genepanel(
+    panel_id: str,
+    panel_id_to_genes: dict[str, list[WebGene]],
+    genepanel: WebGenePanel,
+) -> None:
+    """
+    Small helper function to add panel genes to genepanel object
+    used in genepanel function
+
+    :param: panel_id: str - panel id
+    :param: panel_id_to_genes: dict[str, list[WebGene]] - dict of panel id to list of WebGene
+    :param: genepanel: GenePanel - genepanel object
+
+    :return: None
+    """
+    for gene in PanelGene.objects.filter(panel_id=panel_id).values(
+        "gene_id__hgnc_id", "gene_id", "panel_id"
+    ):
+        gene_id = gene["gene_id"]
+        hgnc_id = gene["gene_id__hgnc_id"]
+
+        panel_id_to_genes[panel_id].append(WebGene(gene_id, hgnc_id))
+
+        genepanel.hgncs.append(WebGene(gene_id, hgnc_id))
+
+
 def genepanel(
     request: HttpRequest,
 ) -> HttpResponse:
@@ -1090,9 +1122,6 @@ def genepanel(
 
     success = None
     warnings = []
-
-    # TODO: hard-coded, will become an upload file in the future
-    # rnas = parse_excluded_hgncs_from_file("testing_files/eris/hgnc_dump_20230606_1.txt")
 
     pending_clinical_indication_panels = ClinicalIndicationPanel.objects.filter(
         pending=True
@@ -1115,8 +1144,8 @@ def genepanel(
     if pending_panel_genes:
         warnings.append("Pending Panel Gene(s) found.")
 
-    genepanels: list[GenePanel] = []
-    panel_id_to_genes: dict[str, list[GeneClass]] = collections.defaultdict(list)
+    genepanels: list[WebGenePanel] = []
+    panel_id_to_genes: dict[str, list[WebGene]] = collections.defaultdict(list)
 
     for row in ClinicalIndicationPanel.objects.filter(
         current=True, pending=False
@@ -1130,7 +1159,7 @@ def genepanel(
     ):
         panel_id = row["panel_id"]
 
-        genepanel = GenePanel(
+        genepanel = WebGenePanel(
             row["clinical_indication_id__r_code"],
             row["clinical_indication_id__name"],
             row["clinical_indication_id"],
@@ -1138,19 +1167,11 @@ def genepanel(
             row["panel_id__panel_name"],
             normalize_version(row["panel_id__panel_version"])
             if row["panel_id__panel_version"]
-            else "1.0",
+            else None,
             [],
         )
 
-        for gene in PanelGene.objects.filter(panel_id=panel_id).values(
-            "gene_id__hgnc_id", "gene_id", "panel_id"
-        ):
-            gene_id = gene["gene_id"]
-            hgnc_id = gene["gene_id__hgnc_id"]
-
-            panel_id_to_genes[panel_id].append(GeneClass(gene_id, hgnc_id))
-
-            genepanel.hgncs.append(GeneClass(gene_id, hgnc_id))
+        _add_panel_genes_to_genepanel(panel_id, panel_id_to_genes, genepanel)
 
         genepanels.append(genepanel)
 
@@ -1167,7 +1188,7 @@ def genepanel(
     ):
         superpanel_id = row["superpanel_id"]
 
-        genepanel = GenePanel(
+        genepanel = WebGenePanel(
             row["clinical_indication_id__r_code"],
             row["clinical_indication_id__name"],
             row["clinical_indication_id"],
@@ -1175,7 +1196,7 @@ def genepanel(
             row["superpanel_id__panel_name"],
             normalize_version(row["superpanel_id__panel_version"])
             if row["superpanel_id__panel_version"]
-            else "1.0",
+            else None,
             [],
             True,
             [],  # child panels
@@ -1191,12 +1212,12 @@ def genepanel(
             child_panel_id = child_panel["panel_id"]
 
             genepanel.child_panels.append(
-                ChildPanelClass(
+                WebChildPanel(
                     child_panel["panel_id"],
                     child_panel["panel_id__panel_name"],
                     normalize_version(child_panel["panel_id__panel_version"])
                     if child_panel["panel_id__panel_version"]
-                    else "1.0",
+                    else None,
                 )
             )
 
@@ -1204,15 +1225,7 @@ def genepanel(
                 genepanel.hgncs.extend(panel_id_to_genes[child_panel_id])
                 continue
 
-            for gene in PanelGene.objects.filter(panel_id=child_panel_id).values(
-                "gene_id__hgnc_id", "gene_id", "panel_id"
-            ):
-                gene_id = gene["gene_id"]
-                hgnc_id = gene["gene_id__hgnc_id"]
-
-                panel_id_to_genes[panel_id].append(GeneClass(gene_id, hgnc_id))
-
-                genepanel.hgncs.append(GeneClass(gene_id, hgnc_id))
+            _add_panel_genes_to_genepanel(child_panel_id, panel_id_to_genes, genepanel)
 
         genepanels.append(genepanel)
 

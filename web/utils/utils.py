@@ -3,7 +3,7 @@ External python modules or scripts relavant to the web app
 """
 
 
-class ChildPanelClass:
+class WebChildPanel:
     """
     This class is used to store information about a child panel.
     Only used in the web app - GenePanel page.
@@ -15,7 +15,7 @@ class ChildPanelClass:
         self.panel_version = panel_version
 
 
-class GeneClass:
+class WebGene:
     """
     This class is used to store information about a gene.
     Only used in the web app - Gene page.
@@ -27,7 +27,7 @@ class GeneClass:
         self.hgnc = hgnc
 
 
-class GenePanel:
+class WebGenePanel:
     """
     This class is used to store information about a gene panel.
     Only used in the web app - GenePanel page.
@@ -41,9 +41,9 @@ class GenePanel:
         panel_id: str,
         panel_name: str,
         panel_version: str,
-        hgncs: list[GeneClass],
+        hgncs: list[WebGene],
         superpanel: bool = False,
-        child_panels: list[ChildPanelClass] = [],
+        child_panels: list[WebChildPanel] = [],
     ) -> None:
         self.ci_id = ci_id  # clinical indication id
         self.panel_id = panel_id  # panel id or superpanel id
