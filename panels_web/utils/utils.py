@@ -6,7 +6,7 @@ External python modules or scripts relavant to the web app
 class WebChildPanel:
     """
     This class is used to store information about a child panel.
-    Only used in the web app - GenePanel page.
+    Only used in the panels_web app - GenePanel page.
     """
 
     def __init__(self, id: str, panel_name: str, panel_version: str) -> None:
@@ -18,7 +18,7 @@ class WebChildPanel:
 class WebGene:
     """
     This class is used to store information about a gene.
-    Only used in the web app - Gene page.
+    Only used in the panels_web app - Gene page.
     Not to be confused with the Gene class in /panels_backend/models.py
     """
 
@@ -30,7 +30,7 @@ class WebGene:
 class WebGenePanel:
     """
     This class is used to store information about a gene panel.
-    Only used in the web app - GenePanel page.
+    Only used in the panels_web app - GenePanel page.
     """
 
     def __init__(

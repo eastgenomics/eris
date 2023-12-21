@@ -54,7 +54,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",  # for static files
     # custom apps
     "panels_backend",
-    "web",
+    "panels_web",
 ]
 
 MIDDLEWARE = [
