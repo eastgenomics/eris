@@ -4,6 +4,7 @@ import collections
 import re
 from django.db import transaction
 from packaging.version import Version
+import copy
 
 pd.options.mode.chained_assignment = None  # default='warn'
 import datetime
@@ -29,7 +30,7 @@ from requests_app.models import (
 
 
 def _update_existing_gene_metadata_symbol_in_db(
-    hgnc_id_to_symbol: dict[str:str], hgnc_release: HgncRelease, user: str
+    hgnc_id_to_symbol: dict[str, str], hgnc_release: HgncRelease, user: str
 ) -> None:
     """
     Function to update gene metadata in db using a hgnc dump prepared dictionary
@@ -73,7 +74,7 @@ def _update_existing_gene_metadata_symbol_in_db(
 
 
 def _update_existing_gene_metadata_aliases_in_db(
-    hgnc_id_to_alias_symbols: dict[str:str], hgnc_release: HgncRelease, user: str
+    hgnc_id_to_alias_symbols: dict[str, str], hgnc_release: HgncRelease, user: str
 ) -> None:
     """
     Function to update gene metadata in db using hgnc dump prepared dictionaries
@@ -147,7 +148,7 @@ def _link_unchanged_genes_to_new_release(
 
 
 def _add_new_genes_to_db(
-    new_genes: dict[str:str], hgnc_release: HgncRelease, user: str
+    new_genes: dict[str, str], hgnc_release: HgncRelease, user: str
 ) -> None:
     """
     If a gene exists in the HGNC file, but does NOT exist in the db, make it.
@@ -188,7 +189,7 @@ def _add_new_genes_to_db(
 
 def _make_hgnc_gene_sets(
     hgnc_id_to_symbol: dict[str, str], hgnc_id_to_alias: dict[str, list[str]]
-) -> tuple[list, dict, dict, list]:
+) -> tuple[list, dict[str, dict[str, str]], dict[str, dict[str, str]], list]:
     """
     Sort genes into:
     - those which are not yet in the Gene table, but are in the HGNC release
@@ -204,8 +205,8 @@ def _make_hgnc_gene_sets(
     :param hgnc_id_to_alias_symbol: a dictionary of HGNC_ID to the list of alias symbols in the new HGNC release
 
     :return new_hgncs: a list of dicts, one per new gene, with keys 'hgnc_id' 'symbol' and 'alias'
-    :return hgnc_symbol_changed: a dict-of-dicts of genes with changed symbols, keys are hgnc_ids, the nested dict has 'old' and 'new 'aliases
-    :return hgnc_alias_changed: a dict-of-dicts of genes with changed alias, keys are hgnc_ids, the nested dict has 'old' and 'new 'aliases
+    :return hgnc_symbol_changed: a dict-of-dicts of genes with changed symbols, keys are hgnc_ids, the nested dict has 'old' and 'new' symbols
+    :return hgnc_alias_changed: a dict-of-dicts of genes with changed alias, keys are hgnc_ids, the nested dict has 'old' and 'new' aliases
     :return hgnc_unchanged: a list of HGNC IDs for genes which are in the release, but unchanged
     """
     # get every HGNC ID in the HGNC file
@@ -245,7 +246,7 @@ def _make_hgnc_gene_sets(
         if gene.hgnc_id in hgnc_id_to_alias:
             resolved_alias = _resolve_alias(hgnc_id_to_alias[gene.hgnc_id])
             if gene.alias_symbols != resolved_alias:
-                # add to a list of alias-changed HGNCs
+                # add to a collection of alias-changed HGNCs
                 alias_change = True
                 hgnc_alias_changed[gene.hgnc_id]["old"] = gene.alias_symbols
                 hgnc_alias_changed[gene.hgnc_id]["new"] = resolved_alias
@@ -424,18 +425,19 @@ def _prepare_mane_file(
 
     result_dict = min_cols.to_dict("records")
 
+    # add a versionless column - used for some transcript-matching later
+    for i in result_dict:
+        i["RefSeq_versionless"] = re.sub(r"\.[\d]+$", "", i["RefSeq"])
+
     return result_dict
 
 
-def _prepare_gff_file(gff_file: str, gff_version: str, user: str) -> dict[str, list]:
+def _prepare_gff_file(gff_file: str) -> dict[str, list[str]]:
     """
     Read through gff files (from DNANexus)
     and prepare dict of hgnc id to list of transcripts
 
     :param gff_file: gff file path
-    :param hgnc_version: a string describing the in-house-assigned release version of
-    the gff file
-    :param user: str, the user's name
 
     :return: dictionary of hgnc id to list of transcripts
     """
@@ -464,7 +466,7 @@ def _prepare_gff_file(gff_file: str, gff_version: str, user: str) -> dict[str, l
     )
 
 
-def _prepare_gene2refseq_file(g2refseq_file: str) -> dict:
+def _prepare_gene2refseq_file(g2refseq_file: str) -> dict[str, list[list[str]]]:
     """
     Reads through gene2refseq file (from HGMD database)
     and generates a dict mapping of HGMD ID to a list which can contain [refcore, refversion],
@@ -472,7 +474,7 @@ def _prepare_gene2refseq_file(g2refseq_file: str) -> dict:
 
     :param g2refseq_file: gene2refseq file path
 
-    :return: dictionary of hgmd id to list of not "tuple" [refcore, refversion]
+    :return: dictionary of hgmd id to a list of 2 items, [refcore, refversion]
     """
 
     # read with dtype str to avoid pandas converting to int64
@@ -492,20 +494,24 @@ def _prepare_gene2refseq_file(g2refseq_file: str) -> dict:
     return df.groupby("hgmdID")["core_plus_version"].apply(list).to_dict()
 
 
-def _prepare_markname_file(markname_file: str) -> dict[str:list]:
+def _prepare_markname_file(markname_file: str) -> dict[int, list[int]]:
     """
     Reads through markname file (from HGMD database)
     and generates a dict mapping of hgnc id to list of gene id
 
     :param markname_file: markname file path
 
-    :return: dictionary of hgnc id to list of gene-id
+    :return: dictionary of hgnc id to lists of matching gene-id
     """
     markname = pd.read_csv(markname_file)
 
     needed_cols = ["hgncID"]
     if missing_columns := check_missing_columns(markname, needed_cols):
         raise ValueError(f"Missing columns in markname: {missing_columns}")
+
+    # convert important cols to nullable integer
+    markname["hgncID"] = markname["hgncID"].astype("Int64")
+    markname["gene_id"] = markname["gene_id"].astype("Int64")
 
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
 
@@ -553,7 +559,7 @@ def _add_transcript_to_db_with_gff_release(
 
 
 def _add_transcript_categorisation_to_db(
-    transcript: Transcript, data: dict[TranscriptRelease : dict[str:bool]]
+    data_dict: list[dict[str : Transcript | TranscriptRelease | bool]],
 ) -> None:
     """
     Each transcript has been searched for in different transcript release files,
@@ -565,30 +571,29 @@ def _add_transcript_categorisation_to_db(
     This function stores that search information, along with the transcript-release
     link.
 
-    :param: the Transcript object
-    :param: a dictionary containing TranscriptRelease objects (generally 1 for MANE Select,
-    1 for MANE Plus Clinical and 1 for HGMD), each of which has a dictionary as its key.
-    The nested dictionary contains the keys 'match_version', 'match_base' and 'clinical'
-    which tells you whether the tx was found in the release (True/False) or not looked
-    for (None).
+    :param: a dictionary containing the keys "transcript", for which the value is a Transcript instance,
+    "release" for which the value is a TranscriptRelease instance, and "match_version" "match_base" and
+    "default_clinical", which are bools describing the status of the transcript in each release.
     """
     TranscriptReleaseTranscript.objects.bulk_create(
         [
             TranscriptReleaseTranscript(
-                transcript=transcript,
-                release=release,
-                match_version=data["match_version"],
-                match_base=data["match_base"],
-                default_clinical=data["clinical"],
+                transcript=i["transcript"],
+                release=i["release"],
+                match_version=i["match_version"],
+                match_base=i["match_base"],
+                default_clinical=i["clinical"],
             )
-            for release, data in data.items()
+            for i in data_dict
         ],
         ignore_conflicts=True,
     )
 
 
 def _get_clin_transcript_from_hgmd_files(
-    hgnc_id: str, markname: dict, gene2refseq: dict
+    hgnc_id: str,
+    markname: dict[int, list[int]],
+    gene2refseq: dict[str, list[list[str]]],
 ) -> tuple[str | None, str | None]:
     """
     Fetch the transcript linked to a particular gene in HGMD.
@@ -607,16 +612,20 @@ def _get_clin_transcript_from_hgmd_files(
 
     # Error states: hgnc id not in markname table / hgmd database,
     # or hgnc id has more than one entry
-    if short_hgnc_id not in markname:
+    if int(short_hgnc_id) not in markname:
         err = f"{hgnc_id} not found in markname HGMD table"
         return None, err
 
-    if len(markname[short_hgnc_id]) > 1:
+    if len(markname[int(short_hgnc_id)]) > 1:
         err = f"{hgnc_id} has two or more entries in markname HGMD table."
         return None, err
 
-    # get the gene-id from markname table
-    markname_gene_id = markname[short_hgnc_id][0]
+    # Error out if HGNC ID's value is an empty list
+    if not markname[int(short_hgnc_id)]:
+        err = f"{hgnc_id} has no gene_id in markname table"
+        return None, err
+
+    markname_gene_id = markname[int(short_hgnc_id)][0]
 
     # Throw errors if the HGNC ID is None or pd.nan, if the gene ID from
     # markname isn't in gene2refseq, or if a gene has multiple entries in the
@@ -626,7 +635,7 @@ def _get_clin_transcript_from_hgmd_files(
         err = f"{hgnc_id} has no gene_id in markname table"
         return None, err
 
-    markname_gene_id = markname_gene_id.strip()
+    markname_gene_id = str(markname_gene_id).strip()
 
     if markname_gene_id not in gene2refseq:
         err = f"{hgnc_id} with gene id {markname_gene_id} not in gene2refseq table"
@@ -647,9 +656,9 @@ def _transcript_assign_to_source(
     tx: str,
     hgnc_id: str,
     mane_data: list[dict],
-    markname_hgmd: dict,
-    gene2refseq_hgmd: dict,
-) -> tuple[dict, dict, dict, str | None]:
+    markname_hgmd: dict[int, list[int]],
+    gene2refseq_hgmd: dict[str, list[list[str]]],
+) -> tuple[dict[str, bool], dict[str, bool], dict[str, bool], str | None]:
     """
     Carries out the logic for deciding whether a transcript is clinical, or non-clinical.
     Checks MANE first, then HGMD, to see if clinical status can be assigned
@@ -665,6 +674,7 @@ def _transcript_assign_to_source(
     :return: hgmd_data, containing info from HGMD
     :return: err, error message if any
     """
+    # set up starting data
     mane_select_data = {"clinical": None, "match_base": None, "match_version": None}
     mane_plus_clinical_data = {
         "clinical": None,
@@ -679,16 +689,18 @@ def _transcript_assign_to_source(
     # First, find the transcript in the MANE file data
     # Note that data in MANE can be Plus Clinical or Select
     mane_exact_match = [d for d in mane_data if d["RefSeq"] == tx]
-    mane_base_match = [
-        d for d in mane_data if re.sub(r"\.[\d]+$", "", d["RefSeq"]) == tx_base
-    ]
+    mane_base_match = [d for d in mane_data if d["RefSeq_versionless"] == tx_base]
+
+    # we search to see whether the transcript's gene is actually linked to a Panel
+    # this becomes important if we have more than one MANE exact or base match
+    relevant_panels = PanelGene.objects.filter(gene__hgnc_id=hgnc_id)
 
     if mane_exact_match:
         if len(mane_exact_match) > 1:
-            # check if we really need this transcript, because there's Panel-Gene
-            # it's relevant to. If yes, throw an error, otherwise, just skip it
-            rel_panels = PanelGene.objects.filter(gene__hgnc_id=hgnc_id)
-            if len(rel_panels) != 0:
+            # this should be impossible - but has happened at least once
+            # if it happens, check if we really need this transcript, because there's Panel-Gene
+            # it's relevant to. If it's not relevant, just skip it. Otherwise throw an error
+            if len(relevant_panels) != 0:
                 raise ValueError(f"Transcript in MANE more than once: {tx}")
             else:
                 err = f"Transcript in MANE more than once, can't resolve: {tx}"
@@ -712,29 +724,32 @@ def _transcript_assign_to_source(
             return mane_select_data, mane_plus_clinical_data, hgmd_data, err
 
     # fall through to here if no exact match - see if there's a versionless match instead
-    if mane_base_match:
+    elif mane_base_match:
         if len(mane_base_match) > 1:
-            rel_panels = PanelGene.objects.filter(gene__hgnc_id=hgnc_id)
-            if len(rel_panels) != 0:
-                raise ValueError(f"Versionless ranscript in MANE more than once: {tx}")
+            # this should be impossible - but has happened at least once
+            # if it happens, check if we really need this transcript, because there's Panel-Gene
+            # it's relevant to. If it's not relevant, just skip it. Otherwise throw an error
+            if len(relevant_panels) != 0:
+                raise ValueError(f"Versionless transcript in MANE more than once: {tx}")
             else:
                 err = f"Versionless transcript in MANE more than once, can't resolve: {tx}"
                 return mane_select_data, mane_plus_clinical_data, hgmd_data, err
-        source = mane_base_match[0]["MANE TYPE"]
-        if str(source).lower() == "mane select":
-            mane_select_data["clinical"] = True
-            mane_select_data["match_base"] = True
-            mane_select_data["match_version"] = False
-        elif str(source).lower() == "mane plus clinical":
-            mane_plus_clinical_data["clinical"] = True
-            mane_plus_clinical_data["match_base"] = True
-            mane_plus_clinical_data["match_version"] = False
-        else:
-            raise ValueError(
-                "MANE Type does not match MANE Select or MANE Plus Clinical"
-                " - check how mane_data has been set up"
-            )
-        return mane_select_data, mane_plus_clinical_data, hgmd_data, err
+        else:  # exactly 1 match between the MANE base and the transcript
+            source = mane_base_match[0]["MANE TYPE"]
+            if str(source).lower() == "mane select":
+                mane_select_data["clinical"] = True
+                mane_select_data["match_base"] = True
+                mane_select_data["match_version"] = False
+            elif str(source).lower() == "mane plus clinical":
+                mane_plus_clinical_data["clinical"] = True
+                mane_plus_clinical_data["match_base"] = True
+                mane_plus_clinical_data["match_version"] = False
+            else:
+                raise ValueError(
+                    "MANE Type does not match MANE Select or MANE Plus Clinical"
+                    " - check how mane_data has been set up"
+                )
+            return mane_select_data, mane_plus_clinical_data, hgmd_data, err
 
     # hgnc id for the transcript's gene is not in MANE -
     # hgnc id for the transcript's gene is not in MANE -
@@ -1092,7 +1107,7 @@ def seed_transcripts(
     # files preparation - parsing the files, and adding release versioning to the database
     hgnc_symbol_to_hgnc_id = _prepare_hgnc_file(hgnc_filepath, hgnc_release, user)
     mane_data = _prepare_mane_file(mane_filepath, hgnc_symbol_to_hgnc_id)
-    gff = _prepare_gff_file(gff_filepath, gff_release, user)
+    gff = _prepare_gff_file(gff_filepath)
     gene2refseq_hgmd = _prepare_gene2refseq_file(g2refseq_filepath)
     markname_hgmd = _prepare_markname_file(markname_filepath)
 
@@ -1120,8 +1135,9 @@ def seed_transcripts(
     # decide whether a transcript is clinical or not
     # add all this information to the database
     tx_starting = datetime.datetime.now().strftime("%H:%M:%S")
-    print(f"Start adding transcripts: {tx_starting}")
+    print(f"Start adding transcripts to db: {tx_starting}")
 
+    release_categories = []
     for hgnc_id, transcripts in gff.items():
         gene = Gene.objects.get(hgnc_id=hgnc_id)
         # get deduplicated transcripts
@@ -1145,12 +1161,19 @@ def seed_transcripts(
 
             # link all the releases to the Transcript,
             # with the dictionaries containing match information
-            releases_and_data_to_link = {
-                mane_select_rel: mane_select_data,
-                mane_plus_clinical_rel: mane_plus_clinical_data,
-                hgmd_rel: hgmd_data,
-            }
-            _add_transcript_categorisation_to_db(transcript, releases_and_data_to_link)
+            for i in [mane_select_data, mane_plus_clinical_data, hgmd_data]:
+                i["transcript"] = transcript
+
+            mane_select_data["release"] = mane_select_rel
+            mane_plus_clinical_data["release"] = mane_plus_clinical_rel
+            hgmd_data["release"] = hgmd_rel
+
+            release_categories.append(mane_select_data)
+            release_categories.append(mane_plus_clinical_data)
+            release_categories.append(hgmd_data)
+
+    print(f"Start adding transcript clinical information to db: {tx_starting}")
+    _add_transcript_categorisation_to_db(release_categories)
 
     tx_ending = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"Finished adding transcripts to db: {tx_ending}")

@@ -13,7 +13,7 @@ class TestTranscriptAssigner_TxAbsent(TestCase):
     """
 
     def test_default_additional_transcript_non_clin(self):
-        hgnc_id = "1234"
+        hgnc_id = "HGNC:1234"
         tx = "NM00004.1"
 
         mane_data = []
@@ -52,11 +52,16 @@ class TestTranscriptAssigner_InMane(TestCase):
         EXPECT: the MANE Select data to be filled out as Clinical, with other dicts
         being empty
         """
-        hgnc_id = "1234"
+        hgnc_id = "HGNC:1234"
         tx = "NM00004.1"
 
         mane_data = [
-            {"HGNC ID": "1234", "RefSeq": "NM00004.2", "MANE TYPE": "MANE SELECT"}
+            {
+                "HGNC ID": "1234",
+                "RefSeq": "NM00004.2",
+                "RefSeq_versionless": "NM00004",
+                "MANE TYPE": "MANE SELECT",
+            }
         ]
         markname_hgmd = {}
         gene2refseq_hgmd = {}
@@ -100,13 +105,14 @@ class TestTranscriptAssigner_InMane(TestCase):
         EXPECT: the MANE Plus Clinical data to be filled out as Clinical, with other dicts
         being empty
         """
-        hgnc_id = "1234"
+        hgnc_id = "HGNC:1234"
         tx = "NM00004.1"
 
         mane_data = [
             {
                 "HGNC ID": "1234",
                 "RefSeq": "NM00004.2",
+                "RefSeq_versionless": "NM00004",
                 "MANE TYPE": "MANE PLUS CLINICAL",
             }
         ]
@@ -143,11 +149,16 @@ class TestTranscriptAssigner_InMane(TestCase):
         EXPECT: the MANE Select data to be filled out as Clinical, with other dicts
         being empty
         """
-        hgnc_id = "1234"
+        hgnc_id = "HGNC:1234"
         tx = "NM00004.1"
 
         mane_data = [
-            {"HGNC ID": "1234", "RefSeq": "NM00004.1", "MANE TYPE": "MANE SELECT"}
+            {
+                "HGNC ID": "1234",
+                "RefSeq": "NM00004.1",
+                "RefSeq_versionless": "NM00004",
+                "MANE TYPE": "MANE SELECT",
+            }
         ]
         markname_hgmd = {}
         gene2refseq_hgmd = {}
@@ -190,13 +201,14 @@ class TestTranscriptAssigner_InMane(TestCase):
         EXPECT: the MANE Plus Clinical data to be filled out as Clinical, with other dicts
         being empty
         """
-        hgnc_id = "1234"
+        hgnc_id = "HGNC:1234"
         tx = "NM00004.1"
 
         mane_data = [
             {
                 "HGNC ID": "1234",
                 "RefSeq": "NM00004.1",
+                "RefSeq_versionless": "NM00004",
                 "MANE TYPE": "MANE PLUS CLINICAL",
             }
         ]
@@ -243,8 +255,8 @@ class TestTranscriptAssigner_InHgmd(TestCase):
         tx = "NM00004.1"
 
         mane_data = []
-        markname_hgmd = {"1234": ["test"]}
-        gene2refseq_hgmd = {"test": [["NM00004", "1"]]}
+        markname_hgmd = {1234: [2]}
+        gene2refseq_hgmd = {"2": [["NM00004", "1"]]}
 
         (
             mane_select_data,
@@ -275,8 +287,8 @@ class TestTranscriptAssigner_InHgmd(TestCase):
         tx = "NM00004.1"
 
         mane_data = []
-        markname_hgmd = {"1234": ["test"]}
-        gene2refseq_hgmd = {"test": [["NM00010", "1"]]}
+        markname_hgmd = {1234: [2]}
+        gene2refseq_hgmd = {"2": [["NM00010", "1"]]}
 
         (
             mane_select_data,
