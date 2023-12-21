@@ -317,7 +317,8 @@ def _prepare_hgnc_file(hgnc_file: str, hgnc_version: str, user: str) -> dict[str
     hgnc: pd.DataFrame = pd.read_csv(hgnc_file, delimiter="\t")
 
     needed_cols = ["HGNC ID", "Approved symbol", "Alias symbols"]
-    _sanity_check_cols_exist(hgnc, needed_cols, "HGNC dump")
+    if missing_columns := check_missing_columns(hgnc, needed_cols):
+        raise ValueError(f"Missing columns in HGNC Dump: {missing_columns}")
 
     # strip whitespace as a precaution
     hgnc["Approved symbol"] = hgnc["Approved symbol"].str.strip()
@@ -373,26 +374,19 @@ def _prepare_hgnc_file(hgnc_file: str, hgnc_version: str, user: str) -> dict[str
     return hgnc_approved_symbol_to_hgnc_id
 
 
-def _sanity_check_cols_exist(
-    df: pd.DataFrame, needed_cols: list, filename: str
-) -> None:
+def check_missing_columns(df: pd.DataFrame, columns: list) -> list[str]:
     """
-    Check for expected columns in a DataFrame.
-    Collects together errors and asserts them all at once, if there's more than one issue.
-    :param: df - a Pandas Dataframe
-    :param: needed_cols - a list of column names to check for
-    :param: filename - a reference to use for the file being checked
-    :return: None
-    """
-    errors = []
-    for x_col in needed_cols:
-        if x_col not in df.columns:
-            errors.append(
-                f"Missing column {x_col} from {filename} file - please check the file"
-            )
+    Check for expected columns in a DataFrame and return columns that are missing
 
-    errors = "; ".join(errors)
-    assert not errors, errors
+    :param: df - a Pandas Dataframe
+    :param: columns - a list of column names to check for
+
+    # NOTE: this function is also used in web view thus Assertion or raise Exception()
+    has been changed to return error instead.
+
+    :return: list or missing columns
+    """
+    return [col for col in columns if col not in df.columns]
 
 
 def _prepare_mane_file(
@@ -411,7 +405,8 @@ def _prepare_mane_file(
     mane = pd.read_csv(mane_file)
 
     needed_mane_cols = ["Gene", "MANE TYPE", "RefSeq StableID GRCh38 / GRCh37"]
-    _sanity_check_cols_exist(mane, needed_mane_cols, "MANE")
+    if missing_columns := check_missing_columns(mane, needed_mane_cols):
+        raise ValueError(f"Missing columns in MANE: {missing_columns}")
 
     filtered_mane = mane[
         mane["MANE TYPE"].isin(["MANE SELECT", "MANE PLUS CLINICAL"])
@@ -459,8 +454,8 @@ def _prepare_gff_file(gff_file: str, gff_version: str, user: str) -> dict[str, l
         dtype=str,
     )
 
-    needed_cols = ["hgnc", "transcript"]
-    _sanity_check_cols_exist(gff, needed_cols, "gff")
+    if missing_columns := check_missing_columns(gff, ["hgnc", "transcript"]):
+        raise ValueError(f"Missing columns in GFF: {missing_columns}")
 
     return (
         gff.groupby("hgnc")
@@ -484,7 +479,8 @@ def _prepare_gene2refseq_file(g2refseq_file: str) -> dict:
     df = pd.read_csv(g2refseq_file, dtype=str)
 
     needed_cols = ["refcore", "refversion", "hgmdID"]
-    _sanity_check_cols_exist(df, needed_cols, "gene2refseq")
+    if missing_columns := check_missing_columns(df, needed_cols):
+        raise ValueError(f"Missing columns in gene2refseq: {missing_columns}")
 
     # create list of refcore + refversion
     df["core_plus_version"] = pd.Series(zip(df["refcore"], df["refversion"])).map(list)
@@ -508,7 +504,8 @@ def _prepare_markname_file(markname_file: str) -> dict[str:list]:
     markname = pd.read_csv(markname_file)
 
     needed_cols = ["hgncID"]
-    _sanity_check_cols_exist(markname, needed_cols, "markname")
+    if missing_columns := check_missing_columns(markname, needed_cols):
+        raise ValueError(f"Missing columns in markname: {missing_columns}")
 
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
 

@@ -1,5 +1,8 @@
 import collections
 import json
+import pandas as pd
+from io import BytesIO
+from requests_app.management.commands._parse_transcript import check_missing_columns
 from itertools import chain
 import dxpy as dx
 import datetime as dt
@@ -8,15 +11,15 @@ from django.http import HttpRequest, HttpResponse
 
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
+from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.db.models import QuerySet, Q, F
 from django.db import transaction
 
 from .forms import ClinicalIndicationForm, PanelForm, GeneForm
-from .utils.utils import Genepanel
+from .utils.utils import WebChildPanel, WebGene, WebGenePanel
 
 from requests_app.management.commands.history import History
 from requests_app.management.commands.utils import (
-    parse_excluded_hgncs_from_file,
     normalize_version,
 )
 from core.settings import HGNC_IDS_TO_OMIT
@@ -33,7 +36,6 @@ from requests_app.models import (
     ClinicalIndicationTestMethodHistory,
     PanelGene,
     PanelGeneHistory,
-    Transcript,
     PanelSuperPanel,
     Gene,
     Confidence,
@@ -43,7 +45,6 @@ from requests_app.models import (
     TranscriptReleaseTranscript,
     TestDirectoryRelease,
     SuperPanel,
-    TranscriptRelease,
 )
 
 
@@ -1061,87 +1062,211 @@ def gene(request: HttpRequest, gene_id: int) -> HttpResponse:
     )
 
 
+def _parse_excluded_hgncs_from_bytes(file: TemporaryUploadedFile) -> set[str]:
+    """
+    Function to parse a file containing hgnc ids that are excluded from the genepanel creation
+    This function is similar to "parse_excluded_hgncs_from_file" from
+    requests_app/management/commands/utils.py but takes different type of input
+
+    :param: file: TemporaryUploadedFile - this is an uploaded file from the front-end in bytes
+
+    :return: set[str] - a set of hgnc ids that are excluded
+    """
+    try:
+        df = pd.read_csv(BytesIO(file.read()), delimiter="\t", dtype=str)
+
+        df = df[
+            df["Locus type"].str.contains("rna", case=False)
+            | df["Approved name"].str.contains("mitochondrially encoded", case=False)
+        ]
+    except Exception as e:
+        print("Error parsing file: ", e)
+        return set()
+
+    return set(df["HGNC ID"].tolist())
+
+
+def _add_panel_genes_to_genepanel(
+    panel_id: str,
+    panel_id_to_genes: dict[str, list[WebGene]],
+    genepanel: WebGenePanel,
+) -> None:
+    """
+    Small helper function to add panel genes to genepanel object
+    used in genepanel function
+
+    :param: panel_id: str - panel id
+    :param: panel_id_to_genes: dict[str, list[WebGene]] - dict of panel id to list of WebGene
+    :param: genepanel: GenePanel - genepanel object
+
+    :return: None
+    """
+    for gene in PanelGene.objects.filter(panel_id=panel_id).values(
+        "gene_id__hgnc_id", "gene_id", "panel_id"
+    ):
+        gene_id = gene["gene_id"]
+        hgnc_id = gene["gene_id__hgnc_id"]
+
+        panel_id_to_genes[panel_id].append(WebGene(gene_id, hgnc_id))
+
+        genepanel.hgncs.append(WebGene(gene_id, hgnc_id))
+
+
 def genepanel(
     request: HttpRequest,
-):  # TODO: revisit once output PR is merged because there's some function change in that PR
+) -> HttpResponse:
     """
     Genepanel page where user view R code, clinical indication name
     its associated panels and genes.
     """
 
-    # TODO: hard-coded, will become an upload file in the future
-    rnas = parse_excluded_hgncs_from_file("testing_files/eris/hgnc_dump_20230606_1.txt")
-
-    ci_panels = collections.defaultdict(list)
-    panel_genes = collections.defaultdict(list)
-    relevant_panels = set()
     success = None
+    warnings = []
+
+    pending_clinical_indication_panels = ClinicalIndicationPanel.objects.filter(
+        pending=True
+    ).exists()
+    pending_clinical_indication_superpanels = (
+        ClinicalIndicationSuperPanel.objects.filter(pending=True).exists()
+    )
+    pending_panel_genes = PanelGene.objects.filter(pending=True).exists()
 
     # if there's no CiPanelAssociation date column, return empty list
     if not ClinicalIndicationPanel.objects.filter(current=True, pending=False).exists():
-        return render(request, "web/info/genepanel.html", {"genepanels": []})
+        return render(request, "web/info/genepanel.html")
 
-    # fetch all relevant clinical indication and panels
+    # if there're pending CiPanel / CiSuperPanel / PanelGene
+    # display notice in front end
+    if pending_clinical_indication_panels:
+        warnings.append("Pending Clinical Indication Panel(s) found.")
+    if pending_clinical_indication_superpanels:
+        warnings.append("Pending Clinical Indication Super Panel(s) found.")
+    if pending_panel_genes:
+        warnings.append("Pending Panel Gene(s) found.")
+
+    genepanels: list[WebGenePanel] = []
+    panel_id_to_genes: dict[str, list[WebGene]] = collections.defaultdict(list)
+
     for row in ClinicalIndicationPanel.objects.filter(
         current=True, pending=False
     ).values(
         "clinical_indication_id__r_code",
         "clinical_indication_id__name",
         "panel_id",
+        "clinical_indication_id",
         "panel_id__panel_name",
         "panel_id__panel_version",
     ):
-        relevant_panels.add(row["panel_id"])
-        ci_panels[row["clinical_indication_id__r_code"]].append(row)
+        panel_id = row["panel_id"]
 
-    # fetch all relevant genes for the relevant panels
-    for row in PanelGene.objects.filter(
-        panel_id__in=relevant_panels, active=True
-    ).values("gene_id__hgnc_id", "gene_id", "panel_id"):
-        panel_genes[row["panel_id"]].append((row["gene_id__hgnc_id"], row["gene_id"]))
-
-    list_of_genepanel: list[Genepanel] = []
-    ci_panel_to_genes = collections.defaultdict(list)
-    file_result: list[list[str]] = []
-
-    # for each r code panel combo, we make a list of genes associated with it
-    for r_code, panel_list in ci_panels.items():
-        # for each clinical indication
-        for panel_dict in panel_list:
-            # for each panel associated with that clinical indication
-            panel_id: str = panel_dict["panel_id"]
-            ci_name: str = panel_dict["clinical_indication_id__name"]
-            for hgnc, gene_id in panel_genes[panel_id]:
-                # for each gene associated with that panel
-                if hgnc in HGNC_IDS_TO_OMIT or hgnc in rnas:
-                    continue
-
-                unique_key = f"{r_code} | {ci_name} |  {panel_dict['panel_id__panel_name']} | {normalize_version(panel_dict['panel_id__panel_version']) if panel_dict['panel_id__panel_version'] else '1.0'}"
-
-                ci_panel_to_genes[unique_key].append((hgnc, gene_id))
-
-                file_result.append(
-                    [
-                        f"{r_code}_{ci_name}",
-                        f"{panel_dict['panel_id__panel_name']}_{normalize_version(panel_dict['panel_id__panel_version']) if panel_dict['panel_id__panel_version'] else '1.0'}",
-                        hgnc,
-                    ]
-                )
-
-    # make GenePanel class for ease of rendering in front end
-    for key, hgncs in ci_panel_to_genes.items():
-        r_code, ci_name, panel_name, panel_version = [
-            val.strip() for val in key.split("|")
-        ]
-        list_of_genepanel.append(
-            Genepanel(r_code, ci_name, panel_name, panel_version, hgncs)
+        genepanel = WebGenePanel(
+            row["clinical_indication_id__r_code"],
+            row["clinical_indication_id__name"],
+            row["clinical_indication_id"],
+            row["panel_id"],
+            row["panel_id__panel_name"],
+            normalize_version(row["panel_id__panel_version"])
+            if row["panel_id__panel_version"]
+            else None,
+            [],
         )
 
-    list_of_genepanel = sorted(list_of_genepanel, key=lambda x: x.r_code)
+        _add_panel_genes_to_genepanel(panel_id, panel_id_to_genes, genepanel)
+
+        genepanels.append(genepanel)
+
+    # deal with CiSuperPanel
+    for row in ClinicalIndicationSuperPanel.objects.filter(
+        current=True, pending=False
+    ).values(
+        "clinical_indication_id__r_code",
+        "clinical_indication_id__name",
+        "clinical_indication_id",
+        "superpanel_id",
+        "superpanel_id__panel_name",
+        "superpanel_id__panel_version",
+    ):
+        superpanel_id = row["superpanel_id"]
+
+        genepanel = WebGenePanel(
+            row["clinical_indication_id__r_code"],
+            row["clinical_indication_id__name"],
+            row["clinical_indication_id"],
+            row["superpanel_id"],
+            row["superpanel_id__panel_name"],
+            normalize_version(row["superpanel_id__panel_version"])
+            if row["superpanel_id__panel_version"]
+            else None,
+            [],
+            True,
+            [],  # child panels
+        )
+
+        for child_panel in PanelSuperPanel.objects.filter(
+            superpanel_id=superpanel_id
+        ).values(
+            "panel_id__panel_name",
+            "panel_id",
+            "panel_id__panel_version",
+        ):
+            child_panel_id = child_panel["panel_id"]
+
+            genepanel.child_panels.append(
+                WebChildPanel(
+                    child_panel["panel_id"],
+                    child_panel["panel_id__panel_name"],
+                    normalize_version(child_panel["panel_id__panel_version"])
+                    if child_panel["panel_id__panel_version"]
+                    else None,
+                )
+            )
+
+            if child_panel_id in panel_id_to_genes:
+                genepanel.hgncs.extend(panel_id_to_genes[child_panel_id])
+                continue
+
+            _add_panel_genes_to_genepanel(child_panel_id, panel_id_to_genes, genepanel)
+
+        genepanels.append(genepanel)
 
     if request.method == "POST":
+        # return errors if there're pending links in Manual Review
+        if (
+            pending_clinical_indication_panels
+            or pending_clinical_indication_panels
+            or pending_clinical_indication_panels
+        ):
+            return render(
+                request,
+                "web/info/genepanel.html",
+                {
+                    "genepanels": genepanels,
+                    "warnings": warnings,
+                    "error": "Please resolve all pending links before uploading to DNAnexus.",
+                },
+            )
+
         project_id = request.POST.get("project_id").strip()
         dnanexus_token = request.POST.get("dnanexus_token").strip()
+        hgnc = request.FILES.get("hgnc_upload")
+
+        # validate hgnc columns
+        if missing_columns := check_missing_columns(
+            pd.read_csv(BytesIO(hgnc.read()), delimiter="\t"),
+            ["HGNC ID", "Locus type", "Approved name"],
+        ):
+            return render(
+                request,
+                "web/info/genepanel.html",
+                {
+                    "genepanels": genepanels,
+                    "error": "Missing columns: "
+                    + ", ".join(missing_columns)
+                    + " in HGNC file.",
+                },
+            )
+
+        rnas = _parse_excluded_hgncs_from_bytes(hgnc)
 
         try:
             # login dnanexus
@@ -1166,12 +1291,40 @@ def genepanel(
                     request,
                     "web/info/genepanel.html",
                     {
-                        "genepanels": list_of_genepanel,
+                        "genepanels": genepanels,
                         "error": "Uploading to 001 or 002 project is not allowed.",
                     },
                 )
 
-            # sort result
+            # generate result and sort
+            file_result = []
+            for gp in genepanels:
+                if gp.superpanel:
+                    for child_panel in gp.child_panels:
+                        for gene in panel_id_to_genes[child_panel.id]:
+                            if gene.hgnc in HGNC_IDS_TO_OMIT or gene.hgnc in rnas:
+                                continue
+
+                            file_result.append(
+                                [
+                                    f"{gp.r_code}_{gp.ci_name}",
+                                    f"{gp.panel_name}_{gp.panel_version}",
+                                    gene.hgnc,
+                                ]
+                            )
+                else:
+                    for gene in gp.hgncs:
+                        if gene.hgnc in HGNC_IDS_TO_OMIT or gene.hgnc in rnas:
+                            continue
+
+                        file_result.append(
+                            [
+                                f"{gp.r_code}_{gp.ci_name}",
+                                f"{gp.panel_name}_{gp.panel_version}",
+                                gene.hgnc,
+                            ]
+                        )
+
             file_result = sorted(file_result, key=lambda x: [x[0], x[1], x[2]])
 
             current_datetime = dt.datetime.today().strftime("%Y%m%d")
@@ -1190,7 +1343,7 @@ def genepanel(
             return render(
                 request,
                 "web/info/genepanel.html",
-                {"genepanels": list_of_genepanel, "error": e},
+                {"genepanels": genepanels, "error": e},
             )
 
         success = True
@@ -1198,10 +1351,7 @@ def genepanel(
     return render(
         request,
         "web/info/genepanel.html",
-        {
-            "genepanels": list_of_genepanel,
-            "success": success,
-        },
+        {"genepanels": genepanels, "warnings": warnings, "success": success},
     )
 
 
