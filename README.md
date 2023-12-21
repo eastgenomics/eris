@@ -14,8 +14,8 @@ Please note this app requires Python version 3.10
 ## Create or update database models
 Make migrations if necessary and migrate to existing database.
 ```
-python manage.py makemigrations requests_app
-python manage.py migrate requests_app
+python manage.py makemigrations panels_backend
+python manage.py migrate panels_backend
 ```
 
 ## Populate the database

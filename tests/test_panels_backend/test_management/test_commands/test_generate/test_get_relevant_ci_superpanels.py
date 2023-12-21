@@ -1,14 +1,14 @@
 from django.test import TestCase
 import collections
 
-from requests_app.models import (
+from panels_backend.models import (
     SuperPanel,
     ClinicalIndication,
     ClinicalIndicationSuperPanel,
     TestDirectoryRelease,
     CiSuperpanelTdRelease,
 )
-from requests_app.management.commands.generate import Command
+from panels_backend.management.commands.generate import Command
 
 
 class TestGetRelevantCiSuperPanels_Basic(TestCase):

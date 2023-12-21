@@ -19,7 +19,7 @@ class WebGene:
     """
     This class is used to store information about a gene.
     Only used in the web app - Gene page.
-    Not to be confused with the Gene class in /requests_app/models.py
+    Not to be confused with the Gene class in /panels_backend/models.py
     """
 
     def __init__(self, id, hgnc) -> None:

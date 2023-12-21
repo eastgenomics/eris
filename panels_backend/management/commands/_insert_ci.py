@@ -5,7 +5,7 @@ from packaging.version import Version
 
 from .history import History
 
-from requests_app.models import (
+from panels_backend.models import (
     TestDirectoryRelease,
     TestDirectoryReleaseHistory,
     Panel,

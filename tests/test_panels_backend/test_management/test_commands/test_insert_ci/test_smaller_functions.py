@@ -9,7 +9,7 @@ This file contains tests for the smaller functions in the insert_ci command.
 """
 
 from django.test import TestCase
-from requests_app.models import (
+from panels_backend.models import (
     ClinicalIndication,
     Panel,
     SuperPanel,
@@ -20,8 +20,8 @@ from requests_app.models import (
     ClinicalIndicationTestMethodHistory,
     TestDirectoryRelease,
 )
-from requests_app.management.commands.utils import sortable_version
-from requests_app.management.commands._insert_ci import (
+from panels_backend.management.commands.utils import sortable_version
+from panels_backend.management.commands._insert_ci import (
     _backward_deactivate,
     flag_clinical_indication_panel_for_review,
     flag_clinical_indication_superpanel_for_review,

@@ -3,7 +3,7 @@ import requests
 import json
 
 
-from requests_app.management.commands.panelapp import SuperPanelClass
+from panels_backend.management.commands.panelapp import SuperPanelClass
 
 
 def mocked_requests_get_superpanel(filename):

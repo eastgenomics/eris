@@ -11,7 +11,7 @@ A few scenarios tested here for insert_gene function
 
 from django.test import TestCase
 
-from requests_app.models import (
+from panels_backend.models import (
     Panel,
     Gene,
     PanelGene,
@@ -22,10 +22,10 @@ from requests_app.models import (
     ModeOfPathogenicity,
 )
 
-from requests_app.management.commands._insert_panel import _insert_gene
+from panels_backend.management.commands._insert_panel import _insert_gene
 
-from requests_app.management.commands.history import History
-from requests_app.management.commands.panelapp import PanelClass
+from panels_backend.management.commands.history import History
+from panels_backend.management.commands.panelapp import PanelClass
 
 
 def len_check_wrapper(metric, metric_name, expected) -> str | list:

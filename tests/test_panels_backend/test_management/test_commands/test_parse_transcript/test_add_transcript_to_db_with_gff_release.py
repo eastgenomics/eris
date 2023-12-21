@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from requests_app.models import (
+from panels_backend.models import (
     Gene,
     Transcript,
     GffRelease,
@@ -8,11 +8,11 @@ from requests_app.models import (
     TranscriptGffReleaseHistory,
     ReferenceGenome,
 )
-from requests_app.management.commands.history import History
-from requests_app.management.commands._parse_transcript import (
+from panels_backend.management.commands.history import History
+from panels_backend.management.commands._parse_transcript import (
     _add_transcript_to_db_with_gff_release,
 )
-from tests.tests_requests_app.test_management.test_commands.test_insert_panel.test_insert_gene import (
+from tests.test_panels_backend.test_management.test_commands.test_insert_panel.test_insert_gene import (
     len_check_wrapper,
     value_check_wrapper,
 )

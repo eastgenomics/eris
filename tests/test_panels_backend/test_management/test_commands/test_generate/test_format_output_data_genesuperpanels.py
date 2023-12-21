@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from requests_app.management.commands.generate import Command
+from panels_backend.management.commands.generate import Command
 
 
 class TestFormatGeneSuperPanels(TestCase):

@@ -2,7 +2,7 @@ from django.test import TestCase
 
 import pandas as pd
 
-from requests_app.management.commands._parse_transcript import check_missing_columns
+from panels_backend.management.commands._parse_transcript import check_missing_columns
 
 
 class TestSanityCheckColsExist(TestCase):

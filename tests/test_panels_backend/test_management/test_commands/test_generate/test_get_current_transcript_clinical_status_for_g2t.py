@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from requests_app.models import (
+from panels_backend.models import (
     ReferenceGenome,
     Gene,
     Transcript,
@@ -8,7 +8,7 @@ from requests_app.models import (
     TranscriptReleaseTranscript,
     TranscriptSource,
 )
-from requests_app.management.commands.generate import Command
+from panels_backend.management.commands.generate import Command
 
 
 class TestCurrentTranscript_ManeSelectOnly(TestCase):

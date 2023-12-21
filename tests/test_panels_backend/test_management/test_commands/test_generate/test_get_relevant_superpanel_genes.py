@@ -1,7 +1,7 @@
 from django.test import TestCase
 
-from requests_app.models import SuperPanel, Panel, Gene, PanelGene, PanelSuperPanel
-from requests_app.management.commands.generate import Command
+from panels_backend.models import SuperPanel, Panel, Gene, PanelGene, PanelSuperPanel
+from panels_backend.management.commands.generate import Command
 
 
 class TestGetRelevantSuperPanelGenes(TestCase):

@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 
-from requests_app.management.commands._parse_transcript import (
+from panels_backend.management.commands._parse_transcript import (
     _transcript_assign_to_source,
 )
 

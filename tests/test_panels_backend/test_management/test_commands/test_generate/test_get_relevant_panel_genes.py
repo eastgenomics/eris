@@ -1,7 +1,7 @@
 from django.test import TestCase
 
-from requests_app.models import Panel, Gene, PanelGene
-from requests_app.management.commands.generate import Command
+from panels_backend.models import Panel, Gene, PanelGene
+from panels_backend.management.commands.generate import Command
 
 
 class TestGetRelevantPanelGenes(TestCase):

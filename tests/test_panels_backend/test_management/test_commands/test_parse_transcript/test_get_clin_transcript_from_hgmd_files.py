@@ -3,7 +3,7 @@ from django.test import TestCase
 import numpy as np
 
 
-from requests_app.management.commands._parse_transcript import (
+from panels_backend.management.commands._parse_transcript import (
     _get_clin_transcript_from_hgmd_files,
 )
 

@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from requests_app.management.commands._insert_panel import (
+from panels_backend.management.commands._insert_panel import (
     _handle_nulls_and_blanks_from_json,
 )
 

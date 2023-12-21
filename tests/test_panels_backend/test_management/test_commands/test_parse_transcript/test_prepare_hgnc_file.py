@@ -1,6 +1,6 @@
 from django.test import TestCase
-from requests_app.models import Gene, HgncRelease
-from requests_app.management.commands._parse_transcript import _prepare_hgnc_file
+from panels_backend.models import Gene, HgncRelease
+from panels_backend.management.commands._parse_transcript import _prepare_hgnc_file
 
 
 class TestPrepareHgncFile(TestCase):

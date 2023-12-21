@@ -1,15 +1,15 @@
 from django.test import TestCase
 
-from requests_app.models import (
+from panels_backend.models import (
     ClinicalIndication,
     Panel,
     ClinicalIndicationPanel,
     ClinicalIndicationPanelHistory,
 )
-from requests_app.management.commands._insert_ci import (
+from panels_backend.management.commands._insert_ci import (
     _flag_panels_removed_from_test_directory,
 )
-from requests_app.management.commands.history import History
+from panels_backend.management.commands.history import History
 
 
 class TestPanelsFlaggedWhenNoLongerInTd(TestCase):

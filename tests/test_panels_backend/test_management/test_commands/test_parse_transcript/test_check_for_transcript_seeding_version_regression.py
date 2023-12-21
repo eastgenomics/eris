@@ -1,14 +1,14 @@
 from django.test import TestCase
 
 
-from requests_app.models import (
+from panels_backend.models import (
     HgncRelease,
     GffRelease,
     TranscriptRelease,
     TranscriptSource,
     ReferenceGenome,
 )
-from requests_app.management.commands._parse_transcript import (
+from panels_backend.management.commands._parse_transcript import (
     _check_for_transcript_seeding_version_regression,
 )
 

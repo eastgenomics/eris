@@ -1,14 +1,14 @@
 from django.test import TestCase
 
-from requests_app.management.commands.history import History
-from requests_app.management.commands._parse_transcript import (
+from panels_backend.management.commands.history import History
+from panels_backend.management.commands._parse_transcript import (
     _link_unchanged_genes_to_new_release,
 )
-from tests.tests_requests_app.test_management.test_commands.test_insert_ci.test_insert_test_directory_data import (
+from tests.test_panels_backend.test_management.test_commands.test_insert_ci.test_insert_test_directory_data import (
     len_check_wrapper,
     value_check_wrapper,
 )
-from requests_app.models import (
+from panels_backend.models import (
     Gene,
     HgncRelease,
     GeneHgncRelease,

@@ -1,5 +1,5 @@
 from django.test import TestCase
-from requests_app.models import (
+from panels_backend.models import (
     ClinicalIndication,
     Panel,
     ClinicalIndicationPanel,
@@ -7,7 +7,7 @@ from requests_app.models import (
     CiPanelTdRelease,
 )
 
-from requests_app.management.commands._insert_panel import (
+from panels_backend.management.commands._insert_panel import (
     _get_most_recent_td_release_for_ci_panel,
 )
 

@@ -4,7 +4,7 @@ from unittest.mock import Mock, MagicMock
 import numpy as np
 import json
 
-from requests_app.management.commands.panelapp import get_specific_version_panel
+from panels_backend.management.commands.panelapp import get_specific_version_panel
 
 
 class TestGetPanel_ErrorsNot200(TestCase):
@@ -20,7 +20,7 @@ class TestGetPanel_ErrorsNot200(TestCase):
         expected_exit_code = "1"
         with self.assertRaisesRegex(SystemExit, expected_exit_code):
             with mock.patch(
-                "requests_app.management.commands.panelapp._check_superpanel_status"
+                "panels_backend.management.commands.panelapp._check_superpanel_status"
             ) as mock_status:
                 # patch over the internally-called function '_check_superpanel_status'
                 mock_status.return_value = True

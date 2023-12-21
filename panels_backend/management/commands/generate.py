@@ -1,7 +1,7 @@
 """
 python manage.py generate --help
 """
-from requests_app.models import (
+from panels_backend.models import (
     ClinicalIndicationPanel,
     ClinicalIndicationSuperPanel,
     CiPanelTdRelease,

@@ -2,7 +2,7 @@ import collections
 import json
 import pandas as pd
 from io import BytesIO
-from requests_app.management.commands._parse_transcript import check_missing_columns
+from panels_backend.management.commands._parse_transcript import check_missing_columns
 from itertools import chain
 import dxpy as dx
 import datetime as dt
@@ -18,14 +18,14 @@ from django.db import transaction
 from .forms import ClinicalIndicationForm, PanelForm, GeneForm
 from .utils.utils import WebChildPanel, WebGene, WebGenePanel
 
-from requests_app.management.commands.history import History
-from requests_app.management.commands.utils import (
+from panels_backend.management.commands.history import History
+from panels_backend.management.commands.utils import (
     normalize_version,
 )
 from core.settings import HGNC_IDS_TO_OMIT
-from requests_app.management.commands._insert_ci import insert_test_directory_data
+from panels_backend.management.commands._insert_ci import insert_test_directory_data
 
-from requests_app.models import (
+from panels_backend.models import (
     ClinicalIndication,
     Panel,
     ClinicalIndicationPanel,
@@ -1066,7 +1066,7 @@ def _parse_excluded_hgncs_from_bytes(file: TemporaryUploadedFile) -> set[str]:
     """
     Function to parse a file containing hgnc ids that are excluded from the genepanel creation
     This function is similar to "parse_excluded_hgncs_from_file" from
-    requests_app/management/commands/utils.py but takes different type of input
+    panels_backend/management/commands/utils.py but takes different type of input
 
     :param: file: TemporaryUploadedFile - this is an uploaded file from the front-end in bytes
 

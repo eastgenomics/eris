@@ -1,7 +1,7 @@
 """
 All function used by edit.py
 """
-from requests_app.models import (
+from panels_backend.models import (
     Panel,
     ClinicalIndication,
     ClinicalIndicationPanel,

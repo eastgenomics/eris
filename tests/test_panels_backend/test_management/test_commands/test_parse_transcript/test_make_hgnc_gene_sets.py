@@ -1,10 +1,10 @@
 from django.test import TestCase
 
-from requests_app.management.commands._parse_transcript import (
+from panels_backend.management.commands._parse_transcript import (
     _make_hgnc_gene_sets,
     _resolve_alias,
 )
-from requests_app.models import (
+from panels_backend.models import (
     Gene,
 )
 

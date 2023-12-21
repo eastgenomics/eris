@@ -10,7 +10,7 @@ pd.options.mode.chained_assignment = None  # default='warn'
 import datetime
 
 from .history import History
-from requests_app.models import (
+from panels_backend.models import (
     Gene,
     Transcript,
     TranscriptRelease,

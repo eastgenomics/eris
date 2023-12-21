@@ -1,7 +1,7 @@
 #!usr/bin/env python
 
 
-from requests_app.models import (
+from panels_backend.models import (
     Panel,
     SuperPanel,
     PanelSuperPanel,

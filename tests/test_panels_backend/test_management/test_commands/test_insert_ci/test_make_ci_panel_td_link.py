@@ -1,7 +1,7 @@
 from django.test import TestCase
 
-from requests_app.management.commands.history import History
-from requests_app.models import (
+from panels_backend.management.commands.history import History
+from panels_backend.models import (
     ClinicalIndication,
     Panel,
     ClinicalIndicationPanel,
@@ -10,7 +10,7 @@ from requests_app.models import (
     CiPanelTdRelease,
     CiPanelTdReleaseHistory,
 )
-from requests_app.management.commands._insert_ci import _make_ci_panel_td_link
+from panels_backend.management.commands._insert_ci import _make_ci_panel_td_link
 
 
 class TestMakeCiPanelTdLink_NewCip(TestCase):

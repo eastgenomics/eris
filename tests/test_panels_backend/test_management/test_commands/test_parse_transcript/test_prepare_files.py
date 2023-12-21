@@ -4,7 +4,7 @@ from unittest import mock
 import pandas as pd
 
 
-from requests_app.management.commands._parse_transcript import _prepare_mane_file
+from panels_backend.management.commands._parse_transcript import _prepare_mane_file
 
 
 class TestBasicManeFile(TestCase):

@@ -1,9 +1,9 @@
 from django.test import TestCase
 
-from requests_app.models import (
+from panels_backend.models import (
     TestDirectoryRelease,
 )
-from requests_app.management.commands._insert_ci import _fetch_latest_td_version
+from panels_backend.management.commands._insert_ci import _fetch_latest_td_version
 
 
 class TestFetchLatestTdVersion_FullDb(TestCase):

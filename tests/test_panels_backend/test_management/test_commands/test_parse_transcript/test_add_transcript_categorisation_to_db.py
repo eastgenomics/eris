@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from requests_app.models import (
+from panels_backend.models import (
     Transcript,
     TranscriptRelease,
     TranscriptSource,
@@ -8,11 +8,11 @@ from requests_app.models import (
     TranscriptReleaseTranscript,
     ReferenceGenome,
 )
-from tests.tests_requests_app.test_management.test_commands.test_insert_panel.test_insert_gene import (
+from tests.test_panels_backend.test_management.test_commands.test_insert_panel.test_insert_gene import (
     len_check_wrapper,
     value_check_wrapper,
 )
-from requests_app.management.commands._parse_transcript import (
+from panels_backend.management.commands._parse_transcript import (
     _add_transcript_categorisation_to_db,
 )
 
