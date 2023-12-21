@@ -18,7 +18,7 @@ services:
       - POSTGRES_PASSWORD=root  # change based on PASSWORD
   eris_web:
     container_name: eris-web
-    # platform: linux/amd64
+    platform: linux/amd64
     image: eris-web:1.0
     build: .
     command: bash -c "python manage.py collectstatic --noinput && gunicorn core.wsgi:application --bind :8009"

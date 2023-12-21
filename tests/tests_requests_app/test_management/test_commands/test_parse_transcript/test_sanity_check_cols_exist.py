@@ -2,7 +2,7 @@ from django.test import TestCase
 
 import pandas as pd
 
-from requests_app.management.commands._parse_transcript import _sanity_check_cols_exist
+from requests_app.management.commands._parse_transcript import check_missing_columns
 
 
 class TestSanityCheckColsExist(TestCase):
@@ -27,57 +27,49 @@ class TestSanityCheckColsExist(TestCase):
         test_mane = pd.DataFrame(
             {"Gene": [], "MANE TYPE": [], "RefSeq StableID GRCh38 / GRCh37": []}
         )
-        assert not _sanity_check_cols_exist(test_mane, self.mane_cols, self.mane_name)
+        assert not check_missing_columns(test_mane, self.mane_cols)
 
     def test_mane_missing_gene(self):
         """
-        Test that a dataframe which misses the Gene column name,
-        raises an AssertionError wtih the sanity-checker.
+        Case: Example df is missing a "Gene" column
+        Expect: Function to return a list containing the missing column "Gene" only
         """
         test_mane = pd.DataFrame(
             {"MANE TYPE": [], "RefSeq StableID GRCh38 / GRCh37": []}
         )
 
-        with self.assertRaisesRegex(
-            AssertionError, "Missing column Gene from MANE file - please check the file"
-        ):
-            _sanity_check_cols_exist(test_mane, self.mane_cols, self.mane_name)
+        assert check_missing_columns(test_mane, self.mane_cols) == ["Gene"]
 
     def test_mane_missing_mane_type(self):
         """
-        Test that a dataframe which misses the MANE TYPE column name,
-        raises an AssertionError with the sanity-checker.
+        Case: Example df is missing a "MANE TYPE" column
+        Expect: Function to return a list containing the missing column "MANE TYPE" only
         """
         test_mane = pd.DataFrame({"Gene": [], "RefSeq StableID GRCh38 / GRCh37": []})
-        with self.assertRaisesRegex(
-            AssertionError,
-            "Missing column MANE TYPE from MANE file - please check the file",
-        ):
-            _sanity_check_cols_exist(test_mane, self.mane_cols, self.mane_name)
+
+        assert check_missing_columns(test_mane, self.mane_cols) == ["MANE TYPE"]
 
     def test_mane_missing_refseq(self):
         """
-        Test that a dataframe which misses the RefSeq column name,
-        raises an AssertionError with the sanity-checker.
+        Case: Example df is missing a "RefSeq StableID GRCh38 / GRCh37" column
+        Expect: Function to return a list containing the missing column "RefSeq StableID GRCh38 / GRCh37" only
         """
         test_mane = pd.DataFrame({"Gene": [], "MANE TYPE": []})
-        with self.assertRaisesRegex(
-            AssertionError,
-            "Missing column RefSeq StableID GRCh38 / GRCh37 from MANE file - please check the file",
-        ):
-            _sanity_check_cols_exist(test_mane, self.mane_cols, self.mane_name)
 
-    def test_mane_missing_several(self):
+        assert check_missing_columns(test_mane, self.mane_cols) == [
+            "RefSeq StableID GRCh38 / GRCh37"
+        ]
+
+    def test_mane_missing_several_columns(self):
         """
-        Test that a dataframe which misses several column names,
-        raises an AssertionError with the sanity-checker.
-        Every missing column should be printed in the output error message.
+        Case: Example df is missing several columns:
+            - RefSeq StableID GRCh38 / GRCh37
+            - MANE TYPE
+        Expect: Function to return a list containing the missing column "RefSeq StableID GRCh38 / GRCh37" only
         """
         test_mane = pd.DataFrame({"Gene": []})
-        with self.assertRaisesRegex(
-            AssertionError,
-            "Missing column MANE TYPE from MANE file - please check the file; "
-            + "Missing column RefSeq StableID GRCh38 / GRCh37 from MANE file - "
-            + "please check the file",
-        ):
-            _sanity_check_cols_exist(test_mane, self.mane_cols, self.mane_name)
+
+        check_missing_columns(test_mane, self.mane_cols) == [
+            "MANE TYPE",
+            "RefSeq StableID GRCh38 / GRCh37",
+        ]

@@ -27,7 +27,7 @@ from core.settings import HGNC_IDS_TO_OMIT
 from ._parse_transcript import (
     _parse_reference_genome,
     _get_latest_transcript_release,
-    _sanity_check_cols_exist,
+    check_missing_columns,
 )
 from ._insert_ci import _fetch_latest_td_version
 
@@ -61,7 +61,8 @@ class Command(BaseCommand):
 
         hgnc = pd.read_csv(file_path, delimiter="\t")
         needed_cols = ["HGNC ID", "Locus type", "Approved name"]
-        _sanity_check_cols_exist(hgnc, needed_cols, "HGNC")
+        if missing_columns := check_missing_columns(hgnc, needed_cols):
+            raise ValueError(f"Missing columns in HGNC file: {missing_columns}")
 
         return True
 
