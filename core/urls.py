@@ -26,5 +26,5 @@ urlpatterns = [
         "favicon.ico",
         RedirectView.as_view(url=staticfiles_storage.url("images/favicon.ico")),
     ),  # favicon
-    path("" if LOCALHOST else "eris/", include("web.urls")),
+    path("" if LOCALHOST else "eris/", include("panels_web.urls")),
 ]
