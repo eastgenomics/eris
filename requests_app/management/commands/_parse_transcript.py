@@ -624,8 +624,8 @@ def _get_clin_transcript_from_hgmd_files(
     if not markname[int(short_hgnc_id)]:
         err = f"{hgnc_id} has no gene_id in markname table"
         return None, err
-    
-    markname_gene_id = markname[int(short_hgnc_id)][0]    
+
+    markname_gene_id = markname[int(short_hgnc_id)][0]
 
     # Throw errors if the HGNC ID is None or pd.nan, if the gene ID from
     # markname isn't in gene2refseq, or if a gene has multiple entries in the
