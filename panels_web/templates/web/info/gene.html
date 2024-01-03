@@ -62,8 +62,9 @@
                     <tr>
                         <th scope="col">Transcript</th>
                         <th scope="col">Source</th>
+                        <th>Source Version</th>
                         <th scope="col">Reference Genome</th>
-                        <th scope="col">Clinical</th>
+                        <th scope="col">Clinical Status</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -75,11 +76,12 @@
                         {% else %}
                         <td>{{ transcript.release_id__source_id__source }}</td>
                         {% endif %}
+                        <td>{{transcript.release_id__release}}</td>
                         <td>{{ transcript.release_id__reference_genome_id__reference_genome }}</td>
                         {% if transcript.default_clinical %}
-                        <td><span class="badge text-bg-success">{{ transcript.default_clinical }}</span></td>
+                        <td><span class="badge text-bg-success">{{transcript.default_clinical}}</span></td>
                         {% else %}
-                        <td>{{ transcript.default_clinical }}</td>
+                        <td>{{transcript.default_clinical}}</td>
                         {% endif %}
                     </tr>
                     {% endfor %}
@@ -98,7 +100,9 @@
 {% block script %}
 <script>
     $(document).ready(function () {
-        new DataTable('#transcriptTable');
+        new DataTable('#transcriptTable', {
+            order: [[4, 'desc']]
+        });
     });
 </script>
 {% endblock %}

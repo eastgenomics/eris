@@ -4,7 +4,6 @@ import collections
 import re
 from django.db import transaction
 from packaging.version import Version
-import copy
 
 pd.options.mode.chained_assignment = None  # default='warn'
 import datetime
@@ -919,7 +918,7 @@ def _get_latest_hgnc_release() -> HgncRelease | None:
 def _get_latest_gff_release(ref_genome: ReferenceGenome) -> GffRelease | None:
     """
     Get the latest GFF release in GffRelease for a given reference genome,
-      using packaging.version because the version formatting
+    using packaging.version because the version formatting
     isn't 100% consistent. Return None if the table has no matching results.
 
     :param reference_genome: a ReferenceGenome object corresponding to user input
@@ -934,7 +933,7 @@ def _get_latest_gff_release(ref_genome: ReferenceGenome) -> GffRelease | None:
         return None
 
 
-def _get_latest_transcript_release(
+def get_latest_transcript_release(
     source: str, ref_genome: ReferenceGenome
 ) -> TranscriptRelease | None:
     """
@@ -945,23 +944,23 @@ def _get_latest_transcript_release(
     :param reference_genome: a ReferenceGenome object corresponding to user input
     :returns: the latest TranscriptRelease, or None if no database matches
     """
-    tx_releases = TranscriptRelease.objects.filter(source__source=source).filter(
-        reference_genome=ref_genome
+    tx_releases = TranscriptRelease.objects.filter(
+        source__source=source, reference_genome=ref_genome
     )
 
-    latest = max([Version(v.release) for v in tx_releases]) if tx_releases else None
+    latest_version = (
+        max([Version(v.release) for v in tx_releases]) if tx_releases else None
+    )
 
     # A 'unique_together' constraint on "source", "release", "reference_genome" means
     # we'll either get 1 result or none
-    latest_tx = (
-        TranscriptRelease.objects.filter(source__source=source)
-        .filter(reference_genome=ref_genome)
-        .filter(release=latest)
+    return (
+        TranscriptRelease.objects.filter(
+            source__source=source, reference_genome=ref_genome, release=latest_version
+        ).first()
+        if latest_version
+        else None
     )
-    if latest_tx:
-        return latest_tx[0]
-    else:
-        return None
 
 
 def _check_for_transcript_seeding_version_regression(
@@ -990,8 +989,8 @@ def _check_for_transcript_seeding_version_regression(
     }
 
     # find the latest releases in the db
-    select = _get_latest_transcript_release("MANE Select", reference_genome)
-    plus = _get_latest_transcript_release("MANE Plus Clinical", reference_genome)
+    select = get_latest_transcript_release("MANE Select", reference_genome)
+    plus = get_latest_transcript_release("MANE Plus Clinical", reference_genome)
 
     # pick whichever of select or plus has the highest version (or 'select' if both are the same)
     # just return None if there aren't versions for either
@@ -1016,8 +1015,8 @@ def _check_for_transcript_seeding_version_regression(
     else:
         latest_gff_release = None
 
-    if _get_latest_transcript_release("HGMD", reference_genome):
-        latest_hgmd_release = _get_latest_transcript_release(
+    if get_latest_transcript_release("HGMD", reference_genome):
+        latest_hgmd_release = get_latest_transcript_release(
             "HGMD", reference_genome
         ).release
     else:
@@ -1041,6 +1040,10 @@ def _check_for_transcript_seeding_version_regression(
 
     if error:
         raise ValueError("Abandoning input:\n" + error)
+
+
+def _get_current_datetime() -> str:
+    return datetime.datetime.now().strftime("%H:%M:%S")
 
 
 # 'atomic' should ensure that any failure rolls back the entire attempt to seed
@@ -1134,8 +1137,7 @@ def seed_transcripts(
 
     # decide whether a transcript is clinical or not
     # add all this information to the database
-    tx_starting = datetime.datetime.now().strftime("%H:%M:%S")
-    print(f"Start adding transcripts to db: {tx_starting}")
+    print(f"Start adding transcripts to db: {_get_current_datetime()}")
 
     release_categories = []
     for hgnc_id, transcripts in gff.items():
@@ -1172,11 +1174,12 @@ def seed_transcripts(
             release_categories.append(mane_plus_clinical_data)
             release_categories.append(hgmd_data)
 
-    print(f"Start adding transcript clinical information to db: {tx_starting}")
+    print(
+        f"Start adding transcript clinical information to db: {_get_current_datetime()}"
+    )
     _add_transcript_categorisation_to_db(release_categories)
 
-    tx_ending = datetime.datetime.now().strftime("%H:%M:%S")
-    print(f"Finished adding transcripts to db: {tx_ending}")
+    print(f"Finished adding transcripts to db: {_get_current_datetime}")
 
     # write error log for those interested to see
     if write_error_log and all_errors:

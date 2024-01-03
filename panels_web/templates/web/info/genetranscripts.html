@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% load static %}
+
+<!-- TODO: Revisit this page -->
+
+{% block content %}
+<div class="container mb-5">
+  <div class="row">
+    <div class="col">
+      <!-- Alert -->
+      {% if error %}
+      <div class="alert alert-danger" role="alert">
+        {{ error }}
+      </div>
+      {% endif %}
+
+      {% if success %}
+      <div class="alert alert-success" role="alert">
+        File Uploaded Successfully!
+      </div>
+      {% endif %}
+      <!-- End Alert -->
+      <h1>Gene Transcripts</h1>
+
+    </div>
+  </div>
+
+  <!-- GeneTranscripts Upload Form -->
+  <div class="row">
+    <div class="col">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Upload Gene Transcripts File to DNANexus Project</h5>
+          <form action="{% url 'genetranscripts' %}" method="POST" id="geneTranscriptsForm">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="referenceGenome" class="form-label">Reference Genome</label>
+              <select class="form-select" aria-label="default select example" name="reference_genome">
+                <option value="GRCh37">GRCh37</option>
+                <option value="GRCh38">GRCh38</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="projectIdInput" class="form-label">DNANexus API Token</label>
+              <input type="text" class="form-control" name="dnanexus_token" aria-describedby="dnanexusTokenHelp"
+                required>
+              <div id="dnanexusTokenHelp" class="form-text">Get this from DNANexus Settings</div>
+            </div>
+            <div class="mb-3">
+              <label for="projectIdInput" class="form-label">Project ID</label>
+              <input type="text" class="form-control" name="project_id" aria-describedby="projectIdHelp" required>
+              <div id="projectIdHelp" class="form-text">e.g. project-GV4VJ2Q46b4p7k7z7491fFA3</div>
+            </div>
+            <button type="submit" class="btn btn-success">Upload
+              <span class="spinner-border spinner-border-sm ml-2 visually-hidden" aria-hidden="true"></span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row my-3"></div>
+
+  <!-- Gene Transcripts List -->
+  <div class="row">
+    <div class="col">
+      <h2>GRCh37</h2>
+      <table class="table pt-2" id="geneTranscriptsGRCh37Table">
+        <thead class="table-success">
+          <tr>
+            <th scope="col">HGNC ID</th>
+            <th scope="col">Transcript</th>
+            <th scope="col">Source</th>
+            <th scoope="col">Clinical Status</th>
+          </tr>
+        </thead>
+      </table>
+    </div>
+  </div>
+
+  <div class="row my-3"></div>
+
+  <!-- Gene Transcripts List -->
+  <div class="row">
+    <div class="col">
+      <h2>GRCh38</h2>
+      <table class="table pt-2" id="geneTranscriptsGRCh38Table">
+        <thead class="table-success">
+          <tr>
+            <th scope="col">HGNC ID</th>
+            <th scope="col">Transcript</th>
+            <th scope="col">Sources</th>
+            <th scoope="col">Clinical Sources</th>
+          </tr>
+        </thead>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+  $(document).ready(function () {
+
+    $('#geneTranscriptsGRCh37Table').DataTable({
+      ajax: "{% url 'api_genetranscripts' 'GRCh37' %}",
+      columns: [
+        {
+          "data": "hgnc_id",
+          "render": function (data, type, row, meta) {
+            var hgnc_id = row.hgnc_id;
+            var gene_id = row.gene_id;
+
+            var url = "{% url 'gene' 0 %}";
+            url = url.replace(0, gene_id);
+
+            return hgnc_id ? '<a href=' + url + '>' + hgnc_id + '</a>' : null;
+          }
+        },
+        {
+          "data": "transcript",
+        },
+        {
+          "data": "source",
+          "render": function (data, type, row, meta) {
+            var source = row.source;
+            var source_id = row.source_id;
+
+            var url = "{% url 'transcript_source' 0 %}";
+            url = url.replace(0, source_id);
+            return source ? '<a href=' + url + '>' + source + '</a>' : null;
+          }
+        },
+        { "data": "clinical" },
+      ],
+      processing: true,
+    });
+
+    $('#geneTranscriptsGRCh38Table').DataTable({
+      ajax: "{% url 'api_genetranscripts' 'GRCh38' %}",
+      columns: [
+        { "data": "hgnc_id" },
+        {
+          "data": "transcript",
+        },
+        {
+          "data": "source",
+          "render": function (data, type, row, meta) {
+            var source = row.source;
+            var source_id = row.source_id;
+
+            var url = "{% url 'transcript_source' 0 %}";
+            url = url.replace(0, source_id);
+            return source ? '<a href=' + url + '>' + source + '</a>' : null;
+          }
+        },
+        { "data": "clinical" },
+      ],
+      processing: true,
+    });
+
+    // script to block submit button on form submission and show loading indicator
+    $('#geneTranscriptsForm').submit(function () {
+      console.log('form submitted!');
+      $(this).find('button[type="submit"]').prop('disabled', true);
+      $(this).find('button[type="submit"]').find('.visually-hidden').removeClass('visually-hidden');
+    });
+  });
+</script>
+{% endblock %}
