@@ -1063,7 +1063,7 @@ def seed_transcripts(
     markname_ext_id: str,
     hgmd_release: str,
     reference_genome: str,
-    write_error_log: bool,
+    write_error_log: bool = False,
 ) -> None:
     """
     Main function to seed transcripts
@@ -1179,7 +1179,7 @@ def seed_transcripts(
     )
     _add_transcript_categorisation_to_db(release_categories)
 
-    print(f"Finished adding transcripts to db: {_get_current_datetime}")
+    print(f"Finished adding transcripts to db: {_get_current_datetime()}")
 
     # write error log for those interested to see
     if write_error_log and all_errors:

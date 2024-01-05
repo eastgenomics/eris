@@ -7,13 +7,15 @@ from itertools import chain
 import dxpy as dx
 import datetime as dt
 from packaging.version import Version
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 
 from django.shortcuts import render, redirect
+from django.contrib import messages
 from django.http import JsonResponse
 from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.db.models import QuerySet, Q, F
 from django.db import transaction
+from asgiref.sync import sync_to_async
 
 from .forms import ClinicalIndicationForm, PanelForm, GeneForm
 from .utils.utils import WebChildPanel, WebGene, WebGenePanel
@@ -22,10 +24,15 @@ from panels_backend.management.commands.history import History
 from panels_backend.management.commands.utils import (
     normalize_version,
 )
+from panels_backend.management.commands.seed import (
+    validate_ext_ids,
+    validate_release_versions,
+)
 from core.settings import HGNC_IDS_TO_OMIT
 from panels_backend.management.commands._insert_ci import insert_test_directory_data
 from panels_backend.management.commands._parse_transcript import (
     get_latest_transcript_release,
+    seed_transcripts,
 )
 
 from panels_backend.models import (
@@ -1602,7 +1609,6 @@ def genetranscripts(request: HttpRequest) -> HttpResponse:
 def transcript_source(request: HttpRequest, ts_id: int) -> HttpResponse:
     """
     Page to view transcript source information and its releases
-
     """
     tx_source = TranscriptSource.objects.get(id=ts_id)
 
@@ -1629,19 +1635,127 @@ def transcript_source(request: HttpRequest, ts_id: int) -> HttpResponse:
     )
 
 
+def _seed_test_directory(
+    request: HttpRequest,
+    force_update: bool,
+    td_version: str,
+    test_directory_data: dict[str, str],
+) -> HttpResponseRedirect:
+    """
+    Sub-function to call insert_test_directory_data (panels_backend/management/commands/_insert_ci.py)
+
+    Args:
+        request: HttpRequest
+        force_update - whether to force update
+        td_version - test directory version (input from front-end)
+        test_directory_data - test directory data (parsed json dict)
+    """
+    try:
+        insert_test_directory_data(
+            test_directory_data,
+            td_version,
+            True if force_update else False,
+        )
+
+        messages.add_message(
+            request, messages.SUCCESS, "Test Directory seeded successfully!"
+        )
+
+    except Exception as e:
+        messages.add_message(request, messages.ERROR, e)
+
+    return redirect("seed")
+
+
+def _seed_transcripts(
+    request: HttpRequest,
+    info: dict[str, str],
+    files: dict[str, TemporaryUploadedFile],
+) -> HttpResponseRedirect:
+    """
+    Sub-function to gather all required inputs from web front-end and
+    call seed_functions (panels_backend/management/commands/_parse_transcript.py)
+
+    Args:
+        request: HttpRequest
+        info: dict[str, str] - dict of user inputs from front-end
+        files: dict[str, TemporaryUploadedFile] - dict of user uploaded files from front-end
+    """
+    # TODO: issue to be solved in new PR - long function which cause 502 Bad Gateway error
+
+    reference_genome = info.get("reference_genome")
+
+    mane_file_id, g2refseq_file_id, markname_file_id = (
+        info.get("mane_file_id"),
+        info.get("g2refseq_file_id"),
+        info.get("markname_file_id"),
+    )
+
+    hgnc_version, mane_version, gff_version, hgmd_version = (
+        info.get("hgnc_version"),
+        info.get("mane_version"),
+        info.get("gff_version"),
+        info.get("hgmd_version"),
+    )
+
+    hgnc_file, mane_file, gff_file, g2refseq_file, markname_file = (
+        BytesIO(files.get("hgnc_upload").read()),
+        BytesIO(files.get("mane_upload").read()),
+        BytesIO(files.get("gff_upload").read()),
+        BytesIO(files.get("g2refseq_upload").read()),
+        BytesIO(files.get("markname_upload").read()),
+    )
+
+    # validate file id inputs
+    try:
+        validate_ext_ids([mane_file_id, g2refseq_file_id, markname_file_id])
+    except Exception as e:
+        messages.add_message(request, messages.ERROR, e)
+        return redirect("seed")
+
+    try:
+        validate_release_versions(
+            [hgnc_version, mane_version, gff_version, hgmd_version]
+        )
+    except Exception as e:
+        messages.add_message(request, messages.ERROR, e)
+        return redirect("seed")
+
+    try:
+        seed_transcripts(
+            hgnc_file,
+            hgnc_version,
+            mane_file,
+            mane_file_id,
+            mane_version,
+            gff_file,
+            gff_version,
+            g2refseq_file,
+            g2refseq_file_id,
+            markname_file,
+            markname_file_id,
+            hgmd_version,
+            reference_genome,
+        )
+        messages.add_message(
+            request, messages.SUCCESS, "Transcripts seeded successfully!"
+        )
+    except Exception as e:
+        messages.add_message(request, messages.ERROR, e)
+        return redirect("seed")
+
+
 def seed(request: HttpRequest) -> HttpResponse:
     """
     Handle seed page:
-    Currently only handle Test Directory seed
-
-    TODO: Handle other seed (transcript)
+    Currently hand:
+    - Test Directory
+    - Transcript (TODO: known issue of long seeding time which cause 502 Bad Gateway error)
     """
-
-    error = None
-
     if request.method == "POST":
-        try:
-            # if force update (True), disregard td version and continue seeding Test Directory
+        action = request.POST.get("action")
+
+        if action == "td":
             force_update = request.POST.get("force")
             td_version = request.POST.get("version")
 
@@ -1649,14 +1763,8 @@ def seed(request: HttpRequest) -> HttpResponse:
                 request.FILES.get("td_upload").read().decode()
             )
 
-            insert_test_directory_data(
-                test_directory_data,
-                td_version,
-                True if force_update else False,
-            )
+            _seed_test_directory(request, force_update, td_version, test_directory_data)
 
-            error = False
-        except Exception as e:
-            error = e
-
-    return render(request, "web/info/seed.html", {"error": error})
+        elif action == "transcripts":
+            _seed_transcripts(request, request.POST, request.FILES)
+    return render(request, "web/info/seed.html")

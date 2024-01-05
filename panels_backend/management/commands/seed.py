@@ -20,6 +20,38 @@ from .panelapp import (
 from django.core.management.base import BaseCommand
 
 
+def validate_ext_ids(file_ids: list[str]) -> None:
+    """
+    Validate that the external file ids are in the correct format
+    :param: file_ids, a list of file ID strings
+    """
+
+    missing_ids = [id for id in file_ids if not re.match(r"^file-[\w]+$", id)]
+
+    if missing_ids:
+        raise Exception(
+            f"External file IDs '{', '.join(missing_ids)}' are misformatted,"
+            f" file IDs must take the format 'file-' followed by an alphanumerical string"
+        )
+
+
+def validate_release_versions(releases: list[str]) -> None:
+    """
+    Validate that the external releases are in the correct format
+    Only numbers and dots are permitted, e.g. 1.0.13
+    """
+
+    invalid_releases = [
+        version for version in releases if not re.match(r"^\d+(\.\d+)*$", version)
+    ]
+
+    if invalid_releases:
+        raise Exception(
+            f"The release versions '{', '.join(invalid_releases)}' are misformatted, "
+            f"release versions may only contain numbers and dots"
+        )
+
+
 class Command(BaseCommand):
     help = (
         "Coordinate the functions in other scripts to import and "
@@ -46,34 +78,6 @@ class Command(BaseCommand):
             raise Exception(f"Files {', '.join(missing_files)} do not exist")
 
         return True
-
-    def _validate_ext_ids(self, file_ids: list[str]) -> None:
-        """
-        Validate that the external file ids are in the correct format
-        :param: file_ids, a list of file ID strings
-        """
-
-        missing_ids = [id for id in file_ids if not re.match(r"^file-[\w]+$", id)]
-
-        if missing_ids:
-            raise Exception(
-                f"External file IDs {', '.join(missing_ids)} are misformatted,"
-                f" file IDs must take the format 'file-' followed by an alphanumerical string"
-            )
-
-    def _validate_release_versions(self, releases: list[str]) -> None:
-        """
-        Validate that the external releases are in the correct format
-        Only numbers and dots are permitted, e.g. 1.0.13
-        """
-
-        invalid_releases = [id for id in releases if not re.match(r"^\d+(\.\d+)*$", id)]
-
-        if invalid_releases:
-            raise Exception(
-                f"The release versions {', '.join(invalid_releases)} are misformatted, "
-                f"release versions may only contain numbers and dots"
-            )
 
     def add_arguments(self, parser) -> None:
         """Define the source of the data to import."""
@@ -292,7 +296,7 @@ class Command(BaseCommand):
             if not self._validate_td(input_directory):
                 raise ValueError("Invalid input file")
 
-            self._validate_release_versions([td_release])
+            validate_release_versions([td_release])
 
             with open(input_directory) as reader:
                 json_data = json.load(reader)
@@ -349,9 +353,9 @@ class Command(BaseCommand):
                 ]
             )
 
-            self._validate_ext_ids([mane_ext_id, g2refseq_ext_id, markname_ext_id])
+            validate_ext_ids([mane_ext_id, g2refseq_ext_id, markname_ext_id])
 
-            self._validate_release_versions(
+            validate_release_versions(
                 [hgnc_release, mane_release, gff_release, hgmd_release]
             )
 
