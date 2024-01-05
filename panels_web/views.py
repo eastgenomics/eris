@@ -58,7 +58,13 @@ from panels_backend.models import (
 
 def index(request: HttpRequest) -> HttpResponse:
     """
-    Main page. Display all clinical indications and panels
+    Main page of the web app.
+    Displaying:
+    - Clinical Indications
+    - Panels
+    - Clinical Indication-Panel links
+    - Test Directory Releases
+    - Transcript Sources
     """
 
     # fetch all clinical indications
@@ -1427,7 +1433,7 @@ def ajax_genes(request: HttpRequest) -> JsonResponse:
 
 def _giving_transcript_clinical_context(
     transcripts: list[dict[str, str]], release_ids: list[str]
-) -> list[dict[str, str]]:
+) -> list[dict[str, str | bool | None]]:
     """
     Function to give transcripts clinical context by querying TranscriptReleaseTranscript
 
@@ -1436,7 +1442,14 @@ def _giving_transcript_clinical_context(
         release_ids: list of release ids
 
     Returns:
-        list of transcripts with clinical context
+        list of transcripts with clinical context in the form of
+        dict with keys:
+            - hgnc_id
+            - gene_id
+            - transcript
+            - clinical
+            - source
+            - source_id
 
     """
 
@@ -1485,6 +1498,13 @@ def _giving_transcript_clinical_context(
 
 
 def ajax_gene_transcripts(request: HttpRequest, reference_genome: str) -> JsonResponse:
+    """
+    Ajax fetch call to get all transcripts for a given reference genome.
+    Returns a json response as this will be requested by the datatable in the front-end
+
+    The content of the json response is a list of transcripts with clinical context
+    See function: `_giving_transcript_clinical_context`
+    """
     refgenome = ReferenceGenome.objects.filter(
         reference_genome=reference_genome
     ).first()
@@ -1529,7 +1549,8 @@ def ajax_gene_transcripts(request: HttpRequest, reference_genome: str) -> JsonRe
 
 def genetranscripts(request: HttpRequest) -> HttpResponse:
     """
-    g2t page where it display gene and their transcripts (clinical and non-clinical)
+    Page where it display gene and their transcripts (clinical and non-clinical)
+    This page also contain form to generate g2t file and upload to dnanexus
 
     NOTE: this page only display the transcript from the latest TranscriptRelease
     as in it will only display the gene and transcripts that are suppose to make it
@@ -1602,6 +1623,12 @@ def genetranscripts(request: HttpRequest) -> HttpResponse:
 def transcript_source(request: HttpRequest, ts_id: int) -> HttpResponse:
     """
     Page to view transcript source information and its releases
+
+    Args:
+        ts_id (int): transcript source id
+
+    Returns:
+        HttpResponse to render transcript source page
 
     """
     tx_source = TranscriptSource.objects.get(id=ts_id)
