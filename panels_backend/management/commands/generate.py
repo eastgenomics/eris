@@ -26,7 +26,7 @@ from .utils import normalize_version, parse_excluded_hgncs_from_file
 from core.settings import HGNC_IDS_TO_OMIT
 from ._parse_transcript import (
     _parse_reference_genome,
-    _get_latest_transcript_release,
+    get_latest_transcript_release,
     check_missing_columns,
 )
 from ._insert_ci import _fetch_latest_td_version
@@ -419,11 +419,11 @@ class Command(BaseCommand):
         )
 
         # We need the latest releases of the transcript clinical status information
-        latest_select = _get_latest_transcript_release("MANE Select", ref_genome)
-        latest_plus_clinical = _get_latest_transcript_release(
+        latest_select = get_latest_transcript_release("MANE Select", ref_genome)
+        latest_plus_clinical = get_latest_transcript_release(
             "MANE Plus Clinical", ref_genome
         )
-        latest_hgmd = _get_latest_transcript_release("HGMD", ref_genome)
+        latest_hgmd = get_latest_transcript_release("HGMD", ref_genome)
 
         if None in [latest_select, latest_plus_clinical, latest_hgmd]:
             raise ValueError(

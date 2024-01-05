@@ -24,6 +24,9 @@ from panels_backend.management.commands.utils import (
 )
 from core.settings import HGNC_IDS_TO_OMIT
 from panels_backend.management.commands._insert_ci import insert_test_directory_data
+from panels_backend.management.commands._parse_transcript import (
+    get_latest_transcript_release,
+)
 
 from panels_backend.models import (
     ClinicalIndication,
@@ -45,12 +48,23 @@ from panels_backend.models import (
     TranscriptReleaseTranscript,
     TestDirectoryRelease,
     SuperPanel,
+    TranscriptRelease,
+    TranscriptReleaseTranscriptFile,
+    TranscriptSource,
+    ReferenceGenome,
+    Transcript,
 )
 
 
 def index(request: HttpRequest) -> HttpResponse:
     """
-    Main page. Display all clinical indications and panels
+    Main page of the web app.
+    Displaying:
+    - Clinical Indications
+    - Panels
+    - Clinical Indication-Panel links
+    - Test Directory Releases
+    - Transcript Sources
     """
 
     # fetch all clinical indications
@@ -59,14 +73,14 @@ def index(request: HttpRequest) -> HttpResponse:
     ] = ClinicalIndication.objects.order_by("r_code").all()
 
     # fetch all panels
-    panels: list[dict] = Panel.objects.order_by("panel_name").all()
+    panels: list[Panel] = Panel.objects.order_by("panel_name").all()
 
     # normalize panel version
     for panel in panels:
         panel.panel_version = normalize_version(panel.panel_version)
         panel.superpanel = False
 
-    super_panels = SuperPanel.objects.all()
+    super_panels: list[SuperPanel] = SuperPanel.objects.all()
 
     # normalize panel version
     for sp in super_panels:
@@ -136,6 +150,21 @@ def index(request: HttpRequest) -> HttpResponse:
     # fetch Test Directory Releases
     td_releases = TestDirectoryRelease.objects.all()
 
+    transcript_sources = TranscriptRelease.objects.values(
+        "id",
+        "source__source",
+        "source",
+        "release",
+        "created",
+        "reference_genome__reference_genome",
+    ).order_by("-created")
+
+    for ts in transcript_sources:
+        # NOTE: HGMD have 2 files (g2refseq and markname)
+        ts["files"] = TranscriptReleaseTranscriptFile.objects.filter(
+            transcript_release=ts["id"]
+        ).values("transcript_file__file_type", "transcript_file__file_id")
+
     return render(
         request,
         "web/index.html",
@@ -144,6 +173,7 @@ def index(request: HttpRequest) -> HttpResponse:
             "panels": all_panels,
             "cips": all_clinical_indication_p_and_sp,
             "td_releases": td_releases,
+            "transcript_sources": transcript_sources,
         },
     )
 
@@ -1053,6 +1083,7 @@ def gene(request: HttpRequest, gene_id: int) -> HttpResponse:
         "release_id__source_id__source",
         "release_id__reference_genome_id__reference_genome",
         "default_clinical",
+        "release_id__release",
     )
 
     return render(
@@ -1400,66 +1431,126 @@ def ajax_genes(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"data": genes}, safe=False)
 
 
-def ajax_gene_transcripts(request: HttpRequest, reference_genome: str) -> JsonResponse:
-    if request.method == "GET":
-        # TODO: revisit once tx is sorted
+def _giving_transcript_clinical_context(
+    transcripts: list[dict[str, str]], release_ids: list[str]
+) -> list[dict[str, str | bool | None]]:
+    """
+    Function to give transcripts clinical context by querying TranscriptReleaseTranscript
 
-        # fetch latest transcript
-        transcripts = TranscriptReleaseTranscript.objects.values(
-            "transcript_id__gene_id__hgnc_id",
-            "transcript_id__gene_id",
-            "transcript_id__transcript",
-            "release_id__source_id__source",
-            "default_clinical",
+    Args:
+        transcripts: list of transcripts in dict form
+        release_ids: list of release ids
+
+    Returns:
+        list of transcripts with clinical context in the form of
+        dict with keys:
+            - hgnc_id
+            - gene_id
+            - transcript
+            - clinical
+            - source
+            - source_id
+
+    """
+
+    relevant_transcripts = TranscriptReleaseTranscript.objects.filter(
+        transcript_id__in=set([tx["id"] for tx in transcripts]),
+        release_id__in=release_ids,
+        default_clinical=True,
+    ).values(
+        "transcript__transcript",
+        "transcript_id",
+        "release_id__release",
+        "release_id__source_id__source",
+        "release_id__source_id",
+    )
+
+    clinical_transcripts_to_source: dict[str, str] = {
+        str(c["transcript_id"])
+        + c["transcript__transcript"]: c["release_id__source_id__source"]
+        for c in relevant_transcripts
+    }
+
+    source_to_source_id = {
+        c["release_id__source_id__source"]: c["release_id__source_id"]
+        for c in relevant_transcripts
+    }
+
+    return [
+        {
+            "hgnc_id": tx["gene_id__hgnc_id"],
+            "gene_id": tx["gene_id"],
+            "transcript": tx["transcript"],
+            "clinical": (str(tx["id"]) + tx["transcript"])
+            in clinical_transcripts_to_source,
+            "source": clinical_transcripts_to_source.get(
+                (str(tx["id"]) + tx["transcript"]), None
+            ),
+            "source_id": source_to_source_id.get(
+                clinical_transcripts_to_source.get(
+                    (str(tx["id"]) + tx["transcript"]), None
+                ),
+                None,
+            ),
+        }
+        for tx in transcripts
+    ]
+
+
+def ajax_gene_transcripts(request: HttpRequest, reference_genome: str) -> JsonResponse:
+    """
+    Ajax fetch call to get all transcripts for a given reference genome.
+    Returns a json response as this will be requested by the datatable in the front-end
+
+    The content of the json response is a list of transcripts with clinical context
+    See function: `_giving_transcript_clinical_context`
+    """
+    refgenome = ReferenceGenome.objects.filter(
+        reference_genome=reference_genome
+    ).first()
+
+    latest_select = get_latest_transcript_release("MANE Select", refgenome)
+    latest_plus_clinical = get_latest_transcript_release(
+        "MANE Plus Clinical", refgenome
+    )
+    latest_hgmd = get_latest_transcript_release("HGMD", refgenome)
+
+    # lack of latest release version in the backend
+    if None in [latest_select, latest_plus_clinical, latest_hgmd]:
+        return JsonResponse(
+            {
+                "data": [
+                    {
+                        "hgnc_id": None,
+                        "transcript": None,
+                        "clinical": None,
+                        "source": None,
+                    }
+                ]
+            },
+            safe=False,
         )
 
-        # convert to list of [hgnc-id, transcript, sources, which one is clinical]
-        hgnc_to_gene_id = {}
-        hgnc_to_txs = collections.defaultdict(list)
-        hgnc_tx_to_assessed_sources = collections.defaultdict(list)
-        hgnc_tx_to_clinical_source = collections.defaultdict(list)
+    transcripts = (
+        Transcript.objects.order_by("gene_id")
+        .filter(reference_genome=refgenome)
+        .values("gene_id__hgnc_id", "gene_id", "transcript", "id")
+    )
 
-        for tx in transcripts:
-            hgnc = tx["transcript_id__gene_id__hgnc_id"]
-            transcript = tx["transcript_id__transcript"]
-
-            if hgnc not in hgnc_to_gene_id:
-                hgnc_to_gene_id[hgnc] = tx["transcript_id__gene_id"]
-
-            if transcript not in hgnc_to_txs[hgnc]:
-                hgnc_to_txs[hgnc].append(transcript)
-
-            if tx["default_clinical"]:
-                hgnc_tx_to_clinical_source[hgnc + transcript].append(
-                    tx["release_id__source_id__source"]
-                )
-
-            hgnc_tx_to_assessed_sources[hgnc + transcript].append(
-                tx["release_id__source_id__source"]
+    return JsonResponse(
+        {
+            "data": _giving_transcript_clinical_context(
+                transcripts, [latest_hgmd.id, latest_select.id, latest_plus_clinical.id]
             )
-
-        trancript_list = []
-
-        for hgnc, txs in hgnc_to_txs.items():
-            for tx in txs:
-                trancript_list.append(
-                    {
-                        "gene_id": hgnc_to_gene_id[hgnc],
-                        "hgnc_id": hgnc,
-                        "tx": tx,
-                        "sources": ", ".join(
-                            hgnc_tx_to_assessed_sources.get(hgnc + tx, [])
-                        ),
-                        "clinical_sources": hgnc_tx_to_clinical_source.get(
-                            hgnc + tx, []
-                        ),
-                    }
-                )
+        },
+        safe=False,
+    )
 
 
-def genetotranscript(request: HttpRequest) -> HttpResponse:
+def genetranscripts(request: HttpRequest) -> HttpResponse:
     """
-    g2t page where it display gene and their transcripts (clinical and non-clinical)
+    Page where it display gene and their transcripts (clinical and non-clinical)
+    This page also contain form to generate g2t file and upload to dnanexus
 
     NOTE: this page only display the transcript from the latest TranscriptRelease
     as in it will only display the gene and transcripts that are suppose to make it
@@ -1469,69 +1560,100 @@ def genetotranscript(request: HttpRequest) -> HttpResponse:
     gene page which is more detailed
     """
 
-    return render(request, "web/info/gene2transcript.html")
+    if request.method == "POST":
+        project_id = request.POST.get("project_id").strip()
+        dnanexus_token = request.POST.get("dnanexus_token").strip()
+        reference_genome = request.POST.get("reference_genome").strip()
 
-    # if request.method == "POST":  # TODO: revisit once tx is sorted
-    #     project_id = request.POST.get("project_id").strip()
-    #     dnanexus_token = request.POST.get("dnanexus_token").strip()
+        try:
+            # login dnanexus
+            dx.set_security_context(
+                {
+                    "auth_token_type": "Bearer",
+                    "auth_token": dnanexus_token,
+                }
+            )
 
-    #     try:
-    #         # login dnanexus
-    #         dx.set_security_context(
-    #             {
-    #                 "auth_token_type": "Bearer",
-    #                 "auth_token": dnanexus_token,
-    #             }
-    #         )
+            # check dnanexus login
+            dx.api.system_whoami()
 
-    #         # check dnanexus login
-    #         dx.api.system_whoami()
+            # check dnanexus project id
+            dx.DXProject(project_id)
 
-    #         # check dnanexus project id
-    #         dx.DXProject(project_id)
+            project_metadata: dict = dx.DXProject(project_id).describe()
+            project_name: str = project_metadata.get("name", "")
 
-    #         project_metadata: dict = dx.DXProject(project_id).describe()
-    #         project_name: str = project_metadata.get("name", "")
+            if project_name.startswith("001") or project_name.startswith("002"):
+                return render(
+                    request,
+                    "web/info/genetranscripts.html",
+                    {"error": "Uploading to 001 or 002 project is not allowed."},
+                )
 
-    #         if project_name.startswith("001") or project_name.startswith("002"):
-    #             return render(
-    #                 request,
-    #                 "web/info/gene2transcript.html",
-    #                 {
-    #                     "transcripts": transcripts,
-    #                     "error": "Uploading to 001 or 002 project is not allowed.",
-    #                 },
-    #             )
+            current_datetime = dt.datetime.today().strftime("%Y%m%d")
 
-    #         current_datetime = dt.datetime.today().strftime("%Y%m%d")
+            transcripts = ajax_gene_transcripts(
+                HttpRequest, reference_genome=reference_genome
+            )
 
-    #         # write result to dnanexus file
-    #         with dx.new_dxfile(
-    #             name=f"{current_datetime}_g2t.tsv",
-    #             project=project_id,
-    #             media_type="text/plain",
-    #         ) as f:
-    #             for row in transcripts:
-    #                 hgnc_id = row["gene_id__hgnc_id"]
-    #                 transcript = row["transcript"]
-    #                 source = row.get("source")
+            # write result to dnanexus file
+            with dx.new_dxfile(
+                name=f"{current_datetime}_g2t.tsv",
+                project=project_id,
+                media_type="text/plain",
+            ) as f:
+                for row in json.loads(transcripts.content)["data"]:
+                    hgnc_id = row["hgnc_id"]
+                    transcript = row["transcript"]
+                    source = row.get("source")
 
-    #                 data = "\t".join(
-    #                     [hgnc_id, transcript, "clinical" if source else "non-clinical"]
-    #                 )
-    #                 data = "\t".join(
-    #                     [hgnc_id, transcript, "clinical" if source else "non-clinical"]
-    #                 )
-    #                 f.write(f"{data}\n")
+                    data = "\t".join(
+                        [hgnc_id, transcript, "True" if source else "False"]
+                    )
+                    f.write(f"{data}\n")
 
-    #     except Exception as e:
-    #         return render(
-    #             request,
-    #             "web/info/gene2transcript.html",
-    #             {"transcripts": transcripts, "error": e},
-    #         )
+            return render(request, "web/info/genetranscripts.html", {"success": True})
 
-    #     success = True
+        except Exception as e:
+            return render(request, "web/info/genetranscripts.html", {"error": e})
+
+    return render(request, "web/info/genetranscripts.html")
+
+
+def transcript_source(request: HttpRequest, ts_id: int) -> HttpResponse:
+    """
+    Page to view transcript source information and its releases
+
+    Args:
+        ts_id (int): transcript source id
+
+    Returns:
+        HttpResponse to render transcript source page
+
+    """
+    tx_source = TranscriptSource.objects.get(id=ts_id)
+
+    tx_releases = (
+        TranscriptRelease.objects.filter(source=ts_id)
+        .values(
+            "id",
+            "release",
+            "created",
+            "reference_genome__reference_genome",
+        )
+        .order_by("-created")
+    )
+
+    for release in tx_releases:
+        release["files"] = TranscriptReleaseTranscriptFile.objects.filter(
+            transcript_release=release["id"]
+        ).values("transcript_file__file_type", "transcript_file__file_id")
+
+    return render(
+        request,
+        "web/info/transcript_source.html",
+        {"tx_releases": tx_releases, "tx_source": tx_source},
+    )
 
 
 def seed(request: HttpRequest) -> HttpResponse:

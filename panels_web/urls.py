@@ -20,10 +20,15 @@ urlpatterns = [
         views.clinical_indication_superpanel,
         name="clinical_indication_superpanel",
     ),
+    path("ts/<int:ts_id>/", views.transcript_source, name="transcript_source"),
     # seed test directory
     path("seed", views.seed, name="seed"),
     path("genepanel/", views.genepanel, name="genepanel"),
-    path("g2t/", views.genetotranscript, name="g2t"),
+    path(
+        "genetranscripts/",
+        views.genetranscripts,
+        name="genetranscripts",
+    ),
     # addition
     path("ci/add/", views.add_clinical_indication, name="ci_add"),
     path("panel/add", views.add_panel, name="panel_add"),
@@ -35,4 +40,9 @@ urlpatterns = [
     path("review/", views.review, name="review"),
     # api
     path("api/genes/", views.ajax_genes, name="api_genes"),
+    path(
+        "api/genetranscripts/<str:reference_genome>/",
+        views.ajax_gene_transcripts,
+        name="api_genetranscripts",
+    ),
 ]

@@ -129,9 +129,7 @@
     <!-- TD Releases -->
     <div class="row">
         <div class="col mt-3">
-            <div class="d-flex justify-content-between mb-2">
-                <h3>Test Directory Releases</h3>
-            </div>
+            <h3>Test Directory Releases</h3>
             <table id="cipTable" class="table pt-2 table-striped table-bordered">
                 <thead class="table-success">
                     <tr>
@@ -169,11 +167,48 @@
             <table class="table pt-2 table-striped table-bordered" id="geneTable">
                 <thead class="table-success">
                     <tr>
-                        <th>HGNC</th>
+                        <th>Transcript Source</th>
                         <th>Gene Symbol</th>
                         <th>Alias Symbols</th>
                     </tr>
                 </thead>
+            </table>
+        </div>
+    </div>
+
+    <div class="row my-2"></div>
+
+    <!-- Transcript Sources -->
+    <div class="row">
+        <div class="col">
+            <h3>Transcript Sources</h3>
+            <p class="fw-light">*same release of MANE should have the same file-id. HGMD should have two file types
+                (g2refseq and markname)</p>
+            <table class="table pt-2 table-striped table-bordered" id="transcriptSources">
+                <thead class="table-success">
+                    <tr>
+                        <th>Source</th>
+                        <th>Release</th>
+                        <th>Date</th>
+                        <th>Reference Genomes</th>
+                        <th>File Type</th>
+                        <th>File ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for source in transcript_sources %}
+                    {% for file in source.files %}
+                    <tr>
+                        <td><a href="{% url 'transcript_source' source.source %}">{{source.source__source}}</a></td>
+                        <td>{{source.release}}</td>
+                        <td>{{source.created}}</td>
+                        <td>{{source.reference_genome__reference_genome}}</td>
+                        <td>{{file.transcript_file__file_type}}</td>
+                        <td>{{file.transcript_file__file_id}}</td>
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                </tbody>
             </table>
         </div>
     </div>
@@ -187,6 +222,7 @@
         new DataTable('#clinicalIndicationTable');
         new DataTable('#panelTable');
         new DataTable('#cipTable');
+        new DataTable('#transcriptSources');
 
         $('#geneTable').DataTable({
             ajax: "{% url 'api_genes' %}",
