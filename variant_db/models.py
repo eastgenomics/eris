@@ -1,5 +1,5 @@
 from django.db import models
-from requests_app.models import Chromosome, ClinicalIndication, Panel, ReferenceGenome
+from panels_backend.models import Chromosome, ClinicalIndication, Panel, ReferenceGenome
 
 # Create your models here.
 
