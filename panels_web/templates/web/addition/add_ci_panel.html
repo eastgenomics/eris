@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mb-5 pb-5">
+    <div class="row">
+        <div class="col">
+            <h1>Add Clinical Indication Panel</h1>
+        </div>
+    </div>
+
+    <div class="row my-3"></div>
+
+    <form action="{% url 'cip_add' %}" method="POST">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="exampleFormControlInput1" class="form-label">Clinical Indications</label>
+            <select class="form-select" aria-label="Default select example" name="clinical_indication">
+                {% for ci in cis %}
+                <option value="{{ci.id}}">{{ci.r_code}} {{ci.name}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="exampleFormControlInput1" class="form-label">Panels</label>
+            <select class="form-select" aria-label="Default select example" name="panel">
+                {% for panel in panels %}
+                <option value="{{panel.id}}">{{panel.external_id}} {{panel.panel_name}} {{panel.panel_version}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">Submit</button>
+    </form>
+</div>
+{% endblock %}

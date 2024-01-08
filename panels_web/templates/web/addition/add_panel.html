@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mb-5">
+  <h1>Add Panel</h1>
+  <div class="row">
+    <div class="col">
+      <!-- error message -->
+      {% if errors %}
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {% for key, values in errors.items %}
+        {% for error in values %}
+        <strong>Error!</strong> {{ error }}
+        {% if panel %}
+        <a href="{% url 'panel' panel.id %}" target="_blank">{{ panel.panel_name }}</a>
+        {% endif %}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        {% endfor %}
+        {% endfor %}
+      </div>
+      {% endif %}
+      <!-- end error message -->
+
+      <!-- form -->
+      <form action="{% url 'panel_add' %}" method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">External ID</label>
+          <input type="text" class="form-control" name="external_id" aria-describedby="externalIdHelp" placeholder="57"
+            value="{{ external_id }}">
+          <div id="externalIdHelp" class="form-text">optional. This is the unique PanelApp id for each Panel. If not
+            sure, just leave blank</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Panel Name</label>
+          <input type="text" class="form-control" name="panel_name" placeholder="Stickler syndrome"
+            value="{{ panel_name }}" required>
+          <div id="externalIdHelp" class="form-text">required</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Panel Version</label>
+          <input type="text" class="form-control" name="panel_version" aria-describedby="panelNameHelp"
+            value="{{ panel_version }}" placeholder="1">
+          <div id="panelVersionHelp" class="form-text">optional. Only accept number input. e.g. 1 or 2.5</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Genes</label>
+          <!-- Genes selection -->
+          <table class="table pt-2" id="geneSelectionTable">
+            <thead class="table-success">
+              <tr>
+                <th>HGNC ID</th>
+                <th>Gene Symbol</th>
+                <th>Check</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for gene in genes %}
+              <tr>
+                <td>{{ gene.hgnc_id }}</td>
+                <td>{{ gene.gene_symbol }}</td>
+                <td>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="{{ gene.id }}" name="genes">
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <!-- End Genes selection -->
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </form>
+      <!-- end form -->
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+  $(document).ready(function () {
+    var table = $('#geneSelectionTable').DataTable();
+
+    // deal with issue on form not submitting all checked values due to
+    // how datatable works
+    // https://stackoverflow.com/questions/33240409/how-to-submit-checkboxes-from-all-pages-with-jquery-datatables
+    $('form').on('submit', function (e) {
+      var $form = $(this);
+
+      // Iterate over all checkboxes in the table
+      table.$('input[type="checkbox"]').each(function () {
+        // If checkbox doesn't exist in DOM
+        if (!$.contains(document, this)) {
+          // If checkbox is checked
+          if (this.checked) {
+            // Create a hidden element 
+            $form.append(
+              $('<input>')
+                .attr('type', 'hidden')
+                .attr('name', this.name)
+                .val(this.value)
+            );
+          }
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

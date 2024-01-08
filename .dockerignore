@@ -1,0 +1,13 @@
+.env
+.env.example
+.gitignore
+docker-compose.yml
+pytest.ini
+README.md
+.coverage
+testing_files
+tests
+nginx
+env
+.vscode
+.ruff_cache

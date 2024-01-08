@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mb-5">
+  <div class="row">
+    <div class="col">
+      <h1>GenePanel</h1>
+
+      <!-- Loading Overlay -->
+      <img class="visually-hidden" id="hamster" src="{% static 'images/hamster-loader.gif' %}" alt="hamster"
+        style="position:absolute;top:0;left:0;right:0;bottom:0;margin:auto;z-index:999" />
+
+      <!-- Alert -->
+      {% if error %}
+      <div class="alert alert-danger" role="alert">
+        {{ error }}
+      </div>
+      {% endif %}
+
+      {% if warnings %}
+      {% for warning in warnings %}
+      <div class="alert alert-warning" role="alert">
+        {{ warning }}
+      </div>
+      {% endfor %}
+      {% endif %}
+
+      {% if success %}
+      <div class="alert alert-success" role="alert">
+        File Uploaded Successfully!
+      </div>
+      {% endif %}
+      <!-- End Alert -->
+
+      <!-- Genepanel Upload Form -->
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Upload GenePanel File to DNANexus Project</h5>
+          <form action="{% url 'genepanel' %}" method="POST" id="genepanelForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="projectIdInput" class="form-label">DNANexus API Token</label>
+              <input type="text" class="form-control" name="dnanexus_token" aria-describedby="dnanexusTokenHelp"
+                required>
+              <div id="dnanexusTokenHelp" class="form-text">Get this from DNANexus Settings</div>
+            </div>
+            <div class="mb-3">
+              <label for="projectIdInput" class="form-label">Project ID</label>
+              <input type="text" class="form-control" name="project_id" aria-describedby="projectIdHelp" required>
+              <div id="projectIdHelp" class="form-text">e.g. project-GV4VJ2Q46b4p7k7z7491fFZ3</div>
+            </div>
+            <div class="mb-3">
+              <label for="formFile" class="form-label">Upload a HGNC Text File</label>
+              <input class="form-control" type="file" id="hgnc_upload" name="hgnc_upload" required>
+            </div>
+            <button type="submit" class="btn btn-success">Upload
+              <span class="spinner-border spinner-border-sm ml-2 visually-hidden" aria-hidden="true"></span>
+            </button>
+          </form>
+        </div>
+      </div>
+      <!-- End Genepanel Upload Form -->
+    </div>
+  </div>
+
+  <div class="my-3"></div>
+
+  <!-- Genepanel Accordion -->
+  {% if genepanels %}
+  <div class="row">
+    <div class="col">
+      <div class="accordion" id="accordion{{genepanel.ci_id}}">
+        {% for genepanel in genepanels %}
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading{{genepanel.ci_id}}">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+              data-bs-target="#collapse{{genepanel.ci_id}}" aria-expanded="false"
+              aria-controls="collapse{{genepanel.ci_id}}">
+              {{genepanel.r_code}} {{genepanel.ci_name}}
+            </button>
+          </h2>
+          <div id="collapse{{genepanel.ci_id}}" class="accordion-collapse collapse"
+            aria-labelledby="heading{{genepanel.ci_id}}" data-bs-parent="#accordion{{genepanel.ci_id}}">
+            <div class="accordion-body">
+              {% if genepanel.superpanel %}
+              <p>
+              <h5>Child Panels</h5>
+              {% for panel in genepanel.child_panels %}
+              <a href="{% url 'panel' panel.id %}" target="_blank">{{panel.panel_name}}
+                {{panel.panel_version}}</a> <br>
+              {% endfor %}
+              </p>
+              <p>
+              <h5>Genes</h5>
+              {% for gene in genepanel.hgncs %}
+              &nbsp;<a href="{% url 'gene' gene.id %}" target="_blank">{{gene.hgnc}}</a>&nbsp;
+              {% endfor %}
+              </p>
+              {% else %}
+              <p>
+              <h5>Panels</h5>
+              <a href="{% url 'panel' genepanel.panel_id %}" target="_blank">{{genepanel.panel_name}}
+                {{genepanel.panel_version}}</a>
+              </p>
+
+              <p>
+              <h5>Genes</h5>
+              {% for gene in genepanel.hgncs %}
+              &nbsp;<a href="{% url 'gene' gene.id %}" target="_blank">{{gene.hgnc}}</a>&nbsp;
+              {% endfor %}
+              </p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  <!-- End GenePanel Accordion -->
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+  $(document).ready(function () {
+    // script to block submit button on form submission and show loading indicator
+    $('#genepanelForm').submit(function () {
+      $(this).find('button[type="submit"]').prop('disabled', true);
+      $(this).find('button[type="submit"]').find('.visually-hidden').removeClass('visually-hidden');
+      $('#hamster').removeClass('visually-hidden');
+    });
+  });
+</script>
+{% endblock %}

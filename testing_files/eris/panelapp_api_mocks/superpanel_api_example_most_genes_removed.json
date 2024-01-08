@@ -1,0 +1,225 @@
+{
+  "id": 465,
+  "hash_id": null,
+  "name": "Other rare neuromuscular disorders",
+  "disease_group": "",
+  "disease_sub_group": "",
+  "status": "public",
+  "version": "19.155",
+  "version_created": "2023-10-11T11:17:24.416918Z",
+  "relevant_disorders": [
+    "Neuromuscular disorders",
+    "R381"
+  ],
+  "stats": {
+    "number_of_genes": 453,
+    "number_of_strs": 7,
+    "number_of_regions": 8
+  },
+  "types": [
+    {
+      "name": "GMS Rare Disease Virtual",
+      "slug": "gms-rare-disease-virtual",
+      "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+    },
+    {
+      "name": "Super Panel",
+      "slug": "superpanel",
+      "description": "Superpanel"
+    },
+    {
+      "name": "GMS signed-off",
+      "slug": "gms-signed-off",
+      "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+    }
+  ],
+  "genes": [
+    {
+      "gene_data": {
+        "alias": [
+          "NPD002",
+          "MGC14452"
+        ],
+        "biotype": "protein_coding",
+        "hgnc_id": "HGNC:21497",
+        "gene_name": "acyl-CoA dehydrogenase family member 9",
+        "omim_gene": [
+          "611103"
+        ],
+        "alias_name": null,
+        "gene_symbol": "ACAD9",
+        "hgnc_symbol": "ACAD9",
+        "hgnc_release": "2017-11-03T00:00:00",
+        "ensembl_genes": {
+          "GRch37": {
+            "82": {
+              "location": "3:128598439-128634910",
+              "ensembl_id": "ENSG00000177646"
+            }
+          },
+          "GRch38": {
+            "90": {
+              "location": "3:128879596-128916067",
+              "ensembl_id": "ENSG00000177646"
+            }
+          }
+        },
+        "hgnc_date_symbol_changed": "2003-06-18"
+      },
+      "entity_type": "gene",
+      "entity_name": "ACAD9",
+      "confidence_level": "3",
+      "penetrance": "Complete",
+      "mode_of_pathogenicity": "",
+      "publications": [
+        "25929793"
+      ],
+      "evidence": [
+        "Expert Review Green",
+        "Radboud University Medical Center, Nijmegen",
+        "UKGTN",
+        "Illumina TruGenome Clinical Sequencing Services",
+        "Emory Genetics Laboratory",
+        "Literature"
+      ],
+      "phenotypes": [
+        "Mitochondrial complex I deficiency due to ACAD9 deficiency 611126"
+      ],
+      "mode_of_inheritance": "BIALLELIC, autosomal or pseudoautosomal",
+      "tags": [],
+      "panel": {
+        "id": 66,
+        "hash_id": "55b63d7f22c1fc05fc7a185b",
+        "name": "Rhabdomyolysis and metabolic muscle disorders",
+        "disease_group": "Neurology and neurodevelopmental disorders",
+        "disease_sub_group": "Neuromuscular disorders",
+        "status": "public",
+        "version": "3.37",
+        "version_created": "2023-10-11T11:17:19.655334Z",
+        "relevant_disorders": [],
+        "stats": {
+          "number_of_genes": 69,
+          "number_of_strs": 0,
+          "number_of_regions": 0
+        },
+        "types": [
+          {
+            "name": "Rare Disease 100K",
+            "slug": "rare-disease-100k",
+            "description": "Rare Disease 100K"
+          },
+          {
+            "name": "Component Of Super Panel",
+            "slug": "component-of-super-panel",
+            "description": "This panel is a component of a Super Panel"
+          },
+          {
+            "name": "GMS signed-off",
+            "slug": "gms-signed-off",
+            "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+          },
+          {
+            "name": "GMS Rare Disease",
+            "slug": "gms-rare-disease",
+            "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+          }
+        ]
+      },
+      "transcript": null
+    },
+    {
+      "gene_data": {
+        "alias": [
+          "MCAD",
+          "MCADH",
+          "ACAD1"
+        ],
+        "biotype": "protein_coding",
+        "hgnc_id": "HGNC:89",
+        "gene_name": "acyl-CoA dehydrogenase medium chain",
+        "omim_gene": [
+          "607008"
+        ],
+        "alias_name": [
+          "medium-chain acyl-CoA dehydrogenase"
+        ],
+        "gene_symbol": "ACADM",
+        "hgnc_symbol": "ACADM",
+        "hgnc_release": "2017-11-03T00:00:00",
+        "ensembl_genes": {
+          "GRch37": {
+            "82": {
+              "location": "1:76190036-76253260",
+              "ensembl_id": "ENSG00000117054"
+            }
+          },
+          "GRch38": {
+            "90": {
+              "location": "1:75724347-75787575",
+              "ensembl_id": "ENSG00000117054"
+            }
+          }
+        },
+        "hgnc_date_symbol_changed": "1986-01-01"
+      },
+      "entity_type": "gene",
+      "entity_name": "ACADM",
+      "confidence_level": "3",
+      "penetrance": "Complete",
+      "mode_of_pathogenicity": "",
+      "publications": [],
+      "evidence": [
+        "Expert Review Green",
+        "UKGTN",
+        "Radboud University Medical Center, Nijmegen",
+        "Illumina TruGenome Clinical Sequencing Services",
+        "Emory Genetics Laboratory"
+      ],
+      "phenotypes": [
+        "Rhabdomyolysis",
+        "Acyl-CoA dehydrogenase, medium chain, deficiency of\t201450"
+      ],
+      "mode_of_inheritance": "BIALLELIC, autosomal or pseudoautosomal",
+      "tags": [],
+      "panel": {
+        "id": 66,
+        "hash_id": "55b63d7f22c1fc05fc7a185b",
+        "name": "Rhabdomyolysis and metabolic muscle disorders",
+        "disease_group": "Neurology and neurodevelopmental disorders",
+        "disease_sub_group": "Neuromuscular disorders",
+        "status": "public",
+        "version": "3.37",
+        "version_created": "2023-10-11T11:17:19.655334Z",
+        "relevant_disorders": [],
+        "stats": {
+          "number_of_genes": 69,
+          "number_of_strs": 0,
+          "number_of_regions": 0
+        },
+        "types": [
+          {
+            "name": "Rare Disease 100K",
+            "slug": "rare-disease-100k",
+            "description": "Rare Disease 100K"
+          },
+          {
+            "name": "Component Of Super Panel",
+            "slug": "component-of-super-panel",
+            "description": "This panel is a component of a Super Panel"
+          },
+          {
+            "name": "GMS signed-off",
+            "slug": "gms-signed-off",
+            "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+          },
+          {
+            "name": "GMS Rare Disease",
+            "slug": "gms-rare-disease",
+            "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+          }
+        ]
+      },
+      "transcript": null
+    }
+  ]
+}

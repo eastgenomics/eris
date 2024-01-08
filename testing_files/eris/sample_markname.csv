@@ -1,0 +1,3 @@
+"gene_id","genesym","chrom","genename","gdbid","omimid","entrezID","unigeneID","hgncID","hprdID","swiss_acc","gene_date","expected_inheritance","svar","gadb","findbase","cosmic","atlas","instruct","mupit","acmg"
+1,RBFOX1,"16p13.3",RNA binding fox-1 homolog 1,"10797363","605104",54715,459842,18222,16091,,"2005-07-12",AD,,,,Y,Y,,,
+2,A2M,"12p13.3-p12.3",Alpha-2-macroglobulin,"119639","103950",2,212838,7,72,P01023,"1996-04-01",AD,,Y,,Y,Y,Y,Y,

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <h1>Add Gene</h1>
+            <!-- error message -->
+            {% if errors %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {% for key, values in errors.items %}
+                {% for error in values %}
+                <strong>Error!</strong> {{ error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button><br>
+                {% endfor %}
+                {% endfor %}
+            </div>
+            {% endif %}
+            <!-- end error message -->
+
+            <form method="POST" action="{% url 'gene_add' %}">
+                {% csrf_token %}
+                <div class="mb-1">
+                    <label class="form-label">HGNC ID</label>
+                    <input type="text" class="form-control" aria-describedby="hgncHelp" name="hgnc_id" required>
+                    <div id="hgncHelp" class="form-text">required.</div>
+                </div>
+                <div class="mb-1">
+                    <label class="form-label">Gene Symbol</label>
+                    <input type="text" class="form-control" aria-describedby="geneSymbolHelp" name="gene_symbol">
+                    <div id="geneSymbolHelp" class="form-text">optional.</div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    $(document).ready(function () {
+        new DataTable('#geneTable');
+    });
+</script>
+{% endblock %}

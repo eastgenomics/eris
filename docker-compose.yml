@@ -1,12 +1,14 @@
 version: "3.9"
-   
+
 services:
-  db:
+  eris_db:
     container_name: eris-db
-    platform: linux/amd64
+    # platform: linux/amd64
     image: postgres:12.15-bullseye
-    ports:
-      - "5431:5432"
+    # ports:
+    #   - "5431:5432"
+    expose:
+      - 5432
     restart: always
     volumes:
       - eris_db:/var/lib/postgresql/data/
@@ -14,12 +16,12 @@ services:
       - POSTGRES_DB=eris # change based on DB
       - POSTGRES_USER=postgres # change based on USER
       - POSTGRES_PASSWORD=root  # change based on PASSWORD
-  web:
+  eris_web:
     container_name: eris-web
     platform: linux/amd64
     image: eris-web:1.0
     build: .
-    command: bash -c "python manage.py collectstatic --noinput && gunicorn panel_requests.wsgi:application --bind :8009"
+    command: bash -c "python manage.py collectstatic --noinput && gunicorn core.wsgi:application --bind :8009"
     env_file:
       - .env # change to relative path when docker compose build
     volumes:
@@ -27,22 +29,22 @@ services:
     expose:
       - 8009
     depends_on:
-      - db
+      - eris_db
     restart: always
-  nginx:
+  eris_nginx:
     container_name: eris-nginx
-    platform: linux/amd64
-    image: eris-nginx:1.0
-    build: nginx
+    # platform: linux/amd64
+    image: nginx:1.23
     volumes:
       - eris_static:/staticfiles
+      - /Users/jason/Github/eris/nginx:/etc/nginx/conf.d
     environment:
       - VIRTUAL_HOST=localhost # change based on HOST
       - VIRTUAL_PATH=/eris # change based on PATH
     expose:
       - 8010 # make sure nginx/nginx.conf PORT is changed too
     depends_on:
-      - web
+      - eris_web
 
 volumes:
   eris_db:

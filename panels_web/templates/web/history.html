@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mb-5 pb-5">
+    <div class="row"> <!-- title -->
+        <div class="col">
+            <h3>History</h3>
+            <h5>Showing: {{ showing }}</h5>
+        </div>
+    </div>
+    <div class="row my-2">
+        <div class="col"> <!-- form -->
+            <form action="{% url 'history' %}" method="post" id="historyForm">
+                {% csrf_token %}
+                <select class="form-select" aria-label="default select example" name="history selection">
+                    {% if 'clinical indications' in selected %}
+                    <option value="clinical indications" selected>Clinical Indications</option>
+                    {% else %}
+                    <option value="clinical indications">Clinical Indications</option>
+                    {% endif %}
+                    {% if 'panels' in selected %}
+                    <option value="panels" selected>Panels</option>
+                    {% else %}
+                    <option value="panels">Panels</option>
+                    {% endif %}
+                    {% if 'clinical indication-panel' in selected %}
+                    <option value="clinical indication-panel" selected>Clinical Indication-Panel</option>
+                    {% else %}
+                    <option value="clinical indication-panel">Clinical Indication-Panel</option>
+                    {% endif %}
+                    {% if 'panel-gene' in selected %}
+                    <option value="panel-gene" selected>Panel-Gene</option>
+                    {% else %}
+                    <option value="panel-gene">Panel-Gene</option>
+                    {% endif %}
+                </select>
+                {% if 'clinical indication-panel' in selected %}
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" value="changed" name="checkbox selections">
+                    <label class="form-check-label" for="flexCheckDefault">
+                        changed
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" value="created" name="checkbox selections">
+                    <label class="form-check-label" for="flexCheckDefault">
+                        created
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" value="deactivated" name="checkbox selections">
+                    <label class="form-check-label" for="flexCheckDefault">
+                        deactivated
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" value="manual review" name="checkbox selections">
+                    <label class="form-check-label" for="flexCheckDefault">
+                        manual review
+                    </label>
+                </div>
+                {% endif %}
+                <button type="submit" class="btn btn-primary btn-sm mt-2">Submit
+                    <span class="spinner-border spinner-border-sm ml-2 visually-hidden" aria-hidden="true"></span>
+                </button>
+            </form> <!-- end form -->
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col">
+            <!-- form -->
+            <table class="table pt-2 table-striped table-bordered" id="historyTable">
+                <thead class="table-success">
+                    <tr>
+                        {% if selected == 'clinical indication-panel' %}
+                        <th>Clinical Indication</th>
+                        <th>Panel Name</th>
+                        <th class="text-nowrap">Created</th>
+                        <th>Note</th>
+                        <th>User</th>
+                        {% elif selected == 'panels' %}
+                        <th>Name</th>
+                        <th>Created</th>
+                        {% elif selected == 'clinical indications' %}
+                        <th>Name</th>
+                        <th>Created</th>
+                        {% else %}
+                        <th>Panel</th>
+                        <th>Gene</th>
+                        <th>Created</th>
+                        <th>Note</th>
+                        <th>User</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if selected == 'clinical indication-panel' %}
+                    {% for history in data %}
+                    <tr>
+                        <td style="max-width:20em;" class="text-wrap">
+                            <a
+                                href="{% url 'clinical_indication' history.clinical_indication_panel_id__clinical_indication_id %}">{{history.clinical_indication_panel_id__clinical_indication_id__name}}</a>
+                        </td>
+                        <td style="max-width:20em;" class="text-break text-wrap">
+                            <a
+                                href="{% url 'panel' history.clinical_indication_panel_id__panel_id %}">{{history.clinical_indication_panel_id__panel_id__panel_name}}</a>
+                        </td>
+                        <td>{{history.created}}</td>
+                        <td style="max-width:20em;" class="text-wrap">{{history.note}}</td>
+                        <td style="max-width:20em;" class="text-wrap">{{history.user}}</td>
+                    </tr>
+                    {% endfor %}
+                    {% elif selected == 'panels' %}
+                    {% for panel in data %}
+                    <tr>
+                        <td class="text-wrap text-break"><a href="{% url 'panel' panel.id %}">{{panel.external_id}}
+                                {{panel.panel_name}}</a></td>
+                        <td>{{panel.created}}</td>
+                    </tr>
+                    {% endfor %}
+                    {% elif selected == 'clinical indications' %}
+                    {% for ci in data %}
+                    <tr>
+                        <td><a href="{% url 'clinical_indication' ci.id %}">{{ci.r_code}} {{ci.name}}</a></td>
+                        <td>{{ ci.created }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% elif selected == 'panel-gene' %}
+                    {% for pg in data%}
+                    <tr>
+                        <td><a
+                                href="{% url 'panel' pg.panel_gene_id__panel_id %}">{{pg.panel_gene_id__panel_id__panel_name}}</a>
+                        </td>
+                        <td><a
+                                href="{% url 'gene' pg.panel_gene_id__gene_id %}">{{pg.panel_gene_id__gene_id__hgnc_id}}</a>
+                        </td>
+                        <td>{{ pg.created }}</td>
+                        <td>{{ pg.note }}</td>
+                        <td>{{ pg.user }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+            <!-- end form -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    $(document).ready(function () {
+        // make table a DataTable (sortable and searchable)
+        new DataTable('#historyTable');
+
+        // disable form submit button when form submitted, prevent double submission
+        $('#historyForm').submit(function () {
+            $(this).find('button[type="submit"]').prop('disabled', true);
+            $(this).find('button[type="submit"]').find('.visually-hidden').removeClass('visually-hidden');
+        });
+    });
+</script>
+{% endblock %}

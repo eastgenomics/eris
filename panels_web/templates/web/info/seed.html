@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col">
+      <!-- Alert -->
+      {% if error %}
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      {% elif error is not None %}
+      <div class="alert alert-success" role="alert">
+        Seed complete!.
+      </div>
+      {% endif %}
+      <!-- End Alert -->
+
+      <h1>Test Directory Seed</h1>
+      <!-- File Upload Form -->
+      <form action="{% url 'seed' %}" method="POST" enctype="multipart/form-data" id="tdForm">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="formFile" class="form-label">Upload a Test Directory Json</label>
+          <input class="form-control" type="file" id="td_upload" name="td_upload" required>
+        </div>
+        <div class="mb-3">
+          <label for="exampleVersionInput" class="form-label">Version</label>
+          <input type="text" class="form-control" id="exampleVersionInput" name="version"
+            aria-describedby="versionHelp">
+          <div id="versionHelp" class="form-text">Test Directory Version</div>
+        </div>
+        <div class="mb-3 form-check">
+          <input type="checkbox" class="form-check-input" id="forceCheck" name="force">
+          <label class="form-check-label" for="forceCheck">Force Seed</label>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">Submit
+          <span class="spinner-border spinner-border-sm ml-2 visually-hidden" aria-hidden="true"></span>
+        </button>
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+  $(document).ready(function () {
+    // script to block submit button on form submission and show loading indicator
+    $('#tdForm').submit(function () {
+      $(this).find('button[type="submit"]').prop('disabled', true);
+      $(this).find('button[type="submit"]').find('.visually-hidden').removeClass('visually-hidden');
+    });
+  });
+</script>
+{% endblock %}

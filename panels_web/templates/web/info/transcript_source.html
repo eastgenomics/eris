@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mb-5">
+    <div class="row">
+        <div class="col">
+            <h1>{{tx_source.source}}</h1>
+        </div>
+    </div>
+
+    <div class="my-3"></div>
+
+    <div class="row">
+        <div class="col">
+            <div class="h1">Releases</div>
+            <table class="table pt-2 table-striped table-bordered" id="transcriptReleases">
+                <thead class="table-success">
+                    <tr>
+                        <th>Release</th>
+                        <th>Date</th>
+                        <th>Reference Genomes</th>
+                        <th>File Type</th>
+                        <th>File ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if tx_releases %}
+                    {% for release in tx_releases %}
+                    {% for file in release.files %}
+                    <tr>
+                        <td>{{release.release}}</td>
+                        <td>{{release.created}}</td>
+                        <td>{{release.reference_genome__reference_genome}}</td>
+                        <td>{{file.transcript_file__file_type}}</td>
+                        <td>{{file.transcript_file__file_id}}</td>
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    $(document).ready(function () {
+
+    });
+</script>
+{% endblock %}
