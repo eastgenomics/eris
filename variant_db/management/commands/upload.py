@@ -62,7 +62,7 @@ class Command(BaseCommand):
         """
         Handles the command line interface for the variant_db app.
         Currently the only command is: 'python manage.py upload variants <path_to_directory>',
-         which lets the user start variant upload from a specified directory.
+         which lets the user start variant upload of variant-containing files from a specified directory.
         """
 
         command: str = kwargs.get("command")
