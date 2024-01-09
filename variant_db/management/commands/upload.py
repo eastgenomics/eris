@@ -1,12 +1,12 @@
 """
 python manage.py upload --help
 """
-
+import pathlib
 from pathlib import Path
-import re
+import pandas as pd
 
 from django.core.management.base import BaseCommand
-
+from .populate_db_from_files import var_db_upload_controller
 
 class Command(BaseCommand):
     help = (
@@ -47,13 +47,16 @@ class Command(BaseCommand):
         else:
             return path
         
-    
-    def _fetch_var_files(self, directory):
+    def _basic_file_validity_check(self, file: pathlib.PosixPath) -> pd.DataFrame:
         """
-        """
-        #TODO: iter through files in directory, and add to an output list
-        return directory
+        Check that the file has a sensible name, is parsable to a DataFrame, and
+        includes the expected columns.
 
+        :param: file, a pathlib.PosixPath found inside a directory
+        :returns: file_table, a Pandas Dataframe containing the file's full contents
+        """
+        #TODO: work out the 'expected' names of files and columns from the workbook parser
+        #TODO: return a Pandas DataFrame
 
     def handle(self, *args, **kwargs) -> None:
         """
@@ -66,10 +69,18 @@ class Command(BaseCommand):
         assert command, "Please specify command: variants"
 
         if command == "variants":
-            # Get directory ath
+            # Get directory path, and then find any files contained in it or its sub-directories
             directory: str = kwargs.get("directory_path")
             path = self._validate_path(directory)
-            files = self._fetch_var_files(path)
-            #TODO: add function to parse all file contents
+            p = path.glob('**/*')
+            files = [x for x in p if x.is_file()]
 
+            # Work through each file, convert to Pandas DataFrame if valid. Quit out and/or print errors if something is wrong.
+            parsed_files = []
+            for file in files:
+                #TODO: add function to parse all file contents, and add to parsed_files
+                parsed_files.append(self._basic_file_validity_check(file))
+            
+            # Call the 'main' function which will handle data entry to the database
+            var_db_upload_controller(parsed_files)
 
