@@ -8,10 +8,9 @@ import pandas as pd
 from django.core.management.base import BaseCommand
 from .populate_db_from_files import var_db_upload_controller
 
+
 class Command(BaseCommand):
-    help = (
-        "Command line interface for the variant_db app."
-    )
+    help = "Command line interface for the variant_db app."
 
     def add_arguments(self, parser) -> None:
         """Define the source of the data to import."""
@@ -39,14 +38,18 @@ class Command(BaseCommand):
         """
         path = Path(directory)
         if not path.exists() or not path.is_dir():
-            print("Directory path doesn't exist, or isn't a real directory - please check and try again")
+            print(
+                "Directory path doesn't exist, or isn't a real directory - please check and try again"
+            )
             exit(1)
         if not any(path.iterdir()):
-            print("The provided directory is empty - please provide a directory path which contains data")
+            print(
+                "The provided directory is empty - please provide a directory path which contains data"
+            )
             exit(1)
         else:
             return path
-        
+
     def _basic_file_validity_check(self, file: pathlib.PosixPath) -> pd.DataFrame:
         """
         Check that the file has a sensible name, is parsable to a DataFrame, and
@@ -55,8 +58,8 @@ class Command(BaseCommand):
         :param: file, a pathlib.PosixPath found inside a directory
         :returns: file_table, a Pandas Dataframe containing the file's full contents
         """
-        #TODO: work out the 'expected' names of files and columns from the workbook parser
-        #TODO: return a Pandas DataFrame
+        # TODO: work out the 'expected' names of files and columns from the workbook parser
+        # TODO: return a Pandas DataFrame
 
     def handle(self, *args, **kwargs) -> None:
         """
@@ -72,15 +75,14 @@ class Command(BaseCommand):
             # Get directory path, and then find any files contained in it or its sub-directories
             directory: str = kwargs.get("directory_path")
             path = self._validate_path(directory)
-            p = path.glob('**/*')
+            p = path.glob("**/*")
             files = [x for x in p if x.is_file()]
 
             # Work through each file, convert to Pandas DataFrame if valid. Quit out and/or print errors if something is wrong.
             parsed_files = []
             for file in files:
-                #TODO: add function to parse all file contents, and add to parsed_files
+                # TODO: add function to parse all file contents, and add to parsed_files
                 parsed_files.append(self._basic_file_validity_check(file))
-            
+
             # Call the 'main' function which will handle data entry to the database
             var_db_upload_controller(parsed_files)
-
