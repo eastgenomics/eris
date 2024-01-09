@@ -10,3 +10,4 @@ def var_db_upload_controller(files: list[pd.DataFrame]) -> None:
     """
     #TODO: write the real code!
     print("TEST")
+    # for each dataframe, do any basic validation, and then put its data into the database tables
