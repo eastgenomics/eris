@@ -414,9 +414,7 @@ class Command(BaseCommand):
         :param ref_genome: ReferenceGenome instance
         """
         start = dt.datetime.now().strftime("%H:%M:%S")
-        print(
-            f"Creating g2t file for reference genome {ref_genome.name} at {start}"
-        )
+        print(f"Creating g2t file for reference genome {ref_genome.name} at {start}")
 
         # We need the latest releases of the transcript clinical status information
         latest_select = get_latest_transcript_release("MANE Select", ref_genome)
