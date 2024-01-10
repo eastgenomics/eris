@@ -3,6 +3,7 @@ from panels_backend.models import Chromosome, ClinicalIndication, Panel, Referen
 
 # Create your models here.
 
+
 class Sample(models.Model):
     """
     Records samples which have undergone sequencing.
@@ -10,17 +11,11 @@ class Sample(models.Model):
     We store this because we want to make sure that data from a single sample isn't accidentally submitted multiple times.
     """
 
-    instrument_id = models.TextField(
-        verbose_name="Instrument ID"
-    )
+    instrument_id = models.TextField(verbose_name="Instrument ID")
 
-    batch_id = models.TextField(
-        verbose_name="Batch ID"
-    )
+    batch_id = models.TextField(verbose_name="Batch ID")
 
-    specimen_id = models.TextField(
-        verbose_name="Specimen ID"
-    )
+    specimen_id = models.TextField(verbose_name="Specimen ID")
 
     class Meta:
         db_table = "sample"
@@ -92,9 +87,7 @@ class AssayMethod(models.Model):
 class ClinvarCollectionMethod(models.Model):
     """Records clinvar collection methods"""
 
-    name = models.TextField(
-        verbose_name="Clinvar collection method name"
-    )
+    name = models.TextField(verbose_name="Clinvar collection method name")
 
     class Meta:
         db_table = "clinvar_collection_method"
@@ -120,9 +113,7 @@ class Variant(models.Model):
         verbose_name="Reference variant allele"
     )  # what's the maximum variant size?
 
-    alt = models.TextField(
-        verbose_name="Alternative variant allele"
-    )  # see above
+    alt = models.TextField(verbose_name="Alternative variant allele")  # see above
 
     class Meta:
         db_table = "variant"
@@ -165,9 +156,7 @@ class Interpretation(models.Model):
     """Records interpretations"""
 
     sample_id = models.ForeignKey(
-        Sample,
-        verbose_name="Sample ID",
-        on_delete=models.PROTECT
+        Sample, verbose_name="Sample ID", on_delete=models.PROTECT
     )
 
     clinical_indication_id = models.ForeignKey(
@@ -177,9 +166,7 @@ class Interpretation(models.Model):
     )
 
     affected_status_id = models.ForeignKey(
-        AffectedStatus,
-        verbose_name="Affected Status ID",
-        on_delete=models.PROTECT
+        AffectedStatus, verbose_name="Affected Status ID", on_delete=models.PROTECT
     )
 
     assertion_criteria_id = models.ForeignKey(
