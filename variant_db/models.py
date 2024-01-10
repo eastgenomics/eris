@@ -3,16 +3,27 @@ from panels_backend.models import Chromosome, ClinicalIndication, Panel, Referen
 
 # Create your models here.
 
+class Sample(models.Model):
+    """
+    Records samples which have undergone sequencing.
+    A single individual may have several samples.
+    We store this because we want to make sure that data from a single sample isn't accidentally submitted multiple times.
+    """
 
-class Individual(models.Model):
-    """Records individuals"""
+    instrument_id = models.TextField(
+        verbose_name="Instrument ID"
+    )
 
-    individual_identifier = models.TextField(
-        verbose_name="Individual external ID"
+    batch_id = models.TextField(
+        verbose_name="Batch ID"
+    )
+
+    specimen_id = models.TextField(
+        verbose_name="Specimen ID"
     )
 
     class Meta:
-        db_table = "individual"
+        db_table = "sample"
 
     def __str__(self):
         return str(self.id)
@@ -153,8 +164,10 @@ class ClinvarSubmission(models.Model):
 class Interpretation(models.Model):
     """Records interpretations"""
 
-    individual_id = models.ForeignKey(
-        Individual, verbose_name="Individual ID", on_delete=models.PROTECT
+    sample_id = models.ForeignKey(
+        Sample,
+        verbose_name="Sample ID",
+        on_delete=models.PROTECT
     )
 
     clinical_indication_id = models.ForeignKey(
@@ -164,7 +177,9 @@ class Interpretation(models.Model):
     )
 
     affected_status_id = models.ForeignKey(
-        AffectedStatus, verbose_name="Affected Status ID", on_delete=models.PROTECT
+        AffectedStatus,
+        verbose_name="Affected Status ID",
+        on_delete=models.PROTECT
     )
 
     assertion_criteria_id = models.ForeignKey(
