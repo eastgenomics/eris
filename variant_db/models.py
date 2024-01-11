@@ -19,6 +19,7 @@ class Sample(models.Model):
 
     class Meta:
         db_table = "sample"
+        unique_together = ["instrument_id", "batch_id", "specimen_id"]
 
     def __str__(self):
         return str(self.id)
