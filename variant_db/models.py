@@ -54,18 +54,6 @@ class ClinicalSignificanceDescription(models.Model):
         return str(self.id)
 
 
-class EvaluatedBy(models.Model):
-    """Records who performed evaluation"""
-
-    group = models.TextField(verbose_name="Evaluated by")
-
-    class Meta:
-        db_table = "evaluated_by"
-
-    def __str__(self):
-        return str(self.id)
-
-
 class AssayMethod(models.Model):
     """Records assay methods"""
 
@@ -150,6 +138,33 @@ class ClinvarSubmission(models.Model):
         return str(self.id)
 
 
+class Organisation(models.Model):
+    """
+    The name of the Organisation where the interpretation was carried out
+    Generally larger than an Institution. For example, a GLH would be an Organisation.
+    #TODO: write an Organisation/Institution relationship once it emerges
+    """
+    name = models.TextField(verbose_name="Organisation name")
+
+    class Meta:
+        db_table = "organisation"
+
+    def __str__(self):
+        return str(self.id)
+
+class Institution(models.Model):
+    """
+    The name of the Institution where the interpretation was carried out
+    Generally smaller than an Organisation. For example, a hospital which is part of a GLH would be an Institution.
+    """
+    name = models.TextField(verbose_name="Institution name")
+
+    class Meta:
+        db_table = "institution"
+
+    def __str__(self):
+        return str(self.id)
+    
 class Interpretation(models.Model):
     """Records interpretations"""
 
@@ -157,10 +172,10 @@ class Interpretation(models.Model):
         Individual, verbose_name="Individual ID", on_delete=models.PROTECT
     )
 
-    clinical_indication_id = models.ForeignKey(
-        ClinicalIndication,
-        verbose_name="Clinical Indication ID",
-        on_delete=models.PROTECT,
+    #TODO: long term, switch to using ClinicalIndication as an FK here. For now, tolerate strings.
+    clinical_indication = models.TextField(
+        verbose_name="Clinical indication as it appears in parsed results workbook",
+        help="N.B. this is NOT a ClinicalIndication FK."
     )
 
     affected_status_id = models.ForeignKey(
@@ -179,8 +194,12 @@ class Interpretation(models.Model):
         on_delete=models.PROTECT,
     )
 
-    evaluated_by_id = models.ForeignKey(
-        EvaluatedBy, verbose_name="Evaluated By ID", on_delete=models.PROTECT
+    evaluating_organisation = models.ForeignKey(
+        Organisation, verbose_name="Evaluating Organisation ID", on_delete=models.PROTECT
+    )
+
+    evaluating_institution = models.ForeignKey(
+        Institution, verbose_name="Evaluating Institution ID", on_delete=models.PROTECT
     )
 
     panel_id = models.ForeignKey(
@@ -211,6 +230,19 @@ class Interpretation(models.Model):
         ClinvarSubmission,
         verbose_name="Clinvar Submission ID",
         on_delete=models.PROTECT,
+    )
+
+    prevalence = models.TextField(
+        verbose_name="Prevalence of variant"
+    )
+
+    known_inheritance = models.TextField(
+        verbose_name="Inheritance pattern",
+        help="Inheritance pattern. Not to be confused with ModeOfInheritance, which is populated from PanelApp for PanelGene/SuperPanelGene"
+    )
+
+    associated_disease = models.TextField(
+        verbose_name="Associated disease"
     )
 
     class Meta:
