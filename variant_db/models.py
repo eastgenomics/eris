@@ -115,6 +115,9 @@ class ClinvarCollectionMethod(models.Model):
 
 class Variant(models.Model):
     """Records variants"""
+    interpreted = models.BooleanField(
+        verbose_name="Interpreted by scientist"
+    )
 
     reference_genome_id = models.ForeignKey(
         ReferenceGenome, verbose_name="Reference Genome ID", on_delete=models.PROTECT
@@ -282,6 +285,11 @@ class Interpretation(models.Model):
         ProbeSet,
         verbose_name="Probe set used for sequencing",
         on_delete=models.PROTECT,
+    )
+
+    #TODO: this is in review in the sample sheet side of things
+    date = models.DateField(
+        verbose_name="Interpretation date"
     )
 
     class Meta:
