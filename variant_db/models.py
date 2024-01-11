@@ -3,7 +3,6 @@ from panels_backend.models import Chromosome, ClinicalIndication, Panel, Referen
 
 # Create your models here.
 
-
 class Individual(models.Model):
     """Records individuals"""
 
@@ -13,6 +12,40 @@ class Individual(models.Model):
 
     class Meta:
         db_table = "individual"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class TestCode(models.Model):
+    """The code of the test used when sequencing a sample. Assay-specific"""
+    testcode = models.TextField(
+        verbose_name="Test code"
+    )
+    class Meta:
+        db_table = "test_code"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class ProbeSet(models.Model):
+    """
+    The specific probeset used when sequencing a sample. A particular test's probes
+    may change over time
+    """
+    probeset_id = models.TextField(
+        verbose_name="Probeset ID"
+    )
+
+    testcode = models.ForeignKey(
+        TestCode,
+        verbose_name="Test code", 
+        on_delete=models.PROTECT
+        )
+
+    class Meta:
+        db_table = "probeset"
 
     def __str__(self):
         return str(self.id)
@@ -243,6 +276,12 @@ class Interpretation(models.Model):
 
     associated_disease = models.TextField(
         verbose_name="Associated disease"
+    )
+
+    probe_set = models.ForeignKey(
+        ProbeSet,
+        verbose_name="Probe set used for sequencing",
+        on_delete=models.PROTECT,
     )
 
     class Meta:
