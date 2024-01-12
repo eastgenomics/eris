@@ -7,8 +7,9 @@ from panels_backend.models import Chromosome, ClinicalIndication, Panel, Referen
 class Sample(models.Model):
     """
     Records samples which have undergone sequencing.
-    A single individual may have several samples.
-    We store this because we want to make sure that data from a single sample isn't accidentally submitted multiple times.
+    A particular combination of specimen, batch, and instrument SHOULD be unique.
+    We store this because we want to make sure that data from a single sample isn't accidentally
+    submitted multiple times.
     """
 
     instrument_id = models.TextField(verbose_name="Instrument ID")
