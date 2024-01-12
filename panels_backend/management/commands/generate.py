@@ -415,7 +415,7 @@ class Command(BaseCommand):
         """
         start = dt.datetime.now().strftime("%H:%M:%S")
         print(
-            f"Creating g2t file for reference genome {ref_genome.reference_genome} at {start}"
+            f"Creating g2t file for reference genome {ref_genome.name} at {start}"
         )
 
         # We need the latest releases of the transcript clinical status information

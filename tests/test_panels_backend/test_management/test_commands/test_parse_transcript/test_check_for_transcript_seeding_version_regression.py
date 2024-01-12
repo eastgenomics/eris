@@ -27,9 +27,7 @@ class TestCheckRegressions_OldHgncRelease(TestCase):
             source="MANE Plus Clinical"
         )
 
-        self.reference_genome = ReferenceGenome.objects.create(
-            name="GRCh37"
-        )
+        self.reference_genome = ReferenceGenome.objects.create(name="GRCh37")
 
         # pre-populate releases
         self.hgnc = HgncRelease.objects.create(release="2")
@@ -96,9 +94,7 @@ class TestCheckRegressions_NoReleasesYet(TestCase):
     """
 
     def setUp(self) -> None:
-        self.reference_genome = ReferenceGenome.objects.create(
-            name="GRCh38"
-        )
+        self.reference_genome = ReferenceGenome.objects.create(name="GRCh38")
 
     def test_fresh_db(self):
         """
