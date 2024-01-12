@@ -58,8 +58,9 @@ class Command(BaseCommand):
         :param: file, a pathlib.PosixPath found inside a directory
         :returns: file_table, a Pandas Dataframe containing the file's full contents
         """
-        # TODO: work out the 'expected' names of files and columns from the workbook parser
-        # TODO: return a Pandas DataFrame
+        # TODO: may want to enforce 'expected' names of files and columns from the workbook parser
+        df = pd.read_csv(file, delimiter=",")
+        return df
 
     def handle(self, *args, **kwargs) -> None:
         """
