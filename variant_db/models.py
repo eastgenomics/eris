@@ -6,9 +6,7 @@ from panels_backend.models import Chromosome, ClinicalIndication, Panel, Referen
 class Individual(models.Model):
     """Records individuals"""
 
-    individual_identifier = models.TextField(
-        verbose_name="Individual external ID"
-    )
+    individual_identifier = models.TextField(verbose_name="Individual external ID")
 
     class Meta:
         db_table = "individual"
@@ -102,9 +100,7 @@ class AssayMethod(models.Model):
 class ClinvarCollectionMethod(models.Model):
     """Records clinvar collection methods"""
 
-    name = models.TextField(
-        verbose_name="Clinvar collection method name"
-    )
+    name = models.TextField(verbose_name="Clinvar collection method name")
 
     class Meta:
         db_table = "clinvar_collection_method"
@@ -133,9 +129,7 @@ class Variant(models.Model):
         verbose_name="Reference variant allele"
     )  # what's the maximum variant size?
 
-    alt = models.TextField(
-        verbose_name="Alternative variant allele"
-    )  # see above
+    alt = models.TextField(verbose_name="Alternative variant allele")  # see above
 
     class Meta:
         db_table = "variant"
