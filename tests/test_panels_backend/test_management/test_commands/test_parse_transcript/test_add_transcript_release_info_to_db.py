@@ -86,9 +86,7 @@ class TestAddTranscriptRelease_ErrorsOnVersionRepeatsWithDifferentFiles(TestCase
     """
 
     def setUp(self) -> None:
-        self.reference_genome = ReferenceGenome.objects.create(
-            name="GRCh37"
-        )
+        self.reference_genome = ReferenceGenome.objects.create(name="GRCh37")
         self.source = TranscriptSource.objects.create(source="HGMD")
         self.release = TranscriptRelease.objects.create(
             source=self.source,
@@ -136,9 +134,7 @@ class TestAddTranscriptRelease_SameFilesNoProblem(TestCase):
     """
 
     def setUp(self) -> None:
-        self.reference_genome = ReferenceGenome.objects.create(
-            name="GRCh37"
-        )
+        self.reference_genome = ReferenceGenome.objects.create(name="GRCh37")
         self.source = TranscriptSource.objects.create(source="HGMD")
         self.release = TranscriptRelease.objects.create(
             source=self.source,
