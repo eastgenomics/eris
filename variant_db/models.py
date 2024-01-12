@@ -209,9 +209,9 @@ class Interpretation(models.Model):
     )
 
     #TODO: long term, switch to using ClinicalIndication as an FK here. For now, tolerate strings.
+    # N.B. this is NOT a ClinicalIndication FK.
     clinical_indication = models.TextField(
-        verbose_name="Clinical indication as it appears in parsed results workbook",
-        help="N.B. this is NOT a ClinicalIndication FK."
+        verbose_name="Clinical indication as it appears in parsed results workbook"
     )
 
     affected_status_id = models.ForeignKey(
@@ -272,9 +272,9 @@ class Interpretation(models.Model):
         verbose_name="Prevalence of variant"
     )
 
+    # Inheritance pattern. Not to be confused with ModeOfInheritance, which is populated from PanelApp for PanelGene/SuperPanelGene
     known_inheritance = models.TextField(
         verbose_name="Inheritance pattern",
-        help="Inheritance pattern. Not to be confused with ModeOfInheritance, which is populated from PanelApp for PanelGene/SuperPanelGene"
     )
 
     associated_disease = models.TextField(
