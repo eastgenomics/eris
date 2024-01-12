@@ -4,13 +4,23 @@ from panels_backend.models import Chromosome, ClinicalIndication, Panel, Referen
 # Create your models here.
 
 
-class Individual(models.Model):
-    """Records individuals"""
+class Sample(models.Model):
+    """
+    Records samples which have undergone sequencing.
+    A particular combination of specimen, batch, and instrument SHOULD be unique.
+    We store this because we want to make sure that data from a single sample isn't accidentally
+    submitted multiple times.
+    """
 
-    individual_identifier = models.TextField(verbose_name="Individual external ID")
+    instrument_id = models.TextField(verbose_name="Instrument ID")
+
+    batch_id = models.TextField(verbose_name="Batch ID")
+
+    specimen_id = models.TextField(verbose_name="Specimen ID")
 
     class Meta:
-        db_table = "individual"
+        db_table = "sample"
+        unique_together = ["instrument_id", "batch_id", "specimen_id"]
 
     def __str__(self):
         return str(self.id)
@@ -199,8 +209,8 @@ class Institution(models.Model):
 class Interpretation(models.Model):
     """Records interpretations"""
 
-    individual_id = models.ForeignKey(
-        Individual, verbose_name="Individual ID", on_delete=models.PROTECT
+    sample_id = models.ForeignKey(
+        Sample, verbose_name="Sample ID", on_delete=models.PROTECT
     )
 
     # TODO: long term, switch to using ClinicalIndication as an FK here. For now, tolerate strings.
