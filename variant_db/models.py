@@ -3,6 +3,7 @@ from panels_backend.models import Chromosome, ClinicalIndication, Panel, Referen
 
 # Create your models here.
 
+
 class Individual(models.Model):
     """Records individuals"""
 
@@ -17,9 +18,9 @@ class Individual(models.Model):
 
 class TestCode(models.Model):
     """The code of the test used when sequencing a sample. Assay-specific"""
-    testcode = models.TextField(
-        verbose_name="Test code"
-    )
+
+    testcode = models.TextField(verbose_name="Test code")
+
     class Meta:
         db_table = "test_code"
 
@@ -32,15 +33,12 @@ class ProbeSet(models.Model):
     The specific probeset used when sequencing a sample. A particular test's probes
     may change over time
     """
-    probeset_id = models.TextField(
-        verbose_name="Probeset ID"
-    )
+
+    probeset_id = models.TextField(verbose_name="Probeset ID")
 
     testcode = models.ForeignKey(
-        TestCode,
-        verbose_name="Test code", 
-        on_delete=models.PROTECT
-        )
+        TestCode, verbose_name="Test code", on_delete=models.PROTECT
+    )
 
     class Meta:
         db_table = "probeset"
@@ -111,9 +109,8 @@ class ClinvarCollectionMethod(models.Model):
 
 class Variant(models.Model):
     """Records variants"""
-    interpreted = models.BooleanField(
-        verbose_name="Interpreted by scientist"
-    )
+
+    interpreted = models.BooleanField(verbose_name="Interpreted by scientist")
 
     reference_genome_id = models.ForeignKey(
         ReferenceGenome, verbose_name="Reference Genome ID", on_delete=models.PROTECT
@@ -174,6 +171,7 @@ class Organisation(models.Model):
     Generally larger than an Institution. For example, a GLH would be an Organisation.
     #TODO: write an Organisation/Institution relationship once it emerges
     """
+
     name = models.TextField(verbose_name="Organisation name")
 
     class Meta:
@@ -182,11 +180,13 @@ class Organisation(models.Model):
     def __str__(self):
         return str(self.id)
 
+
 class Institution(models.Model):
     """
     The name of the Institution where the interpretation was carried out
     Generally smaller than an Organisation. For example, a hospital which is part of a GLH would be an Institution.
     """
+
     name = models.TextField(verbose_name="Institution name")
 
     class Meta:
@@ -194,7 +194,8 @@ class Institution(models.Model):
 
     def __str__(self):
         return str(self.id)
-    
+
+
 class Interpretation(models.Model):
     """Records interpretations"""
 
@@ -202,7 +203,7 @@ class Interpretation(models.Model):
         Individual, verbose_name="Individual ID", on_delete=models.PROTECT
     )
 
-    #TODO: long term, switch to using ClinicalIndication as an FK here. For now, tolerate strings.
+    # TODO: long term, switch to using ClinicalIndication as an FK here. For now, tolerate strings.
     # N.B. this is NOT a ClinicalIndication FK.
     clinical_indication = models.TextField(
         verbose_name="Clinical indication as it appears in parsed results workbook"
@@ -225,7 +226,9 @@ class Interpretation(models.Model):
     )
 
     evaluating_organisation = models.ForeignKey(
-        Organisation, verbose_name="Evaluating Organisation ID", on_delete=models.PROTECT
+        Organisation,
+        verbose_name="Evaluating Organisation ID",
+        on_delete=models.PROTECT,
     )
 
     evaluating_institution = models.ForeignKey(
@@ -262,18 +265,14 @@ class Interpretation(models.Model):
         on_delete=models.PROTECT,
     )
 
-    prevalence = models.TextField(
-        verbose_name="Prevalence of variant"
-    )
+    prevalence = models.TextField(verbose_name="Prevalence of variant")
 
     # Inheritance pattern. Not to be confused with ModeOfInheritance, which is populated from PanelApp for PanelGene/SuperPanelGene
     known_inheritance = models.TextField(
         verbose_name="Inheritance pattern",
     )
 
-    associated_disease = models.TextField(
-        verbose_name="Associated disease"
-    )
+    associated_disease = models.TextField(verbose_name="Associated disease")
 
     probe_set = models.ForeignKey(
         ProbeSet,
@@ -281,10 +280,8 @@ class Interpretation(models.Model):
         on_delete=models.PROTECT,
     )
 
-    #TODO: this is in review in the sample sheet side of things
-    date = models.DateField(
-        verbose_name="Interpretation date"
-    )
+    # TODO: this is in review in the sample sheet side of things
+    date = models.DateField(verbose_name="Interpretation date")
 
     class Meta:
         db_table = "interpretation"
