@@ -75,9 +75,9 @@ class AffectedStatus(models.Model):
 
 class AssertionCriteria(models.Model):
     """
-    #TODO: check that's the case and it isn't just for journal links
     Records assertion criteria.
-    This can be something like ACGS Best Practice Guidelines 2020, or a condition-specific set of guidelines.
+    This can be something like ACGS Best Practice Guidelines for Variant Interpretation 2020,
+    a condition-specific set of guidelines, or something like a Pubmed ID.
     """
 
     name = models.TextField(verbose_name="Assertion criteria name")
@@ -316,6 +316,107 @@ class Interpretation(models.Model):
 
     class Meta:
         db_table = "interpretation"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class AcgsCategoryInformation(models.Model):
+    """
+    For variants which undergo ACGS-style categorisation,
+    add scores and evidence notes for each of the scoring
+    categories.
+    """
+    interpretation = models.ForeignKey(
+        Interpretation, verbose_name="Interpretation", on_delete=models.PROTECT
+    )
+
+    PVS1_verdict = models.TextField(verbose_name="PSV1 verdict", nullable=True)
+    PSV1_evidence = models.TextField(verbose_name="PSV1 evidence notes", nullable=True)
+
+    PS1_verdict = models.TextField(verbose_name="PS1 verdict", nullable=True)
+    PS1_evidence = models.TextField(verbose_name="PS1 evidence notes", nullable=True)
+
+    PS2_verdict = models.TextField(verbose_name="PS2 verdict", nullable=True)
+    PS2_evidence = models.TextField(verbose_name="PS2 evidence notes", nullable=True)
+
+    PS3_verdict = models.TextField(verbose_name="PS3 verdict", nullable=True)
+    PS3_evidence = models.TextField(verbose_name="PS3 evidence notes", nullable=True)
+
+    PS4_verdict = models.TextField(verbose_name="PS4 verdict", nullable=True)
+    PS4_evidence = models.TextField(verbose_name="PS4 evidence notes", nullable=True)
+
+    PM1_verdict = models.TextField(verbose_name="PM1 verdict", nullable=True)
+    PM1_evidence = models.TextField(verbose_name="PM1 evidence notes", nullable=True)
+
+    PM2_verdict = models.TextField(verbose_name="PM2 verdict", nullable=True)
+    PM2_evidence = models.TextField(verbose_name="PM2 evidence notes", nullable=True)
+
+    PM3_verdict = models.TextField(verbose_name="PM3 verdict", nullable=True)
+    PM3_evidence = models.TextField(verbose_name="PM3 evidence notes", nullable=True)
+
+    PM4_verdict = models.TextField(verbose_name="PM4 verdict", nullable=True)
+    PM4_evidence = models.TextField(verbose_name="PM4 evidence notes", nullable=True)
+
+    PM5_verdict = models.TextField(verbose_name="PM5 verdict", nullable=True)
+    PM5_evidence = models.TextField(verbose_name="PM5 evidence notes", nullable=True)
+
+    PM6_verdict = models.TextField(verbose_name="PM6 verdict", nullable=True)
+    PM6_evidence = models.TextField(verbose_name="PM6 evidence notes", nullable=True)
+
+    PP1_verdict = models.TextField(verbose_name="PP1 verdict", nullable=True)
+    PP1_evidence = models.TextField(verbose_name="PP1 evidence notes", nullable=True)
+
+    PP2_verdict = models.TextField(verbose_name="PP2 verdict", nullable=True)
+    PP2_evidence = models.TextField(verbose_name="PP2 evidence notes", nullable=True)
+
+    PP3_verdict = models.TextField(verbose_name="PP3 verdict", nullable=True)
+    PP3_evidence = models.TextField(verbose_name="PP3 evidence notes", nullable=True)
+
+    PP4_verdict = models.TextField(verbose_name="PP4 verdict", nullable=True)
+    PP4_evidence = models.TextField(verbose_name="PP4 evidence notes", nullable=True)
+
+    PP5_verdict = models.TextField(verbose_name="PP5 verdict", nullable=True)
+    PP5_evidence = models.TextField(verbose_name="PP5 evidence notes", nullable=True)
+
+    BS1_verdict = models.TextField(verbose_name="BS1 verdict", nullable=True)
+    BS1_evidence = models.TextField(verbose_name="BS1 evidence notes", nullable=True)
+
+    BS2_verdict = models.TextField(verbose_name="BS2 verdict", nullable=True)
+    BS2_evidence = models.TextField(verbose_name="BS2 evidence notes", nullable=True)
+
+    BS3_verdict = models.TextField(verbose_name="BS3 verdict", nullable=True)
+    BS3_evidence = models.TextField(verbose_name="BS3 evidence notes", nullable=True)
+
+    BS4_verdict = models.TextField(verbose_name="BS4 verdict", nullable=True)
+    BS4_evidence = models.TextField(verbose_name="BS4 evidence notes", nullable=True)
+
+    BA1_verdict = models.TextField(verbose_name="BA1 verdict", nullable=True)
+    BA1_evidence = models.TextField(verbose_name="BA1 evidence notes", nullable=True)
+
+    BP1_verdict = models.TextField(verbose_name="BP1 verdict", nullable=True)
+    BP1_evidence = models.TextField(verbose_name="BP1 evidence notes", nullable=True)
+
+    BP2_verdict = models.TextField(verbose_name="BP2 verdict", nullable=True)
+    BP2_evidence = models.TextField(verbose_name="BP2 evidence notes", nullable=True)
+
+    BP3_verdict = models.TextField(verbose_name="BP3 verdict", nullable=True)
+    BP3_evidence = models.TextField(verbose_name="BP3 evidence notes", nullable=True)
+
+    BP4_verdict = models.TextField(verbose_name="BP4 verdict", nullable=True)
+    BP4_evidence = models.TextField(verbose_name="BP4 evidence notes", nullable=True)
+
+    BP5_verdict = models.TextField(verbose_name="BP5 verdict", nullable=True)
+    BP5_evidence = models.TextField(verbose_name="BP5 evidence notes", nullable=True)
+
+    BP6_verdict = models.TextField(verbose_name="BP6 verdict", nullable=True)
+    BP6_evidence = models.TextField(verbose_name="BP6 evidence notes", nullable=True)
+
+    BP7_verdict = models.TextField(verbose_name="BP7 verdict", nullable=True)
+    BP7_evidence = models.TextField(verbose_name="BP7 evidence notes", nullable=True)
+
+    class Meta:
+        db_table = "acgs_category_information"
 
     def __str__(self):
         return str(self.id)
