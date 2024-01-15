@@ -58,7 +58,11 @@ class ProbeSet(models.Model):
 
 
 class AffectedStatus(models.Model):
-    """Records affected statuses"""
+    """
+    Records affected statuses - whether or not the individual in each observation was affected by the condition
+    for the interpretation.
+    Example values: yes, no, unknown
+    """
 
     name = models.TextField(verbose_name="Affected status")
 
@@ -70,7 +74,11 @@ class AffectedStatus(models.Model):
 
 
 class AssertionCriteria(models.Model):
-    """Records assertion criteria"""
+    """
+    #TODO: check that's the case and it isn't just for journal links
+    Records assertion criteria.
+    This can be something like ACGS Best Practice Guidelines 2020, or a condition-specific set of guidelines.
+    """
 
     name = models.TextField(verbose_name="Assertion criteria name")
 
@@ -82,7 +90,10 @@ class AssertionCriteria(models.Model):
 
 
 class ClinicalSignificanceDescription(models.Model):
-    """Records clinical significance descriptions"""
+    """
+    Records clinical significance descriptions
+    Example values: 'Pathogenic', 'Benign'
+    """
 
     category = models.TextField(verbose_name="CSD category")
 
@@ -106,7 +117,10 @@ class AssayMethod(models.Model):
 
 
 class ClinvarCollectionMethod(models.Model):
-    """Records clinvar collection methods"""
+    """
+    Records clinvar collection methods.
+    Examples of permitted values: 'clinical testing' 'case-control'
+    """
 
     name = models.TextField(verbose_name="Clinvar collection method name")
 
@@ -118,7 +132,9 @@ class ClinvarCollectionMethod(models.Model):
 
 
 class Variant(models.Model):
-    """Records variants"""
+    """
+    Records variants
+    """
 
     interpreted = models.BooleanField(verbose_name="Interpreted by scientist")
 
@@ -146,7 +162,10 @@ class Variant(models.Model):
 
 
 class ClinvarAlleleOrigin(models.Model):
-    """Records clinvar allele origins"""
+    """
+    Records clinvar allele origins
+    The genetic origin of the variant - example values: 'de novo', 'germline', 'somatic', 'maternal'
+    """
 
     category = models.TextField(verbose_name="Allele origin")
 
@@ -175,17 +194,17 @@ class ClinvarSubmission(models.Model):
         return str(self.id)
 
 
-class Organisation(models.Model):
+class Organization(models.Model):
     """
-    The name of the Organisation where the interpretation was carried out
-    Generally larger than an Institution. For example, a GLH would be an Organisation.
-    #TODO: write an Organisation/Institution relationship once it emerges
+    The name of the Organization where the interpretation was carried out
+    Generally larger than an Institution. For example, a GLH would be an Organization.
+    #TODO: write an Organization/Institution relationship once it emerges?
     """
 
-    name = models.TextField(verbose_name="Organisation name")
+    name = models.TextField(verbose_name="Organization name")
 
     class Meta:
-        db_table = "organisation"
+        db_table = "organization"
 
     def __str__(self):
         return str(self.id)
@@ -194,7 +213,7 @@ class Organisation(models.Model):
 class Institution(models.Model):
     """
     The name of the Institution where the interpretation was carried out
-    Generally smaller than an Organisation. For example, a hospital which is part of a GLH would be an Institution.
+    Generally smaller than an Organization. For example, a hospital which is part of a GLH would be an Institution.
     """
 
     name = models.TextField(verbose_name="Institution name")
@@ -207,7 +226,9 @@ class Institution(models.Model):
 
 
 class Interpretation(models.Model):
-    """Records interpretations"""
+    """
+    Records interpretations - information which is linked to the process of assessing the clinical significance of a finding
+    """
 
     sample_id = models.ForeignKey(
         Sample, verbose_name="Sample ID", on_delete=models.PROTECT
@@ -235,9 +256,9 @@ class Interpretation(models.Model):
         on_delete=models.PROTECT,
     )
 
-    evaluating_organisation = models.ForeignKey(
-        Organisation,
-        verbose_name="Evaluating Organisation ID",
+    evaluating_organization = models.ForeignKey(
+        Organization,
+        verbose_name="Evaluating Organization ID",
         on_delete=models.PROTECT,
     )
 
