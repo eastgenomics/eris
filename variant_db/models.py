@@ -327,6 +327,7 @@ class AcgsCategoryInformation(models.Model):
     add scores and evidence notes for each of the scoring
     categories.
     """
+
     interpretation = models.ForeignKey(
         Interpretation, verbose_name="Interpretation", on_delete=models.PROTECT
     )
