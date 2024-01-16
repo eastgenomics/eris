@@ -24,25 +24,11 @@ class Command(BaseCommand):
     def add_arguments(self, parser) -> None:
         """Define the source of the data to import."""
 
-        # python manage.py edit pid/pname <panel_id/panel_name> <activate/deactivate> --cid <clinical indication db id> --rcode <clinical indication r code>
-        # subparsers = parser.add_subparsers(dest="command")
-
-        # subparser for finding panel using panel-id
-        # panel_id = subparsers.add_parser(
-        #     "pid",
-        #     help="add or remove clinical indication-panel link using panel database id",
-        # )
         parser.add_argument(
             "--panel_id",
             type=int,
             help="panel name",
         )
-
-        # subparser for finding panel using panel-name
-        # panel_name = parser.add_parser(
-        #     "pname",
-        #     help="add or remove clinical indication-panel link using panel name",
-        # )
 
         parser.add_argument(
             "--panel_name",
