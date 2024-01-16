@@ -255,14 +255,14 @@ class TestTranscriptAssigner_InHgmd(TestCase):
         tx = "NM00004.1"
 
         mane_data = []
-        markname_hgmd = {1234: [2]}
+        markname_hgmd = {"1234": ["2"]}
         gene2refseq_hgmd = {"2": [["NM00004", "1"]]}
 
         (
             mane_select_data,
             mane_plus_clinical_data,
             hgmd_data,
-            err,
+            _,
         ) = _transcript_assign_to_source(
             tx, hgnc_id, mane_data, markname_hgmd, gene2refseq_hgmd
         )

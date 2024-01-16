@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 
-from panels_backend.management.commands._parse_transcript import _parse_reference_genome
+from panels_backend.management.commands._parse_transcript import parse_reference_genome
 
 
 class TestParsingRefGenome(TestCase):
@@ -18,7 +18,7 @@ class TestParsingRefGenome(TestCase):
         valid = ["37", "GRCh37", "Grch37", "hg19", "HG19", "hG19"]
         for i in valid:
             with self.subTest():
-                self.assertEqual(_parse_reference_genome(i), "GRCh37")
+                self.assertEqual(parse_reference_genome(i), "GRCh37")
 
     def test_ref_genome_values_38(self):
         """
@@ -27,7 +27,7 @@ class TestParsingRefGenome(TestCase):
         valid = ["38", "GRCh38", "Grch38", "hg38", "HG38", "hG38"]
         for i in valid:
             with self.subTest():
-                self.assertEqual(_parse_reference_genome(i), "GRCh38")
+                self.assertEqual(parse_reference_genome(i), "GRCh38")
 
     def test_invalid_ref_genomes(self):
         """
@@ -45,4 +45,4 @@ class TestParsingRefGenome(TestCase):
                 f"{'; '.join(permitted_grch38)} - you provided {i}"
 
                 with self.assertRaisesRegex(ValueError, msg):
-                    _parse_reference_genome(i)
+                    parse_reference_genome(i)

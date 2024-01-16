@@ -512,7 +512,7 @@ def prepare_markname_file(markname_file: str) -> dict[str, list[str]]:
 
     :return: dictionary of hgnc id to lists of matching gene-id
     """
-    markname = pd.read_csv(markname_file)
+    markname = pd.read_csv(markname_file, dtype=str)
 
     needed_cols = ["hgncID"]
     if missing_columns := check_missing_columns(markname, needed_cols):

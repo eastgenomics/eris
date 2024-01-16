@@ -9,7 +9,7 @@ from panels_backend.models import (
     ReferenceGenome,
 )
 from panels_backend.management.commands._parse_transcript import (
-    _add_transcript_release_info_to_db,
+    add_transcript_release_info_to_db,
 )
 from tests.test_panels_backend.test_management.test_commands.test_insert_panel.test_insert_gene import (
     len_check_wrapper,
@@ -37,7 +37,7 @@ class TestAddTranscriptRelease_FromScratch(TestCase):
 
         data = {"mane": "file-1357", "another_mane": "file-101010"}
 
-        _add_transcript_release_info_to_db(source, version, ref_genome, data)
+        add_transcript_release_info_to_db(source, version, ref_genome, data)
 
         sources = TranscriptSource.objects.all()
         files = TranscriptFile.objects.all()
@@ -122,7 +122,7 @@ class TestAddTranscriptRelease_ErrorsOnVersionRepeatsWithDifferentFiles(TestCase
         files = {"hgmd_markname": "file-124"}  # different file-id
 
         with self.assertRaises(ValueError):
-            _add_transcript_release_info_to_db(source, version, ref_genome, files)
+            add_transcript_release_info_to_db(source, version, ref_genome, files)
 
 
 class TestAddTranscriptRelease_SameFilesNoProblem(TestCase):
@@ -160,7 +160,7 @@ class TestAddTranscriptRelease_SameFilesNoProblem(TestCase):
         ref_genome = self.reference_genome
         data = {"test": "123"}
 
-        result = _add_transcript_release_info_to_db(source, version, ref_genome, data)
+        result = add_transcript_release_info_to_db(source, version, ref_genome, data)
         self.assertEqual(result, self.release)
 
         files = TranscriptFile.objects.all()
