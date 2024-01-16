@@ -1,8 +1,7 @@
 import collections
 import json
 import pandas as pd
-from io import BytesIO
-from panels_backend.management.commands._parse_transcript import check_missing_columns
+import io
 from itertools import chain
 import dxpy as dx
 import datetime as dt
@@ -15,8 +14,8 @@ from django.http import JsonResponse
 from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.db.models import QuerySet, Q, F
 from django.db import transaction
-from asgiref.sync import sync_to_async
 
+from core.settings import HGNC_IDS_TO_OMIT
 from .forms import ClinicalIndicationForm, PanelForm, GeneForm
 from .utils.utils import WebChildPanel, WebGene, WebGenePanel
 
@@ -28,12 +27,17 @@ from panels_backend.management.commands.seed import (
     validate_ext_ids,
     validate_release_versions,
 )
-from core.settings import HGNC_IDS_TO_OMIT
-from panels_backend.management.commands._insert_ci import insert_test_directory_data
 from panels_backend.management.commands._parse_transcript import (
+    check_missing_columns,
     get_latest_transcript_release,
-    seed_transcripts,
+    check_for_transcript_seeding_version_regression,
+    prepare_hgnc_file,
+    prepare_mane_file,
+    prepare_gff_file,
+    prepare_gene2refseq_file,
+    prepare_markname_file,
 )
+from panels_backend.management.commands._insert_ci import insert_test_directory_data
 
 from panels_backend.models import (
     ClinicalIndication,
@@ -1111,7 +1115,7 @@ def _parse_excluded_hgncs_from_bytes(file: TemporaryUploadedFile) -> set[str]:
     :return: set[str] - a set of hgnc ids that are excluded
     """
     try:
-        df = pd.read_csv(BytesIO(file.read()), delimiter="\t", dtype=str)
+        df = pd.read_csv(io.BytesIO(file.read()), delimiter="\t", dtype=str)
 
         df = df[
             df["Locus type"].str.contains("rna", case=False)
@@ -1290,7 +1294,7 @@ def genepanel(
 
         # validate hgnc columns
         if missing_columns := check_missing_columns(
-            pd.read_csv(BytesIO(hgnc.read()), delimiter="\t"),
+            pd.read_csv(io.BytesIO(hgnc.read()), delimiter="\t"),
             ["HGNC ID", "Locus type", "Approved name"],
         ):
             return render(
@@ -1695,82 +1699,54 @@ def _seed_test_directory(
     return redirect("seed")
 
 
-def _seed_transcripts(
-    request: HttpRequest,
-    info: dict[str, str],
-    files: dict[str, TemporaryUploadedFile],
-) -> HttpResponseRedirect:
+from panels_web.tasks import (
+    call_seed_transcripts_function,
+    call_update_existing_gene_metadata,
+)
+from core.celery import app as celery_app
+from celery.result import AsyncResult
+import json
+
+
+def get_task_status(request: HttpRequest, task_id: str) -> HttpResponse:
+    async_task = AsyncResult(task_id, app=celery_app)
+
+    return HttpResponse(
+        json.dumps(
+            {
+                "task return": async_task.get(),
+                "status": async_task.status,
+            }
+        ),
+        content_type="application/json",
+    )
+
+
+def _check_task_running(task_name: str) -> bool:
     """
-    Sub-function to gather all required inputs from web front-end and
-    call seed_functions (panels_backend/management/commands/_parse_transcript.py)
+    Function to check if a Celery task is running in the background
 
     Args:
-        request: HttpRequest
-        info: dict[str, str] - dict of user inputs from front-end
-        files: dict[str, TemporaryUploadedFile] - dict of user uploaded files from front-end
+        task_name: str - name of the task
+
+    Returns:
+        bool - True if task is running, False otherwise
     """
-    # TODO: issue to be solved in new PR - long function which cause 502 Bad Gateway error
+    active_tasks = celery_app.control.inspect().active()
 
-    reference_genome = info.get("reference_genome")
+    if not active_tasks:
+        return False
 
-    mane_file_id, g2refseq_file_id, markname_file_id = (
-        info.get("mane_file_id"),
-        info.get("g2refseq_file_id"),
-        info.get("markname_file_id"),
-    )
+    for _, tasks in active_tasks.items():
+        for task in tasks:
+            if task["name"] == task_name:
+                return True
 
-    hgnc_version, mane_version, gff_version, hgmd_version = (
-        info.get("hgnc_version"),
-        info.get("mane_version"),
-        info.get("gff_version"),
-        info.get("hgmd_version"),
-    )
+    return False
 
-    hgnc_file, mane_file, gff_file, g2refseq_file, markname_file = (
-        BytesIO(files.get("hgnc_upload").read()),
-        BytesIO(files.get("mane_upload").read()),
-        BytesIO(files.get("gff_upload").read()),
-        BytesIO(files.get("g2refseq_upload").read()),
-        BytesIO(files.get("markname_upload").read()),
-    )
 
-    # validate file id inputs
-    try:
-        validate_ext_ids([mane_file_id, g2refseq_file_id, markname_file_id])
-    except Exception as e:
-        messages.add_message(request, messages.ERROR, e)
-        return redirect("seed")
-
-    try:
-        validate_release_versions(
-            [hgnc_version, mane_version, gff_version, hgmd_version]
-        )
-    except Exception as e:
-        messages.add_message(request, messages.ERROR, e)
-        return redirect("seed")
-
-    try:
-        seed_transcripts(
-            hgnc_file,
-            hgnc_version,
-            mane_file,
-            mane_file_id,
-            mane_version,
-            gff_file,
-            gff_version,
-            g2refseq_file,
-            g2refseq_file_id,
-            markname_file,
-            markname_file_id,
-            hgmd_version,
-            reference_genome,
-        )
-        messages.add_message(
-            request, messages.SUCCESS, "Transcripts seeded successfully!"
-        )
-    except Exception as e:
-        messages.add_message(request, messages.ERROR, e)
-        return redirect("seed")
+import base64
+from panels_backend.management.commands._parse_transcript import parse_reference_genome
 
 
 def seed(request: HttpRequest) -> HttpResponse:
@@ -1793,6 +1769,184 @@ def seed(request: HttpRequest) -> HttpResponse:
 
             _seed_test_directory(request, force_update, td_version, test_directory_data)
 
+            return render(
+                request,
+                "web/info/seed.html",
+                {"success": "Test Directory seeded successfully!"},
+            )
+
         elif action == "transcripts":
-            _seed_transcripts(request, request.POST, request.FILES)
+            # collect all files
+            reference_genome = request.POST.get("reference_genome")
+
+            mane_file_id, g2refseq_file_id, markname_file_id = (
+                request.POST.get("mane_file_id"),
+                request.POST.get("g2refseq_file_id"),
+                request.POST.get("markname_file_id"),
+            )
+
+            hgnc_version, mane_version, gff_version, hgmd_version = (
+                request.POST.get("hgnc_version"),
+                request.POST.get("mane_version"),
+                request.POST.get("gff_version"),
+                request.POST.get("hgmd_version"),
+            )
+
+            hgnc_file, mane_file, gff_file, g2refseq_file, markname_file = (
+                request.FILES.get("hgnc_upload").read(),
+                request.FILES.get("mane_upload").read(),
+                request.FILES.get("gff_upload").read(),
+                request.FILES.get("g2refseq_upload").read(),
+                request.FILES.get("markname_upload").read(),
+            )
+            # NOTE: uploaded files can't be None because form file inputs are required
+
+            # validation stage should all be here before seeding
+            validate_ext_ids([mane_file_id, g2refseq_file_id, markname_file_id])
+
+            validate_release_versions(
+                [hgnc_version, mane_version, gff_version, hgmd_version]
+            )
+
+            reference_genome_model, _ = ReferenceGenome.objects.get_or_create(
+                reference_genome=parse_reference_genome(reference_genome)
+            )
+
+            check_for_transcript_seeding_version_regression(
+                hgnc_version,
+                gff_version,
+                mane_version,
+                hgmd_version,
+                reference_genome_model,
+            )
+            from panels_backend.management.commands._parse_transcript import (
+                add_gff_release_info_to_db,
+                add_transcript_release_info_to_db,
+                make_hgnc_gene_sets,
+            )
+
+            from panels_backend.models import HgncRelease
+
+            (
+                hgnc_approved_symbol_to_hgnc_id,
+                hgnc_id_to_approved_symbol,
+                hgnc_id_to_alias_symbols,
+            ) = prepare_hgnc_file(
+                io.BytesIO(hgnc_file),
+            )
+
+            hgnc_release_model, release_created = HgncRelease.objects.get_or_create(
+                release=hgnc_version
+            )
+
+            (
+                new_genes,
+                symbol_changed,
+                alias_changed,
+                unchanged_genes,
+            ) = make_hgnc_gene_sets(
+                hgnc_id_to_approved_symbol, hgnc_id_to_alias_symbols
+            )
+
+            # task_id = call_update_existing_gene_metadata.apply_async(
+            #     args=[
+            #         symbol_changed,
+            #         alias_changed,
+            #         release_created,
+            #         new_genes,
+            #         hgnc_release_model.id,
+            #         unchanged_genes,
+            #         "online_user",
+            #     ]
+            # )
+            # print(task_id)
+
+            try:
+                mane_data = prepare_mane_file(
+                    io.BytesIO(mane_file), hgnc_approved_symbol_to_hgnc_id
+                )
+                gff = prepare_gff_file(io.BytesIO(gff_file))
+                gene2refseq_hgmd = prepare_gene2refseq_file(io.BytesIO(g2refseq_file))
+                markname_hgmd = prepare_markname_file(io.BytesIO(markname_file))
+
+                gff_release_model = add_gff_release_info_to_db(
+                    gff_version, reference_genome_model
+                )
+
+                mane_select_tx_model = add_transcript_release_info_to_db(
+                    "MANE Select",
+                    mane_version,
+                    reference_genome_model,
+                    {"mane": mane_file_id},
+                )
+                mane_plus_clinical_tx_model = add_transcript_release_info_to_db(
+                    "MANE Plus Clinical",
+                    mane_version,
+                    reference_genome_model,
+                    {"mane": mane_file_id},
+                )
+                hgmd_tx_model = add_transcript_release_info_to_db(
+                    "HGMD",
+                    hgmd_version,
+                    reference_genome_model,
+                    {
+                        "hgmd_g2refseq": g2refseq_file_id,
+                        "hgmd_markname": markname_file_id,
+                    },
+                )
+            except Exception as e:
+                return render(request, "web/info/seed.html", {"error": e})
+
+            if not _check_task_running("seed_transcripts"):
+                task_id = call_update_existing_gene_metadata.apply_async(
+                    args=[
+                        symbol_changed,
+                        alias_changed,
+                        release_created,
+                        new_genes,
+                        hgnc_release_model.id,
+                        unchanged_genes,
+                        "online_user",
+                    ],
+                    link=call_seed_transcripts_function.s(
+                        gff_release_model.id,
+                        gff,
+                        mane_data,
+                        markname_hgmd,
+                        gene2refseq_hgmd,
+                        reference_genome_model.id,
+                        mane_select_tx_model.id,
+                        mane_plus_clinical_tx_model.id,
+                        hgmd_tx_model.id,
+                        "online_user",
+                    ),
+                )
+
+                # task_id = call_seed_transcripts_function.apply_async(
+                #     args=[
+                #         gff_release_model.id,
+                #         gff,
+                #         mane_data,
+                #         markname_hgmd,
+                #         gene2refseq_hgmd,
+                #         reference_genome_model.id,
+                #         mane_select_tx_model.id,
+                #         mane_plus_clinical_tx_model.id,
+                #         hgmd_tx_model.id,
+                #         "online_user",
+                #     ],
+                #     link=call_update_existing_gene_metadata,
+                # )
+                print(task_id)
+                return render(
+                    request,
+                    "web/info/seed.html",
+                    {"success": "Seeding transcripts instance started!"},
+                )
+            else:
+                return render(
+                    request,
+                    "web/info/seed.html",
+                    {"error": "Another seeding is already running."},
+                )
     return render(request, "web/info/seed.html")

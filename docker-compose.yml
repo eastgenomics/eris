@@ -15,7 +15,7 @@ services:
     environment:
       - POSTGRES_DB=eris # change based on DB
       - POSTGRES_USER=postgres # change based on USER
-      - POSTGRES_PASSWORD=root  # change based on PASSWORD
+      - POSTGRES_PASSWORD=root # change based on PASSWORD
   eris_web:
     container_name: eris-web
     # platform: linux/amd64
@@ -31,6 +31,16 @@ services:
     depends_on:
       - eris_db
     restart: always
+  eris_celery:
+    container_name: eris-eris_celery
+    image: eris-celery:1.0
+    build: .
+    command: celery -A core worker -l INFO
+    env_file:
+      - .env # change to relative path when docker compose build
+    depends_on:
+      - eris_redis
+      - eris_web
   eris_nginx:
     container_name: eris-nginx
     # platform: linux/amd64
@@ -45,10 +55,20 @@ services:
       - 8010 # make sure nginx/nginx.conf PORT is changed too
     depends_on:
       - eris_web
+  eris_redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - 6379:6379
+    command: redis-server --save 20 1 --loglevel warning
+    volumes:
+      - eris_redis:/data
 
 volumes:
   eris_db:
   eris_static:
+  eris_redis:
+
 
 networks:
   default:

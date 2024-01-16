@@ -45,4 +45,5 @@ urlpatterns = [
         views.ajax_gene_transcripts,
         name="api_genetranscripts",
     ),
+    path("api/tasks/<str:task_id>", views.get_task_status, name="api_tasks"),
 ]

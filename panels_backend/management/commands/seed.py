@@ -16,6 +16,21 @@ from .panelapp import (
     get_latest_version_panel,
 )
 
+from panels_backend.management.commands._parse_transcript import (
+    parse_reference_genome,
+    check_for_transcript_seeding_version_regression,
+    prepare_hgnc_file,
+    prepare_mane_file,
+    prepare_gff_file,
+    prepare_gene2refseq_file,
+    prepare_markname_file,
+    make_hgnc_gene_sets,
+    update_existing_gene_metadata,
+    add_gff_release_info_to_db,
+    add_transcript_release_info_to_db,
+)
+from panels_backend.models import ReferenceGenome, HgncRelease
+
 
 from django.core.management.base import BaseCommand
 
@@ -67,7 +82,15 @@ class Command(BaseCommand):
         return True
 
     def _validate_file_exist(self, file_paths: list[str]) -> bool:
-        """Validate that the input files are there"""
+        """
+        Validate that the input files are there
+
+        Args:
+            file_paths: list of file paths
+
+        #NOTE: this function does not check for None value because file path
+        arguments (e.g. --hgnc) are REQUIRED args in the cmd line
+        """
         missing_files: list[str] = []
 
         for file_path in file_paths:
@@ -133,7 +156,7 @@ class Command(BaseCommand):
             "--hgnc",
             type=str,
             help="Path to hgnc dump .txt file",
-            default="testing_files/eris/hgnc_dump_20230613.txt",
+            required=True,
         )
         transcript.add_argument(
             "--hgnc_release",
@@ -145,7 +168,7 @@ class Command(BaseCommand):
             "--mane",
             type=str,
             help="Path to mane .csv file",
-            default="testing_files/eris/mane_grch37.csv",
+            required=True,
         )
         transcript.add_argument(
             "--mane_ext_id",
@@ -163,7 +186,7 @@ class Command(BaseCommand):
             "--gff",
             type=str,
             help="Path to parsed gff .tsv file",
-            default="testing_files/eris/GCF_000001405.25_GRCh37.p13_genomic.exon_5bp_v2.0.0.tsv",
+            required=True,
         )
         transcript.add_argument(
             "--gff_release",
@@ -175,7 +198,7 @@ class Command(BaseCommand):
             "--g2refseq",
             type=str,
             help="Path to gene2refseq csv file",
-            default="testing_files/eris/gene2refseq_202306131409.csv",
+            required=True,
         )
         transcript.add_argument(
             "--g2refseq_ext_id",
@@ -187,7 +210,7 @@ class Command(BaseCommand):
             "--markname",
             type=str,
             help="Path to markname csv file",
-            default="testing_files/eris/markname_202306131409.csv",
+            required=True,
         )
         transcript.add_argument(
             "--markname_ext_id",
@@ -330,26 +353,26 @@ class Command(BaseCommand):
 
             print("Seeding transcripts")
 
-            hgnc_file = kwargs.get("hgnc")
+            hgnc_filepath = kwargs.get("hgnc")
             hgnc_release = kwargs.get("hgnc_release")
-            mane_file = kwargs.get("mane")
+            mane_filepath = kwargs.get("mane")
             mane_ext_id = kwargs.get("mane_ext_id")
             mane_release = kwargs.get("mane_release")
-            gff_file = kwargs.get("gff")
+            gff_filepath = kwargs.get("gff")
             gff_release = kwargs.get("gff_release")
-            g2refseq_file = kwargs.get("g2refseq")
+            g2refseq_filepath = kwargs.get("g2refseq")
             g2refseq_ext_id = kwargs.get("g2refseq_ext_id")
-            markname_file = kwargs.get("markname")
+            markname_filepath = kwargs.get("markname")
             markname_ext_id = kwargs.get("markname_ext_id")
             hgmd_release = kwargs.get("hgmd_release")
 
             self._validate_file_exist(
                 [
-                    hgnc_file,
-                    mane_file,
-                    gff_file,
-                    g2refseq_file,
-                    markname_file,
+                    hgnc_filepath,
+                    mane_filepath,
+                    gff_filepath,
+                    g2refseq_filepath,
+                    markname_filepath,
                 ]
             )
 
@@ -359,23 +382,93 @@ class Command(BaseCommand):
                 [hgnc_release, mane_release, gff_release, hgmd_release]
             )
 
-            error_log = kwargs.get("error_log", False)
+            error_bool = kwargs.get("error_log", False)
+
+            reference_genome = parse_reference_genome(ref_genome)
+
+            reference_genome_model, _ = ReferenceGenome.objects.get_or_create(
+                reference_genome=reference_genome
+            )
+
+            check_for_transcript_seeding_version_regression(
+                hgnc_release,
+                gff_release,
+                mane_release,
+                hgmd_release,
+                reference_genome_model,
+            )
+
+            (
+                hgnc_approved_symbol_to_hgnc_id,
+                hgnc_id_to_approved_symbol,
+                hgnc_id_to_alias_symbols,
+            ) = prepare_hgnc_file(hgnc_filepath)
+
+            hgnc_release, release_created = HgncRelease.objects.get_or_create(
+                release=hgnc_release
+            )
+
+            (
+                new_genes,
+                symbol_changed,
+                alias_changed,
+                unchanged_genes,
+            ) = make_hgnc_gene_sets(
+                hgnc_id_to_approved_symbol, hgnc_id_to_alias_symbols
+            )
+
+            update_existing_gene_metadata(
+                symbol_changed,
+                alias_changed,
+                release_created,
+                new_genes,
+                hgnc_release,
+                unchanged_genes,
+                "command_line",
+            )
+
+            mane_data = prepare_mane_file(
+                mane_filepath, hgnc_approved_symbol_to_hgnc_id
+            )
+            gff = prepare_gff_file(gff_filepath)
+            gene2refseq_hgmd = prepare_gene2refseq_file(g2refseq_filepath)
+            markname_hgmd = prepare_markname_file(markname_filepath)
+
+            gff_release_model = add_gff_release_info_to_db(
+                gff_release, reference_genome_model
+            )
+
+            mane_select_tx_model = add_transcript_release_info_to_db(
+                "MANE Select",
+                mane_release,
+                reference_genome_model,
+                {"mane": mane_ext_id},
+            )
+            mane_plus_clinical_tx_model = add_transcript_release_info_to_db(
+                "MANE Plus Clinical",
+                mane_release,
+                reference_genome_model,
+                {"mane": mane_ext_id},
+            )
+            hgmd_tx_model = add_transcript_release_info_to_db(
+                "HGMD",
+                hgmd_release,
+                reference_genome_model,
+                {"hgmd_g2refseq": g2refseq_ext_id, "hgmd_markname": markname_ext_id},
+            )
 
             seed_transcripts(
-                hgnc_file,
-                hgnc_release,
-                mane_file,
-                mane_ext_id,
-                mane_release,
-                gff_file,
-                gff_release,
-                g2refseq_file,
-                g2refseq_ext_id,
-                markname_file,
-                markname_ext_id,
-                hgmd_release,
-                ref_genome,
-                error_log,
+                gff_release_model,
+                gff,
+                mane_data,
+                markname_hgmd,
+                gene2refseq_hgmd,
+                reference_genome_model,
+                mane_select_tx_model,
+                mane_plus_clinical_tx_model,
+                hgmd_tx_model,
+                "command_line",
+                error_bool,
             )
 
             print("Seed transcripts completed.")
