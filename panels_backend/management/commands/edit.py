@@ -1,7 +1,8 @@
 """
-python manage.py edit [--rcode / --cid] <clinical indication r-code or name>  [pid/pname] <panel-id or panel-name> <activate/deactivate>
-python manage.py edit --rcode R12.1 pid 1234 activate
-python maange.py edit --cid 1234 pname "Stickler Syndrome" deactivate
+python manage.py edit <--panel_id or --panel_name> <panel_id or panel_name> <--clinical_indication_id or --clinical_indication_r_code> <clinical_indication_id or clinical_indication_r_code> <activate or deactivate>
+python manage.py edit --panel_id 26 --clinical_indication_id 1 activate
+python manage.py edit --clinical_indication_r_code R67.1 --panel_id 26 activate
+python maange.py edit --clinical_indication_id 260 panel_name "Stickler Syndrome" deactivate (case insensitive)
 """
 from ._queries import (
     get_panel_by_database_id,
@@ -13,8 +14,6 @@ from ._queries import (
 )
 from django.core.management.base import BaseCommand
 
-POSSIBLE_COMMANDS = ["pname", "pid"]
-
 
 class Command(BaseCommand):
     help = "Commands to let the user edit the database from the command line."
@@ -25,28 +24,28 @@ class Command(BaseCommand):
     def add_arguments(self, parser) -> None:
         """Define the source of the data to import."""
 
-        # python manage.py edit panel_clinical_ind <panel> <add_or_remove> <r_code>
-        subparsers = parser.add_subparsers(dest="command")
+        # python manage.py edit pid/pname <panel_id/panel_name> <activate/deactivate> --cid <clinical indication db id> --rcode <clinical indication r code>
+        # subparsers = parser.add_subparsers(dest="command")
 
         # subparser for finding panel using panel-id
-        panel_id = subparsers.add_parser(
-            "pid",
-            help="add or remove clinical indication-panel link using panel database id",
-        )
-        panel_id.add_argument(
-            "panel_id",
+        # panel_id = subparsers.add_parser(
+        #     "pid",
+        #     help="add or remove clinical indication-panel link using panel database id",
+        # )
+        parser.add_argument(
+            "--panel_id",
             type=int,
             help="panel name",
         )
 
         # subparser for finding panel using panel-name
-        panel_name = subparsers.add_parser(
-            "pname",
-            help="add or remove clinical indication-panel link using panel name",
-        )
+        # panel_name = parser.add_parser(
+        #     "pname",
+        #     help="add or remove clinical indication-panel link using panel name",
+        # )
 
-        panel_name.add_argument(
-            "panel_name",
+        parser.add_argument(
+            "--panel_name",
             type=str,
             help="panel database id",
         )
@@ -64,12 +63,12 @@ class Command(BaseCommand):
 
         # arg for finding clinical indication using r code
         parser.add_argument(
-            "--cid",
+            "--clinical_indication_id",
             help="add or remove clinical indication-panel link using ci database id",
         )
 
         parser.add_argument(
-            "--rcode",
+            "--clinical_indication_r_code",
             help="add or remove clinical indication-panel link using ci r code",
         )
 
@@ -79,33 +78,26 @@ class Command(BaseCommand):
         into the database."""
         print(kwargs)
 
-        command: str = kwargs.get("command")
-
-        assert (
-            command in POSSIBLE_COMMANDS
-        ), "Command not available, options are: " + ", ".join(POSSIBLE_COMMANDS)
-
         # TODO: add user later, once we've decided on how to do that
         user = "init_v1_user"
 
         action: str = kwargs.get("action")
+        panel_id = kwargs.get("panel_id")
+        panel_name = kwargs.get("panel_name")
+        clinical_indication_id = kwargs.get("clinical_indication_id")
+        clinical_indication_r_code = kwargs.get("clinical_indication_r_code")
 
         assert (
             action
         ), "Please specify whether you want to add or remove the clinical indication for this panel"
 
-        if command == "pid":
-            panel_id: str = kwargs.get("panel_id")
-
+        if panel_id:
             assert panel_id, "Please specify panel ID"
 
             panel = get_panel_by_database_id(panel_id)
 
             assert panel, f"The panel {panel_id} was not found in the database"
-
-        if command == "pname":
-            panel_name: str = kwargs.get("panel_name")
-
+        else:
             assert panel_name, "Please specify panel name"
 
             panel = get_panel_by_name(panel_name)
@@ -121,11 +113,9 @@ class Command(BaseCommand):
 
             panel = panel[0]
 
-        clinical_indication_database_id = kwargs.get("cid")
-        clinical_indication_r_code = kwargs.get("rcode")
-
-        assert (
-            clinical_indication_database_id and clinical_indication_r_code
+        assert not (
+            clinical_indication_id is not None
+            and clinical_indication_r_code is not None
         ), "Please specify either clinical indication database id or r-code, not both"
 
         if clinical_indication_r_code:
@@ -143,7 +133,7 @@ class Command(BaseCommand):
 
         else:
             clinical_indication = get_clinical_indication_by_database_id(
-                clinical_indication_database_id
+                clinical_indication_id
             )
 
         assert clinical_indication, "No clinical indication found."
