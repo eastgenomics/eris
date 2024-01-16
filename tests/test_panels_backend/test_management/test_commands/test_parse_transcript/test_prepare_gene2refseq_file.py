@@ -1,5 +1,7 @@
 from django.test import TestCase
-from panels_backend.management.commands._parse_transcript import _prepare_gene2refseq_file
+from panels_backend.management.commands._parse_transcript import (
+    _prepare_gene2refseq_file,
+)
 
 
 class TestPrepareGene2RefSeqFile(TestCase):

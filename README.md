@@ -1,25 +1,42 @@
-# core
+# Eris: A Django app to locally store, edit and manage panels, clinical indications, genes and transcripts
 
-Abbreviations:
+## Purpose
+Eris is a Django app, designed to store panels, clinical indications, genes and transcripts in a PostgreSQL database. A command line interface lets the user populate and bulk-update the database from files. In addition,
+a web interface allows easy viewing of the database contents, and lets users add custom panels, or carry out manual approval for some database changes.
+
+## Intended environment
+Eris requires Python version 3.10. It is designed to run in a Docker container, on a local bioinformatics server running Ubuntu. It needs to be connected to a PostgreSQL database.
+
+## Abbreviations:
+- CLI: command line interface
 - CI: clinical indication
 - PA: PanelApp (website at https://panelapp.genomicsengland.co.uk/)
 - TD: NHS England National Genomic Test Directory (website at https://www.england.nhs.uk/publication/national-genomic-test-directories/)
 
 Descriptions of the various gene metadata attributes can be found in the online PanelApp handbook at https://panelapp.genomicsengland.co.uk/media/files/PanelApp_Handbook_V18_120210506.pdf.
 
-# Python
-Please note this app requires Python version 3.10
+## Overview of components
+Eris' components are:
+- panels_backend:
+  - Includes the database models, in models.py, from which a PostgreSQL database can be populated with tables.
+  - Provides the command line interface and associated processing scripts, in management/commands
+- panels_web: 
+  - Controls the web 'front-end' interface, which allows scientists to view the clinical indications (CIs), panels, genes, transcripts, and their histories; add custom panels; review more-complex changes to the database which need human approval 
+  - For example, when a panel version is updated in PanelApp, Eris automatically linked to the same clinical indication used for the old panel version. However, this change is marked as 'pending' until a user approves it.
+- core: contains some basic app settings
+- nginx: basic nginx (forward-proxy) configurations
 
-# Setup
-## Create or update database models
-Make migrations if necessary and migrate to existing database.
+## Setup
+### Create or update database models
+First, create a database for Eris to connect to.
+Then, make migrations if necessary, and migrate changes to the existing database.
 ```
 python manage.py makemigrations panels_backend
 python manage.py migrate panels_backend
 ```
 
-## Populate the database
-### 1. Insert data from PanelApp
+### Populate/update the database from CLI
+#### 1. Insert data from PanelApp
 You can choose to seed all panels, or to seed specified panels by their PanelApp IDs.
 Note that panels can be either standard panels, or superpanels. Superpanels are collections of standard panels, and contain all the genes contained by each of those standard panels.
 
@@ -44,7 +61,7 @@ python manage.py seed panelapp <panel or superpanel id> <panel or superpanel ver
   - For Superpanels, the most-recent SIGNED OFF version is retrieved. In addition, the most recent signed-off versions of its child panels are retrieved.
 
   
-### 2. Insert data from the National Genomic Test Directory
+#### 2. Insert data from the National Genomic Test Directory
 The generic command for this is:
 ```
 python manage.py seed td <input_json> --td_release <td_release>
@@ -83,7 +100,7 @@ The arguments for this command are:
 - The version of the test directory release, e.g., 5.
 
 
-### 3. Seed transcript
+#### 3. Seed transcript
 
 Adds transcripts to the database for either GRCh37 or GRCh38. 
 MANE and HGMD files are used to assign transcripts as 'default' clinical or non-clinical for each gene - though this can be over-ridden for specific panels, where a non-default transcript is more clinically appropriate. The MANE file for GRCh37 is a CSV file downloaded from Transcript Archive http://tark.ensembl.org/web/mane_GRCh37_list/) and the HGMD files are CSV files of the 'markname' and 'g2refseq' tables, generated when the HGMD database is dumped.
@@ -118,10 +135,10 @@ The arguments are as follows:
 *HGMD database source can be found on DNAnexus (project-Fz4Q15Q42Z9YjYk110b3vGYQ:file-Fz4Q46842Z9z2Q6ZBjy7jVPY)
 
 
-# Generating outputs
+## Generating outputs from CLI
 A series of output 'dump files' can be created from the contents of the Eris database, using the command line.
 
-## Generate genepanel
+### Generate genepanel
 
 Generates a text file which represents each gene in a panel or superpanel, with that panel/superpanel's linked clinical indication, on a separate line. Genes are only output if they are in panels/superpanel which currently have an active link to a clinical indication.
 
@@ -141,7 +158,7 @@ To run with a specified output pathway:
 python manage.py generate genepanels --hgnc testing_files/eris/hgnc_dump_23052023.txt --output <output_path>
 ```
 
-## Generate g2t	
+### Generate g2t	
 
 Generates a text file which represents every transcript linked to the user-selected reference genome in the Eris database, alongside its linked gene, with a column displaying whether the transcript is the 'clinical transcript' for that gene (True), whether it's not clinical for that gene (False), or whether it's not present in the most up-to-date versions of the transcript sources (None). Currently, the sources used to assign clinical status in Eris are MANE Select, MANE Plus Clinical and HGMD.
 
@@ -156,9 +173,9 @@ To run with a specified output pathway:
 python manage.py generate g2t --ref_genome <ref_genome> --output <output pathway>
 ```
 
-# Running unit tests
+## For developers: Running unit tests
 
-Unit tests are stored in the 'tests' directory, and can be run through 'manage.py':
+Unit tests are stored in the 'tests' directory, and can be run via the 'manage.py' script:
 ```
 python manage.py test
 ```
