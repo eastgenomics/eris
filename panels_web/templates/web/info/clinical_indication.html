@@ -105,7 +105,7 @@
                     {% for cisp in ci_superpanels %}
                     <tr>
                         <td><a href="{% url 'clinical_indication_superpanel' cisp.id %}">{{cisp.id}}</a></td>
-                        {% if cip.current %}
+                        {% if cisp.current %}
                         <td><span class="badge text-bg-success">{{cisp.current}}</span></td>
                         {% else %}
                         <td><span class="badge text-bg-danger">{{cisp.current}}</span></td>

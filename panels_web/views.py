@@ -1002,8 +1002,8 @@ def review(request: HttpRequest) -> HttpResponse:
                 panel_gene.active = not panel_gene.active
                 panel_gene.pending = False
                 panel_gene.save()
-        
-        return redirect('panel', panel_id=panel_gene.panel_id)
+
+        return redirect("panel", panel_id=panel_gene.panel_id)
 
     panels: QuerySet[Panel] = Panel.objects.filter(pending=True).all()
 
@@ -1218,6 +1218,16 @@ def genepanel(
         ClinicalIndicationSuperPanel.objects.filter(pending=True).exists()
     )
     pending_panel_genes = PanelGene.objects.filter(pending=True).exists()
+    from django.db.models import Count, Q
+
+    # check if there're clinical indication with more than one active links
+    clinical_indication_with_more_than_one_active_links = (
+        ClinicalIndicationPanel.objects.values("clinical_indication_id")
+        .annotate(panel_count=Count("panel_id"))
+        .filter(panel_count__gt=1)
+        .annotate(true_current_count=Count("id", filter=Q(current=True)))
+        .filter(true_current_count__gt=1)
+    )
 
     # if there's no CiPanelAssociation date column, return empty list
     if not ClinicalIndicationPanel.objects.filter(current=True, pending=False).exists():
@@ -1231,6 +1241,8 @@ def genepanel(
         warnings.append("Pending Clinical Indication Super Panel(s) found.")
     if pending_panel_genes:
         warnings.append("Pending Panel Gene(s) found.")
+    if clinical_indication_with_more_than_one_active_links:
+        warnings.append("Clinical Indication(s) with more than one active links found.")
 
     genepanels: list[WebGenePanel] = []
     panel_id_to_genes: dict[str, list[WebGene]] = collections.defaultdict(list)

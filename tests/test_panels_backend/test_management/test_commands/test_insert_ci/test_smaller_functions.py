@@ -28,7 +28,6 @@ from panels_backend.management.commands._insert_ci import (
     provisionally_link_clinical_indication_to_panel,
     provisionally_link_clinical_indication_to_superpanel,
     _retrieve_panel_from_pa_id,
-    _retrieve_unknown_metadata_records,
     _make_provisional_test_method_change,
 )
 
@@ -415,21 +414,6 @@ class TestRetrievePanelFromPanelID(TestCase):
         panel = _retrieve_panel_from_pa_id(999)
 
         assert panel is None
-
-
-class TestRetrieveUnknownMetadataRecords(TestCase):
-    """
-    this function is mainly called when we got no idea what
-    confidence level, mode of inheritance, mode of pathogenicity and penetrance
-    it will simply retrieve or create all those values from db as none
-    """
-
-    conf, moi, mop, pen = _retrieve_unknown_metadata_records()
-
-    assert not conf
-    assert not moi
-    assert not mop
-    assert not pen
 
 
 class TestMakeProvisionalTestMethodChange(TestCase):

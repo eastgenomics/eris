@@ -546,7 +546,7 @@ def _make_ci_panel_td_link(
     panel_record: Panel,
     td_version: TestDirectoryRelease,
     user: str,
-) -> None:
+) -> tuple[ClinicalIndicationPanel, bool]:
     """
     Gets-or-creates a ClinicalIndicationPanel entry. Links to test directory release.
 
@@ -592,13 +592,15 @@ def _make_ci_panel_td_link(
             user=user,
         )
 
+    return cip_instance, cip_created
+
 
 def _make_ci_superpanel_td_link(
     ci_instance: ClinicalIndication,
     superpanel_record: SuperPanel,
     td_version: TestDirectoryRelease,
     user: str,
-) -> None:
+) -> tuple[ClinicalIndicationSuperPanel, bool]:
     """
     Gets-or-creates a ClinicalIndicationSuperPanel entry. Link to td release.
 
@@ -648,6 +650,8 @@ def _make_ci_superpanel_td_link(
             ),
             user=user,
         )
+
+    return cip_instance, cip_created
 
 
 def _flag_panels_removed_from_test_directory(

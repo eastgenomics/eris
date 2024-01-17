@@ -105,7 +105,6 @@ def _insert_gene(
     :param panel_instance: Panel object
     :param panel_created: boolean to indicate if panel is newly created
     """
-
     # attaching each Gene record to Panel record
     for single_gene in panel.genes:
         gene_data: dict = single_gene.get("gene_data")
@@ -292,7 +291,7 @@ def _disable_custom_hgnc_panels(panel: PanelClass, user: str) -> None:
         gene.get("gene_data") for gene in panel.genes if gene.get("gene_data")
     ]
 
-    potential_hgnc_panel_name: str = ",".join(
+    potential_hgnc_panel_name: str = "&".join(
         sorted(
             [
                 gene.get("hgnc_id").strip().upper()
