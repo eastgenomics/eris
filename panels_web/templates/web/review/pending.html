@@ -2,58 +2,6 @@
 
 {% block content %}
 <div class="container mb-5">
-    <!-- Success notification -->
-    {% if action_cip or action_ci or action_panel or action_pg %}
-    <!-- Depending on what has been approved, show relevant notice -->
-    <!-- Clinical Indication Panel -->
-    {% if action_cip %}
-    {% if approve_bool %}
-    <div class="alert alert-success" role="alert">
-        <a href="{% url 'clinical_indication' action_cip.clinical_indication_id %}">{{
-            action_cip.clinical_indication_id__r_code }} {{ action_cip.clinical_indication_id__name }}</a> to <a
-            href="{% url 'panel' action_cip.panel_id %}">{{ action_cip.panel_id__panel_name }} v{{
-            action_cip.panel_id__panel_version }}</a> has been approved!
-    </div>
-    {% else %}
-    <div class="alert alert-danger" role="alert">
-        <a href="{% url 'clinical_indication' action_cip.clinical_indication_id %}">{{
-            action_cip.clinical_indication_id__r_code }} {{ action_cip.clinical_indication_id__name }}</a> to <a
-            href="{% url 'panel' action_cip.panel_id %}">{{ action_cip.panel_id__panel_name }} v{{
-            action_cip.panel_id__panel_version }}</a> has been reverted!
-    </div>
-    {% endif %}
-    <!-- Clinical Indication -->
-    {% elif action_ci %}
-    {% if approve_bool %}
-    <div class="alert alert-success" role="alert">
-        <a href="{% url 'clinical_indication' action_ci.id %}">{{ action_ci.name }}</a> has been approved!
-    </div>
-    {% else %}
-    <div class="alert alert-danger" role="alert">
-        Clinical Indication has been removed!
-    </div>
-    {% endif %}
-    <!-- Panel -->
-    {% elif action_panel %}
-    {% if approve_bool %}
-    <div class="alert alert-success" role="alert">
-        <a href="{% url 'panel' action_panel.id %}">{{ action_panel.panel_name }}</a> has been approved!
-    </div>
-    {% else %}
-    <div class="alert alert-danger" role="alert">
-        Panel has been removed!
-    </div>
-    {% endif %}
-    <!-- Panel Gene -->
-    {% elif action_pg %}
-    <div class="alert alert-success" role="alert">
-        Link between <a href="{% url 'panel' action_pg.panel_id %}">{{ action_pg.panel_id__panel_name }}</a> and <a
-            href="{% url 'gene' action_pg.gene_id %}">{{action_pg.gene_id__hgnc_id}}</a> now set to active status:
-        {{action_pg.active}}!
-    </div>
-    {% endif %}
-    {% endif %}
-    <!-- End notification -->
     <!-- Title -->
     <div class="row">
         <div class="col">
@@ -116,6 +64,9 @@
         </div>
     </div>
     <!-- Panel Review End -->
+
+    <div class="my-2"></div>
+
     <!-- Clinical Indication Review -->
     <div class="row">
         <div class="col">
@@ -125,30 +76,27 @@
                 <thead>
                     <tr>
                         <th scope="col">Clinical Indication</th>
-                        <th scope="col">R Code</th>
+                        <th scope="col" class="text-nowrap">R Code</th>
                         <th scope="col">Changes</th>
-                        <th scope="col">Action</th>
+                        <th scope="col" style="width:12%;">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for ci in cis %}
                     <tr>
-                        <td><a href="{% url 'clinical_indication' ci.id %}">{{ ci.name }}</a></td>
+                        <td><a href=" {% url 'clinical_indication' ci.id %}">{{ ci.name }}</a></td>
                         <td>{{ ci.r_code }}</td>
-                        {% if ci.reason.note %}
-                        <td>{{ ci.reason.note }}</td>
-                        {% else %}
                         <td>{{ ci.reason }}</td>
-                        {% endif %}
                         <td>
-                            <div class="d-flex justify-content-around">
+                            <div class="d-flex justify-content-between">
+                                <!-- approving new clinical indication or changes to test method -->
                                 <form action="{% url 'clinical_indication' ci.id %}" method="POST">
                                     {% csrf_token %}
                                     <input type="text" class="form-control visually-hidden" name="action"
                                         value="approve">
                                     <button type="submit" class="btn btn-success btn-sm">Approve</button>
                                 </form>
-                                <!-- ignoring action on ci-panel link -->
+                                <!-- ignoring action on clinical indication -->
                                 <form action="{% url 'clinical_indication' ci.id %}" method="POST">
                                     {% csrf_token %}
                                     {% if ci.reason == 'NEW' %}
@@ -160,7 +108,12 @@
                                     {% endif %}
                                     <input type="text" class="form-control visually-hidden" name="action"
                                         value="remove">
+
+                                    {% if ci.reason == "NEW" %}
                                     <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                                    {% else %}
+                                    <button type="submit" class="btn btn-warning btn-sm">Revert</button>
+                                    {% endif %}
                                 </form>
                             </div>
                         </td>
@@ -176,6 +129,10 @@
         </div>
     </div>
     <!-- Clinical Indication Review End -->
+
+    <div class="my-2"></div>
+
+
     <!-- Clinical Indication Panel Review -->
     <div class="row">
         <div class="col">
@@ -184,10 +141,10 @@
             <table class="table table-bordered shadow">
                 <thead>
                     <tr>
-                        <th scope="col">Clinical Indication</th>
-                        <th scope="col">Panel</th>
-                        <th scope="col">Pending</th>
-                        <th class="col">Action</th>
+                        <th scope="col" style="width:30%;">Clinical Indication</th>
+                        <th scope="col" style="width:40%;">Panel</th>
+                        <th scope="col" style="width:10%;">Pending</th>
+                        <th class="col" style="width:20%;">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -218,7 +175,7 @@
                                     {% csrf_token %}
                                     <input type="text" class="form-control visually-hidden" name="action"
                                         value="revert">
-                                    <button type="submit" class="btn btn-danger btn-sm">Revert</button>
+                                    <button type="submit" class="btn btn-warning btn-sm">Revert</button>
                                 </form>
                             </div>
                         </td>
@@ -234,6 +191,71 @@
         </div>
     </div>
     <!-- Clinical Indication Panel Review End -->
+
+    <div class="my-2"></div>
+
+    <!-- Clinical Indication SuperPanel Review -->
+    <div class="row">
+        <div class="col">
+            <h5>Clinical Indication SuperPanel</h5>
+            {% if cisps %}
+            <table class="table table-bordered shadow">
+                <thead>
+                    <tr>
+                        <th scope="col">Clinical Indication</th>
+                        <th scope="col" style="width:25%;">SuperPanel</th>
+                        <th scope="col">Pending</th>
+                        <th class="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cisp in cisps %}
+                    <tr>
+                        <td><span
+                                class="badge text-bg-primary">{{cisp.clinical_indication_id__r_code}}</span>&nbsp;&nbsp;<a
+                                href="{% url 'clinical_indication' cisp.clinical_indication_id %}">{{cisp.clinical_indication_id__name}}</a>
+                        </td>
+                        <td><a href="{% url 'superpanel' cisp.superpanel_id %}">{{cisp.superpanel_id__panel_name}}</a>
+                            <span class="badge text-bg-info">v{{cisp.superpanel_id__panel_version}}</span>
+                        </td>
+                        {% if cisp.current %}
+                        <td><span class="badge text-bg-success">Activation</span></td>
+                        {% else %}
+                        <td><span class="badge text-bg-danger">Deactivation</span></td>
+                        {% endif %}
+                        <td>
+                            <div class="d-flex justify-content-around">
+                                <!-- approving new ci-panel link -->
+                                <form action="{% url 'clinical_indication_superpanel' cisp.id %}" method="POST">
+                                    {% csrf_token %}
+                                    <input type="text" class="form-control visually-hidden" name="action"
+                                        value="approve">
+                                    <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                </form>
+                                <!-- ignoring action on ci-panel link -->
+                                <form action="{% url 'clinical_indication_superpanel' cisp.id %}" method="POST">
+                                    {% csrf_token %}
+                                    <input type="text" class="form-control visually-hidden" name="action"
+                                        value="revert">
+                                    <button type="submit" class="btn btn-warning btn-sm">Revert</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="alert alert-primary" role="alert">
+                Nothing pending
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <!-- Clinical Indication SuperPanel Review End -->
+
+    <div class="my-2"></div>
+
     <!-- Panel Gene Review -->
     <div class="row">
         <div class="col">

@@ -34,6 +34,7 @@ from panels_backend.models import (
     ClinicalIndicationPanel,
     ClinicalIndicationPanelHistory,
     ClinicalIndicationSuperPanel,
+    ClinicalIndicationSuperPanelHistory,
     CiPanelTdRelease,
     CiSuperpanelTdRelease,
     ClinicalIndicationTestMethodHistory,
@@ -332,6 +333,17 @@ def clinical_indication(request: HttpRequest, ci_id: int) -> HttpResponse:
             "panel_id__panel_name",
         )
 
+        ci_superpanels = ClinicalIndicationSuperPanel.objects.filter(
+            clinical_indication_id=ci_id
+        ).values(
+            "id",
+            "current",
+            "pending",
+            "clinical_indication_id",
+            "superpanel_id",
+            "superpanel_id__panel_name",
+        )
+
         # fetch ci-test-method history
         test_method_history: QuerySet[
             ClinicalIndicationTestMethodHistory
@@ -344,7 +356,12 @@ def clinical_indication(request: HttpRequest, ci_id: int) -> HttpResponse:
         return render(
             request,
             "web/info/clinical_indication.html",
-            {"ci": ci, "ci_panels": ci_panels, "tm_history": test_method_history},
+            {
+                "ci": ci,
+                "ci_panels": ci_panels,
+                "tm_history": test_method_history,
+                "ci_superpanels": ci_superpanels,
+            },
         )
 
     else:
@@ -780,7 +797,7 @@ def clinical_indication_panel(request: HttpRequest, cip_id: str) -> HttpResponse
             "web/info/clinical_indication_panel.html",
             {"cip": clinical_indication_panel, "releases": releases},
         )
-    else:
+    elif request.method == "POST":
         action = request.POST.get("action")
         clinical_indication_panel = ClinicalIndicationPanel.objects.get(id=cip_id)
 
@@ -870,6 +887,42 @@ def clinical_indication_superpanel(request: HttpRequest, cisp_id: str) -> HttpRe
             {"cisp": clinical_indication_superpanel, "releases": releases},
         )
 
+    elif request.method == "POST":
+        action = request.POST.get("action")
+        clinical_indication_superpanel = ClinicalIndicationSuperPanel.objects.get(
+            id=cisp_id
+        )
+
+        with transaction.atomic():
+            if action == "revert":
+                # action is "revert" from Review page
+                ClinicalIndicationSuperPanelHistory.objects.create(
+                    clinical_indication_superpanel_id=cisp_id,
+                    note=History.clinical_indication_superpanel_reverted(
+                        id=cisp_id,
+                        metadata="current",
+                        old_value=clinical_indication_superpanel.current,
+                        new_value=not clinical_indication_superpanel.current,
+                        review=True,
+                    ),
+                )
+
+                clinical_indication_superpanel.current = (
+                    not clinical_indication_superpanel.current
+                )
+                clinical_indication_superpanel.pending = False
+            if action == "approve":
+                # action is "approve" from Review page
+                clinical_indication_superpanel.pending = False
+                ClinicalIndicationSuperPanelHistory.objects.create(
+                    clinical_indication_superpanel_id=cisp_id,
+                    note=History.clinical_indication_superpanel_approved(cisp_id),
+                )
+
+            clinical_indication_superpanel.save()
+
+        return redirect("review")
+
 
 def review(request: HttpRequest) -> HttpResponse:
     """
@@ -919,18 +972,6 @@ def review(request: HttpRequest) -> HttpResponse:
                     user="online",
                 )
 
-            action_pg = (
-                PanelGene.objects.filter(id=panel_gene_id)
-                .values(
-                    "panel_id__panel_name",
-                    "gene_id__hgnc_id",
-                    "panel_id",
-                    "gene_id",
-                    "active",
-                )
-                .first()
-            )
-
         elif action == "revert_pg":
             # this is called when reverting a change to existing panel gene link
             # this can be viewed as the opposite of above statement but the logic is the same in terms of making the panel-gene `pending` False
@@ -941,7 +982,7 @@ def review(request: HttpRequest) -> HttpResponse:
             panel_gene_id = request.POST.get("pg_id")
 
             with transaction.atomic():
-                panel_gene = PanelGene.objects.get(id=panel_gene_id)
+                panel_gene: PanelGene = PanelGene.objects.get(id=panel_gene_id)
 
                 PanelGeneHistory.objects.create(
                     panel_gene_id=panel_gene_id,
@@ -961,18 +1002,8 @@ def review(request: HttpRequest) -> HttpResponse:
                 panel_gene.active = not panel_gene.active
                 panel_gene.pending = False
                 panel_gene.save()
-
-            action_pg = (
-                PanelGene.objects.filter(id=panel_gene_id)
-                .values(
-                    "panel_id__panel_name",
-                    "gene_id__hgnc_id",
-                    "panel_id",
-                    "gene_id",
-                    "active",
-                )
-                .first()
-            )
+        
+        return redirect('panel', panel_id=panel_gene.panel_id)
 
     panels: QuerySet[Panel] = Panel.objects.filter(pending=True).all()
 
@@ -998,7 +1029,7 @@ def review(request: HttpRequest) -> HttpResponse:
 
             # determine if test method is changed
             # or it's a new clinical indication creation
-            indication.reason = indication_history if indication_history else "NEW"
+            indication.reason = indication_history.note if indication_history else "NEW"
 
     clinical_indication_panels: QuerySet[ClinicalIndicationPanel] = (
         ClinicalIndicationPanel.objects.filter(pending=True)
@@ -1023,6 +1054,31 @@ def review(request: HttpRequest) -> HttpResponse:
             )
         else:
             cip["panel_id__panel_version"] = 1.0
+
+    # clinical indication - superpanel
+    clinical_indication_superpanels: QuerySet[ClinicalIndicationPanel] = (
+        ClinicalIndicationSuperPanel.objects.filter(pending=True)
+        .values(
+            "clinical_indication_id",
+            "clinical_indication_id__name",
+            "clinical_indication_id__r_code",
+            "superpanel_id",
+            "superpanel_id__panel_name",
+            "superpanel_id__panel_version",
+            "current",
+            "id",
+        )
+        .order_by("clinical_indication_id__r_code")
+    )
+
+    # normalize panel version
+    for cisp in clinical_indication_superpanels:
+        if cisp["superpanel_id__panel_version"]:
+            cisp["superpanel_id__panel_version"] = normalize_version(
+                cisp["superpanel_id__panel_version"]
+            )
+        else:
+            cisp["panel_id__panel_version"] = 1.0
 
     panel_gene = PanelGene.objects.filter(pending=True).values(
         "id",
@@ -1049,6 +1105,7 @@ def review(request: HttpRequest) -> HttpResponse:
             "panels": panels,
             "cis": clinical_indications,
             "cips": clinical_indication_panels,
+            "cisps": clinical_indication_superpanels,
             "panel_gene": panel_gene,
             "action_pg": action_pg,
             "approve_bool": approve_bool,
