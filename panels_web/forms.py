@@ -62,6 +62,14 @@ class PanelForm(forms.Form):
         panel_name: str = self.cleaned_data.get("panel_name")
 
         if panel_name:
+            # ensure the user can't use characters which may cause downstream workbook parsing issues
+            forbidden_strings = [",", ";", "&"]
+            if any(substring in panel_name for substring in forbidden_strings):
+                self.add_error(
+                    "panel_name",
+                    f"The panel contains disallowed characters: {' '.join(forbidden_strings)}. Please choose a different name.",
+                )
+
             p = Panel.objects.filter(panel_name__iexact=panel_name)
 
             if p:
