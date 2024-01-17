@@ -18,19 +18,18 @@ from django.core.management.base import BaseCommand
 class Command(BaseCommand):
     help = "Commands to let the user edit the database from the command line."
 
-    # def _validate_panel_exists(self, panel) -> bool:
-    # TODO: need to check the panel exists
-
     def add_arguments(self, parser) -> None:
         """Define the source of the data to import."""
 
-        parser.add_argument(
+        panel = parser.add_mutually_exclusive_group(required=True)
+
+        panel.add_argument(
             "--panel_id",
             type=int,
             help="panel name",
         )
 
-        parser.add_argument(
+        panel.add_argument(
             "--panel_name",
             type=str,
             help="panel database id",
@@ -47,13 +46,15 @@ class Command(BaseCommand):
             help="Whether to add the clinical indication to the panel, or remove it",
         )
 
+        clinical_indication = parser.add_mutually_exclusive_group(required=True)
+
         # arg for finding clinical indication using r code
-        parser.add_argument(
+        clinical_indication.add_argument(
             "--clinical_indication_id",
             help="add or remove clinical indication-panel link using ci database id",
         )
 
-        parser.add_argument(
+        clinical_indication.add_argument(
             "--clinical_indication_r_code",
             help="add or remove clinical indication-panel link using ci r code",
         )
@@ -78,14 +79,10 @@ class Command(BaseCommand):
         ), "Please specify whether you want to add or remove the clinical indication for this panel"
 
         if panel_id:
-            assert panel_id, "Please specify panel ID"
-
             panel = get_panel_by_database_id(panel_id)
 
             assert panel, f"The panel {panel_id} was not found in the database"
         else:
-            assert panel_name, "Please specify panel name"
-
             panel = get_panel_by_name(panel_name)
 
             # no panel found with the database id
@@ -99,11 +96,6 @@ class Command(BaseCommand):
 
             panel = panel[0]
 
-        assert not (
-            clinical_indication_id is not None
-            and clinical_indication_r_code is not None
-        ), "Please specify either clinical indication database id or r-code, not both"
-
         if clinical_indication_r_code:
             clinical_indication = get_clinical_indication_by_r_code(
                 clinical_indication_r_code
@@ -112,7 +104,7 @@ class Command(BaseCommand):
             # foresee r-code might return multiple ci entries
             assert len(clinical_indication) < 2, (
                 f"More than one clinical indication identified with r-code {clinical_indication_r_code}."
-                "Use python manage.py edit --cid <clinical indication db id> [pid/pname] <panel> <add/remove> instead."
+                "Use clinical indication database id instead to be more specific."
             )
 
             clinical_indication = clinical_indication[0]
