@@ -173,7 +173,17 @@ To run with a specified output pathway:
 python manage.py generate g2t --ref_genome <ref_genome> --output <output pathway>
 ```
 
-## For developers: Running unit tests
+# Edit Interaction
+## clinical indication - panel
+```
+python manage.py edit <--panel_id or --panel_name> <panel id or panel name> <--clinical_indication_id or --clinical_indication_r_code> <r code or clinical indication id> <activate/deactivate>
+
+e.g. python manage.py edit --panel_id 26 --clinical_indication_id 1 deactivate
+
+NOTE: panel_name is case-insensitive
+```
+
+## For developers: Running Unit Tests
 
 Unit tests are stored in the 'tests' directory, and can be run via the 'manage.py' script:
 ```
