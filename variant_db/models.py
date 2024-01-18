@@ -311,8 +311,7 @@ class Interpretation(models.Model):
         on_delete=models.PROTECT,
     )
 
-    # TODO: this is in review in the sample sheet side of things
-    date = models.DateField(verbose_name="Interpretation date")
+    date = models.DateField(verbose_name="Date that the interpretation was completed")
 
     class Meta:
         db_table = "interpretation"
