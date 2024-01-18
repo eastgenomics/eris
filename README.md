@@ -7,10 +7,9 @@ Abbreviations:
 
 Descriptions of the various gene metadata attributes can be found in the online PanelApp handbook at https://panelapp.genomicsengland.co.uk/media/files/PanelApp_Handbook_V18_120210506.pdf.
 
-# Python
-Please note this app requires Python version 3.10
 
-# Setup
+
+# Setup - the Panels tool
 ## Create or update database models
 Make migrations if necessary and migrate to existing database.
 ```
@@ -18,7 +17,7 @@ python manage.py makemigrations panels_backend
 python manage.py migrate panels_backend
 ```
 
-## Populate Database
+## Populate the Panel-relevant sections of the database
 ### 1. Insert data from PanelApp
 You can choose to seed all panels, or to seed specified panels by their PanelApp IDs.
 Note that panels can be either standard panels, or superpanels. Superpanels are collections of standard panels, and contain all the genes contained by each of those standard panels.
@@ -118,7 +117,21 @@ The arguments are as follows:
 *HGMD database source can be found on DNAnexus (project-Fz4Q15Q42Z9YjYk110b3vGYQ:file-Fz4Q46842Z9z2Q6ZBjy7jVPY)
 
 
-# Generating Outputs
+# Setup - the VariantDB tool
+## Create or update database models
+Make migrations if necessary and migrate to existing database.
+```
+python manage.py makemigrations variant_db
+python manage.py migrate variant_db
+```
+
+## Populate the Variant DB-relevant sections of the database
+### 1. Insert variant data from CSV files
+
+#TODO: add information once this section of the work is complete
+
+
+# Generating outputs - for the Panels tool
 A series of output 'dump files' can be created from the contents of the Eris database, using the command line.
 
 ## Generate genepanel

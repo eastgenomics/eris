@@ -17,7 +17,7 @@ class TestCurrentTranscript_ManeSelectOnly(TestCase):
     """
 
     def setUp(self) -> None:
-        self.ref_genome = ReferenceGenome.objects.create(reference_genome="GRCh38")
+        self.ref_genome = ReferenceGenome.objects.create(name="GRCh38")
 
         self.gene = Gene.objects.create(
             hgnc_id="HGNC:987", gene_symbol="YFG1", alias_symbols=None
@@ -104,7 +104,7 @@ class TestCurrentTranscript_NoLinks(TestCase):
     """
 
     def setUp(self) -> None:
-        self.ref_genome = ReferenceGenome.objects.create(reference_genome="GRCh38")
+        self.ref_genome = ReferenceGenome.objects.create(name="GRCh38")
 
         self.gene = Gene.objects.create(
             hgnc_id="HGNC:987", gene_symbol="YFG1", alias_symbols=None

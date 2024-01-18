@@ -866,7 +866,7 @@ def _add_transcript_release_info_to_db(
                     "release, source and ref genome in the db:\n"
                     f"Release version: {release_version}\n"
                     f"Source: {source}.\n"
-                    f"Ref genome: {ref_genome.reference_genome}.\n"
+                    f"Ref genome: {ref_genome.name}.\n"
                     f'File type: {tx_release_file_ids[0]["transcript_file_id__file_type"]}\n'
                     f'File id: {tx_release_file_ids[0]["transcript_file_id__file_id"]}'
                 )
@@ -1095,9 +1095,7 @@ def seed_transcripts(
 
     # check reference genome makes sense, fetch it
     reference_genome_str = _parse_reference_genome(reference_genome)
-    reference_genome, _ = ReferenceGenome.objects.get_or_create(
-        reference_genome=reference_genome_str
-    )
+    reference_genome, _ = ReferenceGenome.objects.get_or_create(name=name_str)
 
     # throw errors if the release versions are older than those already in the db
     _check_for_transcript_seeding_version_regression(
