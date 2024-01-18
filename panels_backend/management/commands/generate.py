@@ -19,6 +19,7 @@ import csv
 import collections
 import datetime as dt
 import pandas as pd
+from alive_progress import alive_bar
 
 from django.core.management.base import BaseCommand
 from django.core.exceptions import ObjectDoesNotExist
@@ -66,7 +67,9 @@ class Command(BaseCommand):
 
         return True
 
-    def _get_relevant_ci_panels(self, td_release) -> tuple[dict[str, list], set]:
+    def _get_relevant_ci_panels(
+        self, td_release
+    ) -> tuple[dict[str, list[dict[str, str | int]]], set[int]]:
         """
         Retrieve relevant panels and CI-panels from the database
         These will be output in the final file.
@@ -98,7 +101,9 @@ class Command(BaseCommand):
 
         return ci_panels, relevant_panels
 
-    def _get_relevant_ci_superpanels(self, td_release) -> tuple[dict[str, list], list]:
+    def _get_relevant_ci_superpanels(
+        self, td_release
+    ) -> tuple[dict[str, list[dict[str, str | int]]], set[int]]:
         """
         Retrieve relevant superpanels and CI-superpanels from the database
         These will be output in the final file.
@@ -181,7 +186,7 @@ class Command(BaseCommand):
 
             # for the linked panels, get linked genes, link to SuperPanel's ID
             panels_genes = self._get_relevant_panel_genes(constituent_panels)
-            for panel_id, genes in panels_genes.items():
+            for _, genes in panels_genes.items():
                 for gene in genes:
                     superpanel_genes[superpanel_id].add(gene)
 
@@ -192,7 +197,7 @@ class Command(BaseCommand):
         ci_panels: dict[str, list],
         panel_genes: dict[int, str],
         excluded_hgncs: set,
-    ) -> list[tuple[str, str, str]]:
+    ) -> list[list[str]]:
         """
         Format a list of results ready for writing out to file.
         Sort the results before returning them.
@@ -209,7 +214,7 @@ class Command(BaseCommand):
             # for each clinical indication
             for panel_dict in panel_list:
                 # for each panel associated with that clinical indication
-                panel_id: str = panel_dict["ci_panel__panel_id"]
+                panel_id: int = panel_dict["ci_panel__panel_id"]
                 ci_name: str = panel_dict["ci_panel__clinical_indication_id__name"]
                 for hgnc in panel_genes[panel_id]:
                     # for each gene associated with that panel
@@ -228,7 +233,6 @@ class Command(BaseCommand):
                         hgnc,
                     ]
                     results.append(line)
-        results = sorted(results, key=lambda x: [x[0], x[1], x[2]])
 
         return results
 
@@ -237,7 +241,7 @@ class Command(BaseCommand):
         ci_panels: dict[str, list],
         panel_genes: dict[int, str],
         excluded_hgncs: set,
-    ) -> list[tuple[str, str, str]]:
+    ) -> list[list[str]]:
         """
         Format a list of results ready for writing out to file.
         Sort the results before returning them.
@@ -254,7 +258,7 @@ class Command(BaseCommand):
             # for each clinical indication
             for panel_dict in panel_list:
                 # for each panel associated with that clinical indication
-                panel_id: str = panel_dict["ci_superpanel__superpanel"]
+                panel_id: int = panel_dict["ci_superpanel__superpanel"]
                 ci_name: str = panel_dict["ci_superpanel__clinical_indication__name"]
 
                 for hgnc in panel_genes[panel_id]:
@@ -278,7 +282,6 @@ class Command(BaseCommand):
                             hgnc,
                         ]
                     )
-        results = sorted(results, key=lambda x: [x[0], x[1], x[2]])
         return results
 
     def _block_genepanels_if_db_not_ready(self):
@@ -405,7 +408,7 @@ class Command(BaseCommand):
                     clinical = True
             return clinical
 
-    def _generate_g2t(self, output_directory, ref_genome) -> None:
+    def _generate_g2t(self, output_directory: str, ref_genome: ReferenceGenome) -> None:
         """
         Main function to generate g2t.tsv
         Calls the function to get all current transcripts, then formats and writes it to file.
@@ -430,23 +433,47 @@ class Command(BaseCommand):
             )
 
         # We need all transcripts which are linked to the correct reference genome
-        ref_genome_transcripts = Transcript.objects.order_by("gene_id").filter(
-            reference_genome=ref_genome
+        ref_genome_transcripts = (
+            Transcript.objects.order_by("gene_id")
+            .order_by("transcript")
+            .filter(reference_genome=ref_genome)
         )
 
         # Append per-transcript results to a list-of-dictionaries
         results = []
+        hgnc_assigned_clinical_transcript = set()
 
-        for transcript in ref_genome_transcripts:
-            clinical_status = self.get_current_transcript_clinical_status_for_g2t(
-                transcript, latest_select, latest_plus_clinical, latest_hgmd
-            )
-            transcript_data = {
-                "hgnc_id": transcript.gene.hgnc_id,
-                "transcript": transcript.transcript,
-                "clinical": clinical_status,
-            }
-            results.append(transcript_data)
+        with alive_bar(len(ref_genome_transcripts)) as bar:
+            for transcript in ref_genome_transcripts:
+                hgnc_id = transcript.gene.hgnc_id
+                tx = transcript.transcript
+
+                if hgnc_id in hgnc_assigned_clinical_transcript:
+                    # if we've already assigned a clinical status to this HGNC ID, skip other transcripts
+                    results.append(
+                        {
+                            "hgnc_id": hgnc_id,
+                            "transcript": tx,
+                            "clinical": False,
+                        }
+                    )
+                    bar()
+                    continue
+
+                clinical_status = self.get_current_transcript_clinical_status_for_g2t(
+                    transcript, latest_select, latest_plus_clinical, latest_hgmd
+                )
+                transcript_data = {
+                    "hgnc_id": hgnc_id,
+                    "transcript": tx,
+                    "clinical": clinical_status,
+                }
+                results.append(transcript_data)
+
+                if clinical_status:
+                    hgnc_assigned_clinical_transcript.add(hgnc_id)
+
+                bar()
 
         # Write out results
         file_time = dt.datetime.today().strftime("%Y%m%d")
