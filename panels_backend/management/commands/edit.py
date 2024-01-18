@@ -26,13 +26,13 @@ class Command(BaseCommand):
         panel.add_argument(
             "--panel_id",
             type=int,
-            help="panel name",
+            help="panel database id",
         )
 
         panel.add_argument(
             "--panel_name",
             type=str,
-            help="panel database id",
+            help="panel name",
         )
 
         # add arguments which don't change depending on whether you use panel ID or name
