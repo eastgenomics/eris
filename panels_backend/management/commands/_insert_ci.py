@@ -341,7 +341,7 @@ def _make_panels_from_hgncs(
 
     conf, moi, mop, pen = _retrieve_unknown_metadata_records()
 
-    panel_name = ",".join(sorted(hgnc_list))
+    panel_name = "&".join(sorted(hgnc_list))
 
     # create Panel record only when HGNC is different
     panel_instance, panel_created = Panel.objects.get_or_create(

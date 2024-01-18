@@ -1,12 +1,6 @@
-# Eris: A database for panels and variants
+# Eris
 
-#TODO: include information on 'panels' and 'variant_db' functionalities
-
-## General information
-### Python version
-Please note this app requires Python version 3.10
-
-### Abbreviations
+Abbreviations:
 - CI: clinical indication
 - PA: PanelApp (website at https://panelapp.genomicsengland.co.uk/)
 - TD: NHS England National Genomic Test Directory (website at https://www.england.nhs.uk/publication/national-genomic-test-directories/)
@@ -175,7 +169,17 @@ To run with a specified output pathway:
 python manage.py generate g2t --ref_genome <ref_genome> --output <output pathway>
 ```
 
-# Running unit tests
+# Edit Interaction
+## clinical indication - panel
+```
+python manage.py edit <--panel_id or --panel_name> <panel id or panel name> <--clinical_indication_id or --clinical_indication_r_code> <r code or clinical indication id> <activate/deactivate>
+
+e.g. python manage.py edit --panel_id 26 --clinical_indication_id 1 deactivate
+
+NOTE: panel_name is case-insensitive
+```
+
+# Running Unit Tests
 
 Unit tests are stored in the 'tests' directory, and can be run through 'manage.py':
 ```

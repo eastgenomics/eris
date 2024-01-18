@@ -75,8 +75,8 @@ class TestMakePanelsFromHgncs(TestCase):
         errors += value_check_wrapper(
             panels[0].panel_name,
             "panel name",
-            "HGNC:1,HGNC:2",
-        )  # panel name should be the list of hgncs joined by comma
+            "HGNC:1&HGNC:2",
+        )  # panel name should be the list of hgncs joined by an ampersand
 
         errors += value_check_wrapper(
             panels[0].test_directory,

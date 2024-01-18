@@ -518,7 +518,7 @@ class TestInsertTestDirectoryData(TestCase):
         """
         test when a clinical indication have hgncs as panel
         expect function to create or use existing clinical indication (R123 is already in the db from setup)
-        expect function to create a new panel (HGNC:1,HGNC:2) and link those two together
+        expect function to create a new panel (HGNC:1&HGNC:2) and link those two together
         """
 
         errors = []
@@ -551,7 +551,7 @@ class TestInsertTestDirectoryData(TestCase):
         errors += value_check_wrapper(
             clinical_indication_panels[1]["panel_id__panel_name"],
             "clinical indication panel name",
-            "HGNC:1,HGNC:2",
+            "HGNC:1&HGNC:2",
         )
 
         errors += value_check_wrapper(
@@ -568,17 +568,17 @@ class TestInsertTestDirectoryData(TestCase):
         what if the same clinical indication (R123) changes its hgncs in the next test directory
 
         example:
-            R123 is linked to panel (HGNC:1,HGNC:2) - already in db
+            R123 is linked to panel (HGNC:1&HGNC:2) - already in db
             in next test directory, R123 have panels: [HGNC:1, HGNC:3]
 
-        we expect the function to make a new panel HGNC1,HGNC3 and link it to R123
+        we expect the function to make a new panel HGNC1&HGNC3 and link it to R123
         then flag both links for review
         """
 
         errors = []
 
         mock_panel = Panel.objects.create(
-            panel_name="HGNC:1,HGNC:2",
+            panel_name="HGNC:1&HGNC:2",
             test_directory=True,  # notice this is True. All panels that come from test directory especially hgncs have this value as True
         )
 
@@ -591,7 +591,7 @@ class TestInsertTestDirectoryData(TestCase):
             panel_id=mock_panel.id,
             clinical_indication_id=mock_clinical_indication.id,
             current=True,
-        )  # make a mock link between R123 and HGNC:1,HGNC:2
+        )  # make a mock link between R123 and HGNC:1&HGNC:2
 
         mock_test_directory = {
             "indications": [
@@ -627,8 +627,8 @@ class TestInsertTestDirectoryData(TestCase):
         ).values("panel_id__panel_name", "clinical_indication_id__r_code", "pending")
 
         # NOTE: the first clinical indication-panel link is made in setup above
-        # the second link is made between R234 and HGNC:1,HGNC:2
-        # we expect the third link to be made by the function between R234 and HGNC:1,HGNC:3
+        # the second link is made between R234 and HGNC:1&HGNC:2
+        # we expect the third link to be made by the function between R234 and HGNC:1&HGNC:3
 
         errors += len_check_wrapper(
             clinical_indication_panels, "clinical indication-panel", 3
@@ -655,14 +655,14 @@ class TestInsertTestDirectoryData(TestCase):
         errors += value_check_wrapper(
             clinical_indication_panels[2]["panel_id__panel_name"],
             "third clinical indication-panel panel name",
-            "HGNC:1,HGNC:3",
-        )  # R234 linked to HGNC:1,HGNC:3
+            "HGNC:1&HGNC:3",
+        )  # R234 linked to HGNC:1&HGNC:3
 
         errors += value_check_wrapper(
             clinical_indication_panels[2]["clinical_indication_id__r_code"],
             "third clinical indication-panel r code",
             "R234",
-        )  # R234 linked to HGNC:1,HGNC:3
+        )  # R234 linked to HGNC:1&HGNC:3
 
         assert not errors, errors
 
