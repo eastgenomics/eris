@@ -33,7 +33,7 @@ class TestAddTranscriptRelease_FromScratch(TestCase):
 
         source = "MANE Select"
         version = "v1.2.3"
-        ref_genome = ReferenceGenome.objects.create(reference_genome="GRCh37")
+        ref_genome = ReferenceGenome.objects.create(name="GRCh37")
 
         data = {"mane": "file-1357", "another_mane": "file-101010"}
 
@@ -86,9 +86,7 @@ class TestAddTranscriptRelease_ErrorsOnVersionRepeatsWithDifferentFiles(TestCase
     """
 
     def setUp(self) -> None:
-        self.reference_genome = ReferenceGenome.objects.create(
-            reference_genome="GRCh37"
-        )
+        self.reference_genome = ReferenceGenome.objects.create(name="GRCh37")
         self.source = TranscriptSource.objects.create(source="HGMD")
         self.release = TranscriptRelease.objects.create(
             source=self.source,
@@ -136,9 +134,7 @@ class TestAddTranscriptRelease_SameFilesNoProblem(TestCase):
     """
 
     def setUp(self) -> None:
-        self.reference_genome = ReferenceGenome.objects.create(
-            reference_genome="GRCh37"
-        )
+        self.reference_genome = ReferenceGenome.objects.create(name="GRCh37")
         self.source = TranscriptSource.objects.create(source="HGMD")
         self.release = TranscriptRelease.objects.create(
             source=self.source,
