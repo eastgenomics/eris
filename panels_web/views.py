@@ -1078,7 +1078,7 @@ def review(request: HttpRequest) -> HttpResponse:
                 cisp["superpanel_id__panel_version"]
             )
         else:
-            cisp["panel_id__panel_version"] = "None"
+            cisp["superpanel_id__panel_version"] = "None"
 
     panel_gene = PanelGene.objects.filter(pending=True).values(
         "id",
