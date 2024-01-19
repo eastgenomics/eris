@@ -157,7 +157,7 @@ def index(request: HttpRequest) -> HttpResponse:
         "source",
         "release",
         "created",
-        "reference_genome__reference_genome",
+        "reference_genome__name",
     ).order_by("-created")
 
     for ts in transcript_sources:
@@ -1053,7 +1053,7 @@ def review(request: HttpRequest) -> HttpResponse:
                 cip["panel_id__panel_version"]
             )
         else:
-            cip["panel_id__panel_version"] = 1.0
+            cip["panel_id__panel_version"] = "None"
 
     # clinical indication - superpanel
     clinical_indication_superpanels: QuerySet[ClinicalIndicationPanel] = (
@@ -1078,7 +1078,7 @@ def review(request: HttpRequest) -> HttpResponse:
                 cisp["superpanel_id__panel_version"]
             )
         else:
-            cisp["panel_id__panel_version"] = 1.0
+            cisp["panel_id__panel_version"] = "None"
 
     panel_gene = PanelGene.objects.filter(pending=True).values(
         "id",
@@ -1138,7 +1138,7 @@ def gene(request: HttpRequest, gene_id: int) -> HttpResponse:
     ).values(
         "transcript_id__transcript",
         "release_id__source_id__source",
-        "release_id__reference_genome_id__reference_genome",
+        "release_id__reference_genome_id__name",
         "default_clinical",
         "release_id__release",
     )
@@ -1574,9 +1574,7 @@ def ajax_gene_transcripts(request: HttpRequest, reference_genome: str) -> JsonRe
     The content of the json response is a list of transcripts with clinical context
     See function: `_giving_transcript_clinical_context`
     """
-    refgenome = ReferenceGenome.objects.filter(
-        reference_genome=reference_genome
-    ).first()
+    refgenome = ReferenceGenome.objects.filter(name=reference_genome).first()
 
     latest_select = get_latest_transcript_release("MANE Select", refgenome)
     latest_plus_clinical = get_latest_transcript_release(
@@ -1708,7 +1706,7 @@ def transcript_source(request: HttpRequest, ts_id: int) -> HttpResponse:
             "id",
             "release",
             "created",
-            "reference_genome__reference_genome",
+            "reference_genome__name",
         )
         .order_by("-created")
     )

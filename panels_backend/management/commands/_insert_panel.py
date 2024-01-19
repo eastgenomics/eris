@@ -282,8 +282,11 @@ def _get_most_recent_td_release_for_ci_superpanel(
 
 def _disable_custom_hgnc_panels(panel: PanelClass, user: str) -> None:
     """
-    Function to disable custom hgnc panels if a panel with
-    similar hgnc panel name is created in PanelApp
+    Function to disable custom hgnc panels
+    if a PanelApp-created panel is linked to exactly the same HGNC IDs as
+    those in the "ACTIVE" custom panel's name
+
+    NOTE: if it's inactivate custom panel, that's fine
 
     :param panel: PanelClass object
     :param user: user who initiated this change
