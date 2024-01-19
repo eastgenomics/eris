@@ -16,4 +16,7 @@ env
 .env
 .ruff_cache
 .DS_Store
+.venv
+*.code-workspace
+
 htmlcov

@@ -875,7 +875,7 @@ def add_transcript_release_info_to_db(
                     "release, source and ref genome in the db:\n"
                     f"Release version: {release_version}\n"
                     f"Source: {source}.\n"
-                    f"Ref genome: {ref_genome.reference_genome}.\n"
+                    f"Ref genome: {ref_genome.name}.\n"
                     f'File type: {tx_release_file_ids[0]["transcript_file_id__file_type"]}\n'
                     f'File id: {tx_release_file_ids[0]["transcript_file_id__file_id"]}'
                 )

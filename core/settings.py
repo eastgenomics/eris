@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "panels_backend",
     "panels_web",
     "django_celery_results",
+    "variant_db.apps.VariantDbConfig",
 ]
 
 MIDDLEWARE = [
