@@ -79,6 +79,24 @@ class History:
     def clinical_indication_panel_approved(id: str) -> str:
         return f"ClinicalIndicationPanel {id} approved by review"
 
+    # clinical indication superpanel
+    def clinical_indication_superpanel_reverted(
+        id: str,
+        metadata: str,
+        old_value: str,
+        new_value: str,
+        review: bool = False,
+    ) -> str:
+        return (
+            f"ClinicalIndicationSuperPanel {id} metadata '{metadata}' reverted from {old_value} to {new_value}"
+            + " by review"
+            if review
+            else ""
+        )
+
+    def clinical_indication_superpanel_approved(id: str) -> str:
+        return f"ClinicalIndicationSuperPanel {id} approved by review"
+
     # panel gene
     def panel_gene_flagged_due_to_confidence(
         confidence_level: str,

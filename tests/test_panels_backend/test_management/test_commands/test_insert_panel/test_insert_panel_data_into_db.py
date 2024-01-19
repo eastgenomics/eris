@@ -63,7 +63,7 @@ class TestInsertDataIntoDB(TestCase):
             genes=[
                 {
                     "gene_data": {
-                        "hgnc_id": 21497,
+                        "hgnc_id": "HGNC:21497",
                         "gene_name": "acyl-CoA dehydrogenase family member 9",
                         "gene_symbol": "ACAD9",
                         "alias": ["NPD002", "MGC14452"],
@@ -107,7 +107,7 @@ class TestInsertDataIntoDB(TestCase):
             errors += value_check_wrapper(
                 attached_gene_hgnc_id[0]["gene_id__hgnc_id"],
                 "panel-gene attached",
-                "21497",
+                "HGNC:21497",
             )  # assert that the second panel that is inserted is attached to gene hgnc-id 21497 through PanelGene
 
         assert not errors, errors
@@ -132,7 +132,7 @@ class TestInsertDataIntoDB(TestCase):
             genes=[
                 {
                     "gene_data": {
-                        "hgnc_id": 21497,
+                        "hgnc_id": "HGNC:21497",  # panelapp api returns hgnc_id as string
                         "gene_name": "acyl-CoA dehydrogenase family member 9",
                         "gene_symbol": "ACAD9",
                         "alias": ["NPD002", "MGC14452"],
@@ -196,7 +196,7 @@ class TestInsertDataIntoDB(TestCase):
             genes=[
                 {
                     "gene_data": {
-                        "hgnc_id": 21497,
+                        "hgnc_id": "HGNC:21497",
                         "gene_name": "acyl-CoA dehydrogenase family member 9",
                         "gene_symbol": "ACAD9",
                         "alias": ["NPD002", "MGC14452"],
@@ -260,7 +260,7 @@ class TestInsertDataIntoDB(TestCase):
             genes=[
                 {
                     "gene_data": {
-                        "hgnc_id": 21497,
+                        "hgnc_id": "HGNC:21497",
                         "gene_name": "acyl-CoA dehydrogenase family member 9",
                         "gene_symbol": "ACAD9",
                         "alias": ["NPD002", "MGC14452"],

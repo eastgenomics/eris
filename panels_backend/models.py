@@ -77,6 +77,10 @@ class Panel(models.Model):
 
     class Meta:
         db_table = "panel"
+        unique_together = (
+            "panel_name",
+            "panel_version",
+        )
 
     def __str__(self):
         return str(self.id)

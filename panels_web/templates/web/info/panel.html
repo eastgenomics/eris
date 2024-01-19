@@ -67,9 +67,17 @@
                     <tr>
                         <td><a href="{% url 'clinical_indication_panel' ci_panel.id %}">{{ci_panel.id}}</a></td>
                         {% if ci_panel.current %}
-                        <td><span class="badge text-bg-success">{{ci_panel.current}}</span></td>
+                        <td><span class="badge text-bg-success">{{ci_panel.current}}</span>
+                            {% if ci_panel.pending %}
+                            <span class="badge text-bg-warning">pending</span>
+                            {% endif %}
+                        </td>
                         {% else %}
-                        <td><span class="badge text-bg-danger">{{ci_panel.current}}</span></td>
+                        <td><span class="badge text-bg-danger">{{ci_panel.current}}</span>
+                            {% if ci_panel.pending %}
+                            <span class="badge text-bg-warning">pending</span>
+                            {% endif %}
+                        </td>
                         {% endif %}
                         <td><a
                                 href="{% url 'clinical_indication' ci_panel.clinical_indication_id %}">{{ci_panel.clinical_indication_id__name}}</a>
