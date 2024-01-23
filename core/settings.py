@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     # custom apps
     "panels_backend",
     "panels_web",
+    "variant_db.apps.VariantDbConfig",
 ]
 
 MIDDLEWARE = [

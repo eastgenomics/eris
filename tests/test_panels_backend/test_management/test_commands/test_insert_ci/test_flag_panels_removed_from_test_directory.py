@@ -82,7 +82,7 @@ class TestPanelsFlaggedWhenNoLongerInTd(TestCase):
         with self.subTest():
             assert len(hist) == 1
             assert hist[0].note == History.flag_clinical_indication_panel(
-                "ClinicalIndicationPanel does not exist in TD"
+                "Panel ID no longer attached to clinical indication in TD"
             )
 
         # check that the panel with the external ID '4', which is PRESENT IN the

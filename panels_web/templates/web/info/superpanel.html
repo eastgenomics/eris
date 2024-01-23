@@ -56,7 +56,7 @@
                 <tbody>
                     {% for row in cips %}
                     <tr>
-                        <td>{{row.id}}</td>
+                        <td><a href="{% url 'clinical_indication_superpanel' row.id %}">{{row.id}}</a></td>
                         <td>{{row.current}}</td>
                         <td><a
                                 href="{% url 'clinical_indication' row.clinical_indication_id %}">{{row.clinical_indication_id__name}}</a>

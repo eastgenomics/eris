@@ -5,7 +5,7 @@
   <div class="row">
     <div class="col">
       {% if cip %}
-      <h1>Clinical Indication Panel {{cip.id}}</h1>
+      <h1>Clinical Indication Panel: {{cip.id}}</h1>
       <h4><span class="badge text-bg-info text-white">Clinical Indication Panel</span></h4>
       <h4>Panel: <a href="{% url 'panel' cip.panel_id %}">{{cip.panel_id__panel_name}}</a></h4>
       <h4>Clinical Indication: <a
