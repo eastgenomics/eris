@@ -444,7 +444,7 @@ class Command(BaseCommand):
             transcript_data = {
                 "hgnc_id": transcript.gene.hgnc_id,
                 "transcript": transcript.transcript,
-                "clinical": clinical_status,
+                "clinical": ["clinical_transcript" if clinical_status else "not_clinical_transcript"],
             }
             results.append(transcript_data)
 
@@ -538,7 +538,7 @@ class Command(BaseCommand):
 
             try:
                 # if the genome is valid, run the controller function, _generate_g2t
-                genome = ReferenceGenome.objects.get(reference_genome=parsed_genome)
+                genome = ReferenceGenome.objects.get(name=parsed_genome)
             except ObjectDoesNotExist:
                 raise ObjectDoesNotExist(
                     "Aborting g2t: reference genome does not exist in the database"
