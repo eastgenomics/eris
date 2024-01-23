@@ -14,7 +14,7 @@ A shared database is used for the two apps.
 
 
 ## Intended environment
-Eris requires Python version 3.10. It is designed to run in Docker containers, on a local bioinformatics server running Ubuntu. It needs to be connected to a PostgreSQL database. You also need to be connected to the internet, in order to access the PanelApp API.
+Eris requires Python version 3.10. It is designed to run in Docker containers running Ubuntu base images, on a local bioinformatics server using RHEL as its operating system. It needs to be connected to a PostgreSQL database. You also need to be connected to the internet, in order to access the PanelApp API.
 
 
 ## Abbreviations:
