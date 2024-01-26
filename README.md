@@ -185,7 +185,7 @@ python manage.py generate genepanels --hgnc testing_files/eris/hgnc_dump_2023060
 ```
 To run with a specified output pathway:
 ```
-python manage.py generate genepanels --hgnc testing_files/eris/hgnc_dump_23052023.txt --output <output_path>
+python manage.py generate genepanels --hgnc testing_files/eris/hgnc_dump_20230606_1.txt --output <output_path>
 ```
 
 #### Generate a g2t file
