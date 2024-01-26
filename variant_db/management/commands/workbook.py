@@ -7,6 +7,8 @@ import re
 import pandas as pd
 from typing import Tuple
 
+from .utils import enumerate_chromosome
+
 def read_workbook(workbook: str) -> pd.DataFrame:
     """
     read workbook
@@ -16,6 +18,7 @@ def read_workbook(workbook: str) -> pd.DataFrame:
     wb_df = pd.read_csv(workbook)
     wb_df.columns = [clean_column_name(x) for x in wb_df.columns]
     _validate_workbook(wb_df)
+    wb_df.numeric_chrom = enumerate_chromosome(wb_df.CHROM)
     pivoted_df = pivot_df_as_row_dict(wb_df)
     return pivoted_df
 
