@@ -323,7 +323,7 @@ def _make_panels_from_hgncs(
     unique_td_source: str = f"{td_source} + {config_source} + {td_release.td_date}"
 
     conf = moi = mop = pen = None
-
+    
     panel_name = "&".join(sorted(hgnc_list))
 
     # create Panel record only when HGNC is different
@@ -333,7 +333,7 @@ def _make_panels_from_hgncs(
         defaults={
             "panel_source": unique_td_source,
             "external_id": None,
-            "panel_version": None,
+            "panel_version": "1.0", #test directory doesn't have versioning of its gene lists - give it 1.0
         },
     )
 
