@@ -202,7 +202,7 @@ class Command(BaseCommand):
         :param: excluded_hgncs, a set of RNAs parsed from HGNC information
 
         :return: a list-of-lists. Each sublist contains a clinical indication,
-        panel name, and panel version
+        panel name, panel version, and PanelApp ID (or blank string if non-PanelApp-derived)
         """
         results = []
         for r_code, panel_list in ci_panels.items():
@@ -211,7 +211,11 @@ class Command(BaseCommand):
                 # for each panel associated with that clinical indication
                 panel_id: str = panel_dict["ci_panel__panel_id"]
                 # get the PanelApp external ID if there is one. If it's none, make it a blank string
-                panelapp_id: str = (panel_dict["ci_panel__panel__external_id"] if panel_dict["ci_panel__panel__external_id"] else "")
+                panelapp_id: str = (
+                    panel_dict["ci_panel__panel__external_id"]
+                    if panel_dict["ci_panel__panel__external_id"]
+                    else ""
+                )
                 ci_name: str = panel_dict["ci_panel__clinical_indication_id__name"]
                 for hgnc in panel_genes[panel_id]:
                     # for each gene associated with that panel
@@ -228,7 +232,7 @@ class Command(BaseCommand):
                         f"{r_code}_{ci_name}",
                         f"{panel_dict['ci_panel__panel__panel_name']}_{panel_version}",
                         hgnc,
-                        f"{panelapp_id}"
+                        f"{panelapp_id}",
                     ]
                     results.append(line)
         results = sorted(results, key=lambda x: [x[0], x[1], x[2]])
@@ -258,6 +262,11 @@ class Command(BaseCommand):
             for panel_dict in panel_list:
                 # for each panel associated with that clinical indication
                 panel_id: str = panel_dict["ci_superpanel__superpanel"]
+                panelapp_id: str = (
+                    panel_dict["ci_superpanel__superpanel__external_id"]
+                    if panel_dict["ci_superpanel__superpanel__external_id"]
+                    else ""
+                )
                 ci_name: str = panel_dict["ci_superpanel__clinical_indication__name"]
 
                 for hgnc in panel_genes[panel_id]:
@@ -276,9 +285,9 @@ class Command(BaseCommand):
                     results.append(
                         [
                             f"{r_code}_{ci_name}",
-                            f"{panel_dict['ci_superpanel__superpanel__panel_name']}_"
-                            f"{panel_version}",
+                            f"{panel_dict['ci_superpanel__superpanel__panel_name']}_{panel_version}",
                             hgnc,
+                            f"{panelapp_id}",
                         ]
                     )
         results = sorted(results, key=lambda x: [x[0], x[1], x[2]])
@@ -444,11 +453,13 @@ class Command(BaseCommand):
             clinical_status = self.get_current_transcript_clinical_status_for_g2t(
                 transcript, latest_select, latest_plus_clinical, latest_hgmd
             )
-            #TODO: add a canonical/non_canonical column
+            # TODO: add a canonical/non_canonical column
             transcript_data = {
                 "hgnc_id": transcript.gene.hgnc_id,
                 "transcript": transcript.transcript,
-                "clinical": "clinical_transcript" if clinical_status else "not_clinical_transcript",
+                "clinical": "clinical_transcript"
+                if clinical_status
+                else "not_clinical_transcript",
             }
             results.append(transcript_data)
 
