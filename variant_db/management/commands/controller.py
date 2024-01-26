@@ -1,5 +1,6 @@
 import pandas as pd
-from ._insert import *
+from .insert import *
+from .workbook import read_workbook
 
 def upload(workbook: str) -> None:
     """
@@ -10,16 +11,6 @@ def upload(workbook: str) -> None:
     :param: files - a list of Pandas DataFrames, each of which contains data from a single variant file
     """
     # call eris.variant_db._insert functions here
-    wb_df = pd.read_csv(workbook)
-    _validate_workbook(workbook)
+    wb_df = read_workbook(workbook)
     print(wb_df)
-    return wb_df
-
-
-def _validate_workbook(workbook: pd.DataFrame):
-    """
-    Validate workbook
-
-    :param: workbook - workbook dataframe
-    """
-    pass
+    return None
