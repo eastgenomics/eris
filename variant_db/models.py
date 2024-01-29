@@ -138,11 +138,11 @@ class Variant(models.Model):
 
     interpreted = models.BooleanField(verbose_name="Interpreted by scientist")
 
-    reference_genome_id = models.ForeignKey(
+    reference_genome = models.ForeignKey(
         ReferenceGenome, verbose_name="Reference Genome ID", on_delete=models.PROTECT
     )
 
-    chromosome_id = models.ForeignKey(
+    chromosome = models.ForeignKey(
         Chromosome, verbose_name="Chromosome ID", on_delete=models.PROTECT
     )
 
@@ -230,7 +230,7 @@ class Interpretation(models.Model):
     Records interpretations - information which is linked to the process of assessing the clinical significance of a finding
     """
 
-    sample_id = models.ForeignKey(
+    sample = models.ForeignKey(
         Sample, verbose_name="Sample ID", on_delete=models.PROTECT
     )
 
@@ -240,17 +240,17 @@ class Interpretation(models.Model):
         verbose_name="Clinical indication as it appears in parsed results workbook"
     )
 
-    affected_status_id = models.ForeignKey(
+    affected_status = models.ForeignKey(
         AffectedStatus, verbose_name="Affected Status ID", on_delete=models.PROTECT
     )
 
-    assertion_criteria_id = models.ForeignKey(
+    assertion_criteria = models.ForeignKey(
         AssertionCriteria,
         verbose_name="Assertion Criteria ID",
         on_delete=models.PROTECT,
     )
 
-    clinical_significance_description_id = models.ForeignKey(
+    clinical_significance_description = models.ForeignKey(
         ClinicalSignificanceDescription,
         verbose_name="Clinical Significance Description ID",
         on_delete=models.PROTECT,
@@ -266,31 +266,33 @@ class Interpretation(models.Model):
         Institution, verbose_name="Evaluating Institution ID", on_delete=models.PROTECT
     )
 
-    panel_id = models.ForeignKey(
-        Panel, verbose_name="Panel ID", on_delete=models.PROTECT
+    panel = models.ForeignKey(
+        Panel,
+        verbose_name="Panel ID",
+        on_delete=models.PROTECT,
     )
 
-    assay_method_id = models.ForeignKey(
+    assay_method = models.ForeignKey(
         AssayMethod, verbose_name="Assay Method ID", on_delete=models.PROTECT
     )
 
-    clinvar_collection_method_id = models.ForeignKey(
+    clinvar_collection_method = models.ForeignKey(
         ClinvarCollectionMethod,
         verbose_name="Clinvar Collection Method ID",
         on_delete=models.PROTECT,
     )
 
-    variant_id = models.ForeignKey(
+    variant = models.ForeignKey(
         Variant, verbose_name="Variant ID", on_delete=models.PROTECT
     )
 
-    clinvar_allele_origin_id = models.ForeignKey(
+    clinvar_allele_origin = models.ForeignKey(
         ClinvarAlleleOrigin,
         verbose_name="Clinvar Allele Origin ID",
         on_delete=models.PROTECT,
     )
 
-    clinvar_submission_id = models.ForeignKey(
+    clinvar_submission = models.ForeignKey(
         ClinvarSubmission,
         verbose_name="Clinvar Submission ID",
         on_delete=models.PROTECT,
