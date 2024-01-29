@@ -14,7 +14,7 @@ from panels_backend.models import (
     TestDirectoryRelease,
     ReferenceGenome,
     GffRelease,
-    TranscriptGffRelease
+    TranscriptGffRelease,
 )
 import os
 import csv
@@ -413,7 +413,7 @@ class Command(BaseCommand):
         Calls the function to get all current transcripts, then formats and writes it to file.
         Returned transcripts are limited to those represented in the user-requested reference genome
         and GFF release.
-        
+
         :param output_directory: output directory
         :param ref_genome: ReferenceGenome instance
         :param gff_release: GffRelease instance. This will be a GFF release which is appropriate for
@@ -438,7 +438,7 @@ class Command(BaseCommand):
         # We only need to assess those transcripts which are linked to the correct GFF release and reference genome
         gff_transcripts = TranscriptGffRelease.objects.filter(
             gff_release__gencode_release=gff_release,
-            gff_release__reference_genome=ref_genome
+            gff_release__reference_genome=ref_genome,
         )
 
         # Append per-transcript results to a list-of-dictionaries
@@ -551,7 +551,7 @@ class Command(BaseCommand):
                 raise ValueError(
                     "No GFF release specified, e.g. python manage.py generate g2t --ref_genome GRCh37 --gff_release <>"
                 )
-            
+
             # if the genome AND gff_release are valid, run the controller function, _generate_g2t
             try:
                 genome = ReferenceGenome.objects.get(name=parsed_genome)
@@ -561,8 +561,9 @@ class Command(BaseCommand):
                 )
 
             try:
-                gff_release = GffRelease.objects.get(gencode_release=kwargs.get("gff_release"),
-                                                     reference_genome=genome)
+                gff_release = GffRelease.objects.get(
+                    gencode_release=kwargs.get("gff_release"), reference_genome=genome
+                )
             except ObjectDoesNotExist:
                 raise ObjectDoesNotExist(
                     "Aborting g2t: GFF release does not exist for this genome build in the database."

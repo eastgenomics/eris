@@ -877,7 +877,9 @@ class GffRelease(models.Model):
     Currently, the GENCODE release number is used.
     """
 
-    gencode_release = models.TextField(verbose_name="Gff Release in GENCODE", unique=True)
+    gencode_release = models.TextField(
+        verbose_name="Gff Release in GENCODE", unique=True
+    )
 
     reference_genome = models.ForeignKey(
         ReferenceGenome,
