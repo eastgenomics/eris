@@ -778,7 +778,7 @@ def _add_gff_release_info_to_db(
     :return gff_release: a GffRelease instance
     """
     gff_release, _ = GffRelease.objects.get_or_create(
-        release=gff_release, reference_genome=reference_genome
+        gencode_release=gff_release, reference_genome=reference_genome
     )
     return gff_release
 
@@ -928,7 +928,7 @@ def _get_latest_gff_release(ref_genome: ReferenceGenome) -> GffRelease | None:
 
     max_release = max([Version(v.release) for v in gffs]) if gffs else None
     if max_release:
-        return GffRelease.objects.get(release=max_release)
+        return GffRelease.objects.get(gencode_release=max_release)
     else:
         return None
 
