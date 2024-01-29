@@ -893,7 +893,7 @@ class GffRelease(models.Model):
 
     class Meta:
         db_table = "gff_release"
-        unique_together = ["release", "reference_genome"]
+        unique_together = ["gencode_release", "reference_genome"]
 
     def __str__(self):
         return str(self.id)
