@@ -267,7 +267,9 @@ class Interpretation(models.Model):
     )
 
     panel = models.ForeignKey(
-        Panel, verbose_name="Panel ID", on_delete=models.PROTECT
+        Panel,
+        verbose_name="Panel ID",
+        on_delete=models.PROTECT,
     )
 
     assay_method = models.ForeignKey(
