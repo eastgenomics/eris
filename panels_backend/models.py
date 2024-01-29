@@ -874,9 +874,10 @@ class GffRelease(models.Model):
     """
     Defines a particular release of the GFF file, the source of possibly-clinically relevant
     transcripts. Release versions must be unique for a given reference genome.
+    Currently, the GENCODE release number is used.
     """
 
-    release = models.TextField(verbose_name="Gff Release", unique=True)
+    gencode_release = models.TextField(verbose_name="Gff Release in GENCODE", unique=True)
 
     reference_genome = models.ForeignKey(
         ReferenceGenome,

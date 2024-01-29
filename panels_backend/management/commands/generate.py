@@ -416,7 +416,8 @@ class Command(BaseCommand):
         
         :param output_directory: output directory
         :param ref_genome: ReferenceGenome instance
-        :param gff_release: GffRelease instance. This will be a GFF release which is appropriate for ReferenceGenome.
+        :param gff_release: GffRelease instance. This will be a GFF release which is appropriate for
+        the stated ReferenceGenome.
         """
         start = dt.datetime.now().strftime("%H:%M:%S")
         print(f"Creating g2t file for reference genome {ref_genome.name} at {start}")
@@ -436,7 +437,7 @@ class Command(BaseCommand):
 
         # We only need to assess those transcripts which are linked to the correct GFF release and reference genome
         gff_transcripts = TranscriptGffRelease.objects.filter(
-            gff_release__release=gff_release,
+            gff_release__gencode_release=gff_release,
             gff_release__reference_genome=ref_genome
         )
 
@@ -560,7 +561,8 @@ class Command(BaseCommand):
                 )
 
             try:
-                gff_release = GffRelease.objects.get(release=kwargs.get("gff_release"), reference_genome=genome)
+                gff_release = GffRelease.objects.get(gencode_release=kwargs.get("gff_release"),
+                                                     reference_genome=genome)
             except ObjectDoesNotExist:
                 raise ObjectDoesNotExist(
                     "Aborting g2t: GFF release does not exist for this genome build in the database."
