@@ -926,7 +926,7 @@ def _get_latest_gff_release(ref_genome: ReferenceGenome) -> GffRelease | None:
     """
     gffs = GffRelease.objects.filter(reference_genome=ref_genome)
 
-    max_release = max([Version(v.release) for v in gffs]) if gffs else None
+    max_release = max([Version(v.gencode_release) for v in gffs]) if gffs else None
     if max_release:
         return GffRelease.objects.get(gencode_release=max_release)
     else:
@@ -1011,7 +1011,7 @@ def _check_for_transcript_seeding_version_regression(
         latest_hgnc_release = None
 
     if _get_latest_gff_release(reference_genome):
-        latest_gff_release = _get_latest_gff_release(reference_genome).release
+        latest_gff_release = _get_latest_gff_release(reference_genome).gencode_release
     else:
         latest_gff_release = None
 

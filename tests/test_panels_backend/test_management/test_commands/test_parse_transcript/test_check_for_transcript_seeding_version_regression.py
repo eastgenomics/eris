@@ -58,7 +58,7 @@ class TestCheckRegressions_OldHgncRelease(TestCase):
         EXPECT: Exception raised with an error for the HGNC release
         """
         new_hgnc = "1"  # this one is higher
-        new_gff = "1.0"
+        new_gff = "10"
         new_mane = "2"
         new_hgmd = "2.1"
 
@@ -76,7 +76,7 @@ class TestCheckRegressions_OldHgncRelease(TestCase):
         EXPECT: Exception raised with an error for the affected releases only.
         """
         new_hgnc = "1"  # too old
-        new_gff = "1.0"
+        new_gff = "11"
         new_mane = "2"
         new_hgmd = "1.9.0"  # too old, uses subversioning
 
