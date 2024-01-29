@@ -541,14 +541,14 @@ class Command(BaseCommand):
             # get the reference genome and standardise it
             if not kwargs["ref_genome"]:
                 raise ValueError(
-                    "No reference genome specified, e.g. python manage.py generate g2t --ref_genome GRCh37 --gff_version <>"
+                    "No reference genome specified, e.g. python manage.py generate g2t --ref_genome GRCh37 --gff_release <>"
                 )
             parsed_genome = _parse_reference_genome(kwargs.get("ref_genome"))
 
             # get the GFF file release
             if not kwargs["gff_release"]:
                 raise ValueError(
-                    "No GFF version specified, e.g. python manage.py generate g2t --ref_genome GRCh37 --gff_version <>"
+                    "No GFF release specified, e.g. python manage.py generate g2t --ref_genome GRCh37 --gff_release <>"
                 )
             
             # if the genome AND gff_release are valid, run the controller function, _generate_g2t
@@ -560,7 +560,7 @@ class Command(BaseCommand):
                 )
 
             try:
-                gff_release = GffRelease.objects.get(release=kwargs.get("gff_version"), reference_genome=genome)
+                gff_release = GffRelease.objects.get(release=kwargs.get("gff_release"), reference_genome=genome)
             except ObjectDoesNotExist:
                 raise ObjectDoesNotExist(
                     "Aborting g2t: GFF release does not exist for this genome build in the database."
