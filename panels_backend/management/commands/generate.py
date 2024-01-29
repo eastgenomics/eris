@@ -553,14 +553,14 @@ class Command(BaseCommand):
             
             # if the genome AND gff_release are valid, run the controller function, _generate_g2t
             try:
-                genome = ReferenceGenome.objects.get(reference_genome=parsed_genome)
+                genome = ReferenceGenome.objects.get(name=parsed_genome)
             except ObjectDoesNotExist:
                 raise ObjectDoesNotExist(
                     "Aborting g2t: reference genome does not exist in the database"
                 )
 
             try:
-                gff_release = GffRelease.objects.get(release=kwargs.get("gff_release"), reference_genome=genome)
+                gff_release = GffRelease.objects.get(release=kwargs.get("gff_version"), reference_genome=genome)
             except ObjectDoesNotExist:
                 raise ObjectDoesNotExist(
                     "Aborting g2t: GFF release does not exist for this genome build in the database."
