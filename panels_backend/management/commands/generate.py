@@ -455,8 +455,9 @@ class Command(BaseCommand):
             results.append(transcript_data)
         return results
 
-
-    def _write_g2t_results(self, results: list[dict(str, str)], output_directory: str) -> None:
+    def _write_g2t_results(
+        self, results: list[dict(str, str)], output_directory: str
+    ) -> None:
         """
         Writes out g2t results to a TSV file at the specified output directory.
 
@@ -473,7 +474,6 @@ class Command(BaseCommand):
                 out_file, delimiter="\t", lineterminator="\n", fieldnames=keys
             )
             writer.writerows(results)
-
 
     def add_arguments(self, parser) -> None:
         """
