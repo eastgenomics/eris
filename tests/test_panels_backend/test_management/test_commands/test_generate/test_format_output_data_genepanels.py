@@ -48,6 +48,50 @@ class TestFormatOutputDataGenepanels(TestCase):
         ]
         self.assertEqual(expected, actual)
 
+    def test_unversioned_panel(self):
+        """
+        CASE: As basic case, but one panel doesn't have a version (probably because it's custom).
+        EXPECT: Return a 4-entry list-of-lists which captures the CI's R code/name, the panel's name and version,
+        the HGNC, and the PanelApp version on each line. For the versionless panel, the version will
+        be a BLANK STRING, ""
+        """
+        ci_panels = {
+            "R123.2": [
+                {
+                    "ci_panel__clinical_indication__r_code": "R1",
+                    "ci_panel__clinical_indication_id__name": "Condition 1",
+                    "ci_panel__panel_id": 1,
+                    "ci_panel__panel__external_id": "109",
+                    "ci_panel__panel__panel_name": "First Panel",
+                    "ci_panel__panel__panel_version": None,
+                }
+            ],
+            "R2": [
+                {
+                    "ci_panel__clinical_indication__r_code": "R2",
+                    "ci_panel__clinical_indication_id__name": "Condition 2",
+                    "ci_panel__panel_id": 2,
+                    "ci_panel__panel__external_id": "209",
+                    "ci_panel__panel__panel_name": "Second Panel",
+                    "ci_panel__panel__panel_version": "2",
+                }
+            ],
+        }
+
+        panel_genes = {1: ["HGNC:1", "HGNC:2"], 2: ["HGNC:3", "HGNC:4"]}
+        excluded_hgncs = set([])
+        cmd = Command()
+        actual = cmd._format_output_data_genepanels(
+            ci_panels, panel_genes, excluded_hgncs
+        )
+        expected = [
+            ["R123.2_Condition 1", "First Panel_", "HGNC:1", "109"],
+            ["R123.2_Condition 1", "First Panel_", "HGNC:2", "109"],
+            ["R2_Condition 2", "Second Panel_2", "HGNC:3", "209"],
+            ["R2_Condition 2", "Second Panel_2", "HGNC:4", "209"],
+        ]
+        self.assertEqual(expected, actual)
+
     def test_includes_non_panelapp_panel(self):
         """
         CASE: Two Clinical Indications are provided with links to 1 panel each. Each panel contains 2 genes.

@@ -416,7 +416,12 @@ class Command(BaseCommand):
             return clinical
 
     def _generate_g2t_results(
-        self, ref_genome: ReferenceGenome, gff_release: GffRelease
+        self,
+        ref_genome: ReferenceGenome,
+        gff_release: GffRelease,
+        latest_select: TranscriptRelease,
+        latest_plus_clinical: TranscriptRelease,
+        latest_hgmd: TranscriptRelease,
     ) -> list[dict[str, str]]:
         """
         Main function to generate g2t.tsv
@@ -427,23 +432,13 @@ class Command(BaseCommand):
         :param ref_genome: ReferenceGenome instance
         :param gff_release: GffRelease instance. This will be a GFF release which is appropriate for
         the stated ReferenceGenome.
+        :param latest_select: latest MANE Select version
+        :param latest_plus_clinical: latest MANE Plus Clinical version
+        :param latest_hgmd: latest HGMD version
         :return: a list-of-dictionaries - each dict can be used to write out a line
         """
         start = dt.datetime.now().strftime("%H:%M:%S")
         print(f"Creating g2t file for reference genome {ref_genome.name} at {start}")
-
-        # We need the latest releases of the transcript clinical status information
-        latest_select = get_latest_transcript_release("MANE Select", ref_genome)
-        latest_plus_clinical = get_latest_transcript_release(
-            "MANE Plus Clinical", ref_genome
-        )
-        latest_hgmd = get_latest_transcript_release("HGMD", ref_genome)
-
-        if None in [latest_select, latest_plus_clinical, latest_hgmd]:
-            raise ValueError(
-                "One or more transcript releases (MANE or HGMD) have not yet been"
-                " added to the database, so clinical status can't be assessed - aborting"
-            )
 
         # We only need to assess those transcripts which are linked to the correct GFF release and reference genome
         gff_transcripts = TranscriptGffRelease.objects.filter(
@@ -595,7 +590,21 @@ class Command(BaseCommand):
                     "Aborting g2t: GFF release does not exist for this genome build in the database."
                 )
 
-            g2t = self._generate_g2t_results(genome, gff_release)
+            latest_select = get_latest_transcript_release("MANE Select", genome)
+            latest_plus_clinical = get_latest_transcript_release(
+                "MANE Plus Clinical", genome
+            )
+            latest_hgmd = get_latest_transcript_release("HGMD", genome)
+
+            if None in [latest_select, latest_plus_clinical, latest_hgmd]:
+                raise ValueError(
+                    "One or more transcript releases (MANE or HGMD) have not yet been"
+                    " added to the database, so clinical status can't be assessed - aborting"
+                )
+
+            g2t = self._generate_g2t_results(
+                genome, gff_release, latest_select, latest_plus_clinical, latest_hgmd
+            )
             self._write_g2t_results(g2t, output_directory)
 
             end = dt.datetime.now().strftime("%H:%M:%S")
