@@ -147,7 +147,7 @@ def provisionally_link_clinical_indication_to_panel(
 
     # attribute the pending Ci-Panel link to the current TestDirectoryRelease
     if ci_panel_instance and td_version:
-        release_link, _ = CiPanelTdRelease.objects.get_or_create(
+        CiPanelTdRelease.objects.get_or_create(
             ci_panel=ci_panel_instance, td_release=td_version
         )
 
@@ -195,7 +195,7 @@ def provisionally_link_clinical_indication_to_superpanel(
     )
 
     if ci_superpanel_instance and td_version:
-        release_link, _ = CiSuperpanelTdRelease.objects.get_or_create(
+        CiSuperpanelTdRelease.objects.get_or_create(
             ci_superpanel=ci_superpanel_instance, td_release=td_version
         )
 
@@ -244,7 +244,7 @@ def _retrieve_panel_from_pa_id(pa_id: str) -> Panel | None:
     """
     Retrieve a single Panel record based on PA panel id.
     We order multiple Panel records by version and select the highest,
-     to account for multiple entries.
+    to account for multiple entries.
     :param: pa_id [str]: panelapp id
 
     returns:
@@ -278,23 +278,6 @@ def _retrieve_superpanel_from_pa_id(pa_id: str) -> SuperPanel | None:
         return None
 
     return panel_instance
-
-
-def _retrieve_unknown_metadata_records() -> tuple[None, None, None, None]:
-    """
-    Set unknown metadata records, as used when making panels from HGNCs, to None
-    :returns:
-        conf: None
-        moi: None
-        mop: None
-        pen: None
-    """
-    conf = None
-    moi = None
-    mop = None
-    pen = None
-
-    return conf, moi, mop, pen
 
 
 def _check_for_changed_pg_justification(pg_instance: PanelGene, unique_td_source: str):
@@ -339,7 +322,7 @@ def _make_panels_from_hgncs(
 
     unique_td_source: str = f"{td_source} + {config_source} + {td_release.td_date}"
 
-    conf, moi, mop, pen = _retrieve_unknown_metadata_records()
+    conf = moi = mop = pen = None
 
     panel_name = "&".join(sorted(hgnc_list))
 
@@ -350,7 +333,7 @@ def _make_panels_from_hgncs(
         defaults={
             "panel_source": unique_td_source,
             "external_id": None,
-            "panel_version": None,
+            "panel_version": "1.0",  # test directory doesn't have versioning of its gene lists - give it 1.0
         },
     )
 
@@ -667,6 +650,7 @@ def _make_ci_superpanel_td_link(
             ),
             user=user,
         )
+
     return cip_instance, cip_created
 
 
@@ -703,7 +687,7 @@ def _flag_panels_removed_from_test_directory(
                 ClinicalIndicationPanelHistory.objects.create(
                     clinical_indication_panel_id=cip.id,
                     note=History.flag_clinical_indication_panel(
-                        "ClinicalIndicationPanel does not exist in TD"
+                        "Panel ID no longer attached to clinical indication in TD"
                     ),
                     user=user,
                 )
@@ -740,7 +724,7 @@ def _flag_superpanels_removed_from_test_directory(
                 ClinicalIndicationSuperPanelHistory.objects.create(
                     clinical_indication_superpanel=cip,
                     note=History.flag_clinical_indication_panel(
-                        "ClinicalIndicationSuperPanel does not exist in TD"
+                        "Superpanel ID no longer attached to clinical indication in TD"
                     ),
                     user=user,
                 )
@@ -859,12 +843,10 @@ def insert_test_directory_data(
 
                 # if we import the same version of TD but with different config source:
                 if panel_record:
-                    cip_instance, cip_created = _make_ci_panel_td_link(
-                        ci_instance, panel_record, td_version, user
-                    )
+                    _make_ci_panel_td_link(ci_instance, panel_record, td_version, user)
 
                 if super_panel_record:
-                    cip_instance, cip_created = _make_ci_superpanel_td_link(
+                    _make_ci_superpanel_td_link(
                         ci_instance,
                         super_panel_record,
                         td_version,

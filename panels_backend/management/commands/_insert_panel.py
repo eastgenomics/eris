@@ -7,6 +7,7 @@ from panels_backend.models import (
     PanelSuperPanel,
     ClinicalIndicationSuperPanel,
     ClinicalIndicationPanel,
+    ClinicalIndicationPanelHistory,
     Gene,
     Chromosome,
     Confidence,
@@ -105,7 +106,6 @@ def _insert_gene(
     :param panel_instance: Panel object
     :param panel_created: boolean to indicate if panel is newly created
     """
-
     # attaching each Gene record to Panel record
     for single_gene in panel.genes:
         gene_data: dict = single_gene.get("gene_data")
@@ -280,6 +280,56 @@ def _get_most_recent_td_release_for_ci_superpanel(
         return latest_td_instance
 
 
+def _disable_custom_hgnc_panels(panel: PanelClass, user: str) -> None:
+    """
+    Function to disable custom hgnc panels
+    if a PanelApp-created panel is linked to exactly the same HGNC IDs as
+    those in the "ACTIVE" custom panel's name
+
+    NOTE: if it's inactivate custom panel, that's fine
+
+    :param panel: PanelClass object
+    :param user: user who initiated this change
+    """
+    genes: list[dict[str, str]] = [
+        gene.get("gene_data") for gene in panel.genes if gene.get("gene_data")
+    ]
+
+    potential_hgnc_panel_name: str = "&".join(
+        sorted(
+            [
+                gene.get("hgnc_id").strip().upper()
+                for gene in genes
+                if gene.get("hgnc_id")
+            ]
+        )
+    )
+
+    # will only have 1 hgnc panel
+    hgnc_panels = Panel.objects.filter(
+        panel_name=potential_hgnc_panel_name, test_directory=True
+    )
+
+    if hgnc_panels.exists():
+        hgnc_panel: Panel = hgnc_panels[0]
+
+        clinical_indication_panels = ClinicalIndicationPanel.objects.filter(
+            panel_id=hgnc_panel.id,
+            current=True,  # active CI-Panel links only
+        )
+
+        for cip in clinical_indication_panels:
+            cip.pending = True
+            cip.current = False
+            cip.save()
+
+            ClinicalIndicationPanelHistory.objects.create(
+                clinical_indication_panel_id=cip.id,
+                note="Panel of similar genes has been created in PanelApp",
+                user=user,
+            )
+
+
 def _insert_panel_data_into_db(panel: PanelClass, user: str) -> Panel:
     """
     Insert data from a parsed JSON a panel record, into the database.
@@ -336,6 +386,7 @@ def _insert_panel_data_into_db(panel: PanelClass, user: str) -> Panel:
     # attach each Gene record to the Panel record,
     # whether it was created just now or was already in the database
     _insert_gene(panel, panel_instance, created)
+    _disable_custom_hgnc_panels(panel, user)
 
     return panel_instance, created
 
@@ -374,9 +425,7 @@ def _insert_superpanel_into_db(
     if created:
         # make links between the SuperPanel and its child panels
         for child in child_panels:
-            panel_link, panel_link_created = PanelSuperPanel.objects.get_or_create(
-                panel=child, superpanel=superpanel
-            )
+            PanelSuperPanel.objects.get_or_create(panel=child, superpanel=superpanel)
 
         # if there are previous SuperPanel(s) with similar external_id,
         # mark previous CI-SuperPanel links as needing review

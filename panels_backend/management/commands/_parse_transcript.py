@@ -1095,7 +1095,9 @@ def seed_transcripts(
 
     # check reference genome makes sense, fetch it
     reference_genome_str = _parse_reference_genome(reference_genome)
-    reference_genome, _ = ReferenceGenome.objects.get_or_create(name=name_str)
+    reference_genome, _ = ReferenceGenome.objects.get_or_create(
+        name=reference_genome_str
+    )
 
     # throw errors if the release versions are older than those already in the db
     _check_for_transcript_seeding_version_regression(
@@ -1177,7 +1179,7 @@ def seed_transcripts(
     )
     _add_transcript_categorisation_to_db(release_categories)
 
-    print(f"Finished adding transcripts to db: {_get_current_datetime}")
+    print(f"Finished adding transcripts to db: {_get_current_datetime()}")
 
     # write error log for those interested to see
     if write_error_log and all_errors:
