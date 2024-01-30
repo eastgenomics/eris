@@ -260,11 +260,11 @@ class Command(BaseCommand):
             for panel_dict in panel_list:
                 # for each panel associated with that clinical indication
                 panel_id: str = panel_dict["ci_superpanel__superpanel"]
-                panelapp_id: str = (
-                    panel_dict["ci_superpanel__superpanel__external_id"]
-                    if panel_dict["ci_superpanel__superpanel__external_id"]
-                    else ""
+                panelapp_id: str = panel_dict.get(
+                    "ci_superpanel__superpanel__external_id", ""
                 )
+                if not panelapp_id:
+                    panelapp_id = ""
                 ci_name: str = panel_dict["ci_superpanel__clinical_indication__name"]
 
                 for hgnc in panel_genes[panel_id]:
