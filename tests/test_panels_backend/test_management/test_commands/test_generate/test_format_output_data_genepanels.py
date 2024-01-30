@@ -41,10 +41,10 @@ class TestFormatOutputDataGenepanels(TestCase):
             ci_panels, panel_genes, excluded_hgncs
         )
         expected = [
-            ["R123.2_Condition 1", "First Panel_5.0", "HGNC:1", "109"],
-            ["R123.2_Condition 1", "First Panel_5.0", "HGNC:2", "109"],
-            ["R2_Condition 2", "Second Panel_2.0", "HGNC:3", "209"],
-            ["R2_Condition 2", "Second Panel_2.0", "HGNC:4", "209"],
+            ["R123.2_Condition 1", "First Panel_5", "HGNC:1", "109"],
+            ["R123.2_Condition 1", "First Panel_5", "HGNC:2", "109"],
+            ["R2_Condition 2", "Second Panel_2", "HGNC:3", "209"],
+            ["R2_Condition 2", "Second Panel_2", "HGNC:4", "209"],
         ]
         self.assertEqual(expected, actual)
 
@@ -65,7 +65,7 @@ class TestFormatOutputDataGenepanels(TestCase):
                     "ci_panel__panel_id": 1,
                     "ci_panel__panel__external_id": "109",
                     "ci_panel__panel__panel_name": "First Panel",
-                    "ci_panel__panel__panel_version": "5",
+                    "ci_panel__panel__panel_version": "5.0",
                 }
             ],
             "R2": [
@@ -109,7 +109,7 @@ class TestFormatOutputDataGenepanels(TestCase):
                     "ci_panel__panel_id": 1,
                     "ci_panel__panel__external_id": "109",
                     "ci_panel__panel__panel_name": "First Panel",
-                    "ci_panel__panel__panel_version": "5",
+                    "ci_panel__panel__panel_version": "5.0",
                 }
             ],
             "R2": [
@@ -119,7 +119,7 @@ class TestFormatOutputDataGenepanels(TestCase):
                     "ci_panel__panel_id": 2,
                     "ci_panel__panel__external_id": "209",
                     "ci_panel__panel__panel_name": "Second Panel",
-                    "ci_panel__panel__panel_version": "2",
+                    "ci_panel__panel__panel_version": "2.0",
                 }
             ],
         }

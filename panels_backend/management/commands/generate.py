@@ -210,8 +210,10 @@ class Command(BaseCommand):
             for panel_dict in panel_list:
                 # for each panel associated with that clinical indication
                 panel_id: str = panel_dict["ci_panel__panel_id"]
-                # get the PanelApp external ID if there is one. If it's none, make it a blank string
-                panelapp_id: panel_dict.get("ci_panel__panel__external_id", "")
+                # get the PanelApp external ID if there is one. If it's None, make it a blank string
+                panelapp_id: str = panel_dict.get("ci_panel__panel__external_id", "")
+                if not panelapp_id:
+                    panelapp_id = ""
                 ci_name: str = panel_dict["ci_panel__clinical_indication_id__name"]
                 for hgnc in panel_genes[panel_id]:
                     # for each gene associated with that panel
@@ -219,9 +221,11 @@ class Command(BaseCommand):
                         continue
 
                     # process the panel version
-                    panel_version: str = normalize_version(
-                        panel_dict.get("ci_panel__panel__panel_version", None)
+                    panel_version: str = panel_dict.get(
+                        "ci_panel__panel__panel_version", ""
                     )
+                    if not panel_version:
+                        panel_version = ""
                     line = [
                         f"{r_code}_{ci_name}",
                         f"{panel_dict['ci_panel__panel__panel_name']}_{panel_version}",
