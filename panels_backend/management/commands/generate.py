@@ -407,14 +407,13 @@ class Command(BaseCommand):
                     clinical = True
             return clinical
 
-    def _generate_g2t(self, output_directory, ref_genome, gff_release) -> None:
+    def _generate_g2t_results(self, ref_genome, gff_release) -> list[dict(str, str)]:
         """
         Main function to generate g2t.tsv
-        Calls the function to get all current transcripts, then formats and writes it to file.
+        Calls the function to get all current transcripts, then formats it, ready to write to file.
         Returned transcripts are limited to those represented in the user-requested reference genome
         and GFF release.
 
-        :param output_directory: output directory
         :param ref_genome: ReferenceGenome instance
         :param gff_release: GffRelease instance. This will be a GFF release which is appropriate for
         the stated ReferenceGenome.
@@ -454,8 +453,17 @@ class Command(BaseCommand):
                 "clinical": clinical_status,
             }
             results.append(transcript_data)
+        return results
 
-        # Write out results
+
+    def _write_g2t_results(self, results: list[dict(str, str)], output_directory: str) -> None:
+        """
+        Writes out g2t results to a TSV file at the specified output directory.
+
+        :param: results, a list of already-formatted lists-of-dictionaries, one dictionary for each
+        row of the eventual file
+        :param: output_directory, where the file should be written
+        """
         file_time = dt.datetime.today().strftime("%Y%m%d")
         keys = results[0].keys()
         with open(
@@ -465,6 +473,7 @@ class Command(BaseCommand):
                 out_file, delimiter="\t", lineterminator="\n", fieldnames=keys
             )
             writer.writerows(results)
+
 
     def add_arguments(self, parser) -> None:
         """
@@ -569,6 +578,8 @@ class Command(BaseCommand):
                     "Aborting g2t: GFF release does not exist for this genome build in the database."
                 )
 
-            self._generate_g2t(output_directory, genome, gff_release)
+            g2t = self._generate_g2t_results(output_directory, genome, gff_release)
+            self._write_g2t_results(g2t, output_directory)
+
             end = dt.datetime.now().strftime("%H:%M:%S")
             print(f"g2t file created at {output_directory} at {end}")
