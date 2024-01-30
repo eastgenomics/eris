@@ -677,9 +677,9 @@ def _check_for_more_than_one_tx_match(matches, relevant_panels, tx) -> tuple[boo
         return False, None
 
 
-def _assign_mane_dicts_by_type(source: str, mane_select_data: dict(str, str),
-                   mane_plus_clinical_data: dict(str, str), does_version_match: bool)\
-                    -> tuple[dict(str, str), dict(str, str)]:
+def _assign_mane_dicts_by_type(source: str, mane_select_data: dict[str, str],
+                   mane_plus_clinical_data: dict[str, str], does_version_match: bool)\
+                    -> tuple[dict[str, str], dict[str, str]]:
     """
     Work out whether a MANE transcript is Select or Plus Clinical.
     Assigns it to the correct dictionary accordinly.
