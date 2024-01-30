@@ -5,11 +5,11 @@ Workbook utils
 
 import re
 import pandas as pd
-from typing import Tuple
+from typing import Tuple, List
 
 from .utils import enumerate_chromosome
 
-def read_workbook(workbook: str) -> pd.DataFrame:
+def read_workbook(workbook: str) -> List[dict(str, str|int)]:
     """
     read workbook
 
