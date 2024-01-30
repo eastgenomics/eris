@@ -417,7 +417,7 @@ class Command(BaseCommand):
                     clinical = True
             return clinical
 
-    def _generate_g2t_results(self, ref_genome, gff_release) -> list[dict(str, str)]:
+    def _generate_g2t_results(self, ref_genome: ReferenceGenome, gff_release: GffRelease) -> list[dict[str, str]]:
         """
         Main function to generate g2t.tsv
         Calls the function to get all current transcripts, then formats it, ready to write to file.
@@ -427,6 +427,7 @@ class Command(BaseCommand):
         :param ref_genome: ReferenceGenome instance
         :param gff_release: GffRelease instance. This will be a GFF release which is appropriate for
         the stated ReferenceGenome.
+        :return: a list-of-dictionaries - each dict can be used to write out a line
         """
         start = dt.datetime.now().strftime("%H:%M:%S")
         print(f"Creating g2t file for reference genome {ref_genome.name} at {start}")
@@ -472,7 +473,7 @@ class Command(BaseCommand):
         return results
 
     def _write_g2t_results(
-        self, results: list[dict(str, str)], output_directory: str
+        self, results: list[dict[str, str]], output_directory: str
     ) -> None:
         """
         Writes out g2t results to a TSV file at the specified output directory.
@@ -594,7 +595,7 @@ class Command(BaseCommand):
                     "Aborting g2t: GFF release does not exist for this genome build in the database."
                 )
 
-            g2t = self._generate_g2t_results(output_directory, genome, gff_release)
+            g2t = self._generate_g2t_results(genome, gff_release)
             self._write_g2t_results(g2t, output_directory)
 
             end = dt.datetime.now().strftime("%H:%M:%S")
