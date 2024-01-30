@@ -42,10 +42,10 @@ class TestFormatGeneSuperPanels(TestCase):
         }
 
         expected = [
-            ["R1_Condition 1", "First Panel_5.0", "HGNC:300"],
-            ["R1_Condition 1", "First Panel_5.0", "HGNC:910"],
-            ["R2_Condition 2", "Second Panel_2.0", "HGNC:100"],
-            ["R2_Condition 2", "Second Panel_2.0", "HGNC:300"],
+            ["R1_Condition 1", "First Panel_5.0", "HGNC:300", "109"],
+            ["R1_Condition 1", "First Panel_5.0", "HGNC:910", "109"],
+            ["R2_Condition 2", "Second Panel_2.0", "HGNC:100", "209"],
+            ["R2_Condition 2", "Second Panel_2.0", "HGNC:300", "209"],
         ]
 
         cmd = Command()
@@ -92,8 +92,8 @@ class TestFormatGeneSuperPanels(TestCase):
         }
 
         expected = [
-            ["R1_Condition 1", "First Panel_5.0", "HGNC:910"],
-            ["R2_Condition 2", "Second Panel_2.0", "HGNC:100"],
+            ["R1_Condition 1", "First Panel_5.0", "HGNC:910", "109"],
+            ["R2_Condition 2", "Second Panel_2.0", "HGNC:100", "209"],
         ]
 
         cmd = Command()
