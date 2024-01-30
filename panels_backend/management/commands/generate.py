@@ -265,8 +265,6 @@ class Command(BaseCommand):
                 panelapp_id: str = panel_dict.get(
                     "ci_superpanel__superpanel__external_id", ""
                 )
-                if not panelapp_id:
-                    panelapp_id = ""
                 ci_name: str = panel_dict["ci_superpanel__clinical_indication__name"]
 
                 for hgnc in panel_genes[panel_id]:
@@ -417,7 +415,9 @@ class Command(BaseCommand):
                     clinical = True
             return clinical
 
-    def _generate_g2t_results(self, ref_genome: ReferenceGenome, gff_release: GffRelease) -> list[dict[str, str]]:
+    def _generate_g2t_results(
+        self, ref_genome: ReferenceGenome, gff_release: GffRelease
+    ) -> list[dict[str, str]]:
         """
         Main function to generate g2t.tsv
         Calls the function to get all current transcripts, then formats it, ready to write to file.

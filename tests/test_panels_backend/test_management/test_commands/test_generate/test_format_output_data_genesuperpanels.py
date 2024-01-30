@@ -102,3 +102,4 @@ class TestFormatGeneSuperPanels(TestCase):
         )
 
         self.assertEqual(expected, actual)
+
