@@ -64,7 +64,10 @@ class Command(BaseCommand):
     def _validate_release_versions(self, releases: list[str]) -> None:
         """
         Validate that the external releases are in the correct format
-        Only numbers and dots are permitted, e.g. 1.0.13
+        Only numbers on their own (e.g. 3) and numbers with dots (e.g. 1.0.13) are permitted
+        Raises error if anything else is encountered
+
+        :param: list of releases provided at CLI
         """
 
         invalid_releases = [id for id in releases if not re.match(r"^\d+(\.\d+)*$", id)]
@@ -76,7 +79,9 @@ class Command(BaseCommand):
             )
 
     def add_arguments(self, parser) -> None:
-        """Define the source of the data to import."""
+        """
+        Define the source of the data to import.
+        """
 
         # python manage.py seed --debug panelapp all
         parser.add_argument("--debug", action="store_true", help="debug mode")
