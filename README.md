@@ -144,7 +144,7 @@ python manage.py seed transcript \
 --error
 
 # working example
-python manage.py seed transcript --hgnc testing_files/eris/hgnc_dump_20230613.txt --hgnc_release 1.0 --mane testing_files/eris/mane_grch37.csv --mane_ext_id file-123 --mane_release 1.0 --gff testing_files/eris/GCF_000001405.25_GRCh37.p13_genomic.exon_5bp_v2.0.0.tsv --gff_release 1.0 --g2refseq testing_files/eris/gene2refseq_202306131409.csv --g2refseq_ext_id file-123 --markname testing_files/eris/markname_202306131409.csv --markname_ext_id file-234 --hgmd_release 1.4 --refgenome grch37
+python manage.py seed transcript --hgnc testing_files/eris/hgnc_dump_20230613.txt --hgnc_release 1.0 --mane testing_files/eris/mane_grch37.csv --mane_ext_id file-123 --mane_release 1.0 --gff testing_files/eris/GCF_000001405.25_GRCh37.p13_genomic.exon_5bp_v2.0.0.tsv --gff_release 19 --g2refseq testing_files/eris/gene2refseq_202306131409.csv --g2refseq_ext_id file-123 --markname testing_files/eris/markname_202306131409.csv --markname_ext_id file-234 --hgmd_release 1.4 --refgenome grch37
 ```
 
 The arguments are as follows:

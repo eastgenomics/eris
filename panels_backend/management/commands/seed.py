@@ -312,7 +312,7 @@ class Command(BaseCommand):
             4. MANE file's external ID (e.g. in DNAnexus)
             5. MANE release version
             6. parsed gff file on DNAnexus (project-Fkb6Gkj433GVVvj73J7x8KbV:file-GF611Z8433Gk7gZ47gypK7ZZ)
-            7. gff release - the in-house release version assigned to the GFF file
+            7. gff release - the release version assigned to the GFF file.
             8. gene2refseq table from HGMD database
             9. gene2refseq table's external ID
             10. markname table from HGMD database
