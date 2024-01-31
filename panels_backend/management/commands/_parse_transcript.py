@@ -893,10 +893,13 @@ def _parse_reference_genome(ref_genome: str) -> str:
         return "GRCh38"
     else:
         # check for valid patch notation, in which build is followed by .p and a number, e.g. GRCh37.p13
-        splits = ref_genome.lower().split(".")
-        if splits[0] in ["grch37", "grch38"]:
-            if re.match(r"^p\d+$", splits[1]):
-                return ref_genome.lower()
+        splits = ref_genome.split(".")
+        if splits[0].lower() in permitted_grch37:
+            if re.match(r"^p\d+$", splits[1].lower()):
+                return f"GRCh37.{splits[1].lower()}"
+        elif splits[0].lower() in permitted_grch38:
+            if re.match(r"^p\d+$", splits[1].lower()):
+                return f"GRCh38.{splits[1].lower()}"
         raise ValueError(
             f"Please provide a valid reference genome,"
             f" such as {'; '.join(permitted_grch37)}, {'; '.join(permitted_grch38)} "

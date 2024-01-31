@@ -24,10 +24,10 @@ class TestParsingRefGenome(TestCase):
         """
         Check valid synonyms for GRCh37 are converted
         """
-        valid = ["GRCh37.p10", "Grch37.p10"]
+        valid = ["GRCh37.p10", "Grch37.P10", "hg19.P10"]
         for i in valid:
             with self.subTest():
-                self.assertEqual(_parse_reference_genome(i), "grch37.p10")
+                self.assertEqual(_parse_reference_genome(i), "GRCh37.p10")
 
     def test_ref_genome_values_38(self):
         """
@@ -38,20 +38,26 @@ class TestParsingRefGenome(TestCase):
             with self.subTest():
                 self.assertEqual(_parse_reference_genome(i), "GRCh38")
 
-    def test_ref_genome_values_37_with_patch(self):
+    def test_ref_genome_values_38_with_patch(self):
         """
         Check valid synonyms for GRCh37 are converted
         """
-        valid = ["GRCh38.p10", "Grch38.p10"]
+        valid = ["GRCh38.p10", "Grch38.p10", "hg38.P10"]
         for i in valid:
             with self.subTest():
-                self.assertEqual(_parse_reference_genome(i), "grch38.p10")
+                self.assertEqual(_parse_reference_genome(i), "GRCh38.p10")
 
     def test_invalid_ref_genomes(self):
         """
         Check that nonsense strings throw a ValueError and a handy message
         """
-        invalid = ["1234", "beans", "£&£*$", "hg19.p10", "GRCh37.p12not_a_real_patch", "GRCh38.p12not_a_real_patch"]
+        invalid = [
+            "1234",
+            "beans",
+            "£&£*$",
+            "GRCh37.p12not_a_real_patch",
+            "GRCh38.p12not_a_real_patch",
+        ]
 
         permitted_grch37 = ["hg19", "37", "grch37"]
         permitted_grch38 = ["hg38", "38", "grch38"]
