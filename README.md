@@ -205,7 +205,7 @@ python manage.py generate g2t --ref_genome <ref_genome> --gff_release <gff_relea
 ```
 To run with a specified output pathway:
 ```
-python manage.py generate g2t --ref_genome <ref_genome> --output <output pathway>
+python manage.py generate g2t --ref_genome <ref_genome> --gff_release <gff_release> --output <output pathway>
 ```
 
 ### Edit links between panel-related tables
