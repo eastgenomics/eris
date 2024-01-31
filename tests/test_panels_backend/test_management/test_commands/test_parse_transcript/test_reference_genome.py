@@ -51,7 +51,7 @@ class TestParsingRefGenome(TestCase):
         """
         Check that nonsense strings throw a ValueError and a handy message
         """
-        invalid = ["1234", "beans", "£&£*$", "hg19.p10", "GRCh38.p12not_a_real_patch"]
+        invalid = ["1234", "beans", "£&£*$", "hg19.p10", "GRCh37.p12not_a_real_patch", "GRCh38.p12not_a_real_patch"]
 
         permitted_grch37 = ["hg19", "37", "grch37"]
         permitted_grch38 = ["hg38", "38", "grch38"]
