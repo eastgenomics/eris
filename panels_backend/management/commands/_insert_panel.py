@@ -9,7 +9,6 @@ from panels_backend.models import (
     ClinicalIndicationPanel,
     ClinicalIndicationPanelHistory,
     Gene,
-    Chromosome,
     Confidence,
     Penetrance,
     ModeOfInheritance,
