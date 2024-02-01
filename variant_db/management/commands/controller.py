@@ -1,6 +1,7 @@
 import pandas as pd
 from .insert import *
 from .workbook import read_workbook
+from .insert import insert_row
 
 def upload(workbook: str) -> None:
     """
@@ -12,5 +13,5 @@ def upload(workbook: str) -> None:
     """
     # call eris.variant_db._insert functions here
     wb_df = read_workbook(workbook)
-    print(wb_df)
-    return None
+    for row in wb_df:
+        insert_row(row)

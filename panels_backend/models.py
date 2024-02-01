@@ -13,7 +13,7 @@ class ReferenceGenome(models.Model):
     )
 
     # TODO: should 'length' be detailed in a Chromosome - ReferenceGenome linking table, instead?
-    length = models.IntegerField(
+    length = models.BigIntegerField(
         verbose_name="chromosome contig length, in bases", null=True
     )
 
@@ -789,19 +789,6 @@ class TranscriptReleaseTranscriptFile(models.Model):
 
     def __str__(self):
         return str(self.id)
-
-
-class Chromosome(models.Model):
-    """Defines chromosomes"""
-
-    panelapp_name = models.CharField(verbose_name="Name in PanelApp", max_length=255)
-
-    class Meta:
-        db_table = "chromosome"
-
-    def __str__(self):
-        return str(self.id)
-
 
 class Transcript(models.Model):
     """Defines a single transcript by RefSeq ID"""

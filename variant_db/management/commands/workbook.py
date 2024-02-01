@@ -5,11 +5,11 @@ Workbook utils
 
 import re
 import pandas as pd
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 
 from .utils import enumerate_chromosome
 
-def read_workbook(workbook: str) -> List[dict(str, str|int)]:
+def read_workbook(workbook: str) -> List[Dict[str, str|int]]:
     """
     read workbook
 
@@ -17,18 +17,18 @@ def read_workbook(workbook: str) -> List[dict(str, str|int)]:
     """
     wb_df = pd.read_csv(workbook)
     wb_df.columns = [clean_column_name(x) for x in wb_df.columns]
-    _validate_workbook(wb_df)
-    wb_df.numeric_chrom = enumerate_chromosome(wb_df.CHROM)
+    validate_workbook(wb_df)
     pivoted_df = pivot_df_as_row_dict(wb_df)
+    pivoted_df = add_panels_field(pivoted_df)
     return pivoted_df
 
-def _validate_workbook(workbook: pd.DataFrame):
+def validate_workbook(workbook: pd.DataFrame):
     """
     Validate workbook
 
     :param: workbook - workbook dataframe
     """
-    pass
+    return workbook
 
 def pivot_df_as_row_dict(df: pd.DataFrame):
     """
@@ -36,10 +36,10 @@ def pivot_df_as_row_dict(df: pd.DataFrame):
     """
     df_dict = df.to_dict()
     n_rows = range(df.shape[0])
-    pivoted_df = [_row_dict(df_dict, i) for i in n_rows]
+    pivoted_df = [row_dict(df_dict, i) for i in n_rows]
     return pivoted_df
 
-def _row_dict(df_dict: dict, i: int):
+def row_dict(df_dict: dict, i: int):
     """
     Helper function to return a row dict given the row index
     """
@@ -47,26 +47,35 @@ def _row_dict(df_dict: dict, i: int):
 
 def clean_column_name(column_header: str) -> str:
     """
-    docs
+    
     """
-    for func in [_replace_with_underscores, _rename_hgvs_column, _convert_name_to_lowercase]:
+    for func in [replace_with_underscores, rename_hgvs_column, convert_name_to_lowercase]:
         column_header = func(column_header)
     
     return column_header
 
-def _replace_with_underscores(column_header: str) -> str:
+def replace_with_underscores(column_header: str) -> str:
     if column_header.endswith("ID"):
         column_header = column_header.replace("ID", "_ID")
     return column_header.replace(" ", "_")
 
-def _rename_hgvs_column(column_header: str) -> str:
+def rename_hgvs_column(column_header: str) -> str:
     if re.match("[BP][AMPSV][SV]?\d$", column_header):
         return column_header + "_verdict"
     else:
         return column_header
 
-def _convert_name_to_lowercase(column_header: str, exclude: Tuple[str] = ("verdict", "evidence", "HGVS")) -> str:
+def convert_name_to_lowercase(column_header: str, exclude: Tuple[str] = ("verdict", "evidence", "HGVS")) -> str:
     if column_header.endswith(exclude):
         return column_header
     else:
         return column_header.lower()
+
+def add_panels_field(pivoted_df: List[Dict]) -> List[Dict]:
+    for row in pivoted_df:
+        row["panels"] = [parse_panel(panel) for panel in row["panel"].split(";")]
+    return pivoted_df
+
+def parse_panel(panel: str) -> Dict[str, str]:
+    split_panel = panel.split("_")
+    return {"name": split_panel[0], "version": split_panel[-1]}
