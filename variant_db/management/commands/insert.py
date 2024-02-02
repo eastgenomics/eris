@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 
-from pandas import DataFrame
-from numpy import int64
-from django.db import transaction, models
+from django.db import models
 from variant_db.models import *
-from panels_backend.models import ReferenceGenome, Panel, PanelSuperPanel
-from .utils import subset_row, rename_key
+from panels_backend.models import ReferenceGenome, Panel
+from typing import Dict, List
 
 # CONSTANTS
 ACGS_COLUMNS = ["PVS1_verdict","PVS1_evidence","PS1_verdict","PS1_evidence","PS2_verdict","PS2_evidence",
@@ -18,46 +16,46 @@ ACGS_COLUMNS = ["PVS1_verdict","PVS1_evidence","PS1_verdict","PS1_evidence","PS2
                 "BS4_verdict","BS4_evidence","BP1_verdict","BP1_evidence","BP4_verdict","BP4_evidence",
                 "BP5_verdict","BP5_evidence","BP7_verdict","BP7_evidence"]
 
-def insert_row(row_dict: dict) -> None:
+def insert_row(row_dict: Dict[str, str|int]) -> None:
     """
-    Function to import stuff into DB
+    Inserts a single row of data into VariantDB
 
     :param row_dict: dataframe row as dictionary
     """
-    sample = insert_into_table(Sample, **subset_row(row_dict, "instrument_id", "batch_id", "specimen_id"))
-    testcode = insert_into_table(TestCode, **subset_row(row_dict, "test_code"))
-    probeset = insert_into_table(ProbeSet, **subset_row(row_dict, "probeset_id") | {"testcode": testcode})
-    affected_status = insert_into_table(AffectedStatus, 
+    sample = _insert_into_table(Sample, **_subset_row(row_dict, "instrument_id", "batch_id", "specimen_id"))
+    testcode = _insert_into_table(TestCode, **_subset_row(row_dict, "test_code"))
+    probeset = _insert_into_table(ProbeSet, **_subset_row(row_dict, "probeset_id") | {"testcode": testcode})
+    affected_status = _insert_into_table(AffectedStatus, 
                                         names_to={"affected_status": "name"},
-                                        **subset_row(row_dict, "affected_status"))
-    assertion_criteria = insert_into_table(AssertionCriteria, **subset_row(row_dict, "category"))
-    clinical_significance_description = insert_into_table(ClinicalSignificanceDescription, **subset_row(row_dict, "category"))
-    assay_method = insert_into_table(AssayMethod, 
+                                        **_subset_row(row_dict, "affected_status"))
+    assertion_criteria = _insert_into_table(AssertionCriteria, **_subset_row(row_dict, "category"))
+    clinical_significance_description = _insert_into_table(ClinicalSignificanceDescription, **_subset_row(row_dict, "category"))
+    assay_method = _insert_into_table(AssayMethod, 
                                      names_to={"assay_method": "name"}, 
-                                     **subset_row(row_dict, "assay_method"))
-    reference_genome = insert_into_table(ReferenceGenome,
+                                     **_subset_row(row_dict, "assay_method"))
+    reference_genome = _insert_into_table(ReferenceGenome,
                                          names_to={"ref_genome": "name"}, 
-                                         **subset_row(row_dict, "ref_genome"))
-    clinvar_collection_method = insert_into_table(ClinvarCollectionMethod, 
+                                         **_subset_row(row_dict, "ref_genome"))
+    clinvar_collection_method = _insert_into_table(ClinvarCollectionMethod, 
                                                   names_to={"collection_method": "name"},
-                                                  **subset_row(row_dict, "collection_method"))
-    chromosome = insert_into_table(Chromosome, 
+                                                  **_subset_row(row_dict, "collection_method"))
+    chromosome = _insert_into_table(Chromosome, 
                                    names_to={"chrom": "name"}, 
-                                   **subset_row(row_dict, "chrom"))
-    vnt_row_subset = subset_row(row_dict, "interpreted", "pos", "ref", "alt")
+                                   **_subset_row(row_dict, "chrom"))
+    vnt_row_subset = _subset_row(row_dict, "interpreted", "pos", "ref", "alt")
     vnt_row_subset["interpreted"] = vnt_row_subset["interpreted"].lower() == "yes"
-    variant = insert_into_table(Variant,
+    variant = _insert_into_table(Variant,
                                 names_to={"pos": "position"},
                                 **vnt_row_subset | {"reference_genome": reference_genome, "chromosome": chromosome})
-    clinvar_allele_origin = insert_into_table(ClinvarAlleleOrigin,
+    clinvar_allele_origin = _insert_into_table(ClinvarAlleleOrigin,
                                               names_to={"allele_origin": "category"},
-                                              **subset_row(row_dict, "allele_origin"))
-    organisation = insert_into_table(Organization, 
+                                              **_subset_row(row_dict, "allele_origin"))
+    organisation = _insert_into_table(Organization, 
                                      names_to={"organisation": "name"},
-                                     **subset_row(row_dict, "organisation"))
-    institution = insert_into_table(Institution,
+                                     **_subset_row(row_dict, "organisation"))
+    institution = _insert_into_table(Institution,
                                     names_to={"institution": "name"},
-                                    **subset_row(row_dict, "institution"))
+                                    **_subset_row(row_dict, "institution"))
 
     interpretation_row = {
         "sample": sample,
@@ -78,29 +76,53 @@ def insert_row(row_dict: dict) -> None:
         "date": row_dict["date"]
     }
 
-    interpretation = insert_into_table(Interpretation, **interpretation_row)
+    interpretation = _insert_into_table(Interpretation, **interpretation_row)
 
-    acgs_category_information = insert_into_table(AcgsCategoryInformation, 
-                                                  **{"interpretation": interpretation} | subset_row(row_dict, *ACGS_COLUMNS))
+    acgs_category_information = _insert_into_table(AcgsCategoryInformation, 
+                                                  **{"interpretation": interpretation} | _subset_row(row_dict, *ACGS_COLUMNS))
     
     panels = [
-        insert_into_table(Panel, **{"panel_name": panel["name"], "panel_version": panel["version"]}) 
+        _insert_into_table(Panel, **{"panel_name": panel["name"], "panel_version": panel["version"]}) 
         for panel in row_dict["panels"]
     ]
 
     for panel in panels:
-        insert_into_table(InterpretationPanel, **{"panel": panel, "interpretation": interpretation})
+        _insert_into_table(InterpretationPanel, **{"panel": panel, "interpretation": interpretation})
 
 
-def insert_into_table(model_class: models.Model, names_to: dict=None, **kwargs) -> models.Model:
+def _subset_row(row: Dict[str, str|int], *desired_keys) -> Dict[str, str|int]:
+    """
+    Subsets a dict given a set of desired keys
+    """
+    return {k: row[k] for k in desired_keys}
+
+def _insert_into_table(model_class: models.Model, names_to: dict=None, **kwargs) -> models.Model:
+    """
+    Inserts a row of data into a table, given the model
+
+    :param: model_class: The model class to insert data into
+    :names_to: names to rename - current name is key, name to use is value
+    :kwargs: named arguments to pass in to model for import
+    """
     try:
         for k in names_to:
-            kwargs = rename_key(kwargs, k, names_to[k])
+            kwargs = _rename_key(kwargs, k, names_to[k])
     except TypeError:
         pass
-    inst = get_or_create(model_class, **kwargs)
+    inst = _get_or_create(model_class, **kwargs)
     return inst
 
-def get_or_create(model_class, **row):
+def _rename_key(dict_obj: Dict[str, str|int], old_name=str, new_name=str) -> Dict[str, str|int]:
+    """
+    Rename a dict key
+    """
+    dict_obj[new_name] = dict_obj[old_name]
+    del(dict_obj[old_name])
+    return dict_obj
+
+def _get_or_create(model_class: models.Model, **row) -> models.Model:
+    """
+    Helper function to call model `get_or_create` method
+    """
     inst, _ = model_class.objects.get_or_create(**row)
     return inst
