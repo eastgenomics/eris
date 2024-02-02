@@ -39,7 +39,7 @@ def _pivot_df_as_row_dict(df: pd.DataFrame) -> List[Dict[str, str|int]]:
     """
     df_dict = df.to_dict()
     n_rows = range(df.shape[0])
-    pivoted_df = [row_dict(df_dict, i) for i in n_rows]
+    pivoted_df = [_row_dict(df_dict, i) for i in n_rows]
     return pivoted_df
 
 def _row_dict(df_dict: dict, i: int) -> Dict[str, str|int]:
