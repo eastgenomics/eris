@@ -3,7 +3,7 @@
 from django.db import models
 from variant_db.models import *
 from panels_backend.models import ReferenceGenome, Panel
-from typing import Dict, List
+from typing import Dict
 
 # CONSTANTS
 ACGS_COLUMNS = ["PVS1_verdict","PVS1_evidence","PS1_verdict","PS1_evidence","PS2_verdict","PS2_evidence",
@@ -86,6 +86,8 @@ def insert_row(row_dict: Dict[str, str|int]) -> None:
         for panel in row_dict["panels"]
     ]
 
+    # Note that SuperPanel does not currently need to be linked to Interpretation in variantDB;
+    # this is because the laboratory does not presently have the option of selecting them in testing.
     for panel in panels:
         _insert_into_table(InterpretationPanel, **{"panel": panel, "interpretation": interpretation})
 
