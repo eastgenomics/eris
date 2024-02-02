@@ -1,7 +1,9 @@
 import pandas as pd
+from .insert import *
+from .workbook import read_workbook
+from .insert import insert_row
 
-
-def var_db_upload_controller(files: list[pd.DataFrame]) -> None:
+def upload(workbook: str) -> None:
     """
     The controller function which uploads a user-provided list of variant files
     into the relevant Eris tables.
@@ -9,6 +11,7 @@ def var_db_upload_controller(files: list[pd.DataFrame]) -> None:
 
     :param: files - a list of Pandas DataFrames, each of which contains data from a single variant file
     """
-    # TODO: write the real code!
-    print("TEST")
-    # for each dataframe, do any basic validation, and then put its data into the database tables
+    # call eris.variant_db._insert functions here
+    wb_df = read_workbook(workbook)
+    for row in wb_df:
+        insert_row(row)
