@@ -25,14 +25,6 @@ def read_workbook(workbook_file: str) -> List[Dict[str, str|int]]:
     pivoted_df = _add_panels_field(pivoted_df)
     return pivoted_df
 
-def validate_workbook(workbook: pd.DataFrame) -> pd.DataFrame:
-    """
-    Validate workbook (TODO)
-
-    :param: workbook: workbook dataframe
-    """
-    return workbook
-
 def _pivot_df_as_row_dict(df: pd.DataFrame) -> List[Dict[str, str|int]]:
     """
     Convert DataFrame to list of rows, where each row is a dictionary
