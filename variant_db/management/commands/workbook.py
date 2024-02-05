@@ -20,7 +20,6 @@ def read_workbook(workbook_file: str) -> List[Dict[str, str|int]]:
     """
     wb_df = pd.read_csv(workbook_file)
     wb_df.columns = [_clean_column_name(x) for x in wb_df.columns]
-    validate_workbook(wb_df)
     pivoted_df = _pivot_df_as_row_dict(wb_df)
     pivoted_df = _add_panels_field(pivoted_df)
     return pivoted_df
