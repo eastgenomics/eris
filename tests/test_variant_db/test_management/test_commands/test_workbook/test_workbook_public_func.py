@@ -4,10 +4,10 @@ from io import StringIO
 from django.test import TestCase
 from variant_db.management.commands.insert import ACGS_COLUMNS
 
-from variant_db.management.commands.workbook import *
+import variant_db.management.commands.workbook as workbook
 
 
-class TestColumnHeaderCleaningFunctions(TestCase):
+class TestReadWorkbook(TestCase):
     @classmethod
     def setUpTestData(cls):
         numeric_headers = [
@@ -55,7 +55,7 @@ class TestColumnHeaderCleaningFunctions(TestCase):
             ",".join(numeric_values + string_values + misc_values),
         )
 
-        wb_records = read_workbook(StringIO(csv_string))
+        wb_records = workbook.read_workbook(StringIO(csv_string))
         cls.wb_records = wb_records
         cls.wb_row = wb_records[0]
 
