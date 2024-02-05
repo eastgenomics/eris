@@ -103,7 +103,8 @@ def _insert_into_table(model_class: models.Model, names_to: dict=None, **kwargs)
     Inserts a row of data into a table, given the model
 
     :param: model_class: The model class to insert data into
-    :names_to: names to rename - current name is key, name to use is value
+    :names_to: names to rename - current name is key, name to use is value. 
+        Required when the key name doesn't match the corresponding column name in the model
     :kwargs: named arguments to pass in to model for import
     """
     try:
