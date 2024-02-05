@@ -145,6 +145,6 @@
 - model: variant_db.chromosome
   pk: 25
   fields:
-    name: M
+    name: MT
     numerical_name: 25
     type: chromosome
