@@ -436,7 +436,7 @@ class AcgsCategoryInformation(models.Model):
 
 class InterpretationPanel(models.Model):
     """
-    docs
+    Interpretation->Panel linking table
     """
     interpretation = models.ForeignKey(Interpretation, on_delete=models.PROTECT)
     panel = models.ForeignKey(Panel, on_delete=models.PROTECT)
