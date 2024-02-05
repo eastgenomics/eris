@@ -21,27 +21,9 @@ def read_workbook(workbook_file: str) -> List[Dict[str, str | int]]:
     """
     wb_df = pd.read_csv(workbook_file)
     wb_df.columns = [_clean_column_name(x) for x in wb_df.columns]
-    pivoted_df = _pivot_df_as_row_dict(wb_df)
-    pivoted_df = _add_panels_field(pivoted_df)
-    return pivoted_df
-
-
-def _pivot_df_as_row_dict(df: pd.DataFrame) -> List[Dict[str, str | int]]:
-    """
-    Convert DataFrame to list of rows, where each row is a dictionary
-    """
-    df_dict = df.to_dict()
-    n_rows = range(df.shape[0])
-    pivoted_df = [_row_dict(df_dict, i) for i in n_rows]
-    return pivoted_df
-
-
-def _row_dict(df_dict: dict, i: int) -> Dict[str, str | int]:
-    """
-    Helper function to return a row dict given the row index
-    """
-    return {k: df_dict[k][i] for k in df_dict}
-
+    wb_records = wb_df.to_dict(orient="records")
+    wb_records = _add_panels_field(wb_records)
+    return wb_records
 
 def _clean_column_name(column_header: str) -> str:
     """
