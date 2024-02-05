@@ -21,14 +21,20 @@ class Command(BaseCommand):
 
         # python manage.py upload variants
         variants = subparsers.add_parser("variants", help="seed variant results files")
-        variants.add_argument("-w", "--workbooks", type=str, nargs="+", required=True, help="One or more filepaths to variant workbook files")
-
+        variants.add_argument(
+            "-w",
+            "--workbooks",
+            type=str,
+            nargs="+",
+            required=True,
+            help="One or more filepaths to variant workbook files",
+        )
 
     def handle(self, *args, **options) -> None:
         """
         Handles the command line interface for the variant_db app.
         Currently the only command is: 'python manage.py upload variants --workbooks=*.csv',
-         which lets the user start variant upload of variant-containing files.
+        which lets the user start variant upload of variant-containing files.
         """
         if options["command"] == "variants":
             for workbook in options["workbooks"]:

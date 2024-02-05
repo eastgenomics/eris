@@ -1,13 +1,14 @@
-'''
+"""
 Workbook utils
-'''
+"""
 #!/usr/bin/env python
 
 import re
 import pandas as pd
 from typing import Tuple, List, Dict
 
-def read_workbook(workbook_file: str) -> List[Dict[str, str|int]]:
+
+def read_workbook(workbook_file: str) -> List[Dict[str, str | int]]:
     """
     Reads CSV workbook into a list of dicts, one per row.
     Column names are cleaned in the following ways for compatibility
@@ -24,7 +25,8 @@ def read_workbook(workbook_file: str) -> List[Dict[str, str|int]]:
     pivoted_df = _add_panels_field(pivoted_df)
     return pivoted_df
 
-def _pivot_df_as_row_dict(df: pd.DataFrame) -> List[Dict[str, str|int]]:
+
+def _pivot_df_as_row_dict(df: pd.DataFrame) -> List[Dict[str, str | int]]:
     """
     Convert DataFrame to list of rows, where each row is a dictionary
     """
@@ -33,20 +35,27 @@ def _pivot_df_as_row_dict(df: pd.DataFrame) -> List[Dict[str, str|int]]:
     pivoted_df = [_row_dict(df_dict, i) for i in n_rows]
     return pivoted_df
 
-def _row_dict(df_dict: dict, i: int) -> Dict[str, str|int]:
+
+def _row_dict(df_dict: dict, i: int) -> Dict[str, str | int]:
     """
     Helper function to return a row dict given the row index
     """
     return {k: df_dict[k][i] for k in df_dict}
 
+
 def _clean_column_name(column_header: str) -> str:
     """
     Helper function to clean the column name
     """
-    for func in [_replace_with_underscores, _rename_acgs_column, _convert_name_to_lowercase]:
+    for func in [
+        _replace_with_underscores,
+        _rename_acgs_column,
+        _convert_name_to_lowercase,
+    ]:
         column_header = func(column_header)
-    
+
     return column_header
+
 
 def _replace_with_underscores(column_header: str) -> str:
     """
@@ -55,6 +64,7 @@ def _replace_with_underscores(column_header: str) -> str:
     if column_header.endswith("ID"):
         column_header = column_header.replace("ID", "_ID")
     return column_header.replace(" ", "_")
+
 
 def _rename_acgs_column(column_header: str) -> str:
     """
@@ -65,7 +75,10 @@ def _rename_acgs_column(column_header: str) -> str:
     else:
         return column_header
 
-def _convert_name_to_lowercase(column_header: str, exclude: Tuple[str] = ("verdict", "evidence", "ACGS")) -> str:
+
+def _convert_name_to_lowercase(
+    column_header: str, exclude: Tuple[str] = ("verdict", "evidence", "ACGS")
+) -> str:
     """
     Converts names to lowercase. Returns an unchanged string if it ends with anything in the `exclude` option
     """
@@ -74,6 +87,7 @@ def _convert_name_to_lowercase(column_header: str, exclude: Tuple[str] = ("verdi
     else:
         return column_header.lower()
 
+
 def _add_panels_field(pivoted_df: List[Dict]) -> List[Dict]:
     """
     Splits up the "panels" field into single panels (";"-separated), where each panel is a dict with `panel_name` and `panel_version`
@@ -81,6 +95,7 @@ def _add_panels_field(pivoted_df: List[Dict]) -> List[Dict]:
     for row in pivoted_df:
         row["panels"] = [_parse_panel(panel) for panel in row["panel"].split(";")]
     return pivoted_df
+
 
 def _parse_panel(panel: str) -> Dict[str, str]:
     """

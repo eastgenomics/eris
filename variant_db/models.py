@@ -1,5 +1,11 @@
 from django.db import models
-from panels_backend.models import ClinicalIndication, Panel, SuperPanel, PanelSuperPanel, ReferenceGenome
+from panels_backend.models import (
+    ClinicalIndication,
+    Panel,
+    SuperPanel,
+    PanelSuperPanel,
+    ReferenceGenome,
+)
 
 # Create your models here.
 
@@ -130,6 +136,7 @@ class ClinvarCollectionMethod(models.Model):
     def __str__(self):
         return str(self.id)
 
+
 class Chromosome(models.Model):
     """
     Records chromosomes
@@ -142,10 +149,11 @@ class Chromosome(models.Model):
     type = models.TextField(verbose_name="chromosome type")
 
     class Meta:
-            db_table = "chromosome"
+        db_table = "chromosome"
 
     def __str__(self):
         return str(self.id)
+
 
 class Variant(models.Model):
     """
@@ -306,7 +314,7 @@ class Interpretation(models.Model):
         ClinvarSubmission,
         verbose_name="Clinvar Submission ID",
         null=True,
-        on_delete=models.PROTECT
+        on_delete=models.PROTECT,
     )
 
     prevalence = models.TextField(verbose_name="Prevalence of variant")
@@ -434,14 +442,17 @@ class AcgsCategoryInformation(models.Model):
     def __str__(self):
         return str(self.id)
 
+
 class InterpretationPanel(models.Model):
     """
     Interpretation->Panel linking table
     """
+
     interpretation = models.ForeignKey(Interpretation, on_delete=models.PROTECT)
     panel = models.ForeignKey(Panel, on_delete=models.PROTECT)
+
     class Meta:
         db_table = "interpretation_panel"
-    
+
     def __str__(self):
         return str(self.id)

@@ -790,6 +790,7 @@ class TranscriptReleaseTranscriptFile(models.Model):
     def __str__(self):
         return str(self.id)
 
+
 class Transcript(models.Model):
     """Defines a single transcript by RefSeq ID"""
 
