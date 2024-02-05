@@ -193,24 +193,14 @@ def _insert_into_table(
             kwargs = _rename_key(kwargs, k, names_to[k])
     except TypeError:
         pass
-    inst = _get_or_create(model_class, **kwargs)
+    inst, _ = model_class.objects.get_or_create(**kwargs)
     return inst
 
 
-def _rename_key(
-    dict_obj: Dict[str, str | int], old_name=str, new_name=str
-) -> Dict[str, str | int]:
+def _rename_key(dict_obj: Dict[str, str | int], old_name=str, new_name=str) -> Dict[str, str | int]:
     """
     Rename a dict key
     """
     dict_obj[new_name] = dict_obj[old_name]
     del dict_obj[old_name]
     return dict_obj
-
-
-def _get_or_create(model_class: models.Model, **row) -> models.Model:
-    """
-    Helper function to call model `get_or_create` method
-    """
-    inst, _ = model_class.objects.get_or_create(**row)
-    return inst
