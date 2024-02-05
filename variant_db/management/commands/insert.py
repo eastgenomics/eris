@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from django.db import models
+from django.db import models, transaction
 from variant_db.models import *
 from panels_backend.models import ReferenceGenome, Panel
 from typing import Dict
@@ -16,6 +16,7 @@ ACGS_COLUMNS = ["PVS1_verdict","PVS1_evidence","PS1_verdict","PS1_evidence","PS2
                 "BS4_verdict","BS4_evidence","BP1_verdict","BP1_evidence","BP4_verdict","BP4_evidence",
                 "BP5_verdict","BP5_evidence","BP7_verdict","BP7_evidence"]
 
+@transaction.atomic
 def insert_row(row_dict: Dict[str, str|int]) -> None:
     """
     Inserts a single row of data into VariantDB
