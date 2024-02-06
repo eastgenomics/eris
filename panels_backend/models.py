@@ -877,6 +877,7 @@ class GffRelease(models.Model):
     The Ensembl release version is used (rather than e.g. GENCODE).
     Release version must be unique for a given reference genome.
     """
+
     ensembl_release = models.TextField(
         verbose_name="Gff Release in Ensembl versioning system", unique=True
     )

@@ -456,9 +456,6 @@ class Command(BaseCommand):
             displayable_clinical_status = (
                 "clinical_transcript" if clinical_status else "not_clinical_transcript"
             )
-            displayable_clinical_status = (
-                "clinical_transcript" if clinical_status else "not_clinical_transcript"
-            )
             transcript_data = {
                 "hgnc_id": transcript.transcript.gene.hgnc_id,
                 "transcript": transcript.transcript,
