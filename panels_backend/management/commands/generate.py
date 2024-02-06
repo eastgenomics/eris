@@ -450,15 +450,17 @@ class Command(BaseCommand):
         results = []
 
         for gff_tx in gff_transcripts:
+            # For each Transcript linked to this GFF release - make a row-dictionary of its data
+            tx = gff_tx.transcript
             clinical_status = self.get_current_transcript_clinical_status_for_g2t(
-                gff_tx.transcript, latest_select, latest_plus_clinical, latest_hgmd
+                tx, latest_select, latest_plus_clinical, latest_hgmd
             )
             displayable_clinical_status = (
                 "clinical_transcript" if clinical_status else "not_clinical_transcript"
             )
             transcript_data = {
-                "hgnc_id": gff_tx.transcript.gene.hgnc_id,
-                "transcript": gff_tx.transcript,
+                "hgnc_id": tx.gene.hgnc_id,
+                "transcript": tx,
                 "clinical": displayable_clinical_status,
             }
             results.append(transcript_data)
