@@ -1826,7 +1826,7 @@ def _check_task_running(task_name: str) -> bool:
 def seed(request: HttpRequest) -> HttpResponse:
     """
     Handle seed page:
-    Currently hand:
+    Currently handle:
     - Test Directory
     - Transcript (TODO: known issue of long seeding time which cause 502 Bad Gateway error)
     """
@@ -1874,7 +1874,9 @@ def seed(request: HttpRequest) -> HttpResponse:
                 request.FILES.get("markname_upload").read(),
             )
             # NOTE: uploaded files can't be None because form file inputs are required
-            if _check_task_running("seed_transcripts"): # check if another seeding instance is running
+            if _check_task_running(
+                "seed_transcripts"
+            ):  # check if another seeding instance is running
                 return render(
                     request,
                     "web/info/seed.html",
