@@ -1,6 +1,24 @@
-# Eris
+# Eris: Django apps for panel management and variant storage
 
-Abbreviations:
+## Note
+Eris is currently still in active pre-release development, as of 23rd January 2024.
+
+
+## Purpose
+Eris is a tool with two broad functionalities:
+1. The 'panels' apps (panels_backend and panels_web) store panels, clinical indications, genes and transcripts in a PostgreSQL database. A command line interface lets the user populate and bulk-update the database from files, and download the information as up-to-date files for downstream pipelines. In addition, a web interface allows easy viewing of the database contents, and lets users add custom panels, or carry out manual approval for some database changes.
+  Note that as of 23rd January 2024, the 'panels' apps can be used without the 'variant_db' functionality.
+2. The 'variant_db' app allows storage of clinical interpretations, and ultimately, to streamline submission of interpreted variants to ClinVar.
+
+A shared database is used for the two apps.
+
+
+## Intended environment
+Eris requires Python version 3.10. It is designed to run in Docker containers running Ubuntu base images, on a local bioinformatics server using RHEL as its operating system. It needs to be connected to a PostgreSQL database. You also need to be connected to the internet, in order to access the PanelApp API.
+
+
+## Abbreviations:
+- CLI: command line interface
 - CI: clinical indication
 - PA: PanelApp (website at https://panelapp.genomicsengland.co.uk/)
 - TD: NHS England National Genomic Test Directory (website at https://www.england.nhs.uk/publication/national-genomic-test-directories/)
@@ -8,17 +26,41 @@ Abbreviations:
 Descriptions of the various gene metadata attributes can be found in the online PanelApp handbook at https://panelapp.genomicsengland.co.uk/media/files/PanelApp_Handbook_V18_120210506.pdf.
 
 
+## Overview of components
+Eris' components are:
+- core: contains some basic app settings, common to both the 'panels' and 'variant_db' apps
+- panels_backend:
+  - Includes the 'panels' database models, in models.py, from which a PostgreSQL database can be populated with tables.
+  - Provides the 'panels' command line interface and associated processing scripts, in management/commands
+- panels_web: 
+  - Controls the 'panels' web 'front-end' interface, which allows scientists to view the clinical indications (CIs), panels, genes, transcripts, and their histories; add custom panels; and review more-complex changes to the database which need human approval 
+  - For example, when a panel version is updated in PanelApp, Eris automatically linked to the same clinical indication used for the old panel version. However, this change is marked as 'pending' until a user approves it.
+- nginx: basic nginx (forward-proxy) configurations
+- variant_db:
+  - Includes variant interpretation-specific database models, in models.py, from which a PostgreSQL database can be populated.
+  - Provides the command line interface and scripts to enable population of parsed CSV variant interpretations, in management/commands
 
-# Setup - the Panels tool
-## Create or update database models
-Make migrations if necessary and migrate to existing database.
+
+## Setup
+### Create or update database models
+First, create a PostgreSQL database for Eris to connect to.
+Then, make migrations if necessary, and migrate changes to the existing database.
+For the 'panels' functionality:
 ```
 python manage.py makemigrations panels_backend
 python manage.py migrate panels_backend
 ```
+If planning to use the 'variant_db' functionality, the add-on models must also be migrated:
+```
+python manage.py makemigrations variant_db
+python manage.py migrate variant_db
+```
 
-## Populate the Panel-relevant sections of the database
-### 1. Insert data from PanelApp
+
+## Using the 'panels' functionality
+
+### Populate/update the database from CLI
+#### 1. Insert data from PanelApp
 You can choose to seed all panels, or to seed specified panels by their PanelApp IDs.
 Note that panels can be either standard panels, or superpanels. Superpanels are collections of standard panels, and contain all the genes contained by each of those standard panels.
 
@@ -43,8 +85,12 @@ python manage.py seed panelapp <panel or superpanel id> <panel or superpanel ver
   - For Superpanels, the most-recent SIGNED OFF version is retrieved. In addition, the most recent signed-off versions of its child panels are retrieved.
 
   
-### 2. Insert data from the National Genomic Test Directory
-The generic command for this is:
+#### 2. Insert data from the National Genomic Test Directory
+Before it can be used in Eris panels, the National Genomic Test Directory's spreadsheet file must be converted to JSON format. To do this, we pre-check it using the separate 'test_directory_checker', make any required changes, and then convert it with the 'test_directory_parser' projects, which are available in GitHub:
+* https://github.com/eastgenomics/test_directory_checker
+* https://github.com/eastgenomics/test_directory_parser
+
+Once the test directory is converted to an input JSON, it can be used to populate the Eris database with the following command:
 ```
 python manage.py seed td <input_json> --td_release <td_release>
 ```
@@ -52,8 +98,8 @@ python manage.py seed td <input_json> --td_release <td_release>
 ```
 python manage.py seed td testing_files/eris/230616_RD_TD_v5.json --td_release 5
 ```
-- This command retrieves data from an output JSON file generated by "test directory parser", inserts the data into the appropriate database models, and link the clinical indication to the appropriate Panel record as specified
-- The JSON file can be created from the original test directory MS Excel file using https://github.com/eastgenomics/test_directory_parser, and take the following format:
+- This command inserts the JSON data into the appropriate database models, and links the clinical indication to the appropriate Panel record as specified
+- The JSON file will look similar to this:
 
 ```json
 {
@@ -82,10 +128,12 @@ The arguments for this command are:
 - The version of the test directory release, e.g., 5.
 
 
-### 3. Seed transcript
+#### 3. Seed transcript
 
-Adds transcripts to the database for either GRCh37 or GRCh38. 
-MANE and HGMD files are used to assign transcripts as 'default' clinical or non-clinical for each gene - though this can be over-ridden for specific panels, where a non-default transcript is more clinically appropriate. The MANE file for GRCh37 is a CSV file downloaded from Transcript Archive http://tark.ensembl.org/web/mane_GRCh37_list/) and the HGMD files are CSV files of the 'markname' and 'g2refseq' tables, generated when the HGMD database is dumped.
+Adds transcripts to the database, for either GRCh37 or GRCh38. The possible transcripts are provided in a GFF file.
+
+MANE and HGMD files are used to assign transcripts as being the 'default' clinical or non-clinical for each gene. The MANE file for GRCh37 is a CSV file downloaded from Transcript Archive http://tark.ensembl.org/web/mane_GRCh37_list/) and the HGMD files are CSV files of the 'markname' and 'g2refseq' tables, generated when the HGMD database is dumped.  
+
 MANE and HGMD files should be version-controlled locally, with file IDs for every file, a release version for MANE, and a release version for HGMD. These are provided as string arguments during transcript seeding. Then, each transcript will be linked to the MANE/HGMD releases which informed the 'clinical/non-clinical' decision.
 
 ```
@@ -117,24 +165,10 @@ The arguments are as follows:
 *HGMD database source can be found on DNAnexus (project-Fz4Q15Q42Z9YjYk110b3vGYQ:file-Fz4Q46842Z9z2Q6ZBjy7jVPY)
 
 
-# Setup - the VariantDB tool
-## Create or update database models
-Make migrations if necessary and migrate to existing database.
-```
-python manage.py makemigrations variant_db
-python manage.py migrate variant_db
-```
-
-## Populate the Variant DB-relevant sections of the database
-### 1. Insert variant data from CSV files
-
-#TODO: add information once this section of the work is complete
-
-
-# Generating outputs - for the Panels tool
+### Generating outputs from CLI
 A series of output 'dump files' can be created from the contents of the Eris database, using the command line.
 
-## Generate genepanel
+#### Generate a genepanel file
 
 Generates a text file which represents each gene in a panel or superpanel, with that panel/superpanel's linked clinical indication, on a separate line. Genes are only output if they are in panels/superpanel which currently have an active link to a clinical indication.
 
@@ -151,10 +185,10 @@ python manage.py generate genepanels --hgnc testing_files/eris/hgnc_dump_2023060
 ```
 To run with a specified output pathway:
 ```
-python manage.py generate genepanels --hgnc testing_files/eris/hgnc_dump_23052023.txt --output <output_path>
+python manage.py generate genepanels --hgnc testing_files/eris/hgnc_dump_20230606_1.txt --output <output_path>
 ```
 
-## Generate g2t	
+#### Generate a g2t file
 
 Generates a text file which represents every transcript linked to the user-selected reference genome in the Eris database, alongside its linked gene, with a column displaying whether the transcript is the 'clinical transcript' for that gene (True), whether it's not clinical for that gene (False), or whether it's not present in the most up-to-date versions of the transcript sources (None). Currently, the sources used to assign clinical status in Eris are MANE Select, MANE Plus Clinical and HGMD.
 
@@ -169,8 +203,10 @@ To run with a specified output pathway:
 python manage.py generate g2t --ref_genome <ref_genome> --output <output pathway>
 ```
 
-# Edit Interaction
-## clinical indication - panel
+### Edit links between panel-related tables
+#### Edit a clinical indication - panel interaction
+
+If an automatically-generated clinical indication/panel link needs to be manually approved (activated or deactivated) this can be done in the web interface, or instead, via the CLI:
 ```
 python manage.py edit <--panel_id or --panel_name> <panel id or panel name> <--clinical_indication_id or --clinical_indication_r_code> <r code or clinical indication id> <activate/deactivate>
 
@@ -179,9 +215,15 @@ e.g. python manage.py edit --panel_id 26 --clinical_indication_id 1 deactivate
 NOTE: panel_name is case-insensitive
 ```
 
-# Running Unit Tests
+## Using the 'variant_db' functionality
 
-Unit tests are stored in the 'tests' directory, and can be run through 'manage.py':
+As of 23rd January 2024, this functionality is still in very early development.
+More information will be added as it nears completion.
+
+
+## For developers: Running Unit Tests
+
+Unit tests are stored in the 'tests' directory, and can be run via the 'manage.py' script:
 ```
 python manage.py test
 ```

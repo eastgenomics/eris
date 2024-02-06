@@ -86,7 +86,7 @@ class TestSuperpanelsFlaggedWhenNoLongerInTd(TestCase):
         with self.subTest():
             assert len(hist) == 1
             assert hist[0].note == History.flag_clinical_indication_panel(
-                "ClinicalIndicationSuperPanel does not exist in TD"
+                "Superpanel ID no longer attached to clinical indication in TD"
             )
 
         # check that the superpanel with the external ID '4', which is PRESENT IN the

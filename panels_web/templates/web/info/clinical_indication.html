@@ -11,6 +11,7 @@
         </div>
     </div>
     {% endif %}
+
     <!-- Clinical Indication Overview -->
     <div class="row">
         <div class="col">
@@ -56,11 +57,61 @@
                     <tr>
                         <td><a href="{% url 'clinical_indication_panel' cip.id %}">{{cip.id}}</a></td>
                         {% if cip.current %}
-                        <td><span class="badge text-bg-success">{{cip.current}}</span></td>
+                        <td><span class="badge text-bg-success">{{cip.current}}</span>
+                            {% if cip.pending %}
+                            <span class="badge text-bg-warning">pending</span>
+                            {% endif %}
+                        </td>
                         {% else %}
-                        <td><span class="badge text-bg-danger">{{cip.current}}</span></td>
+                        <td>
+                            <span class="badge text-bg-danger">{{cip.current}}</span>
+                            {% if cip.pending %}
+                            <span class="badge text-bg-warning">pending</span>
+                            {% endif %}
+                        </td>
                         {% endif %}
                         <td><a href="{% url 'panel' cip.panel_id %}">{{ cip.panel_id__panel_name }}</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="col">
+                <div class="alert alert-info" role="alert">
+                    Nothing to show here!
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row my-3"></div>
+
+    <!-- Clinical Indication SuperPanel Link -->
+    <div class="row">
+        <div class="col">
+            <h3>Clinical Indication SuperPanel Link</h3>
+            <p class="fs-6 text-muted">all clinical indication-superpanel links</p>
+            {% if ci_superpanels %}
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th scope="col">Database ID</th>
+                        <th scope="col">Active</th>
+                        <th scope="col">SuperPanel</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cisp in ci_superpanels %}
+                    <tr>
+                        <td><a href="{% url 'clinical_indication_superpanel' cisp.id %}">{{cisp.id}}</a></td>
+                        {% if cisp.current %}
+                        <td><span class="badge text-bg-success">{{cisp.current}}</span></td>
+                        {% else %}
+                        <td><span class="badge text-bg-danger">{{cisp.current}}</span></td>
+                        {% endif %}
+                        <td><a href="{% url 'superpanel' cisp.superpanel_id %}">{{ cisp.superpanel_id__panel_name }}</a>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

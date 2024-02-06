@@ -20,6 +20,15 @@ class TestParsingRefGenome(TestCase):
             with self.subTest():
                 self.assertEqual(parse_reference_genome(i), "GRCh37")
 
+    def test_ref_genome_values_37_with_patch(self):
+        """
+        Check valid synonyms for GRCh37 are converted
+        """
+        valid = ["GRCh37.p10", "Grch37.P10", "hg19.P10"]
+        for i in valid:
+            with self.subTest():
+                self.assertEqual(_parse_reference_genome(i), "GRCh37.p10")
+
     def test_ref_genome_values_38(self):
         """
         Check valid synonyms for GRCh38 are converted
@@ -29,20 +38,34 @@ class TestParsingRefGenome(TestCase):
             with self.subTest():
                 self.assertEqual(parse_reference_genome(i), "GRCh38")
 
+    def test_ref_genome_values_38_with_patch(self):
+        """
+        Check valid synonyms for GRCh37 are converted
+        """
+        valid = ["GRCh38.p10", "Grch38.p10", "hg38.P10"]
+        for i in valid:
+            with self.subTest():
+                self.assertEqual(_parse_reference_genome(i), "GRCh38.p10")
+
     def test_invalid_ref_genomes(self):
         """
         Check that nonsense strings throw a ValueError and a handy message
         """
-        invalid = ["1234", "beans", "£&£*$"]
+        invalid = [
+            "1234",
+            "beans",
+            "£&£*$",
+            "GRCh37.p12not_a_real_patch",
+            "GRCh38.p12not_a_real_patch",
+        ]
 
         permitted_grch37 = ["hg19", "37", "grch37"]
         permitted_grch38 = ["hg38", "38", "grch38"]
 
         for i in invalid:
             with self.subTest():
-                msg = "Please provide a valid reference genome,"
-                f" such as {'; '.join(permitted_grch37)} or "
-                f"{'; '.join(permitted_grch38)} - you provided {i}"
-
-                with self.assertRaisesRegex(ValueError, msg):
-                    parse_reference_genome(i)
+                msg = f"Please provide a valid reference genome, such as {'; '.join(permitted_grch37)}, "
+                f"{'; '.join(permitted_grch38)} or GRCh37/GRCh38 followed by '.p' patch numbers - you provided {i}"
+                with self.assertRaises(ValueError) as cm:
+                    _parse_reference_genome(i)
+                    self.assertEqual(msg, cm.exception)

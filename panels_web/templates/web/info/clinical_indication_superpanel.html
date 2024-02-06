@@ -5,7 +5,7 @@
     <div class="row">
         <div class="col">
             {% if cisp %}
-            <h1>Clinical Indication SuperPanel {{cisp.id}}</h1>
+            <h1>Clinical Indication SuperPanel: {{cisp.id}}</h1>
             <h4><span class="badge text-bg-info text-white">Clinical Indication SuperPanel</span></h4>
             <h4>Panel: <a href="{% url 'superpanel' cisp.superpanel_id %}">{{cisp.superpanel_id__panel_name}}</a></h4>
             <h4>Clinical Indication: <a
