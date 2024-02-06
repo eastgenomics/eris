@@ -872,11 +872,11 @@ class TranscriptReleaseTranscript(models.Model):
 
 class GffRelease(models.Model):
     """
-    Defines a particular release of the GFF file, the source of possibly-clinically relevant
-    transcripts. Release versions must be unique for a given reference genome.
-    Currently, the Ensembl release number is used.
+    Defines a particular release of the GFF file,
+    which acts as the source of possibly-clinically relevant transcripts.
+    The Ensembl release version is used (rather than e.g. GENCODE).
+    Release version must be unique for a given reference genome.
     """
-
     ensembl_release = models.TextField(
         verbose_name="Gff Release in Ensembl versioning system", unique=True
     )
