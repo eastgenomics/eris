@@ -7,6 +7,9 @@ import dxpy as dx
 import datetime as dt
 from packaging.version import Version
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from core.celery import app as celery_app
+from celery.result import AsyncResult
+import json
 
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -36,8 +39,18 @@ from panels_backend.management.commands._parse_transcript import (
     prepare_gff_file,
     prepare_gene2refseq_file,
     prepare_markname_file,
+    parse_reference_genome,
+    add_gff_release_info_to_db,
+    add_transcript_release_info_to_db,
+    make_hgnc_gene_sets,
 )
+
 from panels_backend.management.commands._insert_ci import insert_test_directory_data
+
+from panels_web.tasks import (
+    call_seed_transcripts_function,
+    call_update_existing_gene_metadata,
+)
 
 from panels_backend.models import (
     ClinicalIndication,
@@ -65,6 +78,7 @@ from panels_backend.models import (
     TranscriptSource,
     ReferenceGenome,
     Transcript,
+    HgncRelease,
 )
 
 
@@ -80,9 +94,9 @@ def index(request: HttpRequest) -> HttpResponse:
     """
 
     # fetch all clinical indications
-    clinical_indications: list[
-        ClinicalIndication
-    ] = ClinicalIndication.objects.order_by("r_code").all()
+    clinical_indications: list[ClinicalIndication] = (
+        ClinicalIndication.objects.order_by("r_code").all()
+    )
 
     # fetch all panels
     panels: list[Panel] = Panel.objects.order_by("panel_name").all()
@@ -356,12 +370,10 @@ def clinical_indication(request: HttpRequest, ci_id: int) -> HttpResponse:
         )
 
         # fetch ci-test-method history
-        test_method_history: QuerySet[
-            ClinicalIndicationTestMethodHistory
-        ] = ClinicalIndicationTestMethodHistory.objects.filter(
-            clinical_indication_id=ci_id
-        ).order_by(
-            "-id"
+        test_method_history: QuerySet[ClinicalIndicationTestMethodHistory] = (
+            ClinicalIndicationTestMethodHistory.objects.filter(
+                clinical_indication_id=ci_id
+            ).order_by("-id")
         )
 
         return render(
@@ -653,10 +665,10 @@ def history(request: HttpRequest) -> HttpResponse:
 
         # normalize panel version
         for cip in cip_histories:
-            cip[
-                "clinical_indication_panel_id__panel_id__panel_version"
-            ] = normalize_version(
-                cip["clinical_indication_panel_id__panel_id__panel_version"]
+            cip["clinical_indication_panel_id__panel_id__panel_version"] = (
+                normalize_version(
+                    cip["clinical_indication_panel_id__panel_id__panel_version"]
+                )
             )
 
         return render(
@@ -730,10 +742,10 @@ def history(request: HttpRequest) -> HttpResponse:
 
             # normalize panel version
             for history in cip_histories:
-                history[
-                    "clinical_indication_panel_id__panel_id__panel_version"
-                ] = normalize_version(
-                    history["clinical_indication_panel_id__panel_id__panel_version"]
+                history["clinical_indication_panel_id__panel_id__panel_version"] = (
+                    normalize_version(
+                        history["clinical_indication_panel_id__panel_id__panel_version"]
+                    )
                 )
 
             return render(
@@ -741,9 +753,11 @@ def history(request: HttpRequest) -> HttpResponse:
                 "web/history.html",
                 {
                     "data": cip_histories,
-                    "showing": f"Clinical Indication Panel & {' + '.join([action.title() for action in actions])}"
-                    if actions
-                    else "Clinical Indication Panel",
+                    "showing": (
+                        f"Clinical Indication Panel & {' + '.join([action.title() for action in actions])}"
+                        if actions
+                        else "Clinical Indication Panel"
+                    ),
                     "selected": "clinical indication-panel",
                 },
             )
@@ -1023,9 +1037,9 @@ def review(request: HttpRequest) -> HttpResponse:
         if panel.panel_version:
             panel.panel_version = normalize_version(panel.panel_version)
 
-    clinical_indications: QuerySet[
-        ClinicalIndication
-    ] = ClinicalIndication.objects.filter(pending=True).all()
+    clinical_indications: QuerySet[ClinicalIndication] = (
+        ClinicalIndication.objects.filter(pending=True).all()
+    )
 
     # clinical indication test method history
     if clinical_indications:
@@ -1276,9 +1290,11 @@ def genepanel(
             row["clinical_indication_id"],
             row["panel_id"],
             row["panel_id__panel_name"],
-            normalize_version(row["panel_id__panel_version"])
-            if row["panel_id__panel_version"]
-            else None,
+            (
+                normalize_version(row["panel_id__panel_version"])
+                if row["panel_id__panel_version"]
+                else None
+            ),
             [],
         )
 
@@ -1305,9 +1321,11 @@ def genepanel(
             row["clinical_indication_id"],
             row["superpanel_id"],
             row["superpanel_id__panel_name"],
-            normalize_version(row["superpanel_id__panel_version"])
-            if row["superpanel_id__panel_version"]
-            else None,
+            (
+                normalize_version(row["superpanel_id__panel_version"])
+                if row["superpanel_id__panel_version"]
+                else None
+            ),
             [],
             True,
             [],  # child panels
@@ -1326,9 +1344,11 @@ def genepanel(
                 WebChildPanel(
                     child_panel["panel_id"],
                     child_panel["panel_id__panel_name"],
-                    normalize_version(child_panel["panel_id__panel_version"])
-                    if child_panel["panel_id__panel_version"]
-                    else None,
+                    (
+                        normalize_version(child_panel["panel_id__panel_version"])
+                        if child_panel["panel_id__panel_version"]
+                        else None
+                    ),
                 )
             )
 
@@ -1766,15 +1786,6 @@ def _seed_test_directory(
     return redirect("seed")
 
 
-from panels_web.tasks import (
-    call_seed_transcripts_function,
-    call_update_existing_gene_metadata,
-)
-from core.celery import app as celery_app
-from celery.result import AsyncResult
-import json
-
-
 def get_task_status(request: HttpRequest, task_id: str) -> HttpResponse:
     async_task = AsyncResult(task_id, app=celery_app)
 
@@ -1810,10 +1821,6 @@ def _check_task_running(task_name: str) -> bool:
                 return True
 
     return False
-
-
-import base64
-from panels_backend.management.commands._parse_transcript import parse_reference_genome
 
 
 def seed(request: HttpRequest) -> HttpResponse:
@@ -1867,6 +1874,12 @@ def seed(request: HttpRequest) -> HttpResponse:
                 request.FILES.get("markname_upload").read(),
             )
             # NOTE: uploaded files can't be None because form file inputs are required
+            if _check_task_running("seed_transcripts"): # check if another seeding instance is running
+                return render(
+                    request,
+                    "web/info/seed.html",
+                    {"error": "Another seeding is already running."},
+                )
 
             # validation stage should all be here before seeding
             validate_ext_ids([mane_file_id, g2refseq_file_id, markname_file_id])
@@ -1876,7 +1889,7 @@ def seed(request: HttpRequest) -> HttpResponse:
             )
 
             reference_genome_model, _ = ReferenceGenome.objects.get_or_create(
-                reference_genome=parse_reference_genome(reference_genome)
+                name=parse_reference_genome(reference_genome)
             )
 
             check_for_transcript_seeding_version_regression(
@@ -1886,21 +1899,16 @@ def seed(request: HttpRequest) -> HttpResponse:
                 hgmd_version,
                 reference_genome_model,
             )
-            from panels_backend.management.commands._parse_transcript import (
-                add_gff_release_info_to_db,
-                add_transcript_release_info_to_db,
-                make_hgnc_gene_sets,
-            )
-
-            from panels_backend.models import HgncRelease
-
-            (
-                hgnc_approved_symbol_to_hgnc_id,
-                hgnc_id_to_approved_symbol,
-                hgnc_id_to_alias_symbols,
-            ) = prepare_hgnc_file(
-                io.BytesIO(hgnc_file),
-            )
+            try:
+                (
+                    hgnc_approved_symbol_to_hgnc_id,
+                    hgnc_id_to_approved_symbol,
+                    hgnc_id_to_alias_symbols,
+                ) = prepare_hgnc_file(
+                    io.BytesIO(hgnc_file),
+                )
+            except Exception as e:
+                return render(request, "web/info/seed.html", {"error": e})
 
             hgnc_release_model, release_created = HgncRelease.objects.get_or_create(
                 release=hgnc_version
@@ -1914,19 +1922,6 @@ def seed(request: HttpRequest) -> HttpResponse:
             ) = make_hgnc_gene_sets(
                 hgnc_id_to_approved_symbol, hgnc_id_to_alias_symbols
             )
-
-            # task_id = call_update_existing_gene_metadata.apply_async(
-            #     args=[
-            #         symbol_changed,
-            #         alias_changed,
-            #         release_created,
-            #         new_genes,
-            #         hgnc_release_model.id,
-            #         unchanged_genes,
-            #         "online_user",
-            #     ]
-            # )
-            # print(task_id)
 
             try:
                 mane_data = prepare_mane_file(
@@ -1965,7 +1960,7 @@ def seed(request: HttpRequest) -> HttpResponse:
                 return render(request, "web/info/seed.html", {"error": e})
 
             if not _check_task_running("seed_transcripts"):
-                task_id = call_update_existing_gene_metadata.apply_async(
+                call_update_existing_gene_metadata.apply_async(
                     args=[
                         symbol_changed,
                         alias_changed,
@@ -1989,22 +1984,6 @@ def seed(request: HttpRequest) -> HttpResponse:
                     ),
                 )
 
-                # task_id = call_seed_transcripts_function.apply_async(
-                #     args=[
-                #         gff_release_model.id,
-                #         gff,
-                #         mane_data,
-                #         markname_hgmd,
-                #         gene2refseq_hgmd,
-                #         reference_genome_model.id,
-                #         mane_select_tx_model.id,
-                #         mane_plus_clinical_tx_model.id,
-                #         hgmd_tx_model.id,
-                #         "online_user",
-                #     ],
-                #     link=call_update_existing_gene_metadata,
-                # )
-                print(task_id)
                 return render(
                     request,
                     "web/info/seed.html",

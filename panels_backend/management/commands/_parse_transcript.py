@@ -311,7 +311,9 @@ def update_existing_gene_metadata(
     unchanged_genes: dict[str, dict[str, str]],
     user: str,
 ) -> None:
-    # make edits and release links to pre-existing genes, and add genes which are new in the HGNC file
+    """
+    make edits and release links to pre-existing genes, and add genes which are new in the HGNC file
+    """
     with transaction.atomic():
         if symbol_changed:
             _update_existing_gene_metadata_symbol_in_db(
@@ -331,8 +333,12 @@ def update_existing_gene_metadata(
 
 
 def prepare_hgnc_file(
-    hgnc_file: str | io.BytesIO,
-) -> tuple[dict[str, str]]:
+    hgnc_file: str,
+) -> tuple[
+    dict[str, str],
+    dict[str, str],
+    dict[str, list[str]],
+]:
     """
     Read a hgnc file and sanity-check it
     If the HGNC version is new, add it to the database
@@ -340,14 +346,13 @@ def prepare_hgnc_file(
     of updating, and which genes already exist in the database.
     Finally, use that categorised data to update the Eris database, linking any changes
     to this HGNC file release.
-    Return a dictionary of every HGNC ID: symbol in the current file.
 
     :param hgnc_file: hgnc file path
-    :param hgnc_version: a string describing the in-house-assigned release version of
-    the HGNC file
-    :param user: str, the user's name
 
-    :return: gene symbol to hgnc id dict
+    :return: three dicts
+    1. hgnc_approved_symbol_to_hgnc_id: dictionary of approved symbol to hgnc id
+    2. hgnc_id_to_approved_symbol: dictionary of hgnc id to approved symbol
+    3. hgnc_id_to_alias_symbols: dictionary of hgnc id to list of alias symbols
     """
     print("Preparing HGNC files")
     hgnc: pd.DataFrame = pd.read_csv(hgnc_file, delimiter="\t")
@@ -391,10 +396,9 @@ def check_missing_columns(df: pd.DataFrame, columns: list) -> list[str]:
     :param: df - a Pandas Dataframe
     :param: columns - a list of column names to check for
 
-    # NOTE: this function is also used in web view thus Assertion or raise Exception()
-    has been changed to return error instead.
+    # NOTE: this function is also used in web view
 
-    :return: list or missing columns
+    :return: list of missing columns
     """
     return [col for col in columns if col not in df.columns]
 
@@ -518,7 +522,7 @@ def prepare_markname_file(markname_file: str) -> dict[str, list[str]]:
     if missing_columns := check_missing_columns(markname, needed_cols):
         raise ValueError(f"Missing columns in markname: {missing_columns}")
 
-    # NOTE: int64 is not JSON serializable, using default str instead
+    # NOTE: int64 is not JSON serializable in web view, using default str instead
     markname.dropna(subset=["hgncID", "gene_id"], inplace=True)
 
     return markname.groupby("hgncID")["gene_id"].apply(list).to_dict()
