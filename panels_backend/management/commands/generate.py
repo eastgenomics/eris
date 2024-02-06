@@ -449,16 +449,16 @@ class Command(BaseCommand):
         # Append per-transcript results to a list-of-dictionaries
         results = []
 
-        for transcript in gff_transcripts:
+        for gff_tx in gff_transcripts:
             clinical_status = self.get_current_transcript_clinical_status_for_g2t(
-                transcript.transcript, latest_select, latest_plus_clinical, latest_hgmd
+                gff_tx.transcript, latest_select, latest_plus_clinical, latest_hgmd
             )
             displayable_clinical_status = (
                 "clinical_transcript" if clinical_status else "not_clinical_transcript"
             )
             transcript_data = {
-                "hgnc_id": transcript.transcript.gene.hgnc_id,
-                "transcript": transcript.transcript,
+                "hgnc_id": gff_tx.transcript.gene.hgnc_id,
+                "transcript": gff_tx.transcript,
                 "clinical": displayable_clinical_status,
             }
             results.append(transcript_data)
