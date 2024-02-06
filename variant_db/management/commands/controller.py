@@ -1,9 +1,10 @@
 import pandas as pd
+from django.db import transaction
 from .insert import *
 from .workbook import read_workbook
 from .insert import insert_row
 
-
+@transaction.atomic
 def upload(workbook: str) -> None:
     """
     The controller function which uploads a user-provided list of variant files
