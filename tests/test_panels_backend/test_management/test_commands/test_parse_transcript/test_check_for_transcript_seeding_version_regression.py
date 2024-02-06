@@ -32,10 +32,10 @@ class TestCheckRegressions_OldHgncRelease(TestCase):
         # pre-populate releases
         self.hgnc = HgncRelease.objects.create(release="2")
         self.gff = GffRelease.objects.create(
-            gencode_release="10", reference_genome=self.reference_genome
+            ensembl_release="10", reference_genome=self.reference_genome
         )
         self.gff_2 = GffRelease.objects.create(
-            gencode_release="5", reference_genome=self.reference_genome
+            ensembl_release="5", reference_genome=self.reference_genome
         )
         self.mane_select = TranscriptRelease.objects.create(
             release="2",

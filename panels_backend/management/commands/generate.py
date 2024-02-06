@@ -442,7 +442,7 @@ class Command(BaseCommand):
 
         # We only need to assess those transcripts which are linked to the correct GFF release and reference genome
         gff_transcripts = TranscriptGffRelease.objects.filter(
-            gff_release__gencode_release=gff_release,
+            gff_release__ensembl_release=gff_release,
             gff_release__reference_genome=ref_genome,
         )
 
@@ -583,7 +583,7 @@ class Command(BaseCommand):
 
             try:
                 gff_release = GffRelease.objects.get(
-                    gencode_release=kwargs.get("gff_release"), reference_genome=genome
+                    ensembl_release=kwargs.get("gff_release"), reference_genome=genome
                 )
             except ObjectDoesNotExist:
                 raise ObjectDoesNotExist(

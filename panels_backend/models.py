@@ -874,11 +874,11 @@ class GffRelease(models.Model):
     """
     Defines a particular release of the GFF file, the source of possibly-clinically relevant
     transcripts. Release versions must be unique for a given reference genome.
-    Currently, the GENCODE release number is used.
+    Currently, the Ensembl release number is used.
     """
 
-    gencode_release = models.TextField(
-        verbose_name="Gff Release in GENCODE", unique=True
+    ensembl_release = models.TextField(
+        verbose_name="Gff Release in Ensembl versioning system", unique=True
     )
 
     reference_genome = models.ForeignKey(
@@ -895,7 +895,7 @@ class GffRelease(models.Model):
 
     class Meta:
         db_table = "gff_release"
-        unique_together = ["gencode_release", "reference_genome"]
+        unique_together = ["ensembl_release", "reference_genome"]
 
     def __str__(self):
         return str(self.id)

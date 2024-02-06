@@ -818,7 +818,7 @@ def _add_gff_release_info_to_db(
     :return gff_release: a GffRelease instance
     """
     gff_release, _ = GffRelease.objects.get_or_create(
-        gencode_release=gff_release, reference_genome=reference_genome
+        ensembl_release=gff_release, reference_genome=reference_genome
     )
     return gff_release
 
@@ -974,9 +974,9 @@ def _get_latest_gff_release(ref_genome: ReferenceGenome) -> GffRelease | None:
     """
     gffs = GffRelease.objects.filter(reference_genome=ref_genome)
 
-    max_release = max([Version(v.gencode_release) for v in gffs]) if gffs else None
+    max_release = max([Version(v.ensembl_release) for v in gffs]) if gffs else None
     if max_release:
-        return GffRelease.objects.get(gencode_release=max_release)
+        return GffRelease.objects.get(ensembl_release=max_release)
     else:
         return None
 
@@ -1059,7 +1059,7 @@ def _check_for_transcript_seeding_version_regression(
         latest_hgnc_release = None
 
     if _get_latest_gff_release(reference_genome):
-        latest_gff_release = _get_latest_gff_release(reference_genome).gencode_release
+        latest_gff_release = _get_latest_gff_release(reference_genome).ensembl_release
     else:
         latest_gff_release = None
 

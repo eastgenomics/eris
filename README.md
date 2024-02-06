@@ -154,7 +154,7 @@ The arguments are as follows:
 - `mane_ext_id`: the external file ID for the release-tagged MANE CSV file
 - `mane_release`: the release version associated with the MANE CSV file and its file ID. This must consist only of numbers and full stops, e.g. 1.0.1.
 - `gff`: path to parsed gff.tsv (project-Fkb6Gkj433GVVvj73J7x8KbV:file-GF611Z8433Gk7gZ47gypK7ZZ)
-- `gff_release`: the documented release version for the `gff` file you are providing for transcript annotations. This must consist only of numbers and full stops. It is recommended that you use the GENCODE release, and if you use VEP in your pipeline, you should select a release compatible with your currently-used VEP version.
+- `gff_release`: the documented release version for the `gff` file you are providing for transcript annotations. This must consist only of numbers and full stops. It is recommended that you use the Ensembl release, and if you use VEP in your pipeline, you should select a release compatible with your currently-used VEP version.
 - `g2refseq`: path to the g2refseq table from the HGMD database, in csv format
 - `g2refseq_ext_id`: external file ID for release-tagged HGMD g2refseq table
 - `markname`: path to markname table from the HGMD database, in csv format
@@ -200,7 +200,7 @@ python manage.py generate g2t --ref_genome <ref_genome> --gff_release <gff_relea
 
 - `ref_genome`: the name of your reference genome build. Currently permitted values are: 37/GRCh37/hg19 or 38/GRCh38/hg38
 
-- `gff_release`: the documented release version for the `gff` file you are providing for transcript annotations. This must consist only of numbers and full stops. It is recommended that you use a GENCODE release version which is compatible with your chosen reference genome. If you use VEP in your pipeline, you should select a release compatible with your currently-used VEP version. 
+- `gff_release`: the documented release version for the `gff` file you are providing for transcript annotations. This must consist only of numbers and full stops. It is recommended that you use an Ensembl release version which is compatible with your chosen reference genome. If you use VEP in your pipeline, you should select a release compatible with your currently-used VEP version. 
 
 ```
 To run with a specified output pathway:
