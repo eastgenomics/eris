@@ -191,6 +191,8 @@ def _insert_into_table(
     try:
         for k in names_to:
             kwargs = _rename_key(kwargs, k, names_to[k])
+    #TODO: I think TypeError should perhaps not be passed on - I think it should probably be a code-
+            #stopping event. Discuss removal.
     except TypeError:
         pass
     inst, _ = model_class.objects.get_or_create(**kwargs)
