@@ -651,22 +651,24 @@ def _get_clin_transcript_from_hgmd_files(
     return hgmd_base, None
 
 
-def _check_for_more_than_one_tx_match(
-    matches, relevant_panels, tx
+def _check_for_more_than_one_tx_match_in_panel_linked_tx(
+    matches, hgnc_id, tx
 ) -> tuple[bool, str | None]:
     """
     Check that a transcript isn't attached to more than one gene.
-    This should be impossible but it's happened at least once.
+    This should be impossible, but it's happened at least once with GRCh37 transcruots,
     If it happens, check if we really need this transcript, because there's a Panel-Gene
     it's relevant to. If we did really need it, raise a ValueError - the input MANE will
     need checking by a human.
-    If it's not relevant, just return the log message noting it.
+    If it's not relevant, just return the log message noting what happened.
 
     :param: matches between the transcript and genes. Will usually be 1.
+    :param: hgnc_id of the transcript's gene
     :param: relevant Panel-Genes affected by the duplicate transcript.
     :return: bool representing whether there's more than one match
     :return: error message or None if not applicable
     """
+    relevant_panels = PanelGene.objects.filter(gene__hgnc_id=hgnc_id)
     if len(matches) > 1:
         if len(relevant_panels) != 0:
             # stop event - throw a ValueError
@@ -680,34 +682,31 @@ def _check_for_more_than_one_tx_match(
 
 
 def _populate_mane_dict_by_category(
-    source: str,
-    mane_select_data: dict[str, str],
-    mane_plus_clinical_data: dict[str, str],
+    tx: list[dict[str, str]],
     does_version_match: bool,
-) -> tuple[dict[str, str], dict[str, str]]:
+) -> tuple[dict[str, str], str]:
     """
-    Work out whether a MANE transcript is Select or Plus Clinical.
-    Assigns it to the correct dictionary accordinly.
+    Work out whether a provided, known-MANE transcript is Select or Plus Clinical.
+    Formats a results dict and returns it with a source string, if so.
+    Otherwise, throws a stopping error.
 
-    :param: source
-    :param: mane_select_data. Dict with keys that are None by default, and set to True if the data is MANE Select.
-    :param: mane_plus_clinical_data. Dict with keys that are None by default, sets to True if the data turns out to be MANE Plus Clinical.
-    :param: does_version_match, a boolean for whether or not the transcript matches the version of its accession or just the name.
+    :param: a list of dicts of information for transcripts matching against MANE
+    :param: does_version_match, a boolean for whether or not the tx matches the version or just the accession
+    :return: mane_data, a formatted dictionary of information about the transcript
+    :return: a string telling you the source of the tx
     """
-    if str(source).lower() == "mane select":
-        mane_select_data["clinical"] = True
-        mane_select_data["match_base"] = True
-        mane_select_data["match_version"] = does_version_match
-    elif str(source).lower() == "mane plus clinical":
-        mane_plus_clinical_data["clinical"] = True
-        mane_plus_clinical_data["match_base"] = True
-        mane_plus_clinical_data["match_version"] = does_version_match
+    mane_data = dict()
+    source = tx[0]["MANE TYPE"]
+    if str(source).lower() in ["mane select", "mane plus clinical"]:
+        mane_data["clinical"] = True
+        mane_data["match_base"] = True
+        mane_data["match_version"] = does_version_match
+        return mane_data, source
     else:
         raise ValueError(
             "MANE Type does not match MANE Select or MANE Plus Clinical"
             " - check how mane_data has been set up"
         )
-    return mane_select_data, mane_plus_clinical_data
 
 
 def _transcript_assign_to_source(
@@ -750,59 +749,50 @@ def _transcript_assign_to_source(
     }
     error_msg = None
 
-    tx_base = re.sub(r"\.[\d]+$", "", tx)
-
     # First, find the transcript in the MANE file data. It could be either Select or Plus Clinical.
+    # Exact version matches are ideal, but check the accession without version if needs be.
     mane_exact_match = [d for d in mane_data if d["RefSeq"] == tx]
+    tx_base = re.sub(r"\.[\d]+$", "", tx)
     mane_base_match = [d for d in mane_data if d["RefSeq_versionless"] == tx_base]
 
-    # we search to see whether the transcript's gene is actually linked to a Panel
-    # this becomes important if we have more than one MANE exact or base match
-    relevant_panels = PanelGene.objects.filter(gene__hgnc_id=hgnc_id)
-
+    # if a transcript has exact matches to MANE, prioritise this.
+    # Fall back to non-exact matches otherwise
     if mane_exact_match:
-        multiple_matches, error_msg = _check_for_more_than_one_tx_match(
-            mane_exact_match, relevant_panels, tx
-        )
-        if not multiple_matches:
-            # determine whether it's MANE Select or Plus Clinical and return everything
-            source = mane_exact_match[0]["MANE TYPE"]
-            mane_select_data, mane_plus_clinical_data = _populate_mane_dict_by_category(
-                source,
-                mane_select_data,
-                mane_plus_clinical_data,
-                does_version_match=True,
-            )
-        # if there are multiple matches in IRRELEVANT transcripts it'll return blank dictionaries and an error msg
-        return mane_select_data, mane_plus_clinical_data, hgmd_data, error_msg
-
-    # fall through to here if no exact match - see if there's a versionless match instead
+        does_version_match = True
+        transcript_list = mane_exact_match
     elif mane_base_match:
-        multiple_matches, error_msg = _check_for_more_than_one_tx_match(
-            mane_base_match, relevant_panels, tx
-        )
+        does_version_match = False
+        transcript_list = mane_base_match
+
+    if mane_exact_match or mane_base_match:
+        (
+            multiple_matches,
+            error_msg,
+        ) = _check_for_more_than_one_tx_match_in_panel_linked_tx(transcript_list, tx)
         if not multiple_matches:
-            source = mane_base_match[0]["MANE TYPE"]
-            mane_select_data, mane_plus_clinical_data = _populate_mane_dict_by_category(
-                source,
-                mane_select_data,
-                mane_plus_clinical_data,
-                does_version_match=False,
+            mane_info, mane_type = _populate_mane_dict_by_category(
+                transcript_list,
+                does_version_match,
             )
+            if mane_type == "mane select":
+                mane_select_data = mane_info
+            elif mane_type == "mane plus clinical":
+                mane_plus_clinical_data = mane_info
         # if there are multiple matches in IRRELEVANT transcripts it'll return blank dictionaries and an error msg
         return mane_select_data, mane_plus_clinical_data, hgmd_data, error_msg
 
-    # transcript's gene is not in MANE - so look in HGMD
-    # note HGMD doesn't contain versions so we must match just against accession
-    hgmd_transcript_base, err = _get_clin_transcript_from_hgmd_files(
-        hgnc_id, markname_hgmd, gene2refseq_hgmd
-    )
-    if tx_base == hgmd_transcript_base:
-        hgmd_data["clinical"] = True
-        hgmd_data["match_base"] = True
-        hgmd_data["match_version"] = False
+    else:
+        # transcript's gene is not in MANE - so look in HGMD
+        # note HGMD doesn't contain versions so we must match just against accession
+        hgmd_transcript_base, err = _get_clin_transcript_from_hgmd_files(
+            hgnc_id, markname_hgmd, gene2refseq_hgmd
+        )
+        if tx_base == hgmd_transcript_base:
+            hgmd_data["clinical"] = True
+            hgmd_data["match_base"] = True
+            hgmd_data["match_version"] = False
 
-    return mane_select_data, mane_plus_clinical_data, hgmd_data, err
+        return mane_select_data, mane_plus_clinical_data, hgmd_data, err
 
 
 def _add_gff_release_info_to_db(
