@@ -12,12 +12,12 @@ class TestColumnHeaderCleaningFunctions(TestCase):
         self.assertEqual(_convert_name_to_lowercase("PIZZA", "PEPPERONI"), "pizza")
         # test defaults
         self.assertEqual(_convert_name_to_lowercase("PIZZA_verdict"), "PIZZA_verdict")
-        self.assertEqual(_convert_name_to_lowercase("ACGS_PIZZA"), "ACGS_PIZZA")
+        self.assertEqual(_convert_name_to_lowercase("PIZZA_evidence"), "PIZZA_evidence")
     
     def test_replace_with_underscores(self):
         self.assertEqual(_replace_with_underscores("margherita pizza"), "margherita_pizza")
         self.assertEqual(_replace_with_underscores("margherita_pizza"), "margherita_pizza")
-        self.assertEqual(_replace_with_underscores("pizza ID"), "pizzaID")
+        self.assertEqual(_replace_with_underscores("pizzaID"), "pizza_ID")
     
     def test_rename_acgs_column(self):
         self.assertEqual(_rename_acgs_column("PS1"), "PS1_verdict")
