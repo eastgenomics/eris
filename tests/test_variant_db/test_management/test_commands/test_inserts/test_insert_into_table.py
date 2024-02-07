@@ -5,21 +5,21 @@ from variant_db.management.commands.insert import (
     _insert_into_table,
 )
 
+
 class TestInsertIntoTable_GettingExisting(TestCase):
     """
     Check that when GETTING already-existing entries from a model, the function works correctly.
     Check the cases for models which need column renaming, and models which don't.
     """
+
     def setUp(self) -> None:
         self.sample, _ = Sample.objects.get_or_create(
             instrument_id="test_inst",
             batch_id="test_batch",
-            specimen_id="test_specimen"
+            specimen_id="test_specimen",
         )
 
-        self.inst, _ = Institution.objects.get_or_create(
-            name="NHS Foundation Trust"
-        )
+        self.inst, _ = Institution.objects.get_or_create(name="NHS Foundation Trust")
 
     def test_getting_sample_without_rename(self):
         """
@@ -30,7 +30,7 @@ class TestInsertIntoTable_GettingExisting(TestCase):
         test_dict = {
             "instrument_id": "test_inst",
             "batch_id": "test_batch",
-            "specimen_id": "test_specimen"
+            "specimen_id": "test_specimen",
         }
 
         retrieved_entry = _insert_into_table(Sample, **test_dict)
@@ -47,16 +47,20 @@ class TestInsertIntoTable_GettingExisting(TestCase):
         test_dict = {"institution": "NHS Foundation Trust"}
         names_to = {"institution": "name"}
 
-        retrieved_entry = _insert_into_table(Institution, names_to=names_to, **test_dict)
-        
+        retrieved_entry = _insert_into_table(
+            Institution, names_to=names_to, **test_dict
+        )
+
         # in this case, we expect _insert_into_table to fetch the already-existing entry
         assert self.inst.id == retrieved_entry.id
+
 
 class TestInsertIntoTable_MakingFromScratch(TestCase):
     """
     Check that when CREATING not-already-existing entries in a model, the function works correctly.
     Check the cases for models which need column renaming, and models which don't.
     """
+
     # no set-up function needed - empty database, in this scenario
     def test_creating_sample_without_rename(self):
         """
@@ -67,7 +71,7 @@ class TestInsertIntoTable_MakingFromScratch(TestCase):
         test_dict = {
             "instrument_id": "test_inst",
             "batch_id": "test_batch",
-            "specimen_id": "test_specimen"
+            "specimen_id": "test_specimen",
         }
 
         retrieved_entry = _insert_into_table(Sample, **test_dict)
@@ -79,8 +83,10 @@ class TestInsertIntoTable_MakingFromScratch(TestCase):
         test_dict = {"institution": "NHS Foundation Trust"}
         names_to = {"institution": "name"}
 
-        retrieved_entry = _insert_into_table(Institution, names_to=names_to, **test_dict)
-        
+        retrieved_entry = _insert_into_table(
+            Institution, names_to=names_to, **test_dict
+        )
+
         assert retrieved_entry.name == "NHS Foundation Trust"
 
-    #TODO: make sure the try/except is hit IF we decide to keep it
+    # TODO: make sure the try/except is hit IF we decide to keep it
