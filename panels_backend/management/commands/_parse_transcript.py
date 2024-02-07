@@ -764,9 +764,7 @@ def _transcript_assign_to_source(
         multiple_matches, error_msg = _check_for_more_than_one_tx_match(
             mane_exact_match, relevant_panels, tx
         )
-        if multiple_matches:
-            return mane_select_data, mane_plus_clinical_data, hgmd_data, error_msg
-        else:
+        if not multiple_matches:
             # determine whether it's MANE Select or Plus Clinical and return everything
             source = mane_exact_match[0]["MANE TYPE"]
             mane_select_data, mane_plus_clinical_data = _populate_mane_dict_by_category(
@@ -775,16 +773,15 @@ def _transcript_assign_to_source(
                 mane_plus_clinical_data,
                 does_version_match=True,
             )
-            return mane_select_data, mane_plus_clinical_data, hgmd_data, error_msg
+        # if there are multiple matches in IRRELEVANT transcripts it'll return blank dictionaries and an error msg
+        return mane_select_data, mane_plus_clinical_data, hgmd_data, error_msg
 
     # fall through to here if no exact match - see if there's a versionless match instead
     elif mane_base_match:
         multiple_matches, error_msg = _check_for_more_than_one_tx_match(
             mane_base_match, relevant_panels, tx
         )
-        if multiple_matches:
-            return mane_select_data, mane_plus_clinical_data, hgmd_data, error_msg
-        else:
+        if not multiple_matches:
             source = mane_base_match[0]["MANE TYPE"]
             mane_select_data, mane_plus_clinical_data = _populate_mane_dict_by_category(
                 source,
@@ -792,7 +789,8 @@ def _transcript_assign_to_source(
                 mane_plus_clinical_data,
                 does_version_match=False,
             )
-            return mane_select_data, mane_plus_clinical_data, hgmd_data, error_msg
+        # if there are multiple matches in IRRELEVANT transcripts it'll return blank dictionaries and an error msg
+        return mane_select_data, mane_plus_clinical_data, hgmd_data, error_msg
 
     # transcript's gene is not in MANE - so look in HGMD
     # note HGMD doesn't contain versions so we must match just against accession
