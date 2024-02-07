@@ -1,5 +1,4 @@
 from django.urls import path
-from django.contrib.auth.views import LoginView
 
 from . import views
 
@@ -7,7 +6,7 @@ urlpatterns = [
     # index
     path("", views.index, name="index"),
     #login
-    path("accounts/login", views.LoginView, name="login"),
+    path("accounts/login", views.login, name="login"),
     # info
     path("panel/<int:panel_id>/", views.panel, name="panel"),
     path("superpanel/<int:superpanel_id>/", views.superpanel, name="superpanel"),

@@ -14,6 +14,8 @@ from django.http import JsonResponse
 from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.db.models import QuerySet, Q, F
 from django.db import transaction
+from django.contrib.auth.views import LoginView
+
 
 from .forms import ClinicalIndicationForm, PanelForm, GeneForm
 from .utils.utils import WebChildPanel, WebGene, WebGenePanel
@@ -177,6 +179,13 @@ def index(request: HttpRequest) -> HttpResponse:
             "transcript_sources": transcript_sources,
         },
     )
+
+def login(request: HttpRequest):
+    """
+    Allows logging in
+    """
+    return render(request, "registration/login.html")
+
 
 
 def panel(request: HttpRequest, panel_id: int) -> HttpResponse:
