@@ -768,15 +768,18 @@ def _transcript_assign_to_source(
         (
             multiple_matches,
             error_msg,
-        ) = _check_for_more_than_one_tx_match_in_panel_linked_tx(transcript_list, tx)
+        ) = _check_for_more_than_one_tx_match_in_panel_linked_tx(
+            transcript_list, hgnc_id, tx
+        )
+
         if not multiple_matches:
             mane_info, mane_type = _populate_mane_dict_by_category(
                 transcript_list,
                 does_version_match,
             )
-            if mane_type == "mane select":
+            if mane_type.lower() == "mane select":
                 mane_select_data = mane_info
-            elif mane_type == "mane plus clinical":
+            elif mane_type.lower() == "mane plus clinical":
                 mane_plus_clinical_data = mane_info
         # if there are multiple matches in IRRELEVANT transcripts it'll return blank dictionaries and an error msg
         return mane_select_data, mane_plus_clinical_data, hgmd_data, error_msg
