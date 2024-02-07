@@ -761,10 +761,10 @@ def _transcript_assign_to_source(
     relevant_panels = PanelGene.objects.filter(gene__hgnc_id=hgnc_id)
 
     if mane_exact_match:
-        error, error_msg = _check_for_more_than_one_tx_match(
+        multiple_matches, error_msg = _check_for_more_than_one_tx_match(
             mane_exact_match, relevant_panels, tx
         )
-        if error:
+        if multiple_matches:
             return mane_select_data, mane_plus_clinical_data, hgmd_data, error_msg
         else:
             # determine whether it's MANE Select or Plus Clinical and return everything
@@ -779,10 +779,10 @@ def _transcript_assign_to_source(
 
     # fall through to here if no exact match - see if there's a versionless match instead
     elif mane_base_match:
-        error, error_msg = _check_for_more_than_one_tx_match(
+        multiple_matches, error_msg = _check_for_more_than_one_tx_match(
             mane_base_match, relevant_panels, tx
         )
-        if error:
+        if multiple_matches:
             return mane_select_data, mane_plus_clinical_data, hgmd_data, error_msg
         else:
             source = mane_base_match[0]["MANE TYPE"]
