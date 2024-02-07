@@ -1,9 +1,6 @@
 from django.db import models
 from panels_backend.models import (
-    ClinicalIndication,
     Panel,
-    SuperPanel,
-    PanelSuperPanel,
     ReferenceGenome,
 )
 
