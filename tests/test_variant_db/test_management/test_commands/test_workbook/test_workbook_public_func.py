@@ -8,8 +8,17 @@ import variant_db.management.commands.workbook as workbook
 
 
 class TestReadWorkbook(TestCase):
+    """
+    Collection of test cases for the workbook reading and parsing utilities
+    """
     @classmethod
     def setUpTestData(cls):
+        """
+        The test data defined here "mocks" a workbook CSV as a single row.
+        It is first generated as a string (header, newline, values), and
+        then passed into the read_workbook function as a `StringIO` instance,
+        which replicates the action of passing a CSV file into the CLI 
+        """
         numeric_headers = [
             "POS",
             "instrumentID",
@@ -60,10 +69,16 @@ class TestReadWorkbook(TestCase):
         cls.wb_row = wb_records[0]
 
     def test_read(self):
+        """
+        tests that `read_workbook` returns a list of dicts
+        """
         self.assertIsInstance(self.wb_records, list)
         self.assertIsInstance(self.wb_row, dict)
     
     def test_acgs_columns(self):
+        """
+        test that all ACGS columns are returned by `read_workbook`
+        """
         row_acgs_columns = [x for x in self.wb_row.keys() if x in ACGS_COLUMNS]
         self.assertListEqual(row_acgs_columns, ACGS_COLUMNS)
     
@@ -78,9 +93,17 @@ class TestReadWorkbook(TestCase):
         self.assertTrue(all(have_no_whitespace))
 
     def test_wb_row(self):
+        """
+        tests that a column of data is handled correctly
+        """
         self.assertEqual(self.wb_row["chrom"], 1)
     
     def test_wb_row_panels(self):
+        """
+        tests that the panel parsing functions correctly split the
+        ";"-separated panel entry into a list. The list should
+        consist of dicts, with pairs of tags for panel name and version
+        """
         wb_panels = self.wb_row["panels"]
         panel_a = wb_panels[0]
         panel_c = wb_panels[-1]
