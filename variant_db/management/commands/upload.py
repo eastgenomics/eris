@@ -38,7 +38,7 @@ class Command(BaseCommand):
         """
         if options["command"] == "variants":
             for workbook in options["workbooks"]:
-                logging.INFO(f" Workbook: {workbook}"...)
+                logging.INFO(f" Workbook: {workbook} attempting upload")
                 try:
                     upload(workbook)
                 except DatabaseError as e:
