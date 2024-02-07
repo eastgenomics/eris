@@ -25,6 +25,7 @@ def read_workbook(workbook_file: str) -> List[Dict[str, str | int]]:
     wb_records = _add_panels_field(wb_records)
     return wb_records
 
+
 def _clean_column_name(column_header: str) -> str:
     """
     Helper function to clean the column name
