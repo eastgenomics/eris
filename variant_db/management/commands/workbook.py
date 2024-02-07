@@ -43,7 +43,7 @@ def _replace_with_underscores(column_header: str) -> str:
     """
     Replaces whitespace with an underscore (except fields ending with "ID")
     """
-    if column_header.endswith("ID"):
+    if re.search("[A-Za-z0-9]ID$", column_header):
         column_header = column_header.replace("ID", "_ID")
     return column_header.replace(" ", "_")
 
