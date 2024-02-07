@@ -1,10 +1,10 @@
 """
 python manage.py upload --help
 """
-import glob
 import logging
 import pandas as pd
 
+from django.db import DatabaseError
 from django.core.management.base import BaseCommand
 from .controller import upload
 
@@ -38,6 +38,11 @@ class Command(BaseCommand):
         """
         if options["command"] == "variants":
             for workbook in options["workbooks"]:
-                upload(workbook)
+                logging.INFO(f" Workbook: {workbook}"...)
+                try:
+                    upload(workbook)
+                except DatabaseError as e:
+                    logging.ERROR(f"Error: {workbook}: {e}")
+                    continue
         else:
             exit(1)
