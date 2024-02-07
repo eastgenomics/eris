@@ -42,6 +42,9 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 
+LOGIN_URL = "/eris/accounts/login"
+LOGIN_REDIRECT_URL = "/eris"
+
 # Application definition
 
 INSTALLED_APPS = [
