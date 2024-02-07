@@ -146,7 +146,9 @@ class Chromosome(models.Model):
 
     numerical_name = models.IntegerField(verbose_name="numeric index")
 
-    source = models.TextField(verbose_name="chromosome source (i.e. RefSeq, Assembly, Genbank etc.)")
+    source = models.TextField(
+        verbose_name="chromosome source (i.e. RefSeq, Assembly, Genbank etc.)"
+    )
 
     class Meta:
         db_table = "chromosome"
