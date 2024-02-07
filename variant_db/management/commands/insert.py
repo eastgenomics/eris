@@ -79,7 +79,7 @@ def insert_row(row_dict: Dict[str, str | int]) -> None:
     affected_status = _insert_into_table(
         AffectedStatus,
         names_to={"affected_status": "name"},
-        **_subset_row(row_dict, "affected_status")
+        **_subset_row(row_dict, "affected_status"),
     )
     assertion_criteria = _insert_into_table(
         AssertionCriteria, **_subset_row(row_dict, "category")
@@ -90,17 +90,17 @@ def insert_row(row_dict: Dict[str, str | int]) -> None:
     assay_method = _insert_into_table(
         AssayMethod,
         names_to={"assay_method": "name"},
-        **_subset_row(row_dict, "assay_method")
+        **_subset_row(row_dict, "assay_method"),
     )
     reference_genome = _insert_into_table(
         ReferenceGenome,
         names_to={"ref_genome": "name"},
-        **_subset_row(row_dict, "ref_genome")
+        **_subset_row(row_dict, "ref_genome"),
     )
     clinvar_collection_method = _insert_into_table(
         ClinvarCollectionMethod,
         names_to={"collection_method": "name"},
-        **_subset_row(row_dict, "collection_method")
+        **_subset_row(row_dict, "collection_method"),
     )
     chromosome = _insert_into_table(
         Chromosome, names_to={"chrom": "name"}, **_subset_row(row_dict, "chrom")
@@ -111,22 +111,22 @@ def insert_row(row_dict: Dict[str, str | int]) -> None:
         Variant,
         names_to={"pos": "position"},
         **vnt_row_subset
-        | {"reference_genome": reference_genome, "chromosome": chromosome}
+        | {"reference_genome": reference_genome, "chromosome": chromosome},
     )
     clinvar_allele_origin = _insert_into_table(
         ClinvarAlleleOrigin,
         names_to={"allele_origin": "category"},
-        **_subset_row(row_dict, "allele_origin")
+        **_subset_row(row_dict, "allele_origin"),
     )
     organisation = _insert_into_table(
         Organization,
         names_to={"organisation": "name"},
-        **_subset_row(row_dict, "organisation")
+        **_subset_row(row_dict, "organisation"),
     )
     institution = _insert_into_table(
         Institution,
         names_to={"institution": "name"},
-        **_subset_row(row_dict, "institution")
+        **_subset_row(row_dict, "institution"),
     )
 
     interpretation_row = {
@@ -152,7 +152,7 @@ def insert_row(row_dict: Dict[str, str | int]) -> None:
 
     acgs_category_information = _insert_into_table(
         AcgsCategoryInformation,
-        **{"interpretation": interpretation} | _subset_row(row_dict, *ACGS_COLUMNS)
+        **{"interpretation": interpretation} | _subset_row(row_dict, *ACGS_COLUMNS),
     )
 
     panels = [
