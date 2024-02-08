@@ -4,8 +4,6 @@ from panels_backend.models import (
     ReferenceGenome,
 )
 
-# Create your models here.
-
 
 class Sample(models.Model):
     """
