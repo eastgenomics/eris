@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 
 from django.db import models, transaction
+from functools import wraps
 from variant_db.models import *
 from panels_backend.models import ReferenceGenome, Panel
 from typing import Dict
+import logging
+
+logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.INFO)
 
 # CONSTANTS
 ACGS_COLUMNS = [
@@ -128,7 +132,6 @@ def insert_row(row_dict: Dict[str, str | int]) -> None:
         names_to={"institution": "name"},
         **_subset_row(row_dict, "institution"),
     )
-
     interpretation_row = {
         "sample": sample,
         "clinical_indication": row_dict["ci"],
@@ -147,27 +150,34 @@ def insert_row(row_dict: Dict[str, str | int]) -> None:
         "probe_set": probeset,
         "date": row_dict["date"],
     }
-
     interpretation = _insert_into_table(Interpretation, **interpretation_row)
-
-    acgs_category_information = _insert_into_table(
+    # ACGS_CATEGORY_INFORMATION return object is not used, so we throw it away
+    _insert_into_table(
         AcgsCategoryInformation,
         **{"interpretation": interpretation} | _subset_row(row_dict, *ACGS_COLUMNS),
     )
-
     panels = [
         _insert_into_table(
             Panel, **{"panel_name": panel["name"], "panel_version": panel["version"]}
         )
         for panel in row_dict["panels"]
     ]
-
     # Note that SuperPanel does not currently need to be linked to Interpretation in variantDB;
     # this is because the laboratory does not presently have the option of selecting them in testing.
     for panel in panels:
         _insert_into_table(
             InterpretationPanel, **{"panel": panel, "interpretation": interpretation}
         )
+
+    if not any(_insert_into_table.created):
+        logging.warning(
+            "This row was redundant, and no data was put into the DB. It was all there already."
+        )
+    else:
+        logging.info("Successfully updated")
+    # reset decorated function state for next loop.
+    # This is being done because it'd just keep filling up with bools otherwise
+    _insert_into_table.created = []
 
 
 def _subset_row(row: Dict[str, str | int], *desired_keys) -> Dict[str, str | int]:
@@ -177,6 +187,25 @@ def _subset_row(row: Dict[str, str | int], *desired_keys) -> Dict[str, str | int
     return {k: row[k] for k in desired_keys}
 
 
+def keep_count_of_truth(f):
+    """
+    Please note: @wraps is being used to preserve the decorated functions
+    metadata. If we didn't use @wraps(f), then the name, docs and so on
+    of `f` would change to `keep_count_of_truth`. This is never what we
+    want.
+    """
+
+    @wraps(f)
+    def counted_func(*args, **kwargs):
+        inst, created = f(*args, **kwargs)
+        counted_func.created.append(created)
+        return inst
+
+    counted_func.created = []
+    return counted_func
+
+
+@keep_count_of_truth
 def _insert_into_table(
     model_class: models.Model, names_to: dict = None, **kwargs
 ) -> models.Model:
@@ -195,8 +224,8 @@ def _insert_into_table(
     # stopping event. Discuss removal.
     except TypeError:
         pass
-    inst, _ = model_class.objects.get_or_create(**kwargs)
-    return inst
+    inst, created = model_class.objects.get_or_create(**kwargs)
+    return inst, created
 
 
 def _rename_key(
