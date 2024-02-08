@@ -44,6 +44,7 @@ class TestColumnHeaderCleaningFunctions(TestCase):
             _replace_with_underscores("margherita_pizza"), "margherita_pizza"
         )
         self.assertEqual(_replace_with_underscores("pizzaID"), "pizza_ID")
+        self.assertEqual(_replace_with_underscores("$%*ID"), "$%*ID")
 
     def test_rename_acgs_column(self):
         """
