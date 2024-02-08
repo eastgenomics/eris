@@ -7,8 +7,6 @@ from panels_backend.models import ReferenceGenome, Panel
 from typing import Dict
 import logging
 
-logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.INFO)
-
 # CONSTANTS
 ACGS_COLUMNS = [
     "PVS1_verdict",
@@ -171,10 +169,10 @@ def insert_row(row_dict: Dict[str, str | int]) -> None:
 
     if not any(_insert_into_table.created):
         logging.warning(
-            "This row was redundant, and no data was put into the DB. It was all there already."
+            "Redundant row; this row already exists in the DB. Not inserting..."
         )
     else:
-        logging.info("Successfully updated")
+        logging.info("Successfully inserted row")
     # reset decorated function state for next loop.
     # This is being done because it'd just keep filling up with bools otherwise
     _insert_into_table.created = []

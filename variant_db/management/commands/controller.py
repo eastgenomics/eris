@@ -5,9 +5,6 @@ from .insert import *
 from .workbook import read_workbook
 from .insert import insert_row
 
-logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.INFO)
-
-
 @transaction.atomic
 def upload(workbook: str) -> None:
     """

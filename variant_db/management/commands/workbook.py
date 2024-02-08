@@ -4,9 +4,9 @@ Workbook utils
 #!/usr/bin/env python
 
 import re
+import logging
 import pandas as pd
 from typing import Tuple, List, Dict
-
 
 def read_workbook(workbook_file: str) -> List[Dict[str, str | int]]:
     """
