@@ -180,12 +180,12 @@ def index(request: HttpRequest) -> HttpResponse:
         },
     )
 
+
 def login(request: HttpRequest):
     """
     Allows logging in
     """
     return render(request, "registration/login.html")
-
 
 
 def panel(request: HttpRequest, panel_id: int) -> HttpResponse:

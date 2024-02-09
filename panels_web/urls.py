@@ -5,7 +5,7 @@ from . import views
 urlpatterns = [
     # index
     path("", views.index, name="index"),
-    #login
+    # login
     path("accounts/login", views.login, name="login"),
     # info
     path("panel/<int:panel_id>/", views.panel, name="panel"),
