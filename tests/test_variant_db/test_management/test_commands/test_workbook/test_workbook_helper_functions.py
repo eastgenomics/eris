@@ -54,6 +54,13 @@ class TestColumnHeaderCleaningFunctions(TestCase):
         already appended, and ignores non-ACGS columns
         EXPECT: `_rename_acgs_column` does what's outlined in the CASE.
         """
+        # cases where _verdict should be added to the string
         self.assertEqual(_rename_acgs_column("PS1"), "PS1_verdict")
+        self.assertEqual(_rename_acgs_column("PVS1"), "PVS1_verdict")
+        self.assertEqual(_rename_acgs_column("BP1"), "BP1_verdict")
+        self.assertEqual(_rename_acgs_column("BM6"), "BM6_verdict")
+        self.assertEqual(_rename_acgs_column("BA1"), "BA1_verdict")
+        self.assertEqual(_rename_acgs_column("PP3"), "PP3_verdict")
+        # cases that shouldn't get _verdict added to the string
         self.assertEqual(_rename_acgs_column("PS1_evidence"), "PS1_evidence")
         self.assertEqual(_rename_acgs_column("PIZZA"), "PIZZA")
