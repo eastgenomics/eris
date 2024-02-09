@@ -130,7 +130,7 @@ The arguments for this command are:
 
 #### 3. Seed transcript
 
-Adds transcripts to the database, for either GRCh37 or GRCh38. The possible transcripts are provided in a GFF file.
+Adds transcripts to the database, for either GRCh37 or GRCh38. The possible transcripts are provided in a GFF file. Note that if you use VEP in your pipelines, you should ensure you provide the file compatible with your current version of VEP.
 
 MANE and HGMD files are used to assign transcripts as being the 'default' clinical or non-clinical for each gene. The MANE file for GRCh37 is a CSV file downloaded from Transcript Archive http://tark.ensembl.org/web/mane_GRCh37_list/) and the HGMD files are CSV files of the 'markname' and 'g2refseq' tables, generated when the HGMD database is dumped.  
 
@@ -144,7 +144,7 @@ python manage.py seed transcript \
 --error
 
 # working example
-python manage.py seed transcript --hgnc testing_files/eris/hgnc_dump_20230613.txt --hgnc_release 1.0 --mane testing_files/eris/mane_grch37.csv --mane_ext_id file-123 --mane_release 1.0 --gff testing_files/eris/GCF_000001405.25_GRCh37.p13_genomic.exon_5bp_v2.0.0.tsv --gff_release 1.0 --g2refseq testing_files/eris/gene2refseq_202306131409.csv --g2refseq_ext_id file-123 --markname testing_files/eris/markname_202306131409.csv --markname_ext_id file-234 --hgmd_release 1.4 --refgenome grch37
+python manage.py seed transcript --hgnc testing_files/eris/hgnc_dump_20230613.txt --hgnc_release 1.0 --mane testing_files/eris/mane_grch37.csv --mane_ext_id file-123 --mane_release 1.0 --gff testing_files/eris/GCF_000001405.25_GRCh37.p13_genomic.exon_5bp_v2.0.0.tsv --gff_release 19 --g2refseq testing_files/eris/gene2refseq_202306131409.csv --g2refseq_ext_id file-123 --markname testing_files/eris/markname_202306131409.csv --markname_ext_id file-234 --hgmd_release 1.4 --refgenome grch37
 ```
 
 The arguments are as follows:
@@ -154,7 +154,7 @@ The arguments are as follows:
 - `mane_ext_id`: the external file ID for the release-tagged MANE CSV file
 - `mane_release`: the release version associated with the MANE CSV file and its file ID. This must consist only of numbers and full stops, e.g. 1.0.1.
 - `gff`: path to parsed gff.tsv (project-Fkb6Gkj433GVVvj73J7x8KbV:file-GF611Z8433Gk7gZ47gypK7ZZ)
-- `gff_release`: the documented release version for the `gff` file. This must consist only of numbers and full stops, e.g. 1.0.1.
+- `gff_release`: the documented release version for the `gff` file you are providing for transcript annotations. This must consist only of numbers and full stops. It is recommended that you use the Ensembl release, and if you use VEP in your pipeline, you should select a release compatible with your currently-used VEP version.
 - `g2refseq`: path to the g2refseq table from the HGMD database, in csv format
 - `g2refseq_ext_id`: external file ID for release-tagged HGMD g2refseq table
 - `markname`: path to markname table from the HGMD database, in csv format
@@ -196,11 +196,16 @@ Provide the reference genome as a string input. GRCh37 and GRCh38 are the curren
 
 To run generate g2t without a specified output pathway (note that this will create the file in your current working directory):
 ```
-python manage.py generate g2t --ref_genome <ref_genome>
+python manage.py generate g2t --ref_genome <ref_genome> --gff_release <gff_release>
+
+- `ref_genome`: the name of your reference genome build. Currently permitted values are: 37/GRCh37/hg19 or 38/GRCh38/hg38
+
+- `gff_release`: the documented release version for the `gff` file you are providing for transcript annotations. This must consist only of numbers and full stops. It is recommended that you use an Ensembl release version which is compatible with your chosen reference genome. If you use VEP in your pipeline, you should select a release compatible with your currently-used VEP version. 
+
 ```
 To run with a specified output pathway:
 ```
-python manage.py generate g2t --ref_genome <ref_genome> --output <output pathway>
+python manage.py generate g2t --ref_genome <ref_genome> --gff_release <gff_release> --output <output pathway>
 ```
 
 ### Edit links between panel-related tables
