@@ -13,6 +13,8 @@ from panels_backend.models import (
     TranscriptReleaseTranscript,
     TestDirectoryRelease,
     ReferenceGenome,
+    GffRelease,
+    TranscriptGffRelease,
 )
 import os
 import csv
@@ -263,8 +265,6 @@ class Command(BaseCommand):
                 panelapp_id: str = panel_dict.get(
                     "ci_superpanel__superpanel__external_id", ""
                 )
-                if not panelapp_id:
-                    panelapp_id = ""
                 ci_name: str = panel_dict["ci_superpanel__clinical_indication__name"]
 
                 for hgnc in panel_genes[panel_id]:
@@ -415,53 +415,67 @@ class Command(BaseCommand):
                     clinical = True
             return clinical
 
-    def _generate_g2t(self, output_directory, ref_genome) -> None:
+    def _generate_g2t_results(
+        self,
+        ref_genome: ReferenceGenome,
+        gff_release: GffRelease,
+        latest_select: TranscriptRelease,
+        latest_plus_clinical: TranscriptRelease,
+        latest_hgmd: TranscriptRelease,
+    ) -> list[dict[str, str]]:
         """
         Main function to generate g2t.tsv
-        Calls the function to get all current transcripts, then formats and writes it to file.
+        Calls the function to get all current transcripts, then formats it, ready to write to file.
+        Returned transcripts are limited to those represented in the user-requested reference genome
+        and GFF release.
 
-        :param output_directory: output directory
         :param ref_genome: ReferenceGenome instance
+        :param gff_release: GffRelease instance. This will be a GFF release which is appropriate for
+        the stated ReferenceGenome.
+        :param latest_select: latest MANE Select version
+        :param latest_plus_clinical: latest MANE Plus Clinical version
+        :param latest_hgmd: latest HGMD version
+        :return: a list-of-dictionaries - each dict can be used to write out a line
         """
         start = dt.datetime.now().strftime("%H:%M:%S")
         print(f"Creating g2t file for reference genome {ref_genome.name} at {start}")
 
-        # We need the latest releases of the transcript clinical status information
-        latest_select = get_latest_transcript_release("MANE Select", ref_genome)
-        latest_plus_clinical = get_latest_transcript_release(
-            "MANE Plus Clinical", ref_genome
-        )
-        latest_hgmd = get_latest_transcript_release("HGMD", ref_genome)
-
-        if None in [latest_select, latest_plus_clinical, latest_hgmd]:
-            raise ValueError(
-                "One or more transcript releases (MANE or HGMD) have not yet been"
-                " added to the database, so clinical status can't be assessed - aborting"
-            )
-
-        # We need all transcripts which are linked to the correct reference genome
-        ref_genome_transcripts = Transcript.objects.order_by("gene_id").filter(
-            reference_genome=ref_genome
+        # We only need to assess those transcripts which are linked to the correct GFF release and reference genome
+        gff_transcripts = TranscriptGffRelease.objects.filter(
+            gff_release__ensembl_release=gff_release,
+            gff_release__reference_genome=ref_genome,
         )
 
         # Append per-transcript results to a list-of-dictionaries
         results = []
 
-        for transcript in ref_genome_transcripts:
+        for gff_tx in gff_transcripts:
+            # For each Transcript linked to this GFF release - make a row-dictionary of its data
+            tx = gff_tx.transcript
             clinical_status = self.get_current_transcript_clinical_status_for_g2t(
-                transcript, latest_select, latest_plus_clinical, latest_hgmd
+                tx, latest_select, latest_plus_clinical, latest_hgmd
             )
             displayable_clinical_status = (
                 "clinical_transcript" if clinical_status else "not_clinical_transcript"
             )
             transcript_data = {
-                "hgnc_id": transcript.gene.hgnc_id,
-                "transcript": transcript.transcript,
+                "hgnc_id": tx.gene.hgnc_id,
+                "transcript": tx,
                 "clinical": displayable_clinical_status,
             }
             results.append(transcript_data)
+        return results
 
-        # Write out results
+    def _write_g2t_results(
+        self, results: list[dict[str, str]], output_directory: str
+    ) -> None:
+        """
+        Writes out g2t results to a TSV file at the specified output directory.
+
+        :param: results, a list of already-formatted lists-of-dictionaries, one dictionary for each
+        row of the eventual file
+        :param: output_directory, where the file should be written
+        """
         file_time = dt.datetime.today().strftime("%Y%m%d")
         keys = results[0].keys()
         with open(
@@ -488,6 +502,9 @@ class Command(BaseCommand):
         # optional parser for reference genome
         parser.add_argument("--ref_genome")
 
+        # optional parser for GFF release
+        parser.add_argument("--gff_release")
+
         # optional parser for output directory
         parser.add_argument("--output")
 
@@ -496,7 +513,7 @@ class Command(BaseCommand):
         Command line handler for python manage.py generate
         e.g.
         python manage.py generate genepanels --hgnc <hgnc dump>
-        python manage.py generate g2t --ref_genome <reference genome> --output <output directory>
+        python manage.py generate g2t --ref_genome <reference genome> --gff_release <gff_release_version> --output <output directory>
 
         """
         cmd = kwargs.get("command")
@@ -545,18 +562,49 @@ class Command(BaseCommand):
             # get the reference genome and standardise it
             if not kwargs["ref_genome"]:
                 raise ValueError(
-                    "No reference genome specified, e.g. python manage.py generate g2t --ref_genome GRCh37"
+                    "No reference genome specified, e.g. python manage.py generate g2t --ref_genome GRCh37 --gff_release <>"
                 )
             parsed_genome = _parse_reference_genome(kwargs.get("ref_genome"))
 
+            # get the GFF file release
+            if not kwargs["gff_release"]:
+                raise ValueError(
+                    "No GFF release specified, e.g. python manage.py generate g2t --ref_genome GRCh37 --gff_release <>"
+                )
+
+            # if the genome AND gff_release are valid, run the controller function, _generate_g2t
             try:
-                # if the genome is valid, run the controller function, _generate_g2t
                 genome = ReferenceGenome.objects.get(name=parsed_genome)
             except ObjectDoesNotExist:
                 raise ObjectDoesNotExist(
                     "Aborting g2t: reference genome does not exist in the database"
                 )
 
-            self._generate_g2t(output_directory, genome)
+            try:
+                gff_release = GffRelease.objects.get(
+                    ensembl_release=kwargs.get("gff_release"), reference_genome=genome
+                )
+            except ObjectDoesNotExist:
+                raise ObjectDoesNotExist(
+                    "Aborting g2t: GFF release does not exist for this genome build in the database."
+                )
+
+            latest_select = get_latest_transcript_release("MANE Select", genome)
+            latest_plus_clinical = get_latest_transcript_release(
+                "MANE Plus Clinical", genome
+            )
+            latest_hgmd = get_latest_transcript_release("HGMD", genome)
+
+            if None in [latest_select, latest_plus_clinical, latest_hgmd]:
+                raise ValueError(
+                    "One or more transcript releases (MANE or HGMD) have not yet been"
+                    " added to the database, so clinical status can't be assessed - aborting"
+                )
+
+            g2t = self._generate_g2t_results(
+                genome, gff_release, latest_select, latest_plus_clinical, latest_hgmd
+            )
+            self._write_g2t_results(g2t, output_directory)
+
             end = dt.datetime.now().strftime("%H:%M:%S")
             print(f"g2t file created at {output_directory} at {end}")
