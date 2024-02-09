@@ -126,7 +126,7 @@ class TestReadWorkbook(TestCase):
         ";"-separated panel entry into a list.
 
         CASE: `wb_panels` tested for length, and contents tested for `dict` membership
-        EXPECT: `wb_panels` is a list with 3 entries. Two arbitrary entries are `dicts` 
+        EXPECT: `wb_panels` is a list with 3 entries. Two arbitrary entries are `dicts`
         with "name" <- (expected string) and "version" <- "1.0"
         consist of dicts, with pairs of tags for panel name and version
         """
