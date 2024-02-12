@@ -430,6 +430,7 @@ def clinical_indication(request: HttpRequest, ci_id: int) -> HttpResponse:
             return redirect("review")
 
 
+@permission_required("staff", raise_exception=False)
 def add_clinical_indication(request: HttpRequest) -> HttpResponse:
     """
     Add clinical indication page
@@ -484,7 +485,7 @@ def add_clinical_indication(request: HttpRequest) -> HttpResponse:
                 },
             )
 
-
+@permission_required("staff", raise_exception=False)
 def add_panel(request: HttpRequest) -> HttpResponse:
     """
     Add panel page
@@ -563,7 +564,7 @@ def add_panel(request: HttpRequest) -> HttpResponse:
             },
         )
 
-
+@permission_required("staff", raise_exception=False)
 def add_ci_panel(request: HttpRequest) -> HttpResponse:
     """
     Add clinical indication panel page
@@ -1189,7 +1190,7 @@ def _parse_excluded_hgncs_from_bytes(file: TemporaryUploadedFile) -> set[str]:
 
     return set(df["HGNC ID"].tolist())
 
-
+@permission_required("staff", raise_exception=False)
 def _add_panel_genes_to_genepanel(
     panel_id: str,
     panel_id_to_genes: dict[str, list[WebGene]],
@@ -1471,6 +1472,7 @@ def genepanel(
     )
 
 
+@permission_required("staff", raise_exception=False)
 def add_gene(request: HttpRequest) -> HttpResponse:
     """
     url name "gene_add"
