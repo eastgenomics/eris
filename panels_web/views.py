@@ -185,7 +185,14 @@ def login(request: HttpRequest):
     """
     Allows logging in
     """
-    return render(request, "registration/login.html")
+    return render(request, "accounts/login.html")
+
+
+def logout(request: HttpRequest):
+    """
+    Allows logging out
+    """
+    return render(request, "accounts/logout.html")
 
 
 def panel(request: HttpRequest, panel_id: int) -> HttpResponse:

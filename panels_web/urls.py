@@ -6,7 +6,9 @@ urlpatterns = [
     # index
     path("", views.index, name="index"),
     # login and related
-    path("accounts/login", views.login, name="login"),
+    path("accounts/", include("django.contrib.auth.urls")),
+    path("accounts/login/", views.login, name="login"),
+    path("accounts/logout/", views.logout, name="logout"),
     # info
     path("panel/<int:panel_id>/", views.panel, name="panel"),
     path("superpanel/<int:superpanel_id>/", views.superpanel, name="superpanel"),
