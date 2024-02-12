@@ -29,6 +29,11 @@ urlpatterns = [
     path("seed", views.seed, name="seed"),
     path("genepanel/", views.genepanel, name="genepanel"),
     path(
+        "genetranscriptsview/",
+        views.genetranscriptsview,
+        name="genetranscriptsview",
+    ),
+    path(
         "genetranscripts/",
         views.genetranscripts,
         name="genetranscripts",

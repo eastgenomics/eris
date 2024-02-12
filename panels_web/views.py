@@ -1630,6 +1630,21 @@ def ajax_gene_transcripts(request: HttpRequest, reference_genome: str) -> JsonRe
     )
 
 
+def genetranscriptsview(request: HttpRequest) -> HttpResponse:
+    """
+    Page where it display gene and their transcripts (clinical and non-clinical)
+
+    NOTE: this page only display the transcript from the latest TranscriptRelease
+    as in it will only display the gene and transcripts that are suppose to make it
+    into the g2t output file.
+
+    For transcript of different TranscriptRelease, this should be viewed under individual
+    gene page which is more detailed
+    """
+    return render(request, "web/info/genetranscriptsview.html")
+
+
+@permission_required("staff", raise_exception=False)
 def genetranscripts(request: HttpRequest) -> HttpResponse:
     """
     Page where it display gene and their transcripts (clinical and non-clinical)
