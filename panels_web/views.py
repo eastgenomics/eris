@@ -15,7 +15,7 @@ from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.db.models import QuerySet, Q, F
 from django.db import transaction
 from django.contrib.auth.views import LoginView
-
+from django.contrib.auth.decorators import permission_required
 
 from .forms import ClinicalIndicationForm, PanelForm, GeneForm
 from .utils.utils import WebChildPanel, WebGene, WebGenePanel
@@ -1215,7 +1215,7 @@ def _add_panel_genes_to_genepanel(
 
         genepanel.hgncs.append(WebGene(gene_id, hgnc_id))
 
-
+@permission_required("staff", raise_exception=False)
 def genepanel(
     request: HttpRequest,
 ) -> HttpResponse:

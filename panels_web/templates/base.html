@@ -40,9 +40,11 @@
                 <div class="navbar-nav border-end border-2">
                     <a class="nav-link" aria-current="page" href="{% url 'history' %}">History</a>
                 </div>
+                {% if user.is_staff %}
                 <div class="navbar-nav border-end border-2">
                     <a class="nav-link" aria-current="page" href="{% url 'genepanel' %}">GenePanel</a>
                 </div>
+                {% endif %}
                 <div class="navbar-nav border-end border-2">
                     <a class="nav-link" aria-current="page" href="{% url 'genetranscripts' %}">GeneTranscripts</a>
                 </div>
