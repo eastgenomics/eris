@@ -1,7 +1,8 @@
 from django.db import models
-from panels_backend.models import Chromosome, ClinicalIndication, Panel, ReferenceGenome
-
-# Create your models here.
+from panels_backend.models import (
+    Panel,
+    ReferenceGenome,
+)
 
 
 class Sample(models.Model):
@@ -29,7 +30,7 @@ class Sample(models.Model):
 class TestCode(models.Model):
     """The code of the test used when sequencing a sample. Assay-specific"""
 
-    testcode = models.TextField(verbose_name="Test code")
+    test_code = models.TextField(verbose_name="Test code")
 
     class Meta:
         db_table = "test_code"
@@ -80,7 +81,7 @@ class AssertionCriteria(models.Model):
     a condition-specific set of guidelines, or something like a Pubmed ID.
     """
 
-    name = models.TextField(verbose_name="Assertion criteria name")
+    category = models.TextField(verbose_name="Assertion criteria name")
 
     class Meta:
         db_table = "assertion_criteria"
@@ -126,6 +127,26 @@ class ClinvarCollectionMethod(models.Model):
 
     class Meta:
         db_table = "clinvar_collection_method"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class Chromosome(models.Model):
+    """
+    Records chromosomes
+    """
+
+    name = models.TextField(verbose_name="chromosome name")
+
+    numerical_name = models.IntegerField(verbose_name="numeric index")
+
+    source = models.TextField(
+        verbose_name="chromosome source (i.e. RefSeq, Assembly, Genbank etc.)"
+    )
+
+    class Meta:
+        db_table = "chromosome"
 
     def __str__(self):
         return str(self.id)
@@ -266,12 +287,6 @@ class Interpretation(models.Model):
         Institution, verbose_name="Evaluating Institution ID", on_delete=models.PROTECT
     )
 
-    panel = models.ForeignKey(
-        Panel,
-        verbose_name="Panel ID",
-        on_delete=models.PROTECT,
-    )
-
     assay_method = models.ForeignKey(
         AssayMethod, verbose_name="Assay Method ID", on_delete=models.PROTECT
     )
@@ -295,6 +310,7 @@ class Interpretation(models.Model):
     clinvar_submission = models.ForeignKey(
         ClinvarSubmission,
         verbose_name="Clinvar Submission ID",
+        null=True,
         on_delete=models.PROTECT,
     )
 
@@ -334,7 +350,7 @@ class AcgsCategoryInformation(models.Model):
     )
 
     PVS1_verdict = models.TextField(verbose_name="PSV1 verdict", null=True)
-    PSV1_evidence = models.TextField(verbose_name="PSV1 evidence notes", null=True)
+    PVS1_evidence = models.TextField(verbose_name="PSV1 evidence notes", null=True)
 
     PS1_verdict = models.TextField(verbose_name="PS1 verdict", null=True)
     PS1_evidence = models.TextField(verbose_name="PS1 evidence notes", null=True)
@@ -419,6 +435,21 @@ class AcgsCategoryInformation(models.Model):
 
     class Meta:
         db_table = "acgs_category_information"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class InterpretationPanel(models.Model):
+    """
+    Interpretation->Panel linking table
+    """
+
+    interpretation = models.ForeignKey(Interpretation, on_delete=models.PROTECT)
+    panel = models.ForeignKey(Panel, on_delete=models.PROTECT)
+
+    class Meta:
+        db_table = "interpretation_panel"
 
     def __str__(self):
         return str(self.id)

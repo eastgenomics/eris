@@ -1,0 +1,150 @@
+- model: variant_db.chromosome
+  pk: 1
+  fields:
+    name: 1
+    numerical_name: 1
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 2
+  fields:
+    name: 2
+    numerical_name: 2
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 3
+  fields:
+    name: 3
+    numerical_name: 3
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 4
+  fields:
+    name: 4
+    numerical_name: 4
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 5
+  fields:
+    name: 5
+    numerical_name: 5
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 6
+  fields:
+    name: 6
+    numerical_name: 6
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 7
+  fields:
+    name: 7
+    numerical_name: 7
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 8
+  fields:
+    name: 8
+    numerical_name: 8
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 9
+  fields:
+    name: 9
+    numerical_name: 9
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 10
+  fields:
+    name: 10
+    numerical_name: 10
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 11
+  fields:
+    name: 11
+    numerical_name: 11
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 12
+  fields:
+    name: 12
+    numerical_name: 12
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 13
+  fields:
+    name: 13
+    numerical_name: 13
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 14
+  fields:
+    name: 14
+    numerical_name: 14
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 15
+  fields:
+    name: 15
+    numerical_name: 15
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 16
+  fields:
+    name: 16
+    numerical_name: 16
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 17
+  fields:
+    name: 17
+    numerical_name: 17
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 18
+  fields:
+    name: 18
+    numerical_name: 18
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 19
+  fields:
+    name: 19
+    numerical_name: 19
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 20
+  fields:
+    name: 20
+    numerical_name: 20
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 21
+  fields:
+    name: 21
+    numerical_name: 21
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 22
+  fields:
+    name: 22
+    numerical_name: 22
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 23
+  fields:
+    name: X
+    numerical_name: 23
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 24
+  fields:
+    name: Y
+    numerical_name: 24
+    source: chromosome
+- model: variant_db.chromosome
+  pk: 25
+  fields:
+    name: MT
+    numerical_name: 25
+    source: chromosome
