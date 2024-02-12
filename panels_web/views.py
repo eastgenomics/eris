@@ -939,7 +939,7 @@ def clinical_indication_superpanel(request: HttpRequest, cisp_id: str) -> HttpRe
 
         return redirect("review")
 
-
+@permission_required("staff", raise_exception=False)
 def review(request: HttpRequest) -> HttpResponse:
     """
     Review / Pending page where user can view those links that are
@@ -1738,7 +1738,7 @@ def transcript_source(request: HttpRequest, ts_id: int) -> HttpResponse:
         {"tx_releases": tx_releases, "tx_source": tx_source},
     )
 
-
+@permission_required("staff", raise_exception=False)
 def seed(request: HttpRequest) -> HttpResponse:
     """
     Handle seed page:
