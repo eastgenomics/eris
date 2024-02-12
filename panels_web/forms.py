@@ -132,3 +132,4 @@ class GeneForm(forms.Form):
             pass
 
         return hgnc_id
+
