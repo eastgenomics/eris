@@ -485,6 +485,7 @@ def add_clinical_indication(request: HttpRequest) -> HttpResponse:
                 },
             )
 
+
 @permission_required("staff", raise_exception=False)
 def add_panel(request: HttpRequest) -> HttpResponse:
     """
@@ -563,6 +564,7 @@ def add_panel(request: HttpRequest) -> HttpResponse:
                 "errors": form.errors if not form_valid else None,
             },
         )
+
 
 @permission_required("staff", raise_exception=False)
 def add_ci_panel(request: HttpRequest) -> HttpResponse:
@@ -940,6 +942,7 @@ def clinical_indication_superpanel(request: HttpRequest, cisp_id: str) -> HttpRe
 
         return redirect("review")
 
+
 @permission_required("staff", raise_exception=False)
 def review(request: HttpRequest) -> HttpResponse:
     """
@@ -1190,6 +1193,7 @@ def _parse_excluded_hgncs_from_bytes(file: TemporaryUploadedFile) -> set[str]:
 
     return set(df["HGNC ID"].tolist())
 
+
 @permission_required("staff", raise_exception=False)
 def _add_panel_genes_to_genepanel(
     panel_id: str,
@@ -1215,6 +1219,7 @@ def _add_panel_genes_to_genepanel(
         panel_id_to_genes[panel_id].append(WebGene(gene_id, hgnc_id))
 
         genepanel.hgncs.append(WebGene(gene_id, hgnc_id))
+
 
 @permission_required("staff", raise_exception=False)
 def genepanel(
@@ -1754,6 +1759,7 @@ def transcript_source(request: HttpRequest, ts_id: int) -> HttpResponse:
         "web/info/transcript_source.html",
         {"tx_releases": tx_releases, "tx_source": tx_source},
     )
+
 
 @permission_required("staff", raise_exception=False)
 def seed(request: HttpRequest) -> HttpResponse:

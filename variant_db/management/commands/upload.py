@@ -9,15 +9,18 @@ from django.core.management.base import BaseCommand
 from .controller import upload
 
 # log to both "log.txt" and STDOUT/ERR
-logging.basicConfig(datefmt='%Y-%m-%d %H:%M',
-                    level=logging.INFO,
-                    filemode="a",
-                    filename="log.txt",
-                    format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+logging.basicConfig(
+    datefmt="%Y-%m-%d %H:%M",
+    level=logging.INFO,
+    filemode="a",
+    filename="log.txt",
+    format="%(asctime)s %(name)-12s %(levelname)-8s %(message)s",
+)
 console = logging.StreamHandler()
-formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
+formatter = logging.Formatter("%(name)-12s: %(levelname)-8s %(message)s")
 console.setFormatter(formatter)
-logging.getLogger('').addHandler(console)
+logging.getLogger("").addHandler(console)
+
 
 class Command(BaseCommand):
     help = "Command line interface for the variant_db app."
@@ -48,9 +51,7 @@ class Command(BaseCommand):
         """
         if options["command"] == "variants":
             for workbook in options["workbooks"]:
-                logging.info(
-                    f"Workbook {workbook}: attempting upload"
-                )
+                logging.info(f"Workbook {workbook}: attempting upload")
                 try:
                     upload(workbook)
                 except DatabaseError as e:

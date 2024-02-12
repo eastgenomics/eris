@@ -5,6 +5,7 @@ from .insert import *
 from .workbook import read_workbook
 from .insert import insert_row
 
+
 @transaction.atomic
 def upload(workbook: str) -> None:
     """

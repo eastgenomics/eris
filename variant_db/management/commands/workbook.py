@@ -8,6 +8,7 @@ import logging
 import pandas as pd
 from typing import Tuple, List, Dict
 
+
 def read_workbook(workbook_file: str) -> List[Dict[str, str | int]]:
     """
     Reads CSV workbook into a list of dicts, one per row.
