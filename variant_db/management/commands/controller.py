@@ -8,11 +8,11 @@ from .insert import insert_row
 @transaction.atomic
 def upload(workbook: str) -> None:
     """
-    The controller function which uploads a user-provided list of variant files
+    The controller function which uploads a user-provided variant workbook
     into the relevant Eris tables.
     This is currently only called from the command line interface.
 
-    :param: files - a list of Pandas DataFrames, each of which contains data from a single variant file
+    :param: workbook - a filepath to a workbook file represented as a string
     """
     # call eris.variant_db._insert functions here
     wb_df = read_workbook(workbook)
