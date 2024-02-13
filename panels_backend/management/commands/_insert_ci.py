@@ -58,7 +58,7 @@ def _backward_deactivate(
 @transaction.atomic
 def flag_clinical_indication_panel_for_review(
     clinical_indication_panel: ClinicalIndicationPanel,
-    user: HttpRequest.user | None,
+    user: HttpRequest | None,
 ) -> None:
     """
     Controller function which takes a clinical indication/panel link, and flags them for manual review.
@@ -90,7 +90,7 @@ def flag_clinical_indication_panel_for_review(
 
 def flag_clinical_indication_superpanel_for_review(
     clinical_indication_panel: ClinicalIndicationSuperPanel,
-    user: HttpRequest.user | None = None,
+    user: HttpRequest | None = None,
 ) -> None:
     """
     Controller function which takes a clinical indication/superpanel link, and flags them for manual review.
@@ -104,7 +104,7 @@ def flag_clinical_indication_superpanel_for_review(
     :param: clinical_indication_superpanel [ClinicalIndicationSuperPanel] which needs to
     be flagged for manual review, usually because something has changed in the test
     directory
-    :param: user if front-end, otherwise None
+    :param: user, either 'request.user' (if called from web) or None (if called from CLI)
     """
 
     clinical_indication_panel.pending = True
@@ -125,7 +125,7 @@ def provisionally_link_clinical_indication_to_panel(
     panel_id: int,
     clinical_indication_id: int,
     td_version: TestDirectoryRelease,
-    user: HttpRequest.user | None,
+    user: HttpRequest | None,
 ) -> ClinicalIndicationPanel:
     """
     Link a CI and panel, but set the 'pending' field to True,
@@ -174,7 +174,7 @@ def provisionally_link_clinical_indication_to_superpanel(
     superpanel: SuperPanel,
     clinical_indication: ClinicalIndication,
     td_version: TestDirectoryRelease,
-    user: HttpRequest.user | None,
+    user: HttpRequest | None,
 ) -> ClinicalIndicationSuperPanel:
     """
     Link a CI and superpanel, but set the 'pending' field to True,
@@ -189,6 +189,8 @@ def provisionally_link_clinical_indication_to_superpanel(
     :param: clinical_indication [ClinicalIndication], a ClinicalIndication which
     needs linking to its panel
     :param: td_version [TestDirectoryRelease], the td release version provided by the user
+    :param: user, either 'request.user' (if called from web) or None (if called from CLI)
+
     """
     (
         ci_superpanel_instance,
@@ -295,7 +297,7 @@ def _retrieve_superpanel_from_pa_id(pa_id: str) -> SuperPanel | None:
 def _check_for_changed_pg_justification(
     pg_instance: PanelGene,
     unique_td_source: str,
-    user: HttpRequest.request | None = None,
+    user: HttpRequest | None = None,
 ) -> None:
     """
     For a PanelGene instance, check that the justification hasn't changed.
@@ -305,7 +307,7 @@ def _check_for_changed_pg_justification(
     :param pg_instance: a PanelGene which might have changed
     :param unique_td_source: the test directory source, which can be used
     as a justification.
-    :param user: the user from 'request', or None if CLI
+    :param: user, either 'request.user' (if called from web) or None (if called from CLI)
     """
     if pg_instance.justification != unique_td_source:
         PanelGeneHistory.objects.create(
@@ -326,7 +328,7 @@ def _make_panels_from_hgncs(
     ci: ClinicalIndication,
     td_release: TestDirectoryRelease,
     hgnc_list: list,
-    user: HttpRequest.user | None = None,
+    user: HttpRequest | None = None,
 ) -> None:
     """
     Make Panel records from a list of HGNC ids.
@@ -334,7 +336,7 @@ def _make_panels_from_hgncs(
     :param: ci [ClinicalIndication record], the CI record to link to the new panel
     :param: td_release [TestDirectoryRelease], the td release instance to link to the new CI-panel interaction
     :param: hgnc_list [list], list of HGNC ids which need to be made into a single panel
-    :param: user, [HttpRequest.user] if a logged-in user, None if CLI
+    :param user: either 'request.user' (if called from web) or None (if called from CLI)
     """
     # get current config source and test directory date
     td_source: str = td_release.td_source
@@ -496,7 +498,7 @@ def _update_ci_panel_tables_with_new_ci(
     r_code: str,
     td_version: TestDirectoryRelease,
     ci_instance: ClinicalIndication,
-    user: HttpRequest.user | None,
+    user: HttpRequest | None,
 ) -> None:
     """
     New clinical indication - the old CI-panel entries with the
@@ -507,7 +509,7 @@ def _update_ci_panel_tables_with_new_ci(
     :param: td_version [TestDirectoryRelease], the test directory's version
     :param: ci_instance [ClinicalIndication], the new ClinicalIndication object
     in the database which may need linking to some panels
-    :param: user - the current user, or None if CLI
+    :param: user, either 'request.user' (if called from web) or None (if called from CLI)
     """
     for clinical_indication_panel in ClinicalIndicationPanel.objects.filter(
         clinical_indication_id__r_code=r_code,
@@ -533,7 +535,7 @@ def _update_ci_superpanel_tables_with_new_ci(
     r_code: str,
     td_version: TestDirectoryRelease,
     ci_instance: ClinicalIndication,
-    user: HttpRequest.user | None,
+    user: HttpRequest | None,
 ) -> None:
     """
     New clinical indication - the old CI-superpanel entries with the
@@ -576,7 +578,7 @@ def _make_ci_panel_td_link(
     ci_instance: ClinicalIndication,
     panel_record: Panel,
     td_version: TestDirectoryRelease,
-    user: HttpRequest.user | None = None,
+    user: HttpRequest | None = None,
 ) -> tuple[ClinicalIndicationPanel, bool]:
     """
     Gets-or-creates a ClinicalIndicationPanel entry. Links to test directory release.
@@ -630,7 +632,7 @@ def _make_ci_superpanel_td_link(
     ci_instance: ClinicalIndication,
     superpanel_record: SuperPanel,
     td_version: TestDirectoryRelease,
-    user: HttpRequest.user | None = None,
+    user: HttpRequest | None = None,
 ) -> tuple[ClinicalIndicationSuperPanel, bool]:
     """
     Gets-or-creates a ClinicalIndicationSuperPanel entry. Link to td release.
@@ -688,7 +690,7 @@ def _make_ci_superpanel_td_link(
 def _flag_panels_removed_from_test_directory(
     ci_instance: ClinicalIndication,
     panels: list,
-    user: HttpRequest.user | None = None,
+    user: HttpRequest | None = None,
 ) -> None:
     """
     For a clinical indication, finds any pre-existing links to Panels and
@@ -732,7 +734,7 @@ def _flag_panels_removed_from_test_directory(
 def _flag_superpanels_removed_from_test_directory(
     ci_instance: ClinicalIndication,
     panels: list,
-    user: HttpRequest.user | None = None,
+    user: HttpRequest | None = None,
 ) -> None:
     """
     For a clinical indication, finds any pre-existing links to SuperPanels and
@@ -773,7 +775,7 @@ def _add_td_release_to_db(
     td_source: str,
     config_source: str,
     td_date: str,
-    user: HttpRequest.user | None,
+    user: HttpRequest | None,
 ) -> TestDirectoryRelease:
     """
     Add a new TestDirectory to the database with a version, and make a history entry
@@ -781,7 +783,7 @@ def _add_td_release_to_db(
     :param td_version: the string of the version of the currently-uploaded test directory
     :param td_source: the string of the source of the currently-uploaded test directory
     :param config_source: the string of the config
-    :param user: the string representing the current user
+    :param: user, either 'request.user' (if called from web) or None (if called from CLI)
     :returns: the TestDirectoryRelease
     """
     td = TestDirectoryRelease.objects.create(
@@ -802,7 +804,7 @@ def insert_test_directory_data(
     json_data: dict,
     td_release: str,
     force: bool = False,
-    user: HttpRequest.user | None = None,
+    user: HttpRequest | None = None,
 ) -> None:
     """This function inserts TD data into DB
 
@@ -813,6 +815,7 @@ def insert_test_directory_data(
         json_data [json dict]: data from TD
         td_release [str]: the version of the test directory file
         td_current [bool]: is this the current TD version?
+        user, either 'request.user' (if called from web) or None (if called from CLI)
     """
 
     print(f"Inserting test directory data into database... forced: {force}")

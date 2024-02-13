@@ -103,7 +103,7 @@ def _insert_gene(
     panel: PanelClass,
     panel_instance: Panel,
     panel_created: bool,
-    user: HttpRequest.user | None = None,
+    user: HttpRequest | None = None,
 ) -> None:
     """
     Function to insert gene component of Panel into database.
@@ -294,7 +294,7 @@ def _get_most_recent_td_release_for_ci_superpanel(
 
 
 def _disable_custom_hgnc_panels(
-    panel: PanelClass, user: HttpRequest.user | None
+    panel: PanelClass, user: HttpRequest | None
 ) -> None:
     """
     Function to disable custom hgnc panels
@@ -304,7 +304,7 @@ def _disable_custom_hgnc_panels(
     NOTE: if it's inactivate custom panel, that's fine
 
     :param panel: PanelClass object
-    :param user: current user if from GUI
+    :param user: either 'request.user' (if called from web) or None (if called from CLI)
     """
     genes: list[dict[str, str]] = [
         gene.get("gene_data") for gene in panel.genes if gene.get("gene_data")
@@ -346,7 +346,7 @@ def _disable_custom_hgnc_panels(
 
 
 def _insert_panel_data_into_db(
-    panel: PanelClass, user: HttpRequest.user | None = None
+    panel: PanelClass, user: HttpRequest | None = None
 ) -> Panel:
     """
     Insert data from a parsed JSON a panel record, into the database.
@@ -489,7 +489,7 @@ def _insert_superpanel_into_db(
 def panel_insert_controller(
     panels: list[PanelClass],
     superpanels: list[SuperPanelClass],
-    user: HttpRequest.user | None = None,
+    user: HttpRequest | None = None,
 ):
     """
     Carries out coordination of panel creation from the 'all' command - Panels and SuperPanels are
@@ -500,7 +500,7 @@ def panel_insert_controller(
     :param: panels [list[PanelClass]], a list of parsed panel input from the API
     :param: superpanels [list[SuperPanel]], a list of parsed superpanel
     input from the API
-    :param: user or None if CLI
+    :param: user, either 'request.user' (if called from web) or None (if called from CLI)
     """
     # currently, we only handle Panel/SuperPanel if the panel data is from
     # PanelApp, hence adding the source manually

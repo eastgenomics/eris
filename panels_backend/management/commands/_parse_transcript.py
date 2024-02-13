@@ -32,7 +32,7 @@ from panels_backend.models import (
 def _update_existing_gene_metadata_symbol_in_db(
     hgnc_id_to_symbol: dict[str, str],
     hgnc_release: HgncRelease,
-    user: HttpRequest.user | None = None,
+    user: HttpRequest | None = None,
 ) -> None:
     """
     Function to update gene metadata in db using a hgnc dump prepared dictionary
@@ -42,7 +42,7 @@ def _update_existing_gene_metadata_symbol_in_db(
 
     :param hgnc_id_to_symbol: dictionary of hgnc id to approved symbol
     :param hgnc_release: the HgncRelease for the currently-uploaded HGNC file
-    :param user: either a User instance (if called from web) or None (if called from CLI)
+    :param user: either 'request.user' (if called from web) or None (if called from CLI)
     """
     gene_symbol_updates = []
 
@@ -80,7 +80,7 @@ def _update_existing_gene_metadata_symbol_in_db(
 def _update_existing_gene_metadata_aliases_in_db(
     hgnc_id_to_alias_symbols: dict[str, str],
     hgnc_release: HgncRelease,
-    user: HttpRequest.user | None = None,
+    user: HttpRequest | None = None,
 ) -> None:
     """
     Function to update gene metadata in db using hgnc dump prepared dictionaries
@@ -123,7 +123,7 @@ def _update_existing_gene_metadata_aliases_in_db(
 def _link_unchanged_genes_to_new_release(
     unchanged_genes: list,
     hgnc_release: HgncRelease,
-    user: HttpRequest.user | None = None,
+    user: HttpRequest | None = None,
 ):
     """
     If a gene wasn't changed in a HGNC release, link it to the new release with a note,
@@ -161,7 +161,7 @@ def _link_unchanged_genes_to_new_release(
 def _add_new_genes_to_db(
     new_genes: dict[str, str],
     hgnc_release: HgncRelease,
-    user: HttpRequest.user | None = None,
+    user: HttpRequest | None = None,
 ) -> None:
     """
     If a gene exists in the HGNC file, but does NOT exist in the db, make it.
@@ -318,7 +318,7 @@ def _resolve_alias(start_alias: list[str]) -> str | None:
 
 
 def _prepare_hgnc_file(
-    hgnc_file: str, hgnc_version: str, user: HttpRequest.user | None = None
+    hgnc_file: str, hgnc_version: str, user: HttpRequest | None = None
 ) -> dict[str, str]:
     """
     Read a hgnc file and sanity-check it
@@ -560,7 +560,7 @@ def _add_transcript_to_db_with_gff_release(
     transcript: str,
     ref_genome: ReferenceGenome,
     gff_release: GffRelease,
-    user: HttpRequest.user | None = None,
+    user: HttpRequest | None = None,
 ) -> Transcript:
     """
     Add each transcript to the database, with its gene.

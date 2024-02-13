@@ -67,7 +67,7 @@ def get_clinical_indication_by_database_id(
 def activate_clinical_indication_panel(
     clinical_indication_id: int,
     panel_id: int,
-    user: HttpRequest.user | None,
+    user: HttpRequest | None,
 ) -> None:
     """
     Fetch ci-panel and make it active.
@@ -76,7 +76,7 @@ def activate_clinical_indication_panel(
 
     :param clinical_indication_id: clinical indication database id
     :param panel_id: panel database id
-    :param user: user who made the change
+    :param: user, either 'request.user' (if called from web) or None (if called from CLI)
     """
     try:
         # fetch ci-panel link
