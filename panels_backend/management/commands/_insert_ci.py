@@ -444,7 +444,7 @@ def _make_panels_from_hgncs(
 def _make_provisional_test_method_change(
     ci_instance: ClinicalIndication,
     new_test_method: str,
-    user: str,
+    user: HttpRequest | None = None,
 ) -> None:
     """
     When a test method changes for a clinical indication,
@@ -453,7 +453,7 @@ def _make_provisional_test_method_change(
 
     :param: ci_instance [ClinicalIndication record], the CI record to link to
     :param: new_test_method [str], new test method
-    :param: user [str], the user initiating the action
+    :param user: either 'request.user' (if called from web) or None (if called from CLI)
 
     return: None
     """
@@ -865,7 +865,7 @@ def insert_test_directory_data(
                 _make_provisional_test_method_change(
                     ci_instance,
                     indication["test_method"],
-                    td_source,
+                    user,
                 )
 
         # now that clinical indications have been made and added to the database,

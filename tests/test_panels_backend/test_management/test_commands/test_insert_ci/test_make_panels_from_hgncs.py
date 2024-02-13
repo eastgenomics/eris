@@ -7,6 +7,7 @@ Tested scenario:
 """
 
 from django.test import TestCase
+from django.contrib.auth.models import User
 
 from panels_backend.models import (
     ClinicalIndication,
@@ -56,7 +57,7 @@ class TestMakePanelsFromHgncs(TestCase):
             td_date="230616",
         )
 
-        self.user = "test"
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
     def test_make_panel_function(self):
         """

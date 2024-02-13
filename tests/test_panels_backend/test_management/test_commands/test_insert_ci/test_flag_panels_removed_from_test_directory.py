@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.contrib.auth.models import User
 
 from panels_backend.models import (
     ClinicalIndication,
@@ -54,6 +55,7 @@ class TestPanelsFlaggedWhenNoLongerInTd(TestCase):
             current=True,
             pending=False,
         )
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
         # make a list of panels which ARE PRESENT in the current td - from which one of the current
         # CiPanels will be missing
@@ -68,7 +70,7 @@ class TestPanelsFlaggedWhenNoLongerInTd(TestCase):
         Meanwhile, panel '4' should be skipped, remaining current with no history data
         """
         _flag_panels_removed_from_test_directory(
-            self.ci, self.current_td_panels, "test user"
+            self.ci, self.current_td_panels, self.user
         )
 
         # check that the panel with the external ID '3', which is absent from the

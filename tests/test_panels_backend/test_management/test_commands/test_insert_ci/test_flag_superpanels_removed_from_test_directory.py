@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.contrib.auth.models import User
 
 from panels_backend.models import (
     ClinicalIndication,
@@ -56,6 +57,7 @@ class TestSuperpanelsFlaggedWhenNoLongerInTd(TestCase):
                 pending=False,
             )
         )
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
         # make a list of panels which ARE PRESENT in the current td - from which one of the current
         # CiSuperPanels will be missing
@@ -70,7 +72,7 @@ class TestSuperpanelsFlaggedWhenNoLongerInTd(TestCase):
         Current Superpanels which ARE in the td-files should be skipped, remaining current with no history data
         """
         _flag_superpanels_removed_from_test_directory(
-            self.ci, self.current_td_panels, "test user"
+            self.ci, self.current_td_panels, self.user
         )
 
         # check that the superpanel with the external ID '3', which is absent from the

@@ -407,7 +407,7 @@ class TestInsertTestDirectoryData(TestCase):
             "date": "230616",
         }
 
-        insert_test_directory_data(mock_test_directory, "5.2")
+        insert_test_directory_data(mock_test_directory, "5.2", False, None)
 
         self.clinical_indication.refresh_from_db()
 

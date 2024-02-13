@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.contrib.auth.models import User
 
 from panels_backend.management.commands.history import History
 from panels_backend.models import (
@@ -44,7 +45,7 @@ class TestMakeCiSuperpanelTdLink_NewCip(TestCase):
             td_date="20220405",
         )
 
-        self.user = "test_user"
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
     def test_superpanel_ci_and_td_link_made(self):
         """
@@ -119,7 +120,7 @@ class TestMakeCiPanelTdLink_ExistingCip(TestCase):
             td_date="20220405",
         )
 
-        self.user = "test_user"
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
         self.cip = ClinicalIndicationSuperPanel.objects.create(
             superpanel=self.panel, clinical_indication=self.ci, current=True
