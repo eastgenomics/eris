@@ -29,11 +29,15 @@ class Command(BaseCommand):
         """Define the source of the data to import."""
 
         # python manage.py seed --debug panelapp all
-        parser.add_argument("--debug", action="store_true", help="run in debug mode")
+        parser.add_argument(
+            "--debug", action="store_true", help="run in debug mode"
+        )
         subparsers = parser.add_subparsers(dest="command")
 
         # python manage.py upload variants
-        variants = subparsers.add_parser("variants", help="seed variant results files")
+        variants = subparsers.add_parser(
+            "variants", help="seed variant results files"
+        )
         variants.add_argument(
             "-w",
             "--workbooks",

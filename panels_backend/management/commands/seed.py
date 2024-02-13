@@ -53,7 +53,9 @@ class Command(BaseCommand):
         :param: file_ids, a list of file ID strings
         """
 
-        missing_ids = [id for id in file_ids if not re.match(r"^file-[\w]+$", id)]
+        missing_ids = [
+            id for id in file_ids if not re.match(r"^file-[\w]+$", id)
+        ]
 
         if missing_ids:
             raise Exception(
@@ -70,7 +72,9 @@ class Command(BaseCommand):
         :param: list of releases provided at CLI
         """
 
-        invalid_releases = [id for id in releases if not re.match(r"^\d+(\.\d+)*$", id)]
+        invalid_releases = [
+            id for id in releases if not re.match(r"^\d+(\.\d+)*$", id)
+        ]
 
         if invalid_releases:
             raise Exception(
@@ -259,14 +263,18 @@ class Command(BaseCommand):
                     # we start by assuming we have a standard panel, and getting the most-recent version
                     # but if we find out it's a superpanel, we make a second call, to get the latest
                     # signed-off version instead
-                    panel_data, is_superpanel = get_latest_version_panel(panel_id)
+                    panel_data, is_superpanel = get_latest_version_panel(
+                        panel_id
+                    )
                     if is_superpanel:
                         # find latest signed-off superpanel version to use
                         print(
                             "Superpanel detected - fetching latest signed-off version"
                         )
                         latest_signedoff_panel_version = (
-                            _fetch_latest_signed_off_version_based_on_panel_id(panel_id)
+                            _fetch_latest_signed_off_version_based_on_panel_id(
+                                panel_id
+                            )
                         )
                         panel_data, is_superpanel = get_specific_version_panel(
                             panel_id, latest_signedoff_panel_version
@@ -279,7 +287,9 @@ class Command(BaseCommand):
                     raise ValueError("Panel specified does not exist")
 
                 else:
-                    panel_data.panel_source = "PanelApp"  # manual addition of source
+                    panel_data.panel_source = (
+                        "PanelApp"  # manual addition of source
+                    )
 
                     print(f"Importing panels into database...")
                     if is_superpanel:
@@ -354,7 +364,9 @@ class Command(BaseCommand):
                 ]
             )
 
-            self._validate_ext_ids([mane_ext_id, g2refseq_ext_id, markname_ext_id])
+            self._validate_ext_ids(
+                [mane_ext_id, g2refseq_ext_id, markname_ext_id]
+            )
 
             self._validate_release_versions(
                 [hgnc_release, mane_release, gff_release, hgmd_release]

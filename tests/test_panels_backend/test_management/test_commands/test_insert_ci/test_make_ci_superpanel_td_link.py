@@ -10,7 +10,9 @@ from panels_backend.models import (
     CiSuperpanelTdRelease,
     CiSuperpanelTdReleaseHistory,
 )
-from panels_backend.management.commands._insert_ci import _make_ci_superpanel_td_link
+from panels_backend.management.commands._insert_ci import (
+    _make_ci_superpanel_td_link,
+)
 
 
 class TestMakeCiSuperpanelTdLink_NewCip(TestCase):
@@ -72,7 +74,8 @@ class TestMakeCiSuperpanelTdLink_NewCip(TestCase):
             cip_hist = ClinicalIndicationSuperPanelHistory.objects.all()
             assert len(cip_hist) == 1
             self.assertEqual(
-                cip_hist[0].note, History.clinical_indication_superpanel_created()
+                cip_hist[0].note,
+                History.clinical_indication_superpanel_created(),
             )
 
         # check cip-td  history logs
@@ -81,7 +84,9 @@ class TestMakeCiSuperpanelTdLink_NewCip(TestCase):
             assert len(cip_td_hist) == 1
             self.assertEqual(
                 cip_td_hist[0].note,
-                History.td_superpanel_ci_autolink(cip_td[0].td_release.release),
+                History.td_superpanel_ci_autolink(
+                    cip_td[0].td_release.release
+                ),
             )
 
 

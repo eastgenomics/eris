@@ -27,7 +27,9 @@ from panels_backend.models import (
     TestDirectoryRelease,
     CiPanelTdRelease,
 )
-from panels_backend.management.commands._insert_ci import insert_test_directory_data
+from panels_backend.management.commands._insert_ci import (
+    insert_test_directory_data,
+)
 from tests.test_panels_backend.test_management.test_commands.test_insert_panel.test_insert_gene import (
     len_check_wrapper,
     value_check_wrapper,
@@ -184,10 +186,14 @@ class TestInsertTestDirectoryData(TestCase):
         insert_test_directory_data(mock_test_directory, "5.2", False)
 
         clinical_indications = ClinicalIndication.objects.all()
-        errors += len_check_wrapper(clinical_indications, "clinical indications", 2)
+        errors += len_check_wrapper(
+            clinical_indications, "clinical indications", 2
+        )
 
         errors += value_check_wrapper(
-            clinical_indications[1].r_code, "clinical indication r code", "R67.1"
+            clinical_indications[1].r_code,
+            "clinical indication r code",
+            "R67.1",
         )
 
         clinical_indication_panels = ClinicalIndicationPanel.objects.all().order_by(
@@ -244,7 +250,9 @@ class TestInsertTestDirectoryData(TestCase):
         insert_test_directory_data(mock_test_directory, "5.2")
 
         clinical_indications = ClinicalIndication.objects.all().order_by("id")
-        errors += len_check_wrapper(clinical_indications, "clinical indications", 2)
+        errors += len_check_wrapper(
+            clinical_indications, "clinical indications", 2
+        )
 
         errors += value_check_wrapper(
             clinical_indications[1].name, "name", "test ci 2"
@@ -342,7 +350,11 @@ class TestInsertTestDirectoryData(TestCase):
 
         clinical_indication_panels = ClinicalIndicationPanel.objects.order_by(
             "id"
-        ).values("panel_id__external_id", "clinical_indication_id__r_code", "pending")
+        ).values(
+            "panel_id__external_id",
+            "clinical_indication_id__r_code",
+            "pending",
+        )
 
         errors += len_check_wrapper(
             clinical_indication_panels, "clinical indication-panel", 2
@@ -443,13 +455,15 @@ class TestInsertTestDirectoryData(TestCase):
 
         clinical_indications = ClinicalIndication.objects.all().order_by("id")
 
-        errors += len_check_wrapper(clinical_indications, "clinical indications", 2)
+        errors += len_check_wrapper(
+            clinical_indications, "clinical indications", 2
+        )
         errors += value_check_wrapper(
             clinical_indications[1].r_code, "r code", "R234"
         )  # the new clinical indication has r code R234
 
-        clinical_indication_panels = ClinicalIndicationPanel.objects.all().order_by(
-            "id"
+        clinical_indication_panels = (
+            ClinicalIndicationPanel.objects.all().order_by("id")
         )
 
         errors += len_check_wrapper(
@@ -471,13 +485,20 @@ class TestInsertTestDirectoryData(TestCase):
 
         clinical_indication_panels = ClinicalIndicationPanel.objects.order_by(
             "id"
-        ).values("panel_id__external_id", "clinical_indication_id__r_code", "pending")
+        ).values(
+            "panel_id__external_id",
+            "clinical_indication_id__r_code",
+            "pending",
+        )
 
         assert clinical_indication_panels[1]["panel_id__external_id"] in [
             "123",
             "234",
         ]  # both links are connected to 123 and 234
-        assert clinical_indication_panels[2]["panel_id__external_id"] in ["123", "234"]
+        assert clinical_indication_panels[2]["panel_id__external_id"] in [
+            "123",
+            "234",
+        ]
 
         errors += value_check_wrapper(
             clinical_indication_panels[1]["clinical_indication_id__r_code"],
@@ -624,7 +645,9 @@ class TestInsertTestDirectoryData(TestCase):
 
         clinical_indication_panels = ClinicalIndicationPanel.objects.order_by(
             "id"
-        ).values("panel_id__panel_name", "clinical_indication_id__r_code", "pending")
+        ).values(
+            "panel_id__panel_name", "clinical_indication_id__r_code", "pending"
+        )
 
         # NOTE: the first clinical indication-panel link is made in setup above
         # the second link is made between R234 and HGNC:1&HGNC:2
@@ -666,7 +689,9 @@ class TestInsertTestDirectoryData(TestCase):
 
         assert not errors, errors
 
-    def test_that_r_code_that_are_no_longer_in_test_directory_will_be_flagged(self):
+    def test_that_r_code_that_are_no_longer_in_test_directory_will_be_flagged(
+        self,
+    ):
         """
         scenario where R123 is no longer in the latest test directory thus we expect
         the function to flag the R123 linked to panel 123 link for review (the link we made in setup)
@@ -684,4 +709,6 @@ class TestInsertTestDirectoryData(TestCase):
         clinical_indication_panels = ClinicalIndicationPanel.objects.all()
 
         assert len(clinical_indication_panels) == 1
-        assert clinical_indication_panels[0].pending is True  # flagged for review
+        assert (
+            clinical_indication_panels[0].pending is True
+        )  # flagged for review

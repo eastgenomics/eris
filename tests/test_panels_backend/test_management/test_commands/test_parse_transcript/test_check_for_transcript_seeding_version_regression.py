@@ -22,7 +22,9 @@ class TestCheckRegressions_OldHgncRelease(TestCase):
     def setUp(self) -> None:
         # set up TranscriptSources and ref genome
         self.hgmd_source = TranscriptSource.objects.create(source="HGMD")
-        self.mane_select_source = TranscriptSource.objects.create(source="MANE Select")
+        self.mane_select_source = TranscriptSource.objects.create(
+            source="MANE Select"
+        )
         self.mane_plus_source = TranscriptSource.objects.create(
             source="MANE Plus Clinical"
         )
@@ -48,7 +50,9 @@ class TestCheckRegressions_OldHgncRelease(TestCase):
             reference_genome=self.reference_genome,
         )
         self.hgmd = TranscriptRelease.objects.create(
-            release="2", source=self.hgmd_source, reference_genome=self.reference_genome
+            release="2",
+            source=self.hgmd_source,
+            reference_genome=self.reference_genome,
         )
 
     def test_one_old_release(self):

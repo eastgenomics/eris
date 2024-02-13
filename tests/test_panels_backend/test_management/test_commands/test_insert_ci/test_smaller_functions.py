@@ -44,10 +44,12 @@ class TestBackwardDeactivation(TestCase):
             panel_version=sortable_version("1.15"),
         )
 
-        self.first_clinical_indication_panel = ClinicalIndicationPanel.objects.create(
-            clinical_indication_id=self.first_clinical_indication.id,
-            panel_id=self.first_panel.id,
-            current=True,
+        self.first_clinical_indication_panel = (
+            ClinicalIndicationPanel.objects.create(
+                clinical_indication_id=self.first_clinical_indication.id,
+                panel_id=self.first_panel.id,
+                current=True,
+            )
         )
 
     def test_that_link_will_be_flagged_if_not_exist(self):
@@ -115,10 +117,12 @@ class TestFlagClinicalIndicationPanelForReview(TestCase):
             panel_version=sortable_version("1.15"),
         )
 
-        self.first_clinical_indication_panel = ClinicalIndicationPanel.objects.create(
-            clinical_indication_id=self.first_clinical_indication.id,
-            panel_id=self.first_panel.id,
-            current=True,
+        self.first_clinical_indication_panel = (
+            ClinicalIndicationPanel.objects.create(
+                clinical_indication_id=self.first_clinical_indication.id,
+                panel_id=self.first_panel.id,
+                current=True,
+            )
         )
 
     def test_that_link_will_be_flagged_and_history_recorded(self):
@@ -207,11 +211,13 @@ class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
             panel_version=sortable_version("1.15"),
         )
 
-        self.first_clinical_indication_panel = ClinicalIndicationPanel.objects.create(
-            clinical_indication_id=self.first_clinical_indication.id,
-            panel_id=self.first_panel.id,
-            current=True,
-            pending=False,
+        self.first_clinical_indication_panel = (
+            ClinicalIndicationPanel.objects.create(
+                clinical_indication_id=self.first_clinical_indication.id,
+                panel_id=self.first_panel.id,
+                current=True,
+                pending=False,
+            )
         )
 
         self.td_version = TestDirectoryRelease.objects.create(release="2.1.0")
@@ -264,10 +270,14 @@ class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
 
         # test a new ci-panel link is made and flagged for review
         with self.subTest():
-            assert ClinicalIndicationPanel.objects.count() == 2  # one new link created
+            assert (
+                ClinicalIndicationPanel.objects.count() == 2
+            )  # one new link created
             new_link = ClinicalIndicationPanel.objects.last()
 
-            assert new_link.pending is True  # new link should be flagged for review
+            assert (
+                new_link.pending is True
+            )  # new link should be flagged for review
 
         # test that a release was linked to the ci-panel
         with self.subTest():
@@ -394,7 +404,9 @@ class TestRetrievePanelFromPanelID(TestCase):
         self.second_panel = Panel.objects.create(
             external_id=123,
             panel_name="Test panel",
-            panel_version=sortable_version("1.19"),  # notice the version number
+            panel_version=sortable_version(
+                "1.19"
+            ),  # notice the version number
         )
 
     def test_that_latest_panel_version_will_be_retrieved(self):
@@ -438,7 +450,9 @@ class TestMakeProvisionalTestMethodChange(TestCase):
         assert (
             self.first_clinical_indication.test_method == "Test method 2"
         )  # test method updated for clinical indication
-        assert self.first_clinical_indication.pending is True  # flagged for review
+        assert (
+            self.first_clinical_indication.pending is True
+        )  # flagged for review
 
         assert (
             ClinicalIndicationTestMethodHistory.objects.count() == 1

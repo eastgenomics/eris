@@ -77,7 +77,9 @@ def _add_panels_field(pivoted_df: List[Dict]) -> List[Dict]:
     Splits up the "panels" field into single panels (";"-separated), where each panel is a dict with `panel_name` and `panel_version`
     """
     for row in pivoted_df:
-        row["panels"] = [_parse_panel(panel) for panel in row["panel"].split(";")]
+        row["panels"] = [
+            _parse_panel(panel) for panel in row["panel"].split(";")
+        ]
     return pivoted_df
 
 

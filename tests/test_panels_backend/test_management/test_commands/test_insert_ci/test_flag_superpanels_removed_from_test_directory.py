@@ -48,11 +48,13 @@ class TestSuperpanelsFlaggedWhenNoLongerInTd(TestCase):
             panel_source="PanelApp",
             panel_version="50",
         )
-        self.cisp_current_present = ClinicalIndicationSuperPanel.objects.create(
-            clinical_indication=self.ci,
-            superpanel=self.superpanel_current_present,
-            current=True,
-            pending=False,
+        self.cisp_current_present = (
+            ClinicalIndicationSuperPanel.objects.create(
+                clinical_indication=self.ci,
+                superpanel=self.superpanel_current_present,
+                current=True,
+                pending=False,
+            )
         )
 
         # make a list of panels which ARE PRESENT in the current td - from which one of the current

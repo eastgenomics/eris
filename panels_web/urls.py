@@ -11,8 +11,14 @@ urlpatterns = [
     path("accounts/logout/", views.logout, name="logout"),
     # info
     path("panel/<int:panel_id>/", views.panel, name="panel"),
-    path("superpanel/<int:superpanel_id>/", views.superpanel, name="superpanel"),
-    path("ci/<int:ci_id>/", views.clinical_indication, name="clinical_indication"),
+    path(
+        "superpanel/<int:superpanel_id>/", views.superpanel, name="superpanel"
+    ),
+    path(
+        "ci/<int:ci_id>/",
+        views.clinical_indication,
+        name="clinical_indication",
+    ),
     path("gene/<int:gene_id>/", views.gene, name="gene"),
     path(
         "cip/<int:cip_id>/",

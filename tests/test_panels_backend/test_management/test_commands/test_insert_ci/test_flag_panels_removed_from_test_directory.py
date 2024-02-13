@@ -37,7 +37,9 @@ class TestPanelsFlaggedWhenNoLongerInTd(TestCase):
             panel_version="500",
         )
         self.cip_current_absent = ClinicalIndicationPanel.objects.create(
-            clinical_indication=self.ci, panel=self.panel_current_absent, current=True
+            clinical_indication=self.ci,
+            panel=self.panel_current_absent,
+            current=True,
         )
 
         self.panel_current_present = Panel.objects.create(
@@ -71,7 +73,9 @@ class TestPanelsFlaggedWhenNoLongerInTd(TestCase):
 
         # check that the panel with the external ID '3', which is absent from the
         # current td, is set to current=False and pending=True
-        panel_ext_3 = ClinicalIndicationPanel.objects.filter(panel__external_id="3")
+        panel_ext_3 = ClinicalIndicationPanel.objects.filter(
+            panel__external_id="3"
+        )
         with self.subTest():
             assert len(panel_ext_3) == 1
             assert not panel_ext_3[0].current
@@ -87,7 +91,9 @@ class TestPanelsFlaggedWhenNoLongerInTd(TestCase):
 
         # check that the panel with the external ID '4', which is PRESENT IN the
         # current td, is still set to current=True
-        panel_ext_4 = ClinicalIndicationPanel.objects.filter(panel__external_id="4")
+        panel_ext_4 = ClinicalIndicationPanel.objects.filter(
+            panel__external_id="4"
+        )
         with self.subTest():
             assert len(panel_ext_4) == 1
             assert panel_ext_4[0].current

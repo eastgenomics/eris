@@ -387,7 +387,9 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
 
         self.moi = ModeOfInheritance.objects.create(mode_of_inheritance="test")
 
-        self.mop = ModeOfPathogenicity.objects.create(mode_of_pathogenicity="test")
+        self.mop = ModeOfPathogenicity.objects.create(
+            mode_of_pathogenicity="test"
+        )
 
         self.penetrance = Penetrance.objects.create(penetrance="test")
 
@@ -459,7 +461,9 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
         new_panelgene = panel_genes[0]
         confidence = Confidence.objects.get(id=new_panelgene.confidence.id)
 
-        errors += value_check_wrapper(confidence.confidence_level, "confidence", "3")
+        errors += value_check_wrapper(
+            confidence.confidence_level, "confidence", "3"
+        )
 
         # there should not have been a history record made,
         # because there was not a change to the gene-panel link in this upload
@@ -493,7 +497,9 @@ class TestAdditionOfGeneToExistingPanelGene(TestCase):
 
         self.moi = ModeOfInheritance.objects.create(mode_of_inheritance="test")
 
-        self.mop = ModeOfPathogenicity.objects.create(mode_of_pathogenicity="test")
+        self.mop = ModeOfPathogenicity.objects.create(
+            mode_of_pathogenicity="test"
+        )
 
         self.penetrance = Penetrance.objects.create(penetrance="test")
 
@@ -625,7 +631,9 @@ class TestDropInPanelGeneConfidence(TestCase):
 
         self.moi = ModeOfInheritance.objects.create(mode_of_inheritance="test")
 
-        self.mop = ModeOfPathogenicity.objects.create(mode_of_pathogenicity="test")
+        self.mop = ModeOfPathogenicity.objects.create(
+            mode_of_pathogenicity="test"
+        )
 
         self.penetrance = Penetrance.objects.create(penetrance="test")
 

@@ -46,7 +46,9 @@ class Command(BaseCommand):
             help="Whether to add the clinical indication to the panel, or remove it",
         )
 
-        clinical_indication = parser.add_mutually_exclusive_group(required=True)
+        clinical_indication = parser.add_mutually_exclusive_group(
+            required=True
+        )
 
         # arg for finding clinical indication using r code
         clinical_indication.add_argument(
@@ -83,7 +85,9 @@ class Command(BaseCommand):
             panel = get_panel_by_name(panel_name)
 
             # no panel found with the database id
-            assert panel, f"The panel {panel_name} was not found in the database"
+            assert (
+                panel
+            ), f"The panel {panel_name} was not found in the database"
 
             # more than one panel with same name found with the database id
             assert len(panel) < 2, (

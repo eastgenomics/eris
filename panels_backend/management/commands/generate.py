@@ -64,11 +64,15 @@ class Command(BaseCommand):
         hgnc = pd.read_csv(file_path, delimiter="\t")
         needed_cols = ["HGNC ID", "Locus type", "Approved name"]
         if missing_columns := check_missing_columns(hgnc, needed_cols):
-            raise ValueError(f"Missing columns in HGNC file: {missing_columns}")
+            raise ValueError(
+                f"Missing columns in HGNC file: {missing_columns}"
+            )
 
         return True
 
-    def _get_relevant_ci_panels(self, td_release) -> tuple[dict[str, list], set]:
+    def _get_relevant_ci_panels(
+        self, td_release
+    ) -> tuple[dict[str, list], set]:
         """
         Retrieve relevant panels and CI-panels from the database
         These will be output in the final file.
@@ -86,7 +90,9 @@ class Command(BaseCommand):
 
         # find Ci-Panels linked to the latest test directory
         for row in CiPanelTdRelease.objects.filter(
-            td_release=td_release, ci_panel__current=True, ci_panel__pending=False
+            td_release=td_release,
+            ci_panel__current=True,
+            ci_panel__pending=False,
         ).values(
             "ci_panel__clinical_indication__r_code",
             "ci_panel__clinical_indication_id__name",
@@ -100,7 +106,9 @@ class Command(BaseCommand):
 
         return ci_panels, relevant_panels
 
-    def _get_relevant_ci_superpanels(self, td_release) -> tuple[dict[str, list], list]:
+    def _get_relevant_ci_superpanels(
+        self, td_release
+    ) -> tuple[dict[str, list], list]:
         """
         Retrieve relevant superpanels and CI-superpanels from the database
         These will be output in the final file.
@@ -129,11 +137,15 @@ class Command(BaseCommand):
             "ci_superpanel__superpanel__panel_version",
         ):
             relevant_panels.add(row["ci_superpanel__superpanel"])
-            ci_panels[row["ci_superpanel__clinical_indication__r_code"]].append(row)
+            ci_panels[
+                row["ci_superpanel__clinical_indication__r_code"]
+            ].append(row)
 
         return ci_panels, relevant_panels
 
-    def _get_relevant_panel_genes(self, relevant_panels: list[int]) -> dict[int, str]:
+    def _get_relevant_panel_genes(
+        self, relevant_panels: list[int]
+    ) -> dict[int, str]:
         """
         Using a list of relevant panels,
         retrieve the genes from those panels from the PanelGene database.
@@ -213,10 +225,14 @@ class Command(BaseCommand):
                 # for each panel associated with that clinical indication
                 panel_id: str = panel_dict["ci_panel__panel_id"]
                 # get the PanelApp external ID if there is one. If it's None, make it a blank string
-                panelapp_id: str = panel_dict.get("ci_panel__panel__external_id", "")
+                panelapp_id: str = panel_dict.get(
+                    "ci_panel__panel__external_id", ""
+                )
                 if not panelapp_id:
                     panelapp_id = ""
-                ci_name: str = panel_dict["ci_panel__clinical_indication_id__name"]
+                ci_name: str = panel_dict[
+                    "ci_panel__clinical_indication_id__name"
+                ]
                 for hgnc in panel_genes[panel_id]:
                     # for each gene associated with that panel
                     if hgnc in HGNC_IDS_TO_OMIT or hgnc in excluded_hgncs:
@@ -265,7 +281,9 @@ class Command(BaseCommand):
                 panelapp_id: str = panel_dict.get(
                     "ci_superpanel__superpanel__external_id", ""
                 )
-                ci_name: str = panel_dict["ci_superpanel__clinical_indication__name"]
+                ci_name: str = panel_dict[
+                    "ci_superpanel__clinical_indication__name"
+                ]
 
                 for hgnc in panel_genes[panel_id]:
                     # for each gene associated with that panel
@@ -275,9 +293,13 @@ class Command(BaseCommand):
                     # process the panel version
                     panel_version: str = (
                         normalize_version(
-                            panel_dict["ci_superpanel__superpanel__panel_version"]
+                            panel_dict[
+                                "ci_superpanel__superpanel__panel_version"
+                            ]
                         )
-                        if panel_dict["ci_superpanel__superpanel__panel_version"]
+                        if panel_dict[
+                            "ci_superpanel__superpanel__panel_version"
+                        ]
                         else None
                     )
                     results.append(
@@ -328,7 +350,9 @@ class Command(BaseCommand):
             msg = "; ".join(errors)
             raise ValueError(msg)
 
-    def _generate_genepanels(self, excluded_hgncs: set, output_directory: str) -> None:
+    def _generate_genepanels(
+        self, excluded_hgncs: set, output_directory: str
+    ) -> None:
         """
         Main function to generate genepanel.tsv, a file containing every clinical indications' genes
         Runs sanity checks, then calls a formatter if these pass
@@ -345,13 +369,18 @@ class Command(BaseCommand):
             release=latest_td_release_ver
         )
 
-        ci_panels, relevant_panels = self._get_relevant_ci_panels(latest_td_instance)
-        ci_superpanels, relevant_superpanels = self._get_relevant_ci_superpanels(
+        ci_panels, relevant_panels = self._get_relevant_ci_panels(
             latest_td_instance
         )
+        (
+            ci_superpanels,
+            relevant_superpanels,
+        ) = self._get_relevant_ci_superpanels(latest_td_instance)
 
         panel_genes = self._get_relevant_panel_genes(relevant_panels)
-        superpanel_genes = self._get_relevant_superpanel_genes(relevant_superpanels)
+        superpanel_genes = self._get_relevant_superpanel_genes(
+            relevant_superpanels
+        )
 
         panel_results = self._format_output_data_genepanels(
             ci_panels, panel_genes, excluded_hgncs
@@ -367,7 +396,9 @@ class Command(BaseCommand):
 
         current_datetime = dt.datetime.today().strftime("%Y%m%d")
 
-        with open(f"{output_directory}/{current_datetime}_genepanels.tsv", "w") as f:
+        with open(
+            f"{output_directory}/{current_datetime}_genepanels.tsv", "w"
+        ) as f:
             for row in results:
                 data = "\t".join(row)
                 f.write(f"{data}\n")
@@ -438,7 +469,9 @@ class Command(BaseCommand):
         :return: a list-of-dictionaries - each dict can be used to write out a line
         """
         start = dt.datetime.now().strftime("%H:%M:%S")
-        print(f"Creating g2t file for reference genome {ref_genome.name} at {start}")
+        print(
+            f"Creating g2t file for reference genome {ref_genome.name} at {start}"
+        )
 
         # We only need to assess those transcripts which are linked to the correct GFF release and reference genome
         gff_transcripts = TranscriptGffRelease.objects.filter(
@@ -452,11 +485,15 @@ class Command(BaseCommand):
         for gff_tx in gff_transcripts:
             # For each Transcript linked to this GFF release - make a row-dictionary of its data
             tx = gff_tx.transcript
-            clinical_status = self.get_current_transcript_clinical_status_for_g2t(
-                tx, latest_select, latest_plus_clinical, latest_hgmd
+            clinical_status = (
+                self.get_current_transcript_clinical_status_for_g2t(
+                    tx, latest_select, latest_plus_clinical, latest_hgmd
+                )
             )
             displayable_clinical_status = (
-                "clinical_transcript" if clinical_status else "not_clinical_transcript"
+                "clinical_transcript"
+                if clinical_status
+                else "not_clinical_transcript"
             )
             transcript_data = {
                 "hgnc_id": tx.gene.hgnc_id,
@@ -582,14 +619,17 @@ class Command(BaseCommand):
 
             try:
                 gff_release = GffRelease.objects.get(
-                    ensembl_release=kwargs.get("gff_release"), reference_genome=genome
+                    ensembl_release=kwargs.get("gff_release"),
+                    reference_genome=genome,
                 )
             except ObjectDoesNotExist:
                 raise ObjectDoesNotExist(
                     "Aborting g2t: GFF release does not exist for this genome build in the database."
                 )
 
-            latest_select = get_latest_transcript_release("MANE Select", genome)
+            latest_select = get_latest_transcript_release(
+                "MANE Select", genome
+            )
             latest_plus_clinical = get_latest_transcript_release(
                 "MANE Plus Clinical", genome
             )
@@ -602,7 +642,11 @@ class Command(BaseCommand):
                 )
 
             g2t = self._generate_g2t_results(
-                genome, gff_release, latest_select, latest_plus_clinical, latest_hgmd
+                genome,
+                gff_release,
+                latest_select,
+                latest_plus_clinical,
+                latest_hgmd,
             )
             self._write_g2t_results(g2t, output_directory)
 

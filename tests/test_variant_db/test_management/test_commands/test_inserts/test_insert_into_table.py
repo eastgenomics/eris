@@ -19,7 +19,9 @@ class TestInsertIntoTable_GettingExisting(TestCase):
             specimen_id="test_specimen",
         )
 
-        self.inst, _ = Institution.objects.get_or_create(name="NHS Foundation Trust")
+        self.inst, _ = Institution.objects.get_or_create(
+            name="NHS Foundation Trust"
+        )
 
     def test_getting_sample_without_rename(self):
         """
