@@ -215,13 +215,9 @@ def _insert_into_table(
         Required when the key name doesn't match the corresponding column name in the model
     :kwargs: named arguments to pass in to model for import
     """
-    try:
+    if names_to:
         for k in names_to:
             kwargs = _rename_key(kwargs, k, names_to[k])
-    # TODO: I think TypeError should perhaps not be passed on - I think it should probably be a code-
-    # stopping event. Discuss removal.
-    except TypeError:
-        pass
     inst, created = model_class.objects.get_or_create(**kwargs)
     return inst, created
 
