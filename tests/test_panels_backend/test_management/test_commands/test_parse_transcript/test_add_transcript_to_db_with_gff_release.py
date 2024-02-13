@@ -34,7 +34,7 @@ class TestAddTranscriptWithGff_NewTranscript(TestCase):
         self.ref_genome, _ = ReferenceGenome.objects.get_or_create(name="GRCh37")
 
         self.gff_release, _ = GffRelease.objects.get_or_create(
-            release="v10.2", reference_genome=self.ref_genome
+            ensembl_release="10", reference_genome=self.ref_genome
         )
 
         self.user = "init_v1_user"
@@ -63,7 +63,7 @@ class TestAddTranscriptWithGff_NewTranscript(TestCase):
 
         release = GffRelease.objects.all()
         err += len_check_wrapper(release, "releases", 1)
-        err += value_check_wrapper(release[0].release, "release version", "v10.2")
+        err += value_check_wrapper(release[0].ensembl_release, "release version", "10")
 
         tx_release = TranscriptGffRelease.objects.all()
         err += len_check_wrapper(tx_release, "tx-release links", 1)
@@ -101,7 +101,7 @@ class TestAddTranscriptWithGff_ExistingTranscripts(TestCase):
         self.ref_genome, _ = ReferenceGenome.objects.get_or_create(name="GRCh37")
 
         self.gff_release, _ = GffRelease.objects.get_or_create(
-            release="v10.2", reference_genome=self.ref_genome
+            ensembl_release="10.2", reference_genome=self.ref_genome
         )
 
         self.transcript, _ = Transcript.objects.get_or_create(
@@ -136,7 +136,9 @@ class TestAddTranscriptWithGff_ExistingTranscripts(TestCase):
 
         release = GffRelease.objects.all()
         err += len_check_wrapper(release, "releases", 1)
-        err += value_check_wrapper(release[0].release, "release version", "v10.2")
+        err += value_check_wrapper(
+            release[0].ensembl_release, "release version", "10.2"
+        )
 
         tx_release = TranscriptGffRelease.objects.all()
         err += len_check_wrapper(tx_release, "tx-release links", 1)
