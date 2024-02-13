@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.contrib.auth.models import User
 
 from panels_backend.models import (
     Gene,
@@ -39,7 +40,7 @@ class TestAddTranscriptWithGff_NewTranscript(TestCase):
             ensembl_release="10", reference_genome=self.ref_genome
         )
 
-        self.user = "init_v1_user"
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
     def test_novel_transcript_links_successfully(self):
         """
@@ -118,7 +119,7 @@ class TestAddTranscriptWithGff_ExistingTranscripts(TestCase):
             reference_genome=self.ref_genome,
         )
 
-        self.user = "init_v1_user"
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
     def test_existing_transcript_links_successfully(self):
         """
