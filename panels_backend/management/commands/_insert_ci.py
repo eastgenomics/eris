@@ -568,8 +568,8 @@ def _update_ci_superpanel_tables_with_new_ci(
             provisionally_link_clinical_indication_to_superpanel(
                 clinical_indication_superpanel.superpanel,
                 ci_instance,
-                user,
                 td_version,
+                user,
             )
         )
 

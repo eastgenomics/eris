@@ -10,6 +10,7 @@ A few scenarios tested here for insert_gene function
 """
 
 from django.test import TestCase
+from django.contrib.auth.models import User
 
 from panels_backend.models import (
     Panel,
@@ -75,6 +76,11 @@ class TestInsertGene_NewGene(TestCase):
             panel_version="1.15",
         )
 
+        self.user_logged_in = User.objects.create_user(
+            username="test", is_staff=True
+        )
+        self.user_cli = None
+
     def test_skip_if_no_gene_data_in_panel(self):
         """
         CASE: The PanelClass made from the PanelApp API has no genes
@@ -92,7 +98,7 @@ class TestInsertGene_NewGene(TestCase):
         )
 
         # run the function under test
-        _insert_gene(test_panel, self.first_panel, True)
+        _insert_gene(test_panel, self.first_panel, True, self.user_cli)
 
         # there should be no genes added into test db
         new_genes = Gene.objects.all()
@@ -128,7 +134,7 @@ class TestInsertGene_NewGene(TestCase):
         )
 
         # run the function under test
-        _insert_gene(test_panel, self.first_panel, True)
+        _insert_gene(test_panel, self.first_panel, True, self.user_logged_in)
 
         # there should be no genes added into test db
         new_genes = Gene.objects.all()
@@ -164,7 +170,7 @@ class TestInsertGene_NewGene(TestCase):
         )
 
         # run the function under test
-        _insert_gene(test_panel, self.first_panel, True)
+        _insert_gene(test_panel, self.first_panel, True, self.user_cli)
 
         # there should be no genes added into test db
         new_genes = Gene.objects.all()
@@ -200,7 +206,7 @@ class TestInsertGene_NewGene(TestCase):
         )
 
         # run the function under test
-        _insert_gene(test_panel, self.first_panel, True)
+        _insert_gene(test_panel, self.first_panel, True, self.user_logged_in)
 
         # there should only be one gene added into test db
         new_genes = Gene.objects.all()
@@ -234,7 +240,9 @@ class TestInsertGene_NewGene(TestCase):
         # check panel-gene history record user as PanelApp
         new_history = panel_gene_history[0]
 
-        errors += value_check_wrapper(new_history.user, "user", "PanelApp")
+        errors += value_check_wrapper(
+            new_history.user, "user", self.user_logged_in
+        )
 
         assert not errors, errors
 
@@ -276,7 +284,7 @@ class TestInsertGene_NewGene(TestCase):
         )
 
         # run the function under test
-        _insert_gene(test_panel, self.first_panel, False)
+        _insert_gene(test_panel, self.first_panel, False, self.user_cli)
 
         # check there is a panel entry - this was in the DB already
         new_panels = Panel.objects.all()
@@ -334,7 +342,7 @@ class TestInsertGene_NewGene(TestCase):
         )
 
         # run the function under test
-        _insert_gene(test_panel, self.first_panel, True)
+        _insert_gene(test_panel, self.first_panel, True, self.user_logged_in)
 
         # check there is a panel entry - this was in the DB already
         new_panels = Panel.objects.all()
@@ -404,6 +412,11 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
             justification="PanelApp",
         )
 
+        self.user_logged_in = User.objects.create_user(
+            username="test", is_staff=True
+        )
+        self.user_cli = None
+
     def test_that_unchanged_gene_is_ignored(self):
         """
         Test that for a panel-gene combination that is already in the database,
@@ -437,7 +450,7 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
 
         # run the function under test
         _insert_gene(
-            test_panel, self.first_panel, False
+            test_panel, self.first_panel, False, self.user_logged_in
         )  # False for `panel_created` because the panel already exist in the database with unchanged `external_id` `panel_name` and `panel_version`
 
         # check that the gene is in the database

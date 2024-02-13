@@ -411,13 +411,15 @@ def _insert_panel_data_into_db(
     # attach each Gene record to the Panel record,
     # whether it was created just now or was already in the database
     _insert_gene(panel, panel_instance, created)
-    _disable_custom_hgnc_panels(panel)
+    _disable_custom_hgnc_panels(panel, user)
 
     return panel_instance, created
 
 
 def _insert_superpanel_into_db(
-    superpanel: SuperPanelClass, child_panels: list[Panel]
+    superpanel: SuperPanelClass,
+    child_panels: list[Panel],
+    user: HttpRequest | None = None,
 ) -> None:
     """
     Insert data from a parsed SuperPanel.
@@ -429,7 +431,7 @@ def _insert_superpanel_into_db(
     :param: child_panels [list[Panel]], the 'child' panels which make up
     the SuperPanel. These are already added to the db, so they're a list
     of database objects.
-    :param: user [str], the user initiating this
+    :param: user if web, None if CLI
     """
     panel_external_id: str = superpanel.id
     panel_name: str = superpanel.name
@@ -462,7 +464,7 @@ def _insert_superpanel_into_db(
             superpanel__external_id=panel_external_id, current=True
         ):
             flag_clinical_indication_superpanel_for_review(
-                clinical_indication_superpanel
+                clinical_indication_superpanel, user
             )
 
             latest_active_td_release = (
@@ -474,8 +476,8 @@ def _insert_superpanel_into_db(
             provisionally_link_clinical_indication_to_superpanel(
                 superpanel,
                 clinical_indication_superpanel.clinical_indication,
-                "PanelApp",
                 latest_active_td_release,
+                user,
             )
 
     # if the superpanel hasn't just been created: the SuperPanel is either
