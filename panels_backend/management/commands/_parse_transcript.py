@@ -68,7 +68,6 @@ def _update_existing_gene_metadata_symbol_in_db(
         GeneHgncReleaseHistory.objects.create(
             gene_hgnc_release=gene_hgnc_release,
             note=History.gene_hgnc_release_approved_symbol_change(old, new),
-            user=user,
         )
 
 
@@ -109,7 +108,6 @@ def _update_existing_gene_metadata_aliases_in_db(
         GeneHgncReleaseHistory.objects.create(
             gene_hgnc_release=gene_hgnc_release,
             note=History.gene_hgnc_release_alias_symbol_change(old, new),
-            user=user,
         )
 
 
@@ -142,7 +140,6 @@ def _link_unchanged_genes_to_new_release(
             GeneHgncReleaseHistory.objects.create(
                 gene_hgnc_release=gene_hgnc_release,
                 note=History.gene_hgnc_release_present(),
-                user=user,
             )
 
 
@@ -182,7 +179,6 @@ def _add_new_genes_to_db(
         GeneHgncReleaseHistory.objects.create(
             gene_hgnc_release=gene_hgnc_release,
             note=History.gene_hgnc_release_new(),
-            user=user,
         )
 
 
@@ -551,7 +547,7 @@ def _add_transcript_to_db_with_gff_release(
         return tx
 
     TranscriptGffReleaseHistory.objects.get_or_create(
-        transcript_gff=tx_gff, note=message, user=user
+        transcript_gff=tx_gff, note=message
     )
 
     return tx

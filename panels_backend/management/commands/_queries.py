@@ -10,6 +10,7 @@ from panels_backend.models import (
 
 from django.db.models import QuerySet
 from django.db import transaction
+from django.http import HttpRequest
 
 
 def get_panel_by_database_id(panel_id: str) -> Panel | None:
@@ -64,7 +65,7 @@ def get_clinical_indication_by_database_id(id: str) -> ClinicalIndication | None
 def activate_clinical_indication_panel(
     clinical_indication_id: int,
     panel_id: int,
-    user: str,
+    user: HttpRequest.user | None,
 ) -> None:
     """
     Fetch ci-panel and make it active.
@@ -91,9 +92,9 @@ def activate_clinical_indication_panel(
             cip_instance.save()
 
             ClinicalIndicationPanelHistory.objects.create(
-                user=user,
                 note=f"Existing ci-panel link set to active by {user}",
                 clinical_indication_panel_id=cip_instance.id,
+                user=user
             )
             print(f"Clinical indication panel {cip_instance.id} link set to active!")
 
@@ -106,9 +107,9 @@ def activate_clinical_indication_panel(
         )
 
         ClinicalIndicationPanelHistory.objects.create(
-            user=user,
             note="Created by command line",
             clinical_indication_panel_id=cip_instance.id,
+            user=user
         )
 
         print(f"Clinical indication panel {cip_instance.id} link created!")
@@ -118,7 +119,7 @@ def activate_clinical_indication_panel(
 def deactivate_clinical_indication_panel(
     clinical_indication_id: int,
     panel_id: int,
-    user: str,
+    user: HttpRequest | None = None,
 ) -> None:
     """
     Deactivate ci-panel link. If link doesn't exist, do nothing.
@@ -139,9 +140,9 @@ def deactivate_clinical_indication_panel(
             cip_instance.save()
 
             ClinicalIndicationPanelHistory.objects.create(
-                user=user,
                 note=f"Existing ci-panel link set to inactive by {user}",
                 clinical_indication_panel_id=cip_instance.id,
+                user=user
             )
             print(f"Clinical indication panel {cip_instance.id} link set to inactive.")
         else:

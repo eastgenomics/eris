@@ -2,6 +2,7 @@
 
 from django.db import transaction
 from packaging.version import Version
+from django.http import HttpRequest
 
 from .history import History
 
@@ -26,12 +27,11 @@ from panels_backend.models import (
 )
 
 
-def _backward_deactivate(indications: list[dict], user: str) -> None:
+def _backward_deactivate(indications: list[dict], user: HttpRequest | None) -> None:
     """
     This function flag any clinical indication that doesn't exist in TestDirectory
 
     :params: indications [list]: list of clinical indication from TD
-    :params: user [str]: user who is importing the TD
     """
     r_codes = set([indication["code"] for indication in indications])
 
@@ -49,13 +49,14 @@ def _backward_deactivate(indications: list[dict], user: str) -> None:
                     note=History.flag_clinical_indication_panel(
                         "clinical indication not found in latest TD"
                     ),
-                    user=user,
+                    user=user
                 )
 
 
 @transaction.atomic
 def flag_clinical_indication_panel_for_review(
-    clinical_indication_panel: ClinicalIndicationPanel, user: str
+    clinical_indication_panel: ClinicalIndicationPanel,
+    user: HttpRequest.user | None
 ) -> None:
     """
     Controller function which takes a clinical indication/panel link, and flags them for manual review.
@@ -68,8 +69,7 @@ def flag_clinical_indication_panel_for_review(
 
     :param: clinical_indication_panel [ClinicalIndicationPanel] which needs to be flagged for manual
     review, usually because something has changed in the test directory
-    :param: user [str] - currently a string, may one day be a User object if we get
-    direct user access up and running
+    :param: user if front-end, otherwise None
     """
 
     clinical_indication_panel.pending = True
@@ -80,12 +80,13 @@ def flag_clinical_indication_panel_for_review(
     ClinicalIndicationPanelHistory.objects.create(
         clinical_indication_panel_id=clinical_indication_panel.id,
         note=History.flag_clinical_indication_panel("new clinical indication provided"),
-        user=user,
+        user=user
     )
 
 
 def flag_clinical_indication_superpanel_for_review(
-    clinical_indication_panel: ClinicalIndicationSuperPanel, user: str
+    clinical_indication_panel: ClinicalIndicationSuperPanel,
+    user: HttpRequest.user | None = None
 ) -> None:
     """
     Controller function which takes a clinical indication/superpanel link, and flags them for manual review.
@@ -99,8 +100,7 @@ def flag_clinical_indication_superpanel_for_review(
     :param: clinical_indication_superpanel [ClinicalIndicationSuperPanel] which needs to
     be flagged for manual review, usually because something has changed in the test
     directory
-    :param: user [str] - currently a string, may one day be a User object if we get
-    direct user access up and running
+    :param: user if front-end, otherwise None
     """
 
     clinical_indication_panel.pending = True
@@ -111,15 +111,15 @@ def flag_clinical_indication_superpanel_for_review(
     ClinicalIndicationSuperPanelHistory.objects.create(
         clinical_indication_superpanel=clinical_indication_panel,
         note=History.flag_clinical_indication_panel("new clinical indication provided"),
-        user=user,
+        user=user
     )
 
 
 def provisionally_link_clinical_indication_to_panel(
     panel_id: int,
     clinical_indication_id: int,
-    user: str,
     td_version: TestDirectoryRelease,
+    user: HttpRequest.user | None
 ) -> ClinicalIndicationPanel:
     """
     Link a CI and panel, but set the 'pending' field to True,
@@ -133,8 +133,8 @@ def provisionally_link_clinical_indication_to_panel(
     a relevant clinical indication
     :param: clinical_indication_id [int], the ID for a ClinicalIndication
     which needs linking to its panel
-    :param: user [str], currently a string, may one day be a User object
     :param: td_version [TestDirectoryRelease], a test directory release
+    :param: user, a HttpRequest 'user' or None if CLI or other non-logged-in function
     """
     ci_panel_instance, created = ClinicalIndicationPanel.objects.update_or_create(
         clinical_indication_id=clinical_indication_id,
@@ -155,7 +155,7 @@ def provisionally_link_clinical_indication_to_panel(
         ClinicalIndicationPanelHistory.objects.create(
             clinical_indication_panel_id=ci_panel_instance.id,
             note=History.auto_created_clinical_indication_panel(),
-            user=user,
+            user=user
         )
 
     return ci_panel_instance
@@ -164,8 +164,8 @@ def provisionally_link_clinical_indication_to_panel(
 def provisionally_link_clinical_indication_to_superpanel(
     superpanel: SuperPanel,
     clinical_indication: ClinicalIndication,
-    user: str,
     td_version: TestDirectoryRelease,
+    user: HttpRequest.user | None
 ) -> ClinicalIndicationSuperPanel:
     """
     Link a CI and superpanel, but set the 'pending' field to True,
@@ -179,7 +179,6 @@ def provisionally_link_clinical_indication_to_superpanel(
     a relevant clinical indication
     :param: clinical_indication [ClinicalIndication], a ClinicalIndication which
     needs linking to its panel
-    :param: user [str], the user initiating the action
     :param: td_version [TestDirectoryRelease], the td release version provided by the user
     """
     (
@@ -203,7 +202,6 @@ def provisionally_link_clinical_indication_to_superpanel(
         ClinicalIndicationSuperPanelHistory.objects.create(
             clinical_indication_superpanel=ci_superpanel_instance,
             note=History.auto_created_clinical_indication_panel(),
-            user=user,
         )
 
     return ci_superpanel_instance
@@ -298,7 +296,6 @@ def _check_for_changed_pg_justification(pg_instance: PanelGene, unique_td_source
                 pg_instance.justification,
                 unique_td_source,
             ),
-            user=unique_td_source,
         )
 
         pg_instance.justification = unique_td_source
@@ -306,7 +303,7 @@ def _check_for_changed_pg_justification(pg_instance: PanelGene, unique_td_source
 
 
 def _make_panels_from_hgncs(
-    ci: ClinicalIndication, td_release: TestDirectoryRelease, hgnc_list: list, user: str
+    ci: ClinicalIndication, td_release: TestDirectoryRelease, hgnc_list: list, user: HttpRequest.user | None
 ) -> None:
     """
     Make Panel records from a list of HGNC ids.
@@ -362,7 +359,6 @@ def _make_panels_from_hgncs(
             PanelGeneHistory.objects.create(
                 panel_gene_id=pg_instance.id,
                 note=History.panel_gene_created(),
-                user=unique_td_source,
             )
         else:
             # a Panel-Gene record already exists - change justification
@@ -378,13 +374,14 @@ def _make_panels_from_hgncs(
         if previous_ci_panels:  # in the case where there are old ci-panel
             for ci_panel in previous_ci_panels:
                 flag_clinical_indication_panel_for_review(
-                    ci_panel, user
+                    ci_panel,
+                    user
                 )  # flag for review
 
                 # linking old ci with new panel with pending = True
                 new_clinical_indication_panel = (
                     provisionally_link_clinical_indication_to_panel(
-                        panel_instance.id, ci.id, td_source, td_release
+                        panel_instance.id, ci.id, td_release, user
                     )
                 )
 
@@ -411,7 +408,7 @@ def _make_panels_from_hgncs(
         ClinicalIndicationPanelHistory.objects.create(
             clinical_indication_panel_id=cpi_instance.id,
             note=History.clinical_indication_panel_created(),
-            user=td_source,
+            user=user
         )
 
 
@@ -441,7 +438,6 @@ def _make_provisional_test_method_change(
                 ci_instance.test_method,
                 new_test_method,
             ),
-            user=user,
         )
 
         ci_instance.pending = True
@@ -472,7 +468,7 @@ def _update_ci_panel_tables_with_new_ci(
     r_code: str,
     td_version: TestDirectoryRelease,
     ci_instance: ClinicalIndication,
-    user: str,
+    user: HttpRequest.user | None,
 ) -> None:
     """
     New clinical indication - the old CI-panel entries with the
@@ -483,7 +479,7 @@ def _update_ci_panel_tables_with_new_ci(
     :param: td_version [TestDirectoryRelease], the test directory's version
     :param: ci_instance [ClinicalIndication], the new ClinicalIndication object
     in the database which may need linking to some panels
-    :param: user - the current user
+    :param: user - the current user, or None if CLI
     """
     for clinical_indication_panel in ClinicalIndicationPanel.objects.filter(
         clinical_indication_id__r_code=r_code,
@@ -499,7 +495,7 @@ def _update_ci_panel_tables_with_new_ci(
         previous_panel_id = clinical_indication_panel.panel_id
 
         provisionally_link_clinical_indication_to_panel(
-            previous_panel_id, ci_instance.id, user, td_version
+            previous_panel_id, ci_instance.id, td_version, user
         )
 
 
@@ -507,7 +503,7 @@ def _update_ci_superpanel_tables_with_new_ci(
     r_code: str,
     td_version: TestDirectoryRelease,
     ci_instance: ClinicalIndication,
-    user: str,
+    user: HttpRequest.user | None,
 ) -> None:
     """
     New clinical indication - the old CI-superpanel entries with the
@@ -519,7 +515,7 @@ def _update_ci_superpanel_tables_with_new_ci(
     :param: ci_instance [ClinicalIndication], the new ClinicalIndication object
     in the database which may need linking to some superpanels
     :param: config_source [str], source metadata for the CI-superpanel link
-    :param: user [str], the current user
+    :param: user - the current user, or None if CLI
     """
     for clinical_indication_superpanel in ClinicalIndicationSuperPanel.objects.filter(
         clinical_indication__r_code=r_code,
@@ -527,7 +523,7 @@ def _update_ci_superpanel_tables_with_new_ci(
     ):
         # flag previous ci-panel link for review because a new ci is created
         flag_clinical_indication_superpanel_for_review(
-            clinical_indication_superpanel, user
+            clinical_indication_superpanel
         )
 
         # linking new ci with old panel with pending = True
@@ -545,7 +541,7 @@ def _make_ci_panel_td_link(
     ci_instance: ClinicalIndication,
     panel_record: Panel,
     td_version: TestDirectoryRelease,
-    user: str,
+    user: HttpRequest.user | None = None
 ) -> tuple[ClinicalIndicationPanel, bool]:
     """
     Gets-or-creates a ClinicalIndicationPanel entry. Links to test directory release.
@@ -555,7 +551,7 @@ def _make_ci_panel_td_link(
     :param: panel_record [Panel], a panel which needs linking to a clinical
     indication
     :param: td_version [TestDirectoryRelease], the TD version in the current user-added source
-    :param: user [str], the name of the user
+    :param: user, either a HttpRequest user, or None if not applicable
 
     :return: a tuple containing the created or fetched ClinicalIndicationPanel
     instance, plus a bool for if it was created or not
@@ -579,7 +575,7 @@ def _make_ci_panel_td_link(
         ClinicalIndicationPanelHistory.objects.create(
             clinical_indication_panel_id=cip_instance.id,
             note=History.clinical_indication_panel_created(),
-            user=user,
+            user=user
         )
 
     # log the fact that a td-ci_panel link was made
@@ -589,7 +585,6 @@ def _make_ci_panel_td_link(
             note=History.td_panel_ci_autolink(
                 td_version.release,
             ),
-            user=user,
         )
 
     return cip_instance, cip_created
@@ -599,7 +594,6 @@ def _make_ci_superpanel_td_link(
     ci_instance: ClinicalIndication,
     superpanel_record: SuperPanel,
     td_version: TestDirectoryRelease,
-    user: str,
 ) -> tuple[ClinicalIndicationSuperPanel, bool]:
     """
     Gets-or-creates a ClinicalIndicationSuperPanel entry. Link to td release.
@@ -609,7 +603,6 @@ def _make_ci_superpanel_td_link(
     :param: panel_record [Panel], a panel which needs linking to a clinical
     indication
     :param: td_version [str], the TD version in the current user-added source
-    :param: user [str], the current user
 
     :return: a tuple containing the created or fetched ClinicalIndicationSuperPanel
     instance, plus a bool for if it was created or not
@@ -638,7 +631,6 @@ def _make_ci_superpanel_td_link(
         ClinicalIndicationSuperPanelHistory.objects.create(
             clinical_indication_superpanel=cip_instance,
             note=History.clinical_indication_superpanel_created(),
-            user=user,
         ),
 
     # log the fact that a td-ci_panel link was made
@@ -648,14 +640,13 @@ def _make_ci_superpanel_td_link(
             note=History.td_superpanel_ci_autolink(
                 cisuperpanel_td.td_release.release,
             ),
-            user=user,
         )
 
     return cip_instance, cip_created
 
 
 def _flag_panels_removed_from_test_directory(
-    ci_instance: ClinicalIndication, panels: list, user: str
+    ci_instance: ClinicalIndication, panels: list, user: HttpRequest.user | None = None
 ) -> None:
     """
     For a clinical indication, finds any pre-existing links to Panels and
@@ -666,7 +657,7 @@ def _flag_panels_removed_from_test_directory(
     :param: ci_instance, a ClinicalIndication which needs its pre-existing links
     to be found and flagged
     :param: panels, a list of relevant panels taken from the TD json or other data source
-    :param: user, the current user name
+    :param: user, the current user
     """
     ci_panels = ClinicalIndicationPanel.objects.filter(
         clinical_indication_id__r_code=ci_instance.r_code, current=True
@@ -689,12 +680,12 @@ def _flag_panels_removed_from_test_directory(
                     note=History.flag_clinical_indication_panel(
                         "Panel ID no longer attached to clinical indication in TD"
                     ),
-                    user=user,
+                    user=user
                 )
 
 
 def _flag_superpanels_removed_from_test_directory(
-    ci_instance: ClinicalIndication, panels: list, user: str
+    ci_instance: ClinicalIndication, panels: list, user: HttpRequest.user | None = None
 ) -> None:
     """
     For a clinical indication, finds any pre-existing links to SuperPanels and
@@ -726,12 +717,12 @@ def _flag_superpanels_removed_from_test_directory(
                     note=History.flag_clinical_indication_panel(
                         "Superpanel ID no longer attached to clinical indication in TD"
                     ),
-                    user=user,
+                    user=user
                 )
 
 
 def _add_td_release_to_db(
-    td_version: str, td_source: str, config_source: str, td_date: str, user: str
+    td_version: str, td_source: str, config_source: str, td_date: str, user: HttpRequest.user | None
 ) -> TestDirectoryRelease:
     """
     Add a new TestDirectory to the database with a version, and make a history entry
@@ -749,15 +740,13 @@ def _add_td_release_to_db(
         config_source=config_source,
     )
 
-    TestDirectoryReleaseHistory.objects.create(
-        td_release=td, user=user, note=History.td_added()
-    )
+    TestDirectoryReleaseHistory.objects.create(td_release=td, note=History.td_added(), user=user)
     return td
 
 
 @transaction.atomic
 def insert_test_directory_data(
-    json_data: dict, td_release: str, force: bool = False
+    json_data: dict, td_release: str, force: bool = False, user: HttpRequest.user | None = None
 ) -> None:
     """This function inserts TD data into DB
 
@@ -781,10 +770,7 @@ def insert_test_directory_data(
     # fetch td version and check it's valid
     latest_td_version_in_db = _fetch_latest_td_version()
     _check_td_version_valid(td_release, latest_td_version_in_db, force)
-
-    # TODO: add a useful User one day
-    user = td_source
-
+    
     # add test directory to the db
     td_version = _add_td_release_to_db(
         td_release, td_source, config_source, td_date, user
@@ -843,14 +829,13 @@ def insert_test_directory_data(
 
                 # if we import the same version of TD but with different config source:
                 if panel_record:
-                    _make_ci_panel_td_link(ci_instance, panel_record, td_version, user)
+                    _make_ci_panel_td_link(ci_instance, panel_record, td_version)
 
                 if super_panel_record:
                     _make_ci_superpanel_td_link(
                         ci_instance,
                         super_panel_record,
                         td_version,
-                        user,
                     )
 
                 if not panel_record and not super_panel_record:
@@ -865,16 +850,16 @@ def insert_test_directory_data(
             # deal with change in clinical indication-panel/superpanel interaction
             # e.g. clinical indication R1 changed from panel 1 to panel 2
             _flag_panels_removed_from_test_directory(
-                ci_instance, indication["panels"], user
+                ci_instance, indication["panels"]
             )
             _flag_superpanels_removed_from_test_directory(
-                ci_instance, indication["panels"], user
+                ci_instance, indication["panels"]
             )
 
         if hgnc_list:
-            _make_panels_from_hgncs(ci_instance, td_version, hgnc_list, user)
+            _make_panels_from_hgncs(ci_instance, td_version, hgnc_list)
 
-    _backward_deactivate(all_indication, td_source)
+    _backward_deactivate(all_indication, user)
 
     print("Data insertion completed.")
     return True
