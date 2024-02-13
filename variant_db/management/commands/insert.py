@@ -187,7 +187,7 @@ def _subset_row(row: Dict[str, str | int], *desired_keys) -> Dict[str, str | int
 
 def keep_count_of_truth(f):
     """
-    Please note: @wraps is being used to preserve the decorated functions
+    Please note: @wraps is being used to preserve the decorated function's
     metadata. If we didn't use @wraps(f), then the name, docs and so on
     of `f` would change to `keep_count_of_truth`. This is never what we
     want.
