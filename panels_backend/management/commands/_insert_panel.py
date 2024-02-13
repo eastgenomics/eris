@@ -34,6 +34,7 @@ from django.http import HttpRequest
 from packaging.version import Version
 from django.contrib.auth.decorators import permission_required
 
+
 def _handle_nulls_and_blanks_from_json(json_field: str | None) -> str | None:
     """
     For an attribute extracted from the genes section
@@ -98,7 +99,7 @@ def _insert_gene(
     panel: PanelClass,
     panel_instance: Panel,
     panel_created: bool,
-    user: HttpRequest.user | None = None
+    user: HttpRequest.user | None = None,
 ) -> None:
     """
     Function to insert gene component of Panel into database.
@@ -148,7 +149,7 @@ def _insert_gene(
                                 note=History.panel_gene_flagged_due_to_confidence(
                                     confidence_level
                                 ),
-                                user=user
+                                user=user,
                             )
                 continue  # if panel-gene doesn't exist in db then we don't care about this gene with confidence level < 3
             else:
@@ -211,7 +212,7 @@ def _insert_gene(
             PanelGeneHistory.objects.create(
                 panel_gene_id=pg_instance.id,
                 note=History.panel_gene_created(),
-                user=user
+                user=user,
             )
         else:
             # Panel-Gene record already exist
@@ -226,7 +227,7 @@ def _insert_gene(
                         pg_instance.justification,
                         "PanelApp",
                     ),
-                    user=user
+                    user=user,
                 )
 
                 pg_instance.justification = "PanelApp"
@@ -282,7 +283,9 @@ def _get_most_recent_td_release_for_ci_superpanel(
         return latest_td_instance
 
 
-def _disable_custom_hgnc_panels(panel: PanelClass, user: HttpRequest.user | None) -> None:
+def _disable_custom_hgnc_panels(
+    panel: PanelClass, user: HttpRequest.user | None
+) -> None:
     """
     Function to disable custom hgnc panels
     if a PanelApp-created panel is linked to exactly the same HGNC IDs as
@@ -328,11 +331,13 @@ def _disable_custom_hgnc_panels(panel: PanelClass, user: HttpRequest.user | None
             ClinicalIndicationPanelHistory.objects.create(
                 clinical_indication_panel_id=cip.id,
                 note="Panel of similar genes has been created in PanelApp",
-                user=user
+                user=user,
             )
 
 
-def _insert_panel_data_into_db(panel: PanelClass, user: HttpRequest.user | None = None) -> Panel:
+def _insert_panel_data_into_db(
+    panel: PanelClass, user: HttpRequest.user | None = None
+) -> Panel:
     """
     Insert data from a parsed JSON a panel record, into the database.
     Controls creation and flagging of new and old CI-Panel links,
@@ -382,7 +387,7 @@ def _insert_panel_data_into_db(panel: PanelClass, user: HttpRequest.user | None 
                 panel_instance.id,
                 clinical_indication_id,
                 latest_active_td_release,
-                user
+                user,
             )
 
     # attach each Gene record to the Panel record,
@@ -460,7 +465,9 @@ def _insert_superpanel_into_db(
 
 @permission_required("staff", raise_exception=False)
 def panel_insert_controller(
-    panels: list[PanelClass], superpanels: list[SuperPanelClass], user: HttpRequest.user | None = None
+    panels: list[PanelClass],
+    superpanels: list[SuperPanelClass],
+    user: HttpRequest.user | None = None,
 ):
     """
     Carries out coordination of panel creation from the 'all' command - Panels and SuperPanels are

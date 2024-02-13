@@ -94,7 +94,7 @@ def activate_clinical_indication_panel(
             ClinicalIndicationPanelHistory.objects.create(
                 note=f"Existing ci-panel link set to active by {user}",
                 clinical_indication_panel_id=cip_instance.id,
-                user=user
+                user=user,
             )
             print(f"Clinical indication panel {cip_instance.id} link set to active!")
 
@@ -109,7 +109,7 @@ def activate_clinical_indication_panel(
         ClinicalIndicationPanelHistory.objects.create(
             note="Created by command line",
             clinical_indication_panel_id=cip_instance.id,
-            user=user
+            user=user,
         )
 
         print(f"Clinical indication panel {cip_instance.id} link created!")
@@ -142,7 +142,7 @@ def deactivate_clinical_indication_panel(
             ClinicalIndicationPanelHistory.objects.create(
                 note=f"Existing ci-panel link set to inactive by {user}",
                 clinical_indication_panel_id=cip_instance.id,
-                user=user
+                user=user,
             )
             print(f"Clinical indication panel {cip_instance.id} link set to inactive.")
         else:

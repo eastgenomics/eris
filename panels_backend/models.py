@@ -1044,7 +1044,6 @@ class PanelGeneHistory(models.Model):
         verbose_name="Note",
     )
 
-    #TODO: get_user_model() isn't working at the moment
     user = models.ForeignKey(
         get_user_model(),
         verbose_name="user",

@@ -115,9 +115,7 @@ class Command(BaseCommand):
 
         if action == "activate":
             activate_clinical_indication_panel(
-                clinical_indication.id,
-                panel.id,
-                user=None
+                clinical_indication.id, panel.id, user=None
             )
         else:
             deactivate_clinical_indication_panel(

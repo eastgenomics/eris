@@ -421,6 +421,7 @@ def clinical_indication(request: HttpRequest, ci_id: int) -> HttpResponse:
                             ci.test_method,
                             previous_test_method,
                         ),
+                        user=request.user,
                     )
 
                     ci.pending = False
@@ -541,11 +542,10 @@ def add_panel(request: HttpRequest) -> HttpResponse:
                     )
 
                     if pg_created:
-                        user = request.user
                         PanelGeneHistory.objects.create(
                             panel_gene_id=pg_instance.id,
                             note=History.panel_gene_created(),
-                            user=user
+                            user=request.user,
                         )
 
             return redirect("panel", panel_id=panel.id)
@@ -619,7 +619,7 @@ def add_ci_panel(request: HttpRequest) -> HttpResponse:
             ClinicalIndicationPanelHistory.objects.create(
                 clinical_indication_panel_id=cip_instance.id,
                 note=History.clinical_indication_panel_created(),
-                user=request.user
+                user=request.user,
             )
 
         return redirect(
@@ -829,7 +829,7 @@ def clinical_indication_panel(request: HttpRequest, cip_id: str) -> HttpResponse
                     ClinicalIndicationPanelHistory.objects.create(
                         clinical_indication_panel_id=cip_id,
                         note=History.clinical_indication_panel_activated(cip_id, True),
-                        user=request.user
+                        user=request.user,
                     )
                 elif action == "deactivate":
                     clinical_indication_panel.current = False
@@ -838,7 +838,7 @@ def clinical_indication_panel(request: HttpRequest, cip_id: str) -> HttpResponse
                         note=History.clinical_indication_panel_deactivated(
                             cip_id, True
                         ),
-                        user=request.user
+                        user=request.user,
                     )
                 clinical_indication_panel.pending = True  # require manual review
             elif action == "revert":
@@ -856,7 +856,7 @@ def clinical_indication_panel(request: HttpRequest, cip_id: str) -> HttpResponse
                         new_value=not clinical_indication_panel.current,
                         review=True,
                     ),
-                    user=request.user
+                    user=request.user,
                 )
             else:
                 # action is "approve" from Review page
@@ -864,7 +864,7 @@ def clinical_indication_panel(request: HttpRequest, cip_id: str) -> HttpResponse
                 ClinicalIndicationPanelHistory.objects.create(
                     clinical_indication_panel_id=cip_id,
                     note=History.clinical_indication_panel_approved(cip_id),
-                    user=request.user
+                    user=request.user,
                 )
 
             clinical_indication_panel.save()
@@ -930,7 +930,7 @@ def clinical_indication_superpanel(request: HttpRequest, cisp_id: str) -> HttpRe
                         new_value=not clinical_indication_superpanel.current,
                         review=True,
                     ),
-                    user=request.user
+                    user=request.user,
                 )
 
                 clinical_indication_superpanel.current = (
@@ -943,7 +943,7 @@ def clinical_indication_superpanel(request: HttpRequest, cisp_id: str) -> HttpRe
                 ClinicalIndicationSuperPanelHistory.objects.create(
                     clinical_indication_superpanel_id=cisp_id,
                     note=History.clinical_indication_superpanel_approved(cisp_id),
-                    user=request.user
+                    user=request.user,
                 )
 
             clinical_indication_superpanel.save()
@@ -988,7 +988,7 @@ def review(request: HttpRequest) -> HttpResponse:
                 PanelGeneHistory.objects.create(
                     panel_gene_id=panel_gene_id,
                     note=History.panel_gene_approved("manual review"),
-                    user=request.user
+                    user=request.user,
                 )
 
                 PanelGeneHistory.objects.create(
@@ -997,7 +997,7 @@ def review(request: HttpRequest) -> HttpResponse:
                         "active",
                         not panel_gene.active,
                         panel_gene.active,
-                        user=request.user
+                        user=request.user,
                     ),
                 )
 
@@ -1016,7 +1016,7 @@ def review(request: HttpRequest) -> HttpResponse:
                 PanelGeneHistory.objects.create(
                     panel_gene_id=panel_gene_id,
                     note=History.panel_gene_reverted("manual review"),
-                    user=request.user
+                    user=request.user,
                 )
 
                 PanelGeneHistory.objects.create(
@@ -1025,7 +1025,7 @@ def review(request: HttpRequest) -> HttpResponse:
                         "active",
                         panel_gene.active,
                         not panel_gene.active,
-                        user=request.user
+                        user=request.user,
                     ),
                 )
 
@@ -1796,7 +1796,7 @@ def seed(request: HttpRequest) -> HttpResponse:
                 test_directory_data,
                 td_version,
                 True if force_update else False,
-                request.user
+                request.user,
             )
 
             error = False
