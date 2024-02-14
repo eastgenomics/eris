@@ -15,7 +15,9 @@ def normalize_version(padded_version: str) -> float:
     if not padded_version:
         return 0.0
 
-    return str(float(".".join(bit.lstrip("0") for bit in padded_version.split("."))))
+    return str(
+        float(".".join(bit.lstrip("0") for bit in padded_version.split(".")))
+    )
 
 
 def parse_excluded_hgncs_from_file(file_path) -> set:
@@ -34,7 +36,9 @@ def parse_excluded_hgncs_from_file(file_path) -> set:
 
     df = df[
         df["Locus type"].str.contains("rna", case=False)
-        | df["Approved name"].str.contains("mitochondrially encoded", case=False)
+        | df["Approved name"].str.contains(
+            "mitochondrially encoded", case=False
+        )
     ]
 
     return set(df["HGNC ID"].tolist())

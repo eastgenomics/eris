@@ -96,7 +96,9 @@ class TestReadWorkbook(TestCase):
         CASE: non-ACGS columns tested for lowercase identity
         EXPECT: All non-ACGS columns are lowercase
         """
-        non_acgs_column_names = [x for x in self.wb_row.keys() if x not in ACGS_COLUMNS]
+        non_acgs_column_names = [
+            x for x in self.wb_row.keys() if x not in ACGS_COLUMNS
+        ]
         are_lowercase = [x.islower() for x in non_acgs_column_names]
         self.assertTrue(all(are_lowercase))
 
@@ -107,8 +109,12 @@ class TestReadWorkbook(TestCase):
         CASE: columns are tested for present of whitespace
         EXPECT: No whitespace found in any columns
         """
-        non_acgs_column_names = [x for x in self.wb_row.keys() if x not in ACGS_COLUMNS]
-        have_no_whitespace = [x.rfind(" ") == -1 for x in non_acgs_column_names]
+        non_acgs_column_names = [
+            x for x in self.wb_row.keys() if x not in ACGS_COLUMNS
+        ]
+        have_no_whitespace = [
+            x.rfind(" ") == -1 for x in non_acgs_column_names
+        ]
         self.assertTrue(all(have_no_whitespace))
 
     def test_wb_row(self):

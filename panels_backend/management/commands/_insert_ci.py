@@ -79,7 +79,9 @@ def flag_clinical_indication_panel_for_review(
 
     ClinicalIndicationPanelHistory.objects.create(
         clinical_indication_panel_id=clinical_indication_panel.id,
-        note=History.flag_clinical_indication_panel("new clinical indication provided"),
+        note=History.flag_clinical_indication_panel(
+            "new clinical indication provided"
+        ),
         user=user,
     )
 
@@ -110,7 +112,9 @@ def flag_clinical_indication_superpanel_for_review(
 
     ClinicalIndicationSuperPanelHistory.objects.create(
         clinical_indication_superpanel=clinical_indication_panel,
-        note=History.flag_clinical_indication_panel("new clinical indication provided"),
+        note=History.flag_clinical_indication_panel(
+            "new clinical indication provided"
+        ),
         user=user,
     )
 
@@ -136,7 +140,10 @@ def provisionally_link_clinical_indication_to_panel(
     :param: user [str], currently a string, may one day be a User object
     :param: td_version [TestDirectoryRelease], a test directory release
     """
-    ci_panel_instance, created = ClinicalIndicationPanel.objects.update_or_create(
+    (
+        ci_panel_instance,
+        created,
+    ) = ClinicalIndicationPanel.objects.update_or_create(
         clinical_indication_id=clinical_indication_id,
         panel_id=panel_id,
         defaults={
@@ -251,7 +258,9 @@ def _retrieve_panel_from_pa_id(pa_id: str) -> Panel | None:
         panel_instance [Panel record] or None if a panel isn't found
     """
     panel_instance: Panel = (
-        Panel.objects.filter(external_id=pa_id).order_by("-panel_version").first()
+        Panel.objects.filter(external_id=pa_id)
+        .order_by("-panel_version")
+        .first()
     )
 
     if not panel_instance:
@@ -271,7 +280,9 @@ def _retrieve_superpanel_from_pa_id(pa_id: str) -> SuperPanel | None:
         panel_instance [SuperPanel record] or None if a SuperPanel isn't found
     """
     panel_instance: SuperPanel = (
-        SuperPanel.objects.filter(external_id=pa_id).order_by("-panel_version").first()
+        SuperPanel.objects.filter(external_id=pa_id)
+        .order_by("-panel_version")
+        .first()
     )
 
     if not panel_instance:
@@ -280,7 +291,9 @@ def _retrieve_superpanel_from_pa_id(pa_id: str) -> SuperPanel | None:
     return panel_instance
 
 
-def _check_for_changed_pg_justification(pg_instance: PanelGene, unique_td_source: str):
+def _check_for_changed_pg_justification(
+    pg_instance: PanelGene, unique_td_source: str
+):
     """
     For a PanelGene instance, check that the justification hasn't changed.
     If it has, update it and log it in history.
@@ -306,7 +319,10 @@ def _check_for_changed_pg_justification(pg_instance: PanelGene, unique_td_source
 
 
 def _make_panels_from_hgncs(
-    ci: ClinicalIndication, td_release: TestDirectoryRelease, hgnc_list: list, user: str
+    ci: ClinicalIndication,
+    td_release: TestDirectoryRelease,
+    hgnc_list: list,
+    user: str,
 ) -> None:
     """
     Make Panel records from a list of HGNC ids.
@@ -320,7 +336,9 @@ def _make_panels_from_hgncs(
     td_source: str = td_release.td_source
     config_source: str = td_release.config_source
 
-    unique_td_source: str = f"{td_source} + {config_source} + {td_release.td_date}"
+    unique_td_source: str = (
+        f"{td_source} + {config_source} + {td_release.td_date}"
+    )
 
     conf = moi = mop = pen = None
 
@@ -490,7 +508,9 @@ def _update_ci_panel_tables_with_new_ci(
         current=True,
     ):
         # flag previous ci-panel link for review because a new ci is created
-        flag_clinical_indication_panel_for_review(clinical_indication_panel, user)
+        flag_clinical_indication_panel_for_review(
+            clinical_indication_panel, user
+        )
 
         # linking new ci with old panel with pending = True
         # this might be duplicated down the line when panel is created
@@ -521,7 +541,9 @@ def _update_ci_superpanel_tables_with_new_ci(
     :param: config_source [str], source metadata for the CI-superpanel link
     :param: user [str], the current user
     """
-    for clinical_indication_superpanel in ClinicalIndicationSuperPanel.objects.filter(
+    for (
+        clinical_indication_superpanel
+    ) in ClinicalIndicationSuperPanel.objects.filter(
         clinical_indication__r_code=r_code,
         current=True,
     ):
@@ -536,7 +558,10 @@ def _update_ci_superpanel_tables_with_new_ci(
         # will still be one ci-panel link instead of two being created
         (
             provisionally_link_clinical_indication_to_superpanel(
-                clinical_indication_superpanel.superpanel, ci_instance, user, td_version
+                clinical_indication_superpanel.superpanel,
+                ci_instance,
+                user,
+                td_version,
             )
         )
 
@@ -678,7 +703,10 @@ def _flag_panels_removed_from_test_directory(
         # if for the clinical indication,
         # the associated panel association is not in test directory
         # flag for review
-        if associated_panel.external_id and associated_panel.external_id not in panels:
+        if (
+            associated_panel.external_id
+            and associated_panel.external_id not in panels
+        ):
             with transaction.atomic():
                 cip.pending = True
                 cip.current = False
@@ -731,7 +759,11 @@ def _flag_superpanels_removed_from_test_directory(
 
 
 def _add_td_release_to_db(
-    td_version: str, td_source: str, config_source: str, td_date: str, user: str
+    td_version: str,
+    td_source: str,
+    config_source: str,
+    td_date: str,
+    user: str,
 ) -> TestDirectoryRelease:
     """
     Add a new TestDirectory to the database with a version, and make a history entry
@@ -807,7 +839,9 @@ def insert_test_directory_data(
             # if a clinical indication is new to the db - check it isn't already linked to a panel
             # # under a different name. If it IS, mark the old panel link as pending,
             # and provisionally link the affected panel to this new CI
-            _update_ci_panel_tables_with_new_ci(r_code, td_version, ci_instance, user)
+            _update_ci_panel_tables_with_new_ci(
+                r_code, td_version, ci_instance, user
+            )
             _update_ci_superpanel_tables_with_new_ci(
                 r_code, td_version, ci_instance, user
             )
@@ -839,11 +873,15 @@ def insert_test_directory_data(
 
                 # for PA panel ids, retrieve latest version matching Panel and SuperPanel records
                 panel_record: Panel = _retrieve_panel_from_pa_id(pa_id)
-                super_panel_record: SuperPanel = _retrieve_superpanel_from_pa_id(pa_id)
+                super_panel_record: SuperPanel = (
+                    _retrieve_superpanel_from_pa_id(pa_id)
+                )
 
                 # if we import the same version of TD but with different config source:
                 if panel_record:
-                    _make_ci_panel_td_link(ci_instance, panel_record, td_version, user)
+                    _make_ci_panel_td_link(
+                        ci_instance, panel_record, td_version, user
+                    )
 
                 if super_panel_record:
                     _make_ci_superpanel_td_link(

@@ -10,7 +10,9 @@ from panels_backend.models import (
     CiPanelTdRelease,
     CiPanelTdReleaseHistory,
 )
-from panels_backend.management.commands._insert_ci import _make_ci_panel_td_link
+from panels_backend.management.commands._insert_ci import (
+    _make_ci_panel_td_link,
+)
 
 
 class TestMakeCiPanelTdLink_NewCip(TestCase):

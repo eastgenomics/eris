@@ -48,7 +48,9 @@ def get_clinical_indication_by_r_code(
     return ClinicalIndication.objects.filter(r_code__iexact=r_code)
 
 
-def get_clinical_indication_by_database_id(id: str) -> ClinicalIndication | None:
+def get_clinical_indication_by_database_id(
+    id: str,
+) -> ClinicalIndication | None:
     """
     Get clinical indication by database id
 
@@ -95,7 +97,9 @@ def activate_clinical_indication_panel(
                 note=f"Existing ci-panel link set to active by {user}",
                 clinical_indication_panel_id=cip_instance.id,
             )
-            print(f"Clinical indication panel {cip_instance.id} link set to active!")
+            print(
+                f"Clinical indication panel {cip_instance.id} link set to active!"
+            )
 
     except ClinicalIndicationPanel.DoesNotExist:
         # if ci-panel link doesn't exist, create it
@@ -143,7 +147,9 @@ def deactivate_clinical_indication_panel(
                 note=f"Existing ci-panel link set to inactive by {user}",
                 clinical_indication_panel_id=cip_instance.id,
             )
-            print(f"Clinical indication panel {cip_instance.id} link set to inactive.")
+            print(
+                f"Clinical indication panel {cip_instance.id} link set to inactive."
+            )
         else:
             # ci-panel already inactive
             print("Clinical indication panel link already inactive.")

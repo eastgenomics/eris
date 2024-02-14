@@ -2,7 +2,9 @@ from django.test import TestCase
 
 import pandas as pd
 
-from panels_backend.management.commands._parse_transcript import check_missing_columns
+from panels_backend.management.commands._parse_transcript import (
+    check_missing_columns,
+)
 
 
 class TestSanityCheckColsExist(TestCase):
@@ -25,7 +27,11 @@ class TestSanityCheckColsExist(TestCase):
         correctly passes the sanity-checker.
         """
         test_mane = pd.DataFrame(
-            {"Gene": [], "MANE TYPE": [], "RefSeq StableID GRCh38 / GRCh37": []}
+            {
+                "Gene": [],
+                "MANE TYPE": [],
+                "RefSeq StableID GRCh38 / GRCh37": [],
+            }
         )
         assert not check_missing_columns(test_mane, self.mane_cols)
 
@@ -45,9 +51,13 @@ class TestSanityCheckColsExist(TestCase):
         Case: Example df is missing a "MANE TYPE" column
         Expect: Function to return a list containing the missing column "MANE TYPE" only
         """
-        test_mane = pd.DataFrame({"Gene": [], "RefSeq StableID GRCh38 / GRCh37": []})
+        test_mane = pd.DataFrame(
+            {"Gene": [], "RefSeq StableID GRCh38 / GRCh37": []}
+        )
 
-        assert check_missing_columns(test_mane, self.mane_cols) == ["MANE TYPE"]
+        assert check_missing_columns(test_mane, self.mane_cols) == [
+            "MANE TYPE"
+        ]
 
     def test_mane_missing_refseq(self):
         """

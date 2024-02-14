@@ -23,10 +23,16 @@ class TestColumnHeaderCleaningFunctions(TestCase):
         # test that PIZZA is ignored when matching `exclude` option is invoked
         self.assertEqual(_convert_name_to_lowercase("PIZZA", "PIZZA"), "PIZZA")
         # test that PIZZA is *not* ignored when non-matching `exclude` option is invoked
-        self.assertEqual(_convert_name_to_lowercase("PIZZA", "PEPPERONI"), "pizza")
+        self.assertEqual(
+            _convert_name_to_lowercase("PIZZA", "PEPPERONI"), "pizza"
+        )
         # tests for the defaults
-        self.assertEqual(_convert_name_to_lowercase("PIZZA_verdict"), "PIZZA_verdict")
-        self.assertEqual(_convert_name_to_lowercase("PIZZA_evidence"), "PIZZA_evidence")
+        self.assertEqual(
+            _convert_name_to_lowercase("PIZZA_verdict"), "PIZZA_verdict"
+        )
+        self.assertEqual(
+            _convert_name_to_lowercase("PIZZA_evidence"), "PIZZA_evidence"
+        )
 
     def test_replace_with_underscores(self):
         """

@@ -2,7 +2,9 @@ import collections
 import json
 import pandas as pd
 from io import BytesIO
-from panels_backend.management.commands._parse_transcript import check_missing_columns
+from panels_backend.management.commands._parse_transcript import (
+    check_missing_columns,
+)
 from itertools import chain
 import dxpy as dx
 import datetime as dt
@@ -23,7 +25,9 @@ from panels_backend.management.commands.utils import (
     normalize_version,
 )
 from core.settings import HGNC_IDS_TO_OMIT
-from panels_backend.management.commands._insert_ci import insert_test_directory_data
+from panels_backend.management.commands._insert_ci import (
+    insert_test_directory_data,
+)
 from panels_backend.management.commands._parse_transcript import (
     get_latest_transcript_release,
 )
@@ -122,7 +126,12 @@ def index(request: HttpRequest) -> HttpResponse:
         )
 
         row["td_release"] = (
-            max([Version(release["td_release_id__release"]) for release in releases])
+            max(
+                [
+                    Version(release["td_release_id__release"])
+                    for release in releases
+                ]
+            )
             if releases
             else None
         )
@@ -137,7 +146,12 @@ def index(request: HttpRequest) -> HttpResponse:
         )
 
         row["td_release"] = (
-            max([Version(release["td_release_id__release"]) for release in releases])
+            max(
+                [
+                    Version(release["td_release_id__release"])
+                    for release in releases
+                ]
+            )
             if releases
             else None
         )
@@ -199,7 +213,9 @@ def panel(request: HttpRequest, panel_id: int) -> HttpResponse:
             )
 
         panel.panel_version = (
-            normalize_version(panel.panel_version) if panel.panel_version else None
+            normalize_version(panel.panel_version)
+            if panel.panel_version
+            else None
         )
 
         # fetch ci-panels (related ci)
@@ -280,7 +296,9 @@ def superpanel(request: HttpRequest, superpanel_id: int) -> HttpResponse:
         "clinical_indication_id__name",
     )
 
-    child_panels = PanelSuperPanel.objects.filter(superpanel_id=superpanel.id).values(
+    child_panels = PanelSuperPanel.objects.filter(
+        superpanel_id=superpanel.id
+    ).values(
         "panel_id",
         "panel_id__panel_name",
         "panel_id__panel_version",
@@ -394,7 +412,9 @@ def clinical_indication(request: HttpRequest, ci_id: int) -> HttpResponse:
 
                     # extract test method from "ClinicalIndication metadata test_method changed from Single gene sequencing >=10 amplicons to Small panel"
                     previous_test_method = (
-                        indication_history.note.split("to")[0].split("from")[-1].strip()
+                        indication_history.note.split("to")[0]
+                        .split("from")[-1]
+                        .strip()
                     )
 
                     ClinicalIndicationTestMethodHistory.objects.create(
@@ -455,7 +475,9 @@ def add_clinical_indication(request: HttpRequest) -> HttpResponse:
             # if form invalid, fetch ci from db
             # return to ask user to modify
             try:
-                clinical_indication = ClinicalIndication.objects.get(r_code=r_code)
+                clinical_indication = ClinicalIndication.objects.get(
+                    r_code=r_code
+                )
             except ClinicalIndication.DoesNotExist:
                 pass
 
@@ -499,14 +521,18 @@ def add_panel(request: HttpRequest) -> HttpResponse:
                     panel_source="online",
                 )
 
-                conf, _ = Confidence.objects.get_or_create(confidence_level=None)
+                conf, _ = Confidence.objects.get_or_create(
+                    confidence_level=None
+                )
                 moi, _ = ModeOfInheritance.objects.get_or_create(
                     mode_of_inheritance=None
                 )
                 mop, _ = ModeOfPathogenicity.objects.get_or_create(
                     mode_of_pathogenicity=None
                 )
-                penetrance, _ = Penetrance.objects.get_or_create(penetrance=None)
+                penetrance, _ = Penetrance.objects.get_or_create(
+                    penetrance=None
+                )
 
                 for gene_id in selected_genes:
                     pg_instance, pg_created = PanelGene.objects.get_or_create(
@@ -553,7 +579,9 @@ def add_ci_panel(request: HttpRequest) -> HttpResponse:
     Add clinical indication panel page
     """
     if request.method == "GET":
-        clinical_indications = ClinicalIndication.objects.all().order_by("r_code")
+        clinical_indications = ClinicalIndication.objects.all().order_by(
+            "r_code"
+        )
 
         panels = (
             Panel.objects.filter(pending=False)
@@ -563,7 +591,9 @@ def add_ci_panel(request: HttpRequest) -> HttpResponse:
 
         for panel in panels:
             panel.panel_version = (
-                normalize_version(panel.panel_version) if panel.panel_version else ""
+                normalize_version(panel.panel_version)
+                if panel.panel_version
+                else ""
             )
             panel.external_id = panel.external_id if panel.external_id else ""
 
@@ -581,7 +611,10 @@ def add_ci_panel(request: HttpRequest) -> HttpResponse:
         clinical_indication_id = request.POST.get("clinical_indication")
 
         with transaction.atomic():
-            cip_instance, created = ClinicalIndicationPanel.objects.get_or_create(
+            (
+                cip_instance,
+                created,
+            ) = ClinicalIndicationPanel.objects.get_or_create(
                 clinical_indication_id=clinical_indication_id,
                 panel_id=panel_id,
                 defaults={
@@ -702,7 +735,9 @@ def history(request: HttpRequest) -> HttpResponse:
                     query_filters |= Q(note__icontains=note_prefix)
 
                 cip_histories: QuerySet[ClinicalIndicationPanelHistory] = (
-                    ClinicalIndicationPanelHistory.objects.filter(query_filters)
+                    ClinicalIndicationPanelHistory.objects.filter(
+                        query_filters
+                    )
                     .order_by("-created")
                     .values(
                         "created",
@@ -722,7 +757,9 @@ def history(request: HttpRequest) -> HttpResponse:
                 history[
                     "clinical_indication_panel_id__panel_id__panel_version"
                 ] = normalize_version(
-                    history["clinical_indication_panel_id__panel_id__panel_version"]
+                    history[
+                        "clinical_indication_panel_id__panel_id__panel_version"
+                    ]
                 )
 
             return render(
@@ -758,7 +795,9 @@ def history(request: HttpRequest) -> HttpResponse:
             )
 
 
-def clinical_indication_panel(request: HttpRequest, cip_id: str) -> HttpResponse:
+def clinical_indication_panel(
+    request: HttpRequest, cip_id: str
+) -> HttpResponse:
     """
     Clinical indication panel page
 
@@ -799,7 +838,9 @@ def clinical_indication_panel(request: HttpRequest, cip_id: str) -> HttpResponse
         )
     elif request.method == "POST":
         action = request.POST.get("action")
-        clinical_indication_panel = ClinicalIndicationPanel.objects.get(id=cip_id)
+        clinical_indication_panel = ClinicalIndicationPanel.objects.get(
+            id=cip_id
+        )
 
         with transaction.atomic():
             if action in ["activate", "deactivate"]:
@@ -807,7 +848,9 @@ def clinical_indication_panel(request: HttpRequest, cip_id: str) -> HttpResponse
                     clinical_indication_panel.current = True
                     ClinicalIndicationPanelHistory.objects.create(
                         clinical_indication_panel_id=cip_id,
-                        note=History.clinical_indication_panel_activated(cip_id, True),
+                        note=History.clinical_indication_panel_activated(
+                            cip_id, True
+                        ),
                     )
                 elif action == "deactivate":
                     clinical_indication_panel.current = False
@@ -817,7 +860,9 @@ def clinical_indication_panel(request: HttpRequest, cip_id: str) -> HttpResponse
                             cip_id, True
                         ),
                     )
-                clinical_indication_panel.pending = True  # require manual review
+                clinical_indication_panel.pending = (
+                    True  # require manual review
+                )
             elif action == "revert":
                 # action is "revert" from Review page
                 clinical_indication_panel.current = (
@@ -847,7 +892,9 @@ def clinical_indication_panel(request: HttpRequest, cip_id: str) -> HttpResponse
         return redirect("review")
 
 
-def clinical_indication_superpanel(request: HttpRequest, cisp_id: str) -> HttpResponse:
+def clinical_indication_superpanel(
+    request: HttpRequest, cisp_id: str
+) -> HttpResponse:
     """
     Clinical indication panel page
 
@@ -889,8 +936,8 @@ def clinical_indication_superpanel(request: HttpRequest, cisp_id: str) -> HttpRe
 
     elif request.method == "POST":
         action = request.POST.get("action")
-        clinical_indication_superpanel = ClinicalIndicationSuperPanel.objects.get(
-            id=cisp_id
+        clinical_indication_superpanel = (
+            ClinicalIndicationSuperPanel.objects.get(id=cisp_id)
         )
 
         with transaction.atomic():
@@ -916,7 +963,9 @@ def clinical_indication_superpanel(request: HttpRequest, cisp_id: str) -> HttpRe
                 clinical_indication_superpanel.pending = False
                 ClinicalIndicationSuperPanelHistory.objects.create(
                     clinical_indication_superpanel_id=cisp_id,
-                    note=History.clinical_indication_superpanel_approved(cisp_id),
+                    note=History.clinical_indication_superpanel_approved(
+                        cisp_id
+                    ),
                 )
 
             clinical_indication_superpanel.save()
@@ -1029,7 +1078,9 @@ def review(request: HttpRequest) -> HttpResponse:
 
             # determine if test method is changed
             # or it's a new clinical indication creation
-            indication.reason = indication_history.note if indication_history else "NEW"
+            indication.reason = (
+                indication_history.note if indication_history else "NEW"
+            )
 
     clinical_indication_panels: QuerySet[ClinicalIndicationPanel] = (
         ClinicalIndicationPanel.objects.filter(pending=True)
@@ -1146,7 +1197,11 @@ def gene(request: HttpRequest, gene_id: int) -> HttpResponse:
     return render(
         request,
         "web/info/gene.html",
-        {"gene": gene, "panels": associated_panels, "transcripts": transcripts},
+        {
+            "gene": gene,
+            "panels": associated_panels,
+            "transcripts": transcripts,
+        },
     )
 
 
@@ -1165,7 +1220,9 @@ def _parse_excluded_hgncs_from_bytes(file: TemporaryUploadedFile) -> set[str]:
 
         df = df[
             df["Locus type"].str.contains("rna", case=False)
-            | df["Approved name"].str.contains("mitochondrially encoded", case=False)
+            | df["Approved name"].str.contains(
+                "mitochondrially encoded", case=False
+            )
         ]
     except Exception as e:
         print("Error parsing file: ", e)
@@ -1211,9 +1268,9 @@ def genepanel(
     success = None
     warnings = []
 
-    pending_clinical_indication_panels = ClinicalIndicationPanel.objects.filter(
-        pending=True
-    ).exists()
+    pending_clinical_indication_panels = (
+        ClinicalIndicationPanel.objects.filter(pending=True).exists()
+    )
     pending_clinical_indication_superpanels = (
         ClinicalIndicationSuperPanel.objects.filter(pending=True).exists()
     )
@@ -1230,7 +1287,9 @@ def genepanel(
     )
 
     # if there's no CiPanelAssociation date column, return empty list
-    if not ClinicalIndicationPanel.objects.filter(current=True, pending=False).exists():
+    if not ClinicalIndicationPanel.objects.filter(
+        current=True, pending=False
+    ).exists():
         return render(request, "web/info/genepanel.html")
 
     # if there're pending CiPanel / CiSuperPanel / PanelGene
@@ -1242,7 +1301,9 @@ def genepanel(
     if pending_panel_genes:
         warnings.append("Pending Panel Gene(s) found.")
     if clinical_indication_with_more_than_one_active_links:
-        warnings.append("Clinical Indication(s) with more than one active links found.")
+        warnings.append(
+            "Clinical Indication(s) with more than one active links found."
+        )
 
     genepanels: list[WebGenePanel] = []
     panel_id_to_genes: dict[str, list[WebGene]] = collections.defaultdict(list)
@@ -1325,7 +1386,9 @@ def genepanel(
                 genepanel.hgncs.extend(panel_id_to_genes[child_panel_id])
                 continue
 
-            _add_panel_genes_to_genepanel(child_panel_id, panel_id_to_genes, genepanel)
+            _add_panel_genes_to_genepanel(
+                child_panel_id, panel_id_to_genes, genepanel
+            )
 
         genepanels.append(genepanel)
 
@@ -1386,7 +1449,9 @@ def genepanel(
             project_metadata: dict = dx.DXProject(project_id).describe()
             project_name: str = project_metadata.get("name", "")
 
-            if project_name.startswith("001") or project_name.startswith("002"):
+            if project_name.startswith("001") or project_name.startswith(
+                "002"
+            ):
                 return render(
                     request,
                     "web/info/genepanel.html",
@@ -1402,7 +1467,10 @@ def genepanel(
                 if gp.superpanel:
                     for child_panel in gp.child_panels:
                         for gene in panel_id_to_genes[child_panel.id]:
-                            if gene.hgnc in HGNC_IDS_TO_OMIT or gene.hgnc in rnas:
+                            if (
+                                gene.hgnc in HGNC_IDS_TO_OMIT
+                                or gene.hgnc in rnas
+                            ):
                                 continue
 
                             file_result.append(
@@ -1566,7 +1634,9 @@ def _giving_transcript_clinical_context(
     ]
 
 
-def ajax_gene_transcripts(request: HttpRequest, reference_genome: str) -> JsonResponse:
+def ajax_gene_transcripts(
+    request: HttpRequest, reference_genome: str
+) -> JsonResponse:
     """
     Ajax fetch call to get all transcripts for a given reference genome.
     Returns a json response as this will be requested by the datatable in the front-end
@@ -1607,7 +1677,8 @@ def ajax_gene_transcripts(request: HttpRequest, reference_genome: str) -> JsonRe
     return JsonResponse(
         {
             "data": _giving_transcript_clinical_context(
-                transcripts, [latest_hgmd.id, latest_select.id, latest_plus_clinical.id]
+                transcripts,
+                [latest_hgmd.id, latest_select.id, latest_plus_clinical.id],
             )
         },
         safe=False,
@@ -1650,11 +1721,15 @@ def genetranscripts(request: HttpRequest) -> HttpResponse:
             project_metadata: dict = dx.DXProject(project_id).describe()
             project_name: str = project_metadata.get("name", "")
 
-            if project_name.startswith("001") or project_name.startswith("002"):
+            if project_name.startswith("001") or project_name.startswith(
+                "002"
+            ):
                 return render(
                     request,
                     "web/info/genetranscripts.html",
-                    {"error": "Uploading to 001 or 002 project is not allowed."},
+                    {
+                        "error": "Uploading to 001 or 002 project is not allowed."
+                    },
                 )
 
             current_datetime = dt.datetime.today().strftime("%Y%m%d")
@@ -1679,10 +1754,14 @@ def genetranscripts(request: HttpRequest) -> HttpResponse:
                     )
                     f.write(f"{data}\n")
 
-            return render(request, "web/info/genetranscripts.html", {"success": True})
+            return render(
+                request, "web/info/genetranscripts.html", {"success": True}
+            )
 
         except Exception as e:
-            return render(request, "web/info/genetranscripts.html", {"error": e})
+            return render(
+                request, "web/info/genetranscripts.html", {"error": e}
+            )
 
     return render(request, "web/info/genetranscripts.html")
 

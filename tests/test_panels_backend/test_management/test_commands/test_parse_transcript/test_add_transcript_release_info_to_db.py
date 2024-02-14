@@ -79,7 +79,9 @@ class TestAddTranscriptRelease_FromScratch(TestCase):
         assert not errors, errors
 
 
-class TestAddTranscriptRelease_ErrorsOnVersionRepeatsWithDifferentFiles(TestCase):
+class TestAddTranscriptRelease_ErrorsOnVersionRepeatsWithDifferentFiles(
+    TestCase
+):
     """
     CASE: An identical transcript release already exists in the DB - this release has been linked to file id 123
     EXPECT: A ValueError should be raised!
@@ -120,7 +122,9 @@ class TestAddTranscriptRelease_ErrorsOnVersionRepeatsWithDifferentFiles(TestCase
         files = {"hgmd_markname": "file-124"}  # different file-id
 
         with self.assertRaises(ValueError):
-            _add_transcript_release_info_to_db(source, version, ref_genome, files)
+            _add_transcript_release_info_to_db(
+                source, version, ref_genome, files
+            )
 
 
 class TestAddTranscriptRelease_SameFilesNoProblem(TestCase):
@@ -141,7 +145,9 @@ class TestAddTranscriptRelease_SameFilesNoProblem(TestCase):
             release="v1.0.5",
             reference_genome=self.reference_genome,
         )
-        self.file_one = TranscriptFile.objects.create(file_id="123", file_type="test")
+        self.file_one = TranscriptFile.objects.create(
+            file_id="123", file_type="test"
+        )
         self.li = TranscriptReleaseTranscriptFile.objects.create(
             transcript_release=self.release, transcript_file=self.file_one
         )
@@ -156,7 +162,9 @@ class TestAddTranscriptRelease_SameFilesNoProblem(TestCase):
         ref_genome = self.reference_genome
         data = {"test": "123"}
 
-        result = _add_transcript_release_info_to_db(source, version, ref_genome, data)
+        result = _add_transcript_release_info_to_db(
+            source, version, ref_genome, data
+        )
         self.assertEqual(result, self.release)
 
         files = TranscriptFile.objects.all()

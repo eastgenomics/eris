@@ -72,11 +72,15 @@ def insert_row(row_dict: dict[str, str | int]) -> None:
     :param row_dict: dataframe row as dictionary
     """
     sample = _insert_into_table(
-        Sample, **_subset_row(row_dict, "instrument_id", "batch_id", "specimen_id")
+        Sample,
+        **_subset_row(row_dict, "instrument_id", "batch_id", "specimen_id"),
     )
-    testcode = _insert_into_table(TestCode, **_subset_row(row_dict, "test_code"))
+    testcode = _insert_into_table(
+        TestCode, **_subset_row(row_dict, "test_code")
+    )
     probeset = _insert_into_table(
-        ProbeSet, **_subset_row(row_dict, "probeset_id") | {"testcode": testcode}
+        ProbeSet,
+        **_subset_row(row_dict, "probeset_id") | {"testcode": testcode},
     )
     affected_status = _insert_into_table(
         AffectedStatus,
@@ -105,10 +109,14 @@ def insert_row(row_dict: dict[str, str | int]) -> None:
         **_subset_row(row_dict, "collection_method"),
     )
     chromosome = _insert_into_table(
-        Chromosome, names_to={"chrom": "name"}, **_subset_row(row_dict, "chrom")
+        Chromosome,
+        names_to={"chrom": "name"},
+        **_subset_row(row_dict, "chrom"),
     )
     vnt_row_subset = _subset_row(row_dict, "interpreted", "pos", "ref", "alt")
-    vnt_row_subset["interpreted"] = vnt_row_subset["interpreted"].lower() == "yes"
+    vnt_row_subset["interpreted"] = (
+        vnt_row_subset["interpreted"].lower() == "yes"
+    )
     variant = _insert_into_table(
         Variant,
         names_to={"pos": "position"},
@@ -152,11 +160,13 @@ def insert_row(row_dict: dict[str, str | int]) -> None:
     # ACGS_CATEGORY_INFORMATION return object is not used, so we throw it away
     _insert_into_table(
         AcgsCategoryInformation,
-        **{"interpretation": interpretation} | _subset_row(row_dict, *ACGS_COLUMNS),
+        **{"interpretation": interpretation}
+        | _subset_row(row_dict, *ACGS_COLUMNS),
     )
     panels = [
         _insert_into_table(
-            Panel, **{"panel_name": panel["name"], "panel_version": panel["version"]}
+            Panel,
+            **{"panel_name": panel["name"], "panel_version": panel["version"]},
         )
         for panel in row_dict["panels"]
     ]
@@ -164,7 +174,8 @@ def insert_row(row_dict: dict[str, str | int]) -> None:
     # this is because the laboratory does not presently have the option of selecting them in testing.
     for panel in panels:
         _insert_into_table(
-            InterpretationPanel, **{"panel": panel, "interpretation": interpretation}
+            InterpretationPanel,
+            **{"panel": panel, "interpretation": interpretation},
         )
 
     if not any(_insert_into_table.created):
@@ -178,25 +189,29 @@ def insert_row(row_dict: dict[str, str | int]) -> None:
     _insert_into_table.created = []
 
 
-def _subset_row(row: dict[str, str | int], *desired_keys) -> dict[str, str | int]:
+def _subset_row(
+    row: dict[str, str | int], *desired_keys
+) -> dict[str, str | int]:
     """
     Subsets a dict given a set of desired keys
     """
     return {k: row[k] for k in desired_keys}
 
+
 # See docstring in `keep_count_of_truth` for why these are here
-T = TypeVar('T')
-P = ParamSpec('P')
+T = TypeVar("T")
+P = ParamSpec("P")
+
 
 def store_bools(func: Callable[P, T]) -> Callable[P, T]:
     """
-    This is a decorator that takes a function that returns a `model.Model` and a `bool`, 
-    and appends the `bool` in a `list` every time it's called. The `bool` objects are 
-    stored in an internal attribute (`wrapped.created`). 
+    This is a decorator that takes a function that returns a `model.Model` and a `bool`,
+    and appends the `bool` in a `list` every time it's called. The `bool` objects are
+    stored in an internal attribute (`wrapped.created`).
 
     The type hints for this decorator are misleading, because it only takes
     functions that return a `model.Model` and a `bool` (i.e. `_insert_into_row`).
-    However, if we were to do this "properly", the resulting type hint would be 
+    However, if we were to do this "properly", the resulting type hint would be
     horrible to write and would actually work against readability.
     The use of `ParamSpec` and `TypeVar` are a suggested convention for
     annotating decorator call signatures (see https://typing.readthedocs.io/en/latest/spec/generics.html#paramspec)
@@ -208,6 +223,7 @@ def store_bools(func: Callable[P, T]) -> Callable[P, T]:
 
     :param func: Any function that returns `(models.Model, bool)`
     """
+
     @wraps(func)
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> models.Model:
         inst, created = func(*args, **kwargs)

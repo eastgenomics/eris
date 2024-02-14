@@ -45,7 +45,9 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
             hgnc_id, markname, gene2refseq
         )
 
-        expected_err = "HGNC:1234 has two or more entries in markname HGMD table."
+        expected_err = (
+            "HGNC:1234 has two or more entries in markname HGMD table."
+        )
 
         assert not result
         assert test_error == expected_err
@@ -135,9 +137,7 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
             hgnc_id, markname, gene2refseq
         )
 
-        expected_err = (
-            "HGNC:1234 has more than one transcript in the HGMD database: NM005,NM009"
-        )
+        expected_err = "HGNC:1234 has more than one transcript in the HGMD database: NM005,NM009"
 
         assert not result
         assert test_error == expected_err

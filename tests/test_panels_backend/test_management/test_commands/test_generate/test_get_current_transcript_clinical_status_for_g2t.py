@@ -29,7 +29,9 @@ class TestCurrentTranscript_ManeSelectOnly(TestCase):
             reference_genome_id=self.ref_genome.id,
         )
 
-        self.mane_select_source = TranscriptSource.objects.create(source="MANE Select")
+        self.mane_select_source = TranscriptSource.objects.create(
+            source="MANE Select"
+        )
         self.mane_plus_source = TranscriptSource.objects.create(
             source="MANE Plus Clinical"
         )
@@ -67,7 +69,10 @@ class TestCurrentTranscript_ManeSelectOnly(TestCase):
         """
         cmd = Command()
         clinical = cmd.get_current_transcript_clinical_status_for_g2t(
-            self.transcript, self.mane_select_rel, self.mane_plus_rel, self.hgmd_rel
+            self.transcript,
+            self.mane_select_rel,
+            self.mane_plus_rel,
+            self.hgmd_rel,
         )
         assert clinical
 
@@ -93,7 +98,10 @@ class TestCurrentTranscript_ManeSelectOnly(TestCase):
         )
         cmd = Command()
         clinical = cmd.get_current_transcript_clinical_status_for_g2t(
-            self.transcript, self.mane_select_rel, self.mane_plus_rel, self.hgmd_rel
+            self.transcript,
+            self.mane_select_rel,
+            self.mane_plus_rel,
+            self.hgmd_rel,
         )
         assert clinical
 
@@ -116,7 +124,9 @@ class TestCurrentTranscript_NoLinks(TestCase):
             reference_genome_id=self.ref_genome.id,
         )
 
-        self.mane_select_source = TranscriptSource.objects.create(source="MANE Select")
+        self.mane_select_source = TranscriptSource.objects.create(
+            source="MANE Select"
+        )
         self.mane_plus_source = TranscriptSource.objects.create(
             source="MANE Plus Clinical"
         )
@@ -145,6 +155,9 @@ class TestCurrentTranscript_NoLinks(TestCase):
         """
         cmd = Command()
         clinical = cmd.get_current_transcript_clinical_status_for_g2t(
-            self.transcript, self.mane_select_rel, self.mane_plus_rel, self.hgmd_rel
+            self.transcript,
+            self.mane_select_rel,
+            self.mane_plus_rel,
+            self.hgmd_rel,
         )
         assert clinical == None

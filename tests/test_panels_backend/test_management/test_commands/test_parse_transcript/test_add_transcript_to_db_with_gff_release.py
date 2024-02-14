@@ -31,7 +31,9 @@ class TestAddTranscriptWithGff_NewTranscript(TestCase):
 
         self.transcript_name = "NM04582.5"
 
-        self.ref_genome, _ = ReferenceGenome.objects.get_or_create(name="GRCh37")
+        self.ref_genome, _ = ReferenceGenome.objects.get_or_create(
+            name="GRCh37"
+        )
 
         self.gff_release, _ = GffRelease.objects.get_or_create(
             ensembl_release="10", reference_genome=self.ref_genome
@@ -63,11 +65,15 @@ class TestAddTranscriptWithGff_NewTranscript(TestCase):
 
         release = GffRelease.objects.all()
         err += len_check_wrapper(release, "releases", 1)
-        err += value_check_wrapper(release[0].ensembl_release, "release version", "10")
+        err += value_check_wrapper(
+            release[0].ensembl_release, "release version", "10"
+        )
 
         tx_release = TranscriptGffRelease.objects.all()
         err += len_check_wrapper(tx_release, "tx-release links", 1)
-        err += value_check_wrapper(tx_release[0].transcript, "linked tx", tx[0])
+        err += value_check_wrapper(
+            tx_release[0].transcript, "linked tx", tx[0]
+        )
         err += value_check_wrapper(
             tx_release[0].gff_release, "linked release", release[0]
         )
@@ -98,7 +104,9 @@ class TestAddTranscriptWithGff_ExistingTranscripts(TestCase):
 
         self.transcript_name = "NM04582.5"
 
-        self.ref_genome, _ = ReferenceGenome.objects.get_or_create(name="GRCh37")
+        self.ref_genome, _ = ReferenceGenome.objects.get_or_create(
+            name="GRCh37"
+        )
 
         self.gff_release, _ = GffRelease.objects.get_or_create(
             ensembl_release="10.2", reference_genome=self.ref_genome
@@ -142,7 +150,9 @@ class TestAddTranscriptWithGff_ExistingTranscripts(TestCase):
 
         tx_release = TranscriptGffRelease.objects.all()
         err += len_check_wrapper(tx_release, "tx-release links", 1)
-        err += value_check_wrapper(tx_release[0].transcript, "linked tx", tx[0])
+        err += value_check_wrapper(
+            tx_release[0].transcript, "linked tx", tx[0]
+        )
         err += value_check_wrapper(
             tx_release[0].gff_release, "linked release", release[0]
         )
@@ -153,7 +163,9 @@ class TestAddTranscriptWithGff_ExistingTranscripts(TestCase):
             history[0].transcript_gff, "tx-release", tx_release[0]
         )
         err += value_check_wrapper(
-            history[0].note, "tx-release note", History.tx_gff_release_present()
+            history[0].note,
+            "tx-release note",
+            History.tx_gff_release_present(),
         )
 
         errors = "; ".join(err)

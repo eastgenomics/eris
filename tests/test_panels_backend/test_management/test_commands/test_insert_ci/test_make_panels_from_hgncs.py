@@ -19,7 +19,9 @@ from panels_backend.models import (
     TestDirectoryRelease,
     CiPanelTdRelease,
 )
-from panels_backend.management.commands._insert_ci import _make_panels_from_hgncs
+from panels_backend.management.commands._insert_ci import (
+    _make_panels_from_hgncs,
+)
 from tests.test_panels_backend.test_management.test_commands.test_insert_panel.test_insert_gene import (
     len_check_wrapper,
     value_check_wrapper,

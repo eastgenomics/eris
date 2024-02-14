@@ -34,9 +34,7 @@ class History:
     def clinical_indication_panel_new_td_link(
         new_value: str,
     ) -> str:
-        return (
-            f"ClinicalIndicationPanel linked to new test directory release: {new_value}"
-        )
+        return f"ClinicalIndicationPanel linked to new test directory release: {new_value}"
 
     def clinical_indication_metadata_changed(
         field: str, old_value: str, new_value: str
@@ -123,10 +121,16 @@ class History:
         return f"SuperPanel-ClinicalIndication linked to a new TestDirectoryRelease {new_td}"
 
     # gene/HGNC releases
-    def gene_hgnc_release_approved_symbol_change(old_value: str, new_value: str) -> str:
-        return f"HGNC approved symbol has changed from {old_value} to {new_value}"
+    def gene_hgnc_release_approved_symbol_change(
+        old_value: str, new_value: str
+    ) -> str:
+        return (
+            f"HGNC approved symbol has changed from {old_value} to {new_value}"
+        )
 
-    def gene_hgnc_release_alias_symbol_change(old_value: str, new_value: str) -> str:
+    def gene_hgnc_release_alias_symbol_change(
+        old_value: str, new_value: str
+    ) -> str:
         return f"HGNC alias symbol has changed from {old_value} to {new_value}"
 
     def gene_hgnc_release_new() -> str:

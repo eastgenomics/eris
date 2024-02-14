@@ -55,7 +55,9 @@ def _handle_nulls_and_blanks_from_json(json_field: str | None) -> str | None:
 
 def _populate_nullable_gene_fields(
     gene: dict,
-) -> tuple[ModeOfInheritance | None, ModeOfPathogenicity | None, Penetrance | None]:
+) -> tuple[
+    ModeOfInheritance | None, ModeOfPathogenicity | None, Penetrance | None
+]:
     """
     Handles extracting fields which are commonly nullable and seen in gene parsing.
     Where the fields exist, make them in the db.
@@ -72,7 +74,9 @@ def _populate_nullable_gene_fields(
     mop_instance = None
     penetrance_instance = None
 
-    inheritance = _handle_nulls_and_blanks_from_json(gene.get("mode_of_inheritance"))
+    inheritance = _handle_nulls_and_blanks_from_json(
+        gene.get("mode_of_inheritance")
+    )
     if inheritance:
         moi_instance, _ = ModeOfInheritance.objects.get_or_create(
             mode_of_inheritance=inheritance
@@ -252,7 +256,9 @@ def _get_most_recent_td_release_for_ci_panel(
         latest_td = max(td_releases, key=Version)
 
         # return the instance for that release
-        latest_td_instance = TestDirectoryRelease.objects.get(release=latest_td)
+        latest_td_instance = TestDirectoryRelease.objects.get(
+            release=latest_td
+        )
         return latest_td_instance
 
 
@@ -266,7 +272,9 @@ def _get_most_recent_td_release_for_ci_superpanel(
     based on data which exists for earlier versions of the same R code and SuperPanel ID.
     """
     # get all td_releases
-    releases = CiSuperpanelTdRelease.objects.filter(ci_superpanel=ci_superpanel)
+    releases = CiSuperpanelTdRelease.objects.filter(
+        ci_superpanel=ci_superpanel
+    )
     if not releases:
         return None
     else:
@@ -275,7 +283,9 @@ def _get_most_recent_td_release_for_ci_superpanel(
         latest_td = max(td_releases, key=Version)
 
         # return the instance for that release
-        latest_td_instance = TestDirectoryRelease.objects.get(release=latest_td)
+        latest_td_instance = TestDirectoryRelease.objects.get(
+            release=latest_td
+        )
         return latest_td_instance
 
 
@@ -361,18 +371,26 @@ def _insert_panel_data_into_db(panel: PanelClass, user: str) -> Panel:
         # handle previous Panel(s) with similar external_id. Panel name and version aren't suited for this.
         # mark previous CI-Panel links as needing review!
 
-        for clinical_indication_panel in ClinicalIndicationPanel.objects.filter(
+        for (
+            clinical_indication_panel
+        ) in ClinicalIndicationPanel.objects.filter(
             panel_id__external_id=panel_external_id,
             current=True,
         ):
-            flag_clinical_indication_panel_for_review(clinical_indication_panel, user)
+            flag_clinical_indication_panel_for_review(
+                clinical_indication_panel, user
+            )
 
-            clinical_indication_id = clinical_indication_panel.clinical_indication_id
+            clinical_indication_id = (
+                clinical_indication_panel.clinical_indication_id
+            )
 
             # get the most recent TestDirectoryRelease for this clinical_indication_panel,
             #  and provisionally link it
-            latest_active_td_release = _get_most_recent_td_release_for_ci_panel(
-                clinical_indication_panel
+            latest_active_td_release = (
+                _get_most_recent_td_release_for_ci_panel(
+                    clinical_indication_panel
+                )
             )
 
             provisionally_link_clinical_indication_to_panel(
@@ -424,7 +442,9 @@ def _insert_superpanel_into_db(
     if created:
         # make links between the SuperPanel and its child panels
         for child in child_panels:
-            PanelSuperPanel.objects.get_or_create(panel=child, superpanel=superpanel)
+            PanelSuperPanel.objects.get_or_create(
+                panel=child, superpanel=superpanel
+            )
 
         # if there are previous SuperPanel(s) with similar external_id,
         # mark previous CI-SuperPanel links as needing review
@@ -437,8 +457,10 @@ def _insert_superpanel_into_db(
                 clinical_indication_superpanel, user
             )
 
-            latest_active_td_release = _get_most_recent_td_release_for_ci_superpanel(
-                clinical_indication_superpanel
+            latest_active_td_release = (
+                _get_most_recent_td_release_for_ci_superpanel(
+                    clinical_indication_superpanel
+                )
             )
 
             provisionally_link_clinical_indication_to_superpanel(
