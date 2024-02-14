@@ -237,12 +237,13 @@ class TestInsertGene_NewGene(TestCase):
 
         errors += len_check_wrapper(panel_gene_history, "history record", 1)
 
-        # check panel-gene history record user as PanelApp
+        # check panel-gene history records user correctly
         new_history = panel_gene_history[0]
 
         errors += value_check_wrapper(
             new_history.user, "user", self.user_logged_in
         )
+        errors += value_check_wrapper(panel_gene_history[0].user.username, "history username", self.user_logged_in.username)
 
         assert not errors, errors
 
@@ -301,6 +302,7 @@ class TestInsertGene_NewGene(TestCase):
         # check 1 history entry
         new_history = PanelGeneHistory.objects.all()
         errors += len_check_wrapper(new_history, "history record", 1)
+        errors += value_check_wrapper(new_history[0].user, "history user", self.user_cli)
 
         assert not errors, errors
 
@@ -362,6 +364,7 @@ class TestInsertGene_NewGene(TestCase):
         errors += len_check_wrapper(
             new_history, "history record", 1
         )  # assert that history is created for one panel-gene link created
+        errors += value_check_wrapper(new_history[0].user.username, "history username", self.user_logged_in.username)
 
         assert not errors, errors
 

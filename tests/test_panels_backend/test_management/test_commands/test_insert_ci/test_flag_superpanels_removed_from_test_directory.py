@@ -92,6 +92,7 @@ class TestSuperpanelsFlaggedWhenNoLongerInTd(TestCase):
             assert hist[0].note == History.flag_clinical_indication_panel(
                 "Superpanel ID no longer attached to clinical indication in TD"
             )
+            assert hist[0].user.username == "test"
 
         # check that the superpanel with the external ID '4', which is PRESENT IN the
         # current td, is still set to current=True

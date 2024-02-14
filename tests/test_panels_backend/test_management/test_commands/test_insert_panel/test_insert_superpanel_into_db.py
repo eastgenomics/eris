@@ -191,12 +191,12 @@ class TestInsertSuperpanelVersionChange(TestCase):
             child_panels=[],
         )
 
-        _insert_superpanel_into_db(new_superpanel, self.child_panels, None)
+        _insert_superpanel_into_db(new_superpanel, self.child_panels, user=None)
 
         # check what's in the db now
         ci_superpanels = ClinicalIndicationSuperPanel.objects.all()
         superpanels = SuperPanel.objects.all()
-        ci_superpanels_history = ClinicalIndicationSuperPanel.objects.all()
+        ci_superpanels_history = ClinicalIndicationSuperPanelHistory.objects.all()
 
         errors += len_check_wrapper(
             ci_superpanels, "clinical indication-panel", 2
@@ -205,6 +205,8 @@ class TestInsertSuperpanelVersionChange(TestCase):
         errors += len_check_wrapper(
             ci_superpanels_history, "ci-superpanel history", 2
         )
+        
+        errors += value_check_wrapper(ci_superpanels_history[0].user, "history user", None)
 
         errors += value_check_wrapper(
             superpanels[1].panel_version,

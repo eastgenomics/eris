@@ -77,6 +77,7 @@ class TestMakeCiPanelTdLink_NewCip(TestCase):
             self.assertEqual(
                 cip_hist[0].note, History.clinical_indication_panel_created()
             )
+            assert cip_hist[0].user.username == "test"
 
         # check cip-td  history logs
         with self.subTest():
@@ -155,3 +156,4 @@ class TestMakeCiPanelTdLink_ExistingCip(TestCase):
                     cip_td[0].td_release.release,
                 ),
             )
+            assert hist[0].user.username == "test"

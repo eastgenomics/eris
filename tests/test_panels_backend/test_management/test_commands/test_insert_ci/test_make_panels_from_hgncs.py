@@ -202,6 +202,12 @@ class TestMakePanelsFromHgncs(TestCase):
             PanelGeneHistory.objects.all(), "panel-gene history records", 3
         )  # should have 3 history recorded HGNC:1 HGNC:2 and HGNC:3
 
+        errors += value_check_wrapper(
+            PanelGeneHistory.objects.all()[0].user.username,
+            "PanelGeneHistory user",
+            "test",
+        )
+
         # check that test directory release links are formed
         links_with_td = CiPanelTdRelease.objects.all()
         errors += len_check_wrapper(links_with_td, "links with td", 2)
