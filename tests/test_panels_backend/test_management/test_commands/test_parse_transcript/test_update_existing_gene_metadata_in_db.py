@@ -93,6 +93,12 @@ class TestUpdateExistingGeneSymbol(TestCase):
             ),
         )
 
+        err += value_check_wrapper(
+            history[0].user,
+            "linked history user",
+            self.user,
+        )
+
         errors = "; ".join(err)
         assert not errors, errors
 
@@ -152,6 +158,7 @@ class TestUpdateExistingGeneSymbol(TestCase):
                 old_name, new_name
             ),
         )
+        err += value_check_wrapper(history[0].user, "history user", self.user)
         err += value_check_wrapper(
             history[1].gene_hgnc_release, "Gene-HGNC link", gene_release[1]
         )

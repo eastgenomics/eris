@@ -84,6 +84,9 @@ class TestLinkMade_GeneUnchanged(TestCase):
                 "linked history",
                 History.gene_hgnc_release_present(),
             )
+            errors += value_check_wrapper(
+                post_run_history[i].user, "linked history user", self.user
+            )
 
         errors = "; ".join(errors)
         assert not errors, errors

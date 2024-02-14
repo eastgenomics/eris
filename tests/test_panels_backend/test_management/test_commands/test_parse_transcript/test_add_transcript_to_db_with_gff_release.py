@@ -87,7 +87,9 @@ class TestAddTranscriptWithGff_NewTranscript(TestCase):
         err += value_check_wrapper(
             history[0].note, "tx-release note", History.tx_gff_release_new()
         )
-        err += value_check_wrapper(history[0].user.username, "history username", self.user.username)
+        err += value_check_wrapper(
+            history[0].user.username, "history username", self.user.username
+        )
 
         errors = "; ".join(err)
         assert not errors, errors
@@ -169,7 +171,9 @@ class TestAddTranscriptWithGff_ExistingTranscripts(TestCase):
             "tx-release note",
             History.tx_gff_release_present(),
         )
-        err += value_check_wrapper(history[0].user.username, "history username", self.user.username)
+        err += value_check_wrapper(
+            history[0].user.username, "history username", self.user.username
+        )
 
         errors = "; ".join(err)
         assert not errors, errors

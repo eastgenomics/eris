@@ -243,7 +243,11 @@ class TestInsertGene_NewGene(TestCase):
         errors += value_check_wrapper(
             new_history.user, "user", self.user_logged_in
         )
-        errors += value_check_wrapper(panel_gene_history[0].user.username, "history username", self.user_logged_in.username)
+        errors += value_check_wrapper(
+            panel_gene_history[0].user.username,
+            "history username",
+            self.user_logged_in.username,
+        )
 
         assert not errors, errors
 
@@ -302,7 +306,9 @@ class TestInsertGene_NewGene(TestCase):
         # check 1 history entry
         new_history = PanelGeneHistory.objects.all()
         errors += len_check_wrapper(new_history, "history record", 1)
-        errors += value_check_wrapper(new_history[0].user, "history user", self.user_cli)
+        errors += value_check_wrapper(
+            new_history[0].user, "history user", self.user_cli
+        )
 
         assert not errors, errors
 
@@ -364,7 +370,11 @@ class TestInsertGene_NewGene(TestCase):
         errors += len_check_wrapper(
             new_history, "history record", 1
         )  # assert that history is created for one panel-gene link created
-        errors += value_check_wrapper(new_history[0].user.username, "history username", self.user_logged_in.username)
+        errors += value_check_wrapper(
+            new_history[0].user.username,
+            "history username",
+            self.user_logged_in.username,
+        )
 
         assert not errors, errors
 
@@ -612,6 +622,9 @@ class TestAdditionOfGeneToExistingPanelGene(TestCase):
             "recorded panel-gene history",
             panel_genes[1],
         )
+        errors += value_check_wrapper(
+            panel_gene_history[0].user, "history user", None
+        )
 
         assert not errors, errors
 
@@ -751,6 +764,10 @@ class TestDropInPanelGeneConfidence(TestCase):
         errors += len_check_wrapper(
             PanelGeneHistory.objects.all(), "history record", 1
         )  # there should only be one history record
+
+        errors += value_check_wrapper(
+            PanelGeneHistory.objects.all()[0].user, "history user", None
+        )
 
         errors += value_check_wrapper(
             PanelGeneHistory.objects.get(panel_gene_id=panel_gene_2.id).note,

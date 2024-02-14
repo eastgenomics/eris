@@ -118,6 +118,11 @@ class TestMakePanelsFromHgncs(TestCase):
             "clinical indication-panel history",
             1,
         )  # there should be one record of clinical indication-panel history
+        errors += value_check_wrapper(
+            ClinicalIndicationPanelHistory.objects.all()[0].user,
+            "history username",
+            self.user,
+        )
 
         genes = Gene.objects.all()
 

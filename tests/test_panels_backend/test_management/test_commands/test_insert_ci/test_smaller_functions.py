@@ -154,7 +154,11 @@ class TestFlagClinicalIndicationPanelForReview(TestCase):
         assert (
             ClinicalIndicationPanelHistory.objects.count() == 1
         )  # one history recorded
-        assert ClinicalIndicationPanelHistory.objects.all()[0].user.username == "test"
+        assert (
+            ClinicalIndicationPanelHistory.objects.all()[0].user.username
+            == "test"
+        )
+
 
 class TestFlagClinicalIndicationSuperpanelForReview(TestCase):
     """
@@ -201,7 +205,10 @@ class TestFlagClinicalIndicationSuperpanelForReview(TestCase):
         assert (
             ClinicalIndicationSuperPanelHistory.objects.count() == 1
         )  # one history recorded
-        assert ClinicalIndicationSuperPanelHistory.objects.all()[0].user.username == "test"
+        assert (
+            ClinicalIndicationSuperPanelHistory.objects.all()[0].user.username
+            == "test"
+        )
 
 
 class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
@@ -475,6 +482,9 @@ class TestMakeProvisionalTestMethodChange(TestCase):
 
         assert (
             ClinicalIndicationTestMethodHistory.objects.count() == 1
-        )  # one history 
+        )  # one history
 
-        assert ClinicalIndicationTestMethodHistory.objects.all()[0].user.username == self.user.username
+        assert (
+            ClinicalIndicationTestMethodHistory.objects.all()[0].user.username
+            == self.user.username
+        )

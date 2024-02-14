@@ -90,6 +90,10 @@ class TestMakeCiSuperpanelTdLink_NewCip(TestCase):
                     cip_td[0].td_release.release
                 ),
             )
+            self.assertEqual(
+                cip_td_hist[0].user,
+                self.user,
+            )
 
 
 class TestMakeCiPanelTdLink_ExistingCip(TestCase):
