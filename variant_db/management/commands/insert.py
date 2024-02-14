@@ -4,7 +4,7 @@ from django.db import models, transaction
 from functools import wraps
 from variant_db.models import *
 from panels_backend.models import ReferenceGenome, Panel
-from typing import Dict
+from typing import Callable, TypeVar, ParamSpec
 import logging
 
 # CONSTANTS
@@ -65,7 +65,7 @@ ACGS_COLUMNS = [
 
 
 @transaction.atomic
-def insert_row(row_dict: Dict[str, str | int]) -> None:
+def insert_row(row_dict: dict[str, str | int]) -> None:
     """
     Inserts a single row of data into VariantDB
 
@@ -178,32 +178,47 @@ def insert_row(row_dict: Dict[str, str | int]) -> None:
     _insert_into_table.created = []
 
 
-def _subset_row(row: Dict[str, str | int], *desired_keys) -> Dict[str, str | int]:
+def _subset_row(row: dict[str, str | int], *desired_keys) -> dict[str, str | int]:
     """
     Subsets a dict given a set of desired keys
     """
     return {k: row[k] for k in desired_keys}
 
+# See docstring in `keep_count_of_truth` for why these are here
+T = TypeVar('T')
+P = ParamSpec('P')
 
-def keep_count_of_truth(f):
+def store_bools(func: Callable[P, T]) -> Callable[P, T]:
     """
+    This is a decorator that takes a function that returns a `model.Model` and a `bool`, 
+    and appends the `bool` in a `list` every time it's called. The `bool` objects are 
+    stored in an internal attribute (`wrapped.created`). 
+
+    The type hints for this decorator are misleading, because it only takes
+    functions that return a `model.Model` and a `bool` (i.e. `_insert_into_row`).
+    However, if we were to do this "properly", the resulting type hint would be 
+    horrible to write and would actually work against readability.
+    The use of `ParamSpec` and `TypeVar` are a suggested convention for
+    annotating decorator call signatures (see https://typing.readthedocs.io/en/latest/spec/generics.html#paramspec)
+
     Please note: @wraps is being used to preserve the decorated function's
-    metadata. If we didn't use @wraps(f), then the name, docs and so on
-    of `f` would change to `keep_count_of_truth`. This is never what we
-    want.
-    """
+    metadata. If we didn't use @wraps(func), then the name, docs and so on
+    of `func` would change to `store_bools`, instead of whatever's being
+    passed in. This is never what we want.
 
-    @wraps(f)
-    def counted_func(*args, **kwargs):
-        inst, created = f(*args, **kwargs)
-        counted_func.created.append(created)
+    :param func: Any function that returns `(models.Model, bool)`
+    """
+    @wraps(func)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> models.Model:
+        inst, created = func(*args, **kwargs)
+        wrapper.created.append(created)
         return inst
 
-    counted_func.created = []
-    return counted_func
+    wrapper.created = []
+    return wrapper
 
 
-@keep_count_of_truth
+@store_bools
 def _insert_into_table(
     model_class: models.Model, names_to: dict = None, **kwargs
 ) -> models.Model:
@@ -223,8 +238,8 @@ def _insert_into_table(
 
 
 def _rename_key(
-    dict_obj: Dict[str, str | int], old_name=str, new_name=str
-) -> Dict[str, str | int]:
+    dict_obj: dict[str, str | int], old_name=str, new_name=str
+) -> dict[str, str | int]:
     """
     Rename a dict key
     """
