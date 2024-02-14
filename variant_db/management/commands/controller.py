@@ -1,7 +1,6 @@
 import logging
 import pandas as pd
 from django.db import transaction
-from .insert import *
 from .workbook import read_workbook
 from .insert import insert_row
 
