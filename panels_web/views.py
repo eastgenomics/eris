@@ -765,6 +765,7 @@ def history(request: HttpRequest) -> HttpResponse:
                         "created",
                         "note",
                         "user",
+                        "user__username",
                         "clinical_indication_panel_id__clinical_indication_id__name",
                         "clinical_indication_panel_id__clinical_indication_id__r_code",
                         "clinical_indication_panel_id__panel_id__panel_name",
@@ -1048,8 +1049,8 @@ def review(request: HttpRequest) -> HttpResponse:
                         "active",
                         not panel_gene.active,
                         panel_gene.active,
-                        user=request.user,
                     ),
+                    user=request.user,
                 )
 
         elif action == "revert_pg":
@@ -1076,8 +1077,8 @@ def review(request: HttpRequest) -> HttpResponse:
                         "active",
                         panel_gene.active,
                         not panel_gene.active,
-                        user=request.user,
                     ),
+                    user=request.user,
                 )
 
                 panel_gene.active = not panel_gene.active
@@ -1287,6 +1288,8 @@ def _add_panel_genes_to_genepanel(
 
         panel_id_to_genes[panel_id].append(WebGene(gene_id, hgnc_id))
 
+        print(panel_id_to_genes[panel_id])
+
         genepanel.hgncs.append(WebGene(gene_id, hgnc_id))
 
 
@@ -1365,7 +1368,6 @@ def genepanel(
             else None,
             [],
         )
-
         _add_panel_genes_to_genepanel(panel_id, panel_id_to_genes, genepanel)
 
         genepanels.append(genepanel)
