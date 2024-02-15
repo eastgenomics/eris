@@ -84,9 +84,6 @@ def flag_clinical_indication_panel_for_review(
         note=History.flag_clinical_indication_panel(
             "new clinical indication provided"
         ),
-        note=History.flag_clinical_indication_panel(
-            "new clinical indication provided"
-        ),
         user=user,
     )
 
