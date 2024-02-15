@@ -1,9 +1,5 @@
 from django.db import models
-from panels_backend.models import (
-    Panel,
-    ReferenceGenome,
-    Chromosome
-)
+from panels_backend.models import Panel, ReferenceGenome, Chromosome
 
 
 class Sample(models.Model):
@@ -490,4 +486,3 @@ class AcgsCategoryInformation(models.Model):
 
     def __str__(self):
         return str(self.id)
-

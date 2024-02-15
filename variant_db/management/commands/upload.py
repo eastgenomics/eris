@@ -1,25 +1,12 @@
 """
 python manage.py upload --help
 """
-import logging
+import pathlib
+from pathlib import Path
 import pandas as pd
 
-from django.db import DatabaseError
 from django.core.management.base import BaseCommand
-from .controller import upload
-
-# log to both "log.txt" and STDOUT/ERR
-logging.basicConfig(
-    datefmt="%Y-%m-%d %H:%M",
-    level=logging.INFO,
-    filemode="a",
-    filename="log.txt",
-    format="%(asctime)s %(name)-12s %(levelname)-8s %(message)s",
-)
-console = logging.StreamHandler()
-formatter = logging.Formatter("%(name)-12s: %(levelname)-8s %(message)s")
-console.setFormatter(formatter)
-logging.getLogger("").addHandler(console)
+from .populate_db_from_files import var_db_upload_controller
 
 
 class Command(BaseCommand):
@@ -34,52 +21,76 @@ class Command(BaseCommand):
         )
         subparsers = parser.add_subparsers(dest="command")
 
-        # python manage.py upload variants
         variants = subparsers.add_parser(
             "variants", help="seed variant results files"
         )
         variants.add_argument(
-            "-w",
-            "--workbooks",
+            "directory_path",
             type=str,
-            nargs="+",
-            required=True,
-            help="One or more filepaths to variant workbook files",
+            help="Path to a directory containing variants to upload to Eris database",
         )
 
-    def handle(self, *args, **options) -> None:
+    def _validate_path(self, directory: str) -> Path:
+        """
+        Convert the directory to a Pathlib path.
+        Throw errors and exit if the path doesn't exist, isn't a directory, or is empty.
+        Return the path if it passes.
+
+        :param self:
+        :param directory: string containing directory path
+        :return: Pathlib Path object
+        """
+        path = Path(directory)
+        if not path.exists() or not path.is_dir():
+            print(
+                "Directory path doesn't exist, or isn't a real directory - please check and try again"
+            )
+            exit(1)
+        if not any(path.iterdir()):
+            print(
+                "The provided directory is empty - please provide a directory path which contains data"
+            )
+            exit(1)
+        else:
+            return path
+
+    def _basic_file_validity_check(
+        self, file: pathlib.PosixPath
+    ) -> pd.DataFrame:
+        """
+        Check that the file has a sensible name, is parsable to a DataFrame, and
+        includes the expected columns.
+
+        :param: file, a pathlib.PosixPath found inside a directory
+        :returns: file_table, a Pandas Dataframe containing the file's full contents
+        """
+        # TODO: check the filename is 'as expected' and the file isn't too big
+        # TODO: may want to enforce 'expected' names of files and columns from the workbook parser
+        df = pd.read_csv(file, delimiter=",")
+        return df
+
+    def handle(self, *args, **kwargs) -> None:
         """
         Handles the command line interface for the variant_db app.
-        Currently the only command is: 'python manage.py upload variants --workbooks=*.csv',
-        which lets the user start variant upload of variant-containing files.
+        Currently the only command is: 'python manage.py upload variants <path_to_directory>',
+         which lets the user start variant upload of variant-containing files from a specified directory.
         """
-        if options["command"] == "variants":
-            for workbook in options["workbooks"]:
-                logging.info(f"Workbook {workbook}: attempting upload")
-                try:
-                    upload(workbook)
-                except DatabaseError as e:
-                    logging.error(
-                        f"Workbook {workbook}:\n\
-                                  Exception raised: {e}.\n\
-                                  Rolling back transactions and continuing to next workbook"
-                    )
-                    continue
-                except KeyError as e:
-                    logging.error(
-                        f"Workbook: {workbook}\n\
-                                  Exception raised: {e}\n\
-                                  It is likely that your headers don't conform to the specs. Please seek advice from a bioinformatics manager\n\
-                                  Rolling back transactions and continuing to next workbook"
-                    )
-                    continue
-                except ValueError as e:
-                    logging.error(
-                        f"Workbook: {workbook}\nException raised: {e}\n\
-                                  It is likely that a value(s) are an invalid type. Please seek advice from a bioinformatics manager\n\
-                                  Rolling back transactions and moving to next workbook"
-                    )
-                    continue
-            logging.info("All done")
-        else:
-            exit(1)
+
+        command: str = kwargs.get("command")
+        assert command, "Please specify command: variants"
+
+        if command == "variants":
+            # Get directory path, and then find any files contained in it or its sub-directories
+            directory: str = kwargs.get("directory_path")
+            path = self._validate_path(directory)
+            p = path.glob("**/*")
+            files = [x for x in p if x.is_file()]
+
+            # Work through each file, convert to Pandas DataFrame if valid. Quit out and/or print errors if something is wrong.
+            parsed_files = []
+            for file in files:
+                # TODO: add function to parse all file contents, and add to parsed_files
+                parsed_files.append(self._basic_file_validity_check(file))
+
+            # Call the 'main' function which will handle data entry to the database
+            var_db_upload_controller(parsed_files)

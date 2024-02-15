@@ -40,7 +40,9 @@ class ReferenceGenome(models.Model):
 class Chromosome(models.Model):
     """Defines chromosomes"""
 
-    panelapp_name = models.CharField(verbose_name="Name in PanelApp", max_length=255)
+    panelapp_name = models.CharField(
+        verbose_name="Name in PanelApp", max_length=255
+    )
 
     class Meta:
         db_table = "chromosome"
