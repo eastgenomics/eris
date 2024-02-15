@@ -139,6 +139,7 @@ class Command(BaseCommand):
         )
 
         if action == "activate":
+            # TODO: what about superpanels?
             activate_clinical_indication_panel(
                 clinical_indication.id, panel.id, user=None
             )
