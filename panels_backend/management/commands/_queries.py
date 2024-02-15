@@ -2,7 +2,6 @@
 All function used by edit.py
 """
 from panels_backend.models import (
-    Panel,
     ClinicalIndicationPanel,
     ClinicalIndicationPanelHistory,
 )
@@ -21,7 +20,7 @@ def activate_clinical_indication_panel(
     """
     Fetch ci-panel and make it active.
     If it doesn't exist, create it.
-    If it already active, do nothing.
+    If it's already active, do nothing.
 
     :param clinical_indication_id: clinical indication database id
     :param panel_id: panel database id

@@ -12,6 +12,65 @@ from ._queries import (
 from django.core.management.base import BaseCommand
 
 
+def get_ci_from_r_code_or_id(ci_r_code: str, ci_id: str) -> ClinicalIndication:
+    """
+    Finds the correct clinical indication, based on user-provided R code or ID.
+    Handles logic for ambiguous R codes and raises errors if a matching entry doesn't exist.
+    """
+    if ci_r_code:
+        clinical_indication = ClinicalIndication.objects.filter(
+            r_code__iexact=ci_r_code
+        )
+
+        # foresee r-code might return multiple ci entries
+        assert len(clinical_indication) < 2, (
+            f"More than one clinical indication identified with r-code {ci_r_code}."
+            "Use clinical indication database id instead to be more specific."
+        )
+        clinical_indication = clinical_indication[0]
+        assert clinical_indication, "No clinical indication found."
+
+    else:
+        try:
+            clinical_indication = ClinicalIndication.objects.get(id=ci_id)
+        except ClinicalIndication.DoesNotExist:
+            raise ClinicalIndication.DoesNotExist(
+                "The clinical indication {clinical_indication} was not found in the database"
+            )
+
+    return clinical_indication
+
+
+def get_panel_from_id_or_name(panel_id: str, panel_name: str) -> Panel:
+    """
+    Finds the correct panel, based on user-provided ID or name of panel.
+    Handles logic for ambiguous panel names, and raises errors if a matching entry doesn't exist.
+    """
+    if panel_id:
+        try:
+            panel = Panel.objects.get(id=panel_id)
+        except Panel.DoesNotExist:
+            raise Panel.DoesNotExist(
+                f"The panel {panel_id} was not found in the database"
+            )
+    else:
+        try:
+            panel = Panel.objects.filter(panel_name__iexact=panel_name)
+        except Panel.DoesNotExist:
+            raise Panel.DoesNotExist(
+                "The panel {panel_name} was not found in the database"
+            )
+
+        # more than one panel with same name found
+        assert len(panel) < 2, (
+            f"More than one {panel_name} identified."
+            "Use python manage.py edit [--cid/--rcode] <ci> pid <panel-id> <add/remove> instead."
+        )
+        panel = panel[0]
+
+    return panel
+
+
 class Command(BaseCommand):
     help = "Commands to let the user edit the database from the command line."
 
@@ -74,43 +133,10 @@ class Command(BaseCommand):
             action
         ), "Please specify whether you want to add or remove the clinical indication for this panel"
 
-        if panel_id:
-            try:
-                panel = Panel.objects.get(id=panel_id)
-            except Panel.DoesNotExist:
-                raise Panel.DoesNotExist(f"The panel {panel_id} was not found in the database")
-        else:
-            try:
-                panel = Panel.objects.filter(panel_name__iexact=panel_name)
-            except Panel.DoesNotExist:
-                raise Panel.DoesNotExist("The panel {panel_name} was not found in the database")
-
-        # more than one panel with same name found with the database id
-        assert len(panel) < 2, (
-            f"More than one {panel_name} identified."
-            "Use python manage.py edit [--cid/--rcode] <ci> pid <panel-id> <add/remove> instead."
+        panel = get_panel_from_id_or_name(panel_id, panel_name)
+        clinical_indication = get_ci_from_r_code_or_id(
+            clinical_indication_r_code, clinical_indication_id
         )
-
-        panel = panel[0]
-
-        if clinical_indication_r_code:
-            clinical_indication = ClinicalIndication.objects.filter(r_code__iexact=clinical_indication_r_code)
-
-            # foresee r-code might return multiple ci entries
-            assert len(clinical_indication) < 2, (
-                f"More than one clinical indication identified with r-code {clinical_indication_r_code}."
-                "Use clinical indication database id instead to be more specific."
-            )
-
-            clinical_indication = clinical_indication[0]
-
-        else:
-            try:
-                clinical_indication = ClinicalIndication.objects.get(id=id)
-            except ClinicalIndication.DoesNotExist:
-                clinical_indication = None
-
-        assert clinical_indication, "No clinical indication found."
 
         if action == "activate":
             activate_clinical_indication_panel(
