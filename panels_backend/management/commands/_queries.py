@@ -101,9 +101,6 @@ def activate_clinical_indication_panel(
             print(
                 f"Clinical indication panel {cip_instance.id} link set to active!"
             )
-            print(
-                f"Clinical indication panel {cip_instance.id} link set to active!"
-            )
 
     except ClinicalIndicationPanel.DoesNotExist:
         # if ci-panel link doesn't exist, create it
