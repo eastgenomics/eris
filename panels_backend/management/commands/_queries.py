@@ -3,7 +3,6 @@ All function used by edit.py
 """
 from panels_backend.models import (
     Panel,
-    ClinicalIndication,
     ClinicalIndicationPanel,
     ClinicalIndicationPanelHistory,
 )
@@ -11,56 +10,6 @@ from panels_backend.models import (
 from django.db.models import QuerySet
 from django.db import transaction
 from django.http import HttpRequest
-
-
-def get_panel_by_database_id(panel_id: str) -> Panel | None:
-    """
-    Get panel from database
-
-    :param panel_id: panel DATABASE id
-    """
-    try:
-        return Panel.objects.get(id=panel_id)
-    except Panel.DoesNotExist:
-        return None
-
-
-def get_panel_by_name(panel_name: str) -> QuerySet[Panel] | None:
-    """
-    Get panel from database by name
-
-    :param panel_name: panel name
-    """
-
-    try:
-        return Panel.objects.filter(panel_name__iexact=panel_name)
-    except Panel.DoesNotExist:
-        return None
-
-
-def get_clinical_indication_by_r_code(
-    r_code: str,
-) -> QuerySet[ClinicalIndication]:
-    """
-    Get clinical indication by its R code
-
-    :param r_code: clinical indication R code
-    """
-    return ClinicalIndication.objects.filter(r_code__iexact=r_code)
-
-
-def get_clinical_indication_by_database_id(
-    id: str,
-) -> ClinicalIndication | None:
-    """
-    Get clinical indication by database id
-
-    :param id: clinical indication database id
-    """
-    try:
-        return ClinicalIndication.objects.get(id=id)
-    except ClinicalIndication.DoesNotExist:
-        return None
 
 
 @transaction.atomic

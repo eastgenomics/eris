@@ -4,11 +4,8 @@ python manage.py edit --panel_id 26 --clinical_indication_id 1 activate
 python manage.py edit --clinical_indication_r_code R67.1 --panel_id 26 activate
 python maange.py edit --clinical_indication_id 260 panel_name "Stickler Syndrome" deactivate (case insensitive)
 """
+from models import ClinicalIndication, Panel
 from ._queries import (
-    get_panel_by_database_id,
-    get_panel_by_name,
-    get_clinical_indication_by_r_code,
-    get_clinical_indication_by_database_id,
     activate_clinical_indication_panel,
     deactivate_clinical_indication_panel,
 )
@@ -78,29 +75,26 @@ class Command(BaseCommand):
         ), "Please specify whether you want to add or remove the clinical indication for this panel"
 
         if panel_id:
-            panel = get_panel_by_database_id(panel_id)
-
-            assert panel, f"The panel {panel_id} was not found in the database"
+            try:
+                panel = Panel.objects.get(id=panel_id)
+            except Panel.DoesNotExist:
+                raise Panel.DoesNotExist(f"The panel {panel_id} was not found in the database")
         else:
-            panel = get_panel_by_name(panel_name)
+            try:
+                panel = Panel.objects.filter(panel_name__iexact=panel_name)
+            except Panel.DoesNotExist:
+                raise Panel.DoesNotExist("The panel {panel_name} was not found in the database")
 
-            # no panel found with the database id
-            assert (
-                panel
-            ), f"The panel {panel_name} was not found in the database"
+        # more than one panel with same name found with the database id
+        assert len(panel) < 2, (
+            f"More than one {panel_name} identified."
+            "Use python manage.py edit [--cid/--rcode] <ci> pid <panel-id> <add/remove> instead."
+        )
 
-            # more than one panel with same name found with the database id
-            assert len(panel) < 2, (
-                f"More than one {panel_name} identified."
-                "Use python manage.py edit [--cid/--rcode] <ci> pid <panel-id> <add/remove> instead."
-            )
-
-            panel = panel[0]
+        panel = panel[0]
 
         if clinical_indication_r_code:
-            clinical_indication = get_clinical_indication_by_r_code(
-                clinical_indication_r_code
-            )
+            clinical_indication = ClinicalIndication.objects.filter(r_code__iexact=clinical_indication_r_code)
 
             # foresee r-code might return multiple ci entries
             assert len(clinical_indication) < 2, (
@@ -111,9 +105,10 @@ class Command(BaseCommand):
             clinical_indication = clinical_indication[0]
 
         else:
-            clinical_indication = get_clinical_indication_by_database_id(
-                clinical_indication_id
-            )
+            try:
+                clinical_indication = ClinicalIndication.objects.get(id=id)
+            except ClinicalIndication.DoesNotExist:
+                clinical_indication = None
 
         assert clinical_indication, "No clinical indication found."
 
