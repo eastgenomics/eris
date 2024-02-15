@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.contrib.auth.models import User
 
 from panels_backend.management.commands.history import History
 from panels_backend.management.commands._parse_transcript import (
@@ -24,7 +25,7 @@ class TestLinkMade_GeneUnchanged(TestCase):
     """
 
     def setUp(self) -> None:
-        self.user = "init_v1_user"
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
         self.new_hgnc_release = HgncRelease.objects.create(release="version2")
 
@@ -83,6 +84,9 @@ class TestLinkMade_GeneUnchanged(TestCase):
                 "linked history",
                 History.gene_hgnc_release_present(),
             )
+            errors += value_check_wrapper(
+                post_run_history[i].user, "linked history user", self.user
+            )
 
         errors = "; ".join(errors)
         assert not errors, errors
@@ -96,7 +100,7 @@ class TestLinkAlreadyExists(TestCase):
     """
 
     def setUp(self) -> None:
-        self.user = "init_v1_user"
+        self.user = None
 
         self.new_hgnc_release = HgncRelease.objects.create(release="version2")
 

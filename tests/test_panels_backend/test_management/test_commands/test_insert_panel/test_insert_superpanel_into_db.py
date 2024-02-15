@@ -10,6 +10,8 @@ superpanel name or version change in PanelApp API
 """
 
 from django.test import TestCase
+from django.contrib.auth.models import User
+
 from panels_backend.management.commands.panelapp import SuperPanelClass
 from panels_backend.models import (
     Panel,
@@ -54,6 +56,8 @@ class TestInsertNewSuperpanelIntoDb(TestCase):
             test_method="Test method",
         )
 
+        self.user = User.objects.create_user(username="test", is_staff=True)
+
     def test_that_a_new_superpanel_is_made(
         self,
     ):
@@ -75,7 +79,7 @@ class TestInsertNewSuperpanelIntoDb(TestCase):
 
         child_panels = [self.child_one, self.child_two]
 
-        _insert_superpanel_into_db(superpanel, child_panels, "PanelApp")
+        _insert_superpanel_into_db(superpanel, child_panels, self.user)
 
         # look at db changes
         superpanel = SuperPanel.objects.all()
@@ -188,13 +192,15 @@ class TestInsertSuperpanelVersionChange(TestCase):
         )
 
         _insert_superpanel_into_db(
-            new_superpanel, self.child_panels, "PanelApp"
+            new_superpanel, self.child_panels, user=None
         )
 
         # check what's in the db now
         ci_superpanels = ClinicalIndicationSuperPanel.objects.all()
         superpanels = SuperPanel.objects.all()
-        ci_superpanels_history = ClinicalIndicationSuperPanel.objects.all()
+        ci_superpanels_history = (
+            ClinicalIndicationSuperPanelHistory.objects.all()
+        )
 
         errors += len_check_wrapper(
             ci_superpanels, "clinical indication-panel", 2
@@ -202,6 +208,10 @@ class TestInsertSuperpanelVersionChange(TestCase):
         errors += len_check_wrapper(superpanels, "superpanels", 2)
         errors += len_check_wrapper(
             ci_superpanels_history, "ci-superpanel history", 2
+        )
+
+        errors += value_check_wrapper(
+            ci_superpanels_history[0].user, "history user", None
         )
 
         errors += value_check_wrapper(
@@ -314,9 +324,7 @@ class TestInsertSuperpanelNameChange(TestCase):
             regions=[],
         )
 
-        _insert_superpanel_into_db(
-            superpanel_input, self.child_panels, "PanelApp"
-        )
+        _insert_superpanel_into_db(superpanel_input, self.child_panels, None)
 
         ci_superpanels = ClinicalIndicationSuperPanel.objects.all()
         superpanels = SuperPanel.objects.all()

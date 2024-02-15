@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.contrib.auth.models import User
 
 from panels_backend.management.commands.history import History
 from panels_backend.models import (
@@ -44,7 +45,7 @@ class TestMakeCiSuperpanelTdLink_NewCip(TestCase):
             td_date="20220405",
         )
 
-        self.user = "test_user"
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
     def test_superpanel_ci_and_td_link_made(self):
         """
@@ -77,6 +78,7 @@ class TestMakeCiSuperpanelTdLink_NewCip(TestCase):
                 cip_hist[0].note,
                 History.clinical_indication_superpanel_created(),
             )
+            assert cip_hist[0].user.username == "test"
 
         # check cip-td  history logs
         with self.subTest():
@@ -87,6 +89,10 @@ class TestMakeCiSuperpanelTdLink_NewCip(TestCase):
                 History.td_superpanel_ci_autolink(
                     cip_td[0].td_release.release
                 ),
+            )
+            self.assertEqual(
+                cip_td_hist[0].user,
+                self.user,
             )
 
 
@@ -119,7 +125,7 @@ class TestMakeCiPanelTdLink_ExistingCip(TestCase):
             td_date="20220405",
         )
 
-        self.user = "test_user"
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
         self.cip = ClinicalIndicationSuperPanel.objects.create(
             superpanel=self.panel, clinical_indication=self.ci, current=True
@@ -157,3 +163,4 @@ class TestMakeCiPanelTdLink_ExistingCip(TestCase):
                     cip_td[0].td_release.release,
                 ),
             )
+            assert hist[0].user.username == "test"

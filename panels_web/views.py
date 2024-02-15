@@ -16,6 +16,9 @@ from django.http import JsonResponse
 from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.db.models import QuerySet, Q, F
 from django.db import transaction
+from django.contrib.auth.views import LoginView
+from django.contrib.auth.decorators import permission_required
+
 
 from .forms import ClinicalIndicationForm, PanelForm, GeneForm
 from .utils.utils import WebChildPanel, WebGene, WebGenePanel
@@ -191,6 +194,20 @@ def index(request: HttpRequest) -> HttpResponse:
             "transcript_sources": transcript_sources,
         },
     )
+
+
+def login(request: HttpRequest):
+    """
+    Allows logging in
+    """
+    return render(request, "accounts/login.html")
+
+
+def logout(request: HttpRequest):
+    """
+    Allows logging out
+    """
+    return render(request, "accounts/logout.html")
 
 
 def panel(request: HttpRequest, panel_id: int) -> HttpResponse:
@@ -419,12 +436,12 @@ def clinical_indication(request: HttpRequest, ci_id: int) -> HttpResponse:
 
                     ClinicalIndicationTestMethodHistory.objects.create(
                         clinical_indication_id=ci_id,
-                        user="online",
                         note=History.clinical_indication_metadata_changed(
                             "test_method",
                             ci.test_method,
                             previous_test_method,
                         ),
+                        user=request.user,
                     )
 
                     ci.pending = False
@@ -434,6 +451,7 @@ def clinical_indication(request: HttpRequest, ci_id: int) -> HttpResponse:
             return redirect("review")
 
 
+@permission_required("staff", raise_exception=False)
 def add_clinical_indication(request: HttpRequest) -> HttpResponse:
     """
     Add clinical indication page
@@ -491,6 +509,7 @@ def add_clinical_indication(request: HttpRequest) -> HttpResponse:
             )
 
 
+@permission_required("staff", raise_exception=False)
 def add_panel(request: HttpRequest) -> HttpResponse:
     """
     Add panel page
@@ -552,7 +571,7 @@ def add_panel(request: HttpRequest) -> HttpResponse:
                         PanelGeneHistory.objects.create(
                             panel_gene_id=pg_instance.id,
                             note=History.panel_gene_created(),
-                            user="online",
+                            user=request.user,
                         )
 
             return redirect("panel", panel_id=panel.id)
@@ -574,6 +593,7 @@ def add_panel(request: HttpRequest) -> HttpResponse:
         )
 
 
+@permission_required("staff", raise_exception=False)
 def add_ci_panel(request: HttpRequest) -> HttpResponse:
     """
     Add clinical indication panel page
@@ -632,6 +652,7 @@ def add_ci_panel(request: HttpRequest) -> HttpResponse:
             ClinicalIndicationPanelHistory.objects.create(
                 clinical_indication_panel_id=cip_instance.id,
                 note=History.clinical_indication_panel_created(),
+                user=request.user,
             )
 
         return redirect(
@@ -655,6 +676,7 @@ def _get_clinical_indication_panel_history() -> QuerySet:
             "created",
             "note",
             "user",
+            "user__username",
             "clinical_indication_panel_id__clinical_indication_id__name",
             "clinical_indication_panel_id__clinical_indication_id__r_code",
             "clinical_indication_panel_id__panel_id__panel_name",
@@ -743,6 +765,7 @@ def history(request: HttpRequest) -> HttpResponse:
                         "created",
                         "note",
                         "user",
+                        "user__username",
                         "clinical_indication_panel_id__clinical_indication_id__name",
                         "clinical_indication_panel_id__clinical_indication_id__r_code",
                         "clinical_indication_panel_id__panel_id__panel_name",
@@ -778,6 +801,7 @@ def history(request: HttpRequest) -> HttpResponse:
                 "created",
                 "note",
                 "user",
+                "user__username",
                 "panel_gene_id__panel_id__panel_name",
                 "panel_gene_id__panel_id",
                 "panel_gene_id__gene_id",
@@ -851,6 +875,7 @@ def clinical_indication_panel(
                         note=History.clinical_indication_panel_activated(
                             cip_id, True
                         ),
+                        user=request.user,
                     )
                 elif action == "deactivate":
                     clinical_indication_panel.current = False
@@ -859,6 +884,7 @@ def clinical_indication_panel(
                         note=History.clinical_indication_panel_deactivated(
                             cip_id, True
                         ),
+                        user=request.user,
                     )
                 clinical_indication_panel.pending = (
                     True  # require manual review
@@ -878,6 +904,7 @@ def clinical_indication_panel(
                         new_value=not clinical_indication_panel.current,
                         review=True,
                     ),
+                    user=request.user,
                 )
             else:
                 # action is "approve" from Review page
@@ -885,6 +912,7 @@ def clinical_indication_panel(
                 ClinicalIndicationPanelHistory.objects.create(
                     clinical_indication_panel_id=cip_id,
                     note=History.clinical_indication_panel_approved(cip_id),
+                    user=request.user,
                 )
 
             clinical_indication_panel.save()
@@ -952,6 +980,7 @@ def clinical_indication_superpanel(
                         new_value=not clinical_indication_superpanel.current,
                         review=True,
                     ),
+                    user=request.user,
                 )
 
                 clinical_indication_superpanel.current = (
@@ -966,6 +995,7 @@ def clinical_indication_superpanel(
                     note=History.clinical_indication_superpanel_approved(
                         cisp_id
                     ),
+                    user=request.user,
                 )
 
             clinical_indication_superpanel.save()
@@ -973,6 +1003,7 @@ def clinical_indication_superpanel(
         return redirect("review")
 
 
+@permission_required("staff", raise_exception=False)
 def review(request: HttpRequest) -> HttpResponse:
     """
     Review / Pending page where user can view those links that are
@@ -1009,6 +1040,7 @@ def review(request: HttpRequest) -> HttpResponse:
                 PanelGeneHistory.objects.create(
                     panel_gene_id=panel_gene_id,
                     note=History.panel_gene_approved("manual review"),
+                    user=request.user,
                 )
 
                 PanelGeneHistory.objects.create(
@@ -1018,7 +1050,7 @@ def review(request: HttpRequest) -> HttpResponse:
                         not panel_gene.active,
                         panel_gene.active,
                     ),
-                    user="online",
+                    user=request.user,
                 )
 
         elif action == "revert_pg":
@@ -1036,6 +1068,7 @@ def review(request: HttpRequest) -> HttpResponse:
                 PanelGeneHistory.objects.create(
                     panel_gene_id=panel_gene_id,
                     note=History.panel_gene_reverted("manual review"),
+                    user=request.user,
                 )
 
                 PanelGeneHistory.objects.create(
@@ -1045,7 +1078,7 @@ def review(request: HttpRequest) -> HttpResponse:
                         panel_gene.active,
                         not panel_gene.active,
                     ),
-                    user="online",
+                    user=request.user,
                 )
 
                 panel_gene.active = not panel_gene.active
@@ -1231,6 +1264,7 @@ def _parse_excluded_hgncs_from_bytes(file: TemporaryUploadedFile) -> set[str]:
     return set(df["HGNC ID"].tolist())
 
 
+@permission_required("staff", raise_exception=False)
 def _add_panel_genes_to_genepanel(
     panel_id: str,
     panel_id_to_genes: dict[str, list[WebGene]],
@@ -1257,6 +1291,7 @@ def _add_panel_genes_to_genepanel(
         genepanel.hgncs.append(WebGene(gene_id, hgnc_id))
 
 
+@permission_required("staff", raise_exception=False)
 def genepanel(
     request: HttpRequest,
 ) -> HttpResponse:
@@ -1331,7 +1366,6 @@ def genepanel(
             else None,
             [],
         )
-
         _add_panel_genes_to_genepanel(panel_id, panel_id_to_genes, genepanel)
 
         genepanels.append(genepanel)
@@ -1523,6 +1557,7 @@ def genepanel(
     )
 
 
+@permission_required("staff", raise_exception=False)
 def add_gene(request: HttpRequest) -> HttpResponse:
     """
     url name "gene_add"
@@ -1685,6 +1720,21 @@ def ajax_gene_transcripts(
     )
 
 
+def genetranscriptsview(request: HttpRequest) -> HttpResponse:
+    """
+    Page where it display gene and their transcripts (clinical and non-clinical)
+
+    NOTE: this page only display the transcript from the latest TranscriptRelease
+    as in it will only display the gene and transcripts that are suppose to make it
+    into the g2t output file.
+
+    For transcript of different TranscriptRelease, this should be viewed under individual
+    gene page which is more detailed
+    """
+    return render(request, "web/info/genetranscriptsview.html")
+
+
+@permission_required("staff", raise_exception=False)
 def genetranscripts(request: HttpRequest) -> HttpResponse:
     """
     Page where it display gene and their transcripts (clinical and non-clinical)
@@ -1802,6 +1852,7 @@ def transcript_source(request: HttpRequest, ts_id: int) -> HttpResponse:
     )
 
 
+@permission_required("staff", raise_exception=False)
 def seed(request: HttpRequest) -> HttpResponse:
     """
     Handle seed page:
@@ -1826,6 +1877,7 @@ def seed(request: HttpRequest) -> HttpResponse:
                 test_directory_data,
                 td_version,
                 True if force_update else False,
+                request.user,
             )
 
             error = False

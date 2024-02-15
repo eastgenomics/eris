@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth import get_user_model
 
 
 class ReferenceGenome(models.Model):
@@ -31,6 +32,20 @@ class ReferenceGenome(models.Model):
 
     class Meta:
         db_table = "reference_genome"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class Chromosome(models.Model):
+    """Defines chromosomes"""
+
+    panelapp_name = models.CharField(
+        verbose_name="Name in PanelApp", max_length=255
+    )
+
+    class Meta:
+        db_table = "chromosome"
 
     def __str__(self):
         return str(self.id)
@@ -212,9 +227,11 @@ class TestDirectoryReleaseHistory(models.Model):
         verbose_name="note",
     )
 
-    user = models.TextField(
+    user = models.ForeignKey(
+        get_user_model(),
         verbose_name="user",
         null=True,
+        on_delete=models.PROTECT,
     )
 
     class Meta:
@@ -348,9 +365,11 @@ class ClinicalIndicationPanelHistory(models.Model):
         verbose_name="note",
     )
 
-    user = models.TextField(
+    user = models.ForeignKey(
+        get_user_model(),
         verbose_name="user",
         null=True,
+        on_delete=models.PROTECT,
     )
 
     class Meta:
@@ -378,9 +397,11 @@ class ClinicalIndicationSuperPanelHistory(models.Model):
         verbose_name="note",
     )
 
-    user = models.TextField(
+    user = models.ForeignKey(
+        get_user_model(),
         verbose_name="user",
         null=True,
+        on_delete=models.PROTECT,
     )
 
     class Meta:
@@ -438,10 +459,11 @@ class CiPanelTdReleaseHistory(models.Model):
         verbose_name="Note",
     )
 
-    user = models.TextField(
+    user = models.ForeignKey(
+        get_user_model(),
         verbose_name="user",
-        max_length=255,
         null=True,
+        on_delete=models.PROTECT,
     )
 
     class Meta:
@@ -499,9 +521,11 @@ class CiSuperpanelTdReleaseHistory(models.Model):
         verbose_name="Note",
     )
 
-    user = models.TextField(
+    user = models.ForeignKey(
+        get_user_model(),
         verbose_name="user",
         null=True,
+        on_delete=models.PROTECT,
     )
 
     class Meta:
@@ -526,9 +550,11 @@ class ClinicalIndicationTestMethodHistory(models.Model):
         verbose_name="Note",
     )
 
-    user = models.TextField(
+    user = models.ForeignKey(
+        get_user_model(),
         verbose_name="user",
         null=True,
+        on_delete=models.PROTECT,
     )
 
     class Meta:
@@ -697,9 +723,11 @@ class GeneHgncReleaseHistory(models.Model):
         verbose_name="Note",
     )
 
-    user = models.TextField(
+    user = models.ForeignKey(
+        get_user_model(),
         verbose_name="user",
         null=True,
+        on_delete=models.PROTECT,
     )
 
     class Meta:
@@ -961,9 +989,11 @@ class TranscriptGffReleaseHistory(models.Model):
 
     note = models.TextField(verbose_name="Note")
 
-    user = models.TextField(
+    user = models.ForeignKey(
+        get_user_model(),
         verbose_name="user",
         null=True,
+        on_delete=models.PROTECT,
     )
 
     class Meta:
@@ -1055,9 +1085,11 @@ class PanelGeneHistory(models.Model):
         verbose_name="Note",
     )
 
-    user = models.TextField(
+    user = models.ForeignKey(
+        get_user_model(),
         verbose_name="user",
         null=True,
+        on_delete=models.PROTECT,
     )
 
     class Meta:

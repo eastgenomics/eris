@@ -9,6 +9,8 @@ Tested scenario `insert_panel_data_into_db_function`
 """
 
 from django.test import TestCase
+from django.contrib.auth.models import User
+
 from panels_backend.management.commands.panelapp import PanelClass
 from panels_backend.models import (
     Panel,
@@ -47,6 +49,11 @@ class TestInsertDataIntoDB(TestCase):
             panel_id=self.first_panel.id,
             current=True,
         )
+
+        self.user_logged_in = User.objects.create_user(
+            username="test", is_staff=True
+        )
+        self.user_cli = None
 
     def test_that_a_new_panel_will_be_inserted_together_with_its_gene(
         self,
@@ -88,7 +95,7 @@ class TestInsertDataIntoDB(TestCase):
             ],
         )
 
-        _insert_panel_data_into_db(mock_api, "PanelApp")
+        _insert_panel_data_into_db(mock_api, self.user_cli)
 
         errors += len_check_wrapper(
             ClinicalIndicationPanel.objects.all(),
@@ -150,7 +157,7 @@ class TestInsertDataIntoDB(TestCase):
             regions=[],
         )
 
-        _insert_panel_data_into_db(mock_api, "PanelApp")
+        _insert_panel_data_into_db(mock_api, self.user_logged_in)
 
         errors += len_check_wrapper(
             ClinicalIndicationPanel.objects.all(),
@@ -218,7 +225,7 @@ class TestInsertDataIntoDB(TestCase):
             regions=[],
         )
 
-        _insert_panel_data_into_db(mock_api, "PanelApp")
+        _insert_panel_data_into_db(mock_api, self.user_cli)
 
         errors += len_check_wrapper(
             ClinicalIndicationPanel.objects.all(), "ClinicalIndicationPanel", 2
@@ -282,7 +289,7 @@ class TestInsertDataIntoDB(TestCase):
             regions=[],
         )
 
-        _insert_panel_data_into_db(mock_api, "PanelApp")
+        _insert_panel_data_into_db(mock_api, self.user_logged_in)
 
         errors += len_check_wrapper(
             Panel.objects.all(), "panel", 1
