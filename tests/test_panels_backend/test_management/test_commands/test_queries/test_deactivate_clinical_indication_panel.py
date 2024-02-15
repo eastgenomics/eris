@@ -7,14 +7,14 @@ from panels_backend.models import (
     ClinicalIndicationPanelHistory,
 )
 from panels_backend.management.commands._queries import (
-    activate_clinical_indication_panel,
+    deactivate_clinical_indication_panel,
 )
 
 
-class TestActivateCiPanel_AlreadyExists_Active(TestCase):
+class TestDeactivateCiPanel_AlreadyExists_Active(TestCase):
     """
     CASE: A CI-Panel already exists and is active
-    EXPECT: No change - CI-Panel remains in same state as before function call
+    EXPECT: CI-Panel entry is changed to current=False
     """
 
     def setUp(self) -> None:
@@ -36,24 +36,34 @@ class TestActivateCiPanel_AlreadyExists_Active(TestCase):
     def test_already_exists_active(self):
         """
         CASE: A CI-Panel already exists and is active
-        EXPECT: No change - CI-Panel remains in same state as before function call
+        EXPECT: CI-Panel entry is changed to current=False
         """
-        activate_clinical_indication_panel(self.ci.id, self.panel.id, None)
+        deactivate_clinical_indication_panel(self.ci.id, self.panel.id, None)
 
         # check that the only ci_panel entry is our originally-made one
         cips = ClinicalIndicationPanel.objects.all()
         assert len(cips) == 1
         self.assertEquals(cips[0], self.ci_panel)
 
-        # check that no new history data was made
-        cip_history = ClinicalIndicationPanelHistory.objects.all()
-        assert not len(cip_history)
+        # check that the ci_panel entry is now NOT current
+        with self.subTest():
+            assert not cips[0].current
+
+        # check that a new history row was made
+        with self.subTest():
+            cip_history = ClinicalIndicationPanelHistory.objects.all()
+            assert len(cip_history) == 1
+            assert cip_history[0].clinical_indication_panel == self.ci_panel
+            assert (
+                cip_history[0].note
+                == "Existing ci-panel link set to inactive by None"
+            )
 
 
-class TestActivateCiPanel_AlreadyExists_Inactive(TestCase):
+class TestDectivateCiPanel_AlreadyExists_Inactive(TestCase):
     """
-    CASE: A CI-Panel already exists BUT it is not active
-    EXPECT: CI-Panel becomes activated, and a history entry is made to say this
+    CASE: A CI-Panel already exists AND IS ALREADY inactive
+    EXPECT: CI-Panel remains unchanged, with no history log
     """
 
     def setUp(self) -> None:
@@ -79,7 +89,7 @@ class TestActivateCiPanel_AlreadyExists_Inactive(TestCase):
         CASE: A CI-Panel already exists BUT it is not active
         EXPECT: CI-Panel becomes activated, and a history entry is made to say this
         """
-        activate_clinical_indication_panel(self.ci.id, self.panel.id, None)
+        deactivate_clinical_indication_panel(self.ci.id, self.panel.id, None)
 
         # check that the only ci_panel entry is our originally-made one
         with self.subTest():
@@ -87,25 +97,20 @@ class TestActivateCiPanel_AlreadyExists_Inactive(TestCase):
             assert len(cips) == 1
             self.assertEquals(cips[0].id, self.ci_panel.id)
 
-        # check that the ci_panel entry is now active
+        # check that the ci_panel entry is still active
         with self.subTest():
-            assert cips[0].current
+            assert not cips[0].current
 
-        # check that a new history row has been made
+        # check that a no new history row has been made
         with self.subTest():
             cip_history = ClinicalIndicationPanelHistory.objects.all()
-            assert len(cip_history) == 1
-            assert cip_history[0].clinical_indication_panel == self.ci_panel
-            assert (
-                cip_history[0].note
-                == "Existing ci-panel link set to active by None"
-            )
+            assert not cip_history
 
 
-class TestActivateCiPanel_BrandNew(TestCase):
+class TestDeactivateCiPanel_NoExistingLink(TestCase):
     """
     CASE: A CI-Panel link hasn't been made before, although the CI and Panel are already in the database.
-    EXPECT: CI-Panel is created, activated, and a history entry is made to say this
+    EXPECT: Nothing happens - no new link is made, no history is logged
     """
 
     def setUp(self) -> None:
@@ -120,27 +125,19 @@ class TestActivateCiPanel_BrandNew(TestCase):
             r_code="R1", name="Our CI", test_method="small panel"
         )
 
-    def test_brand_new(self):
+    def test_no_existing_link(self):
         """
         CASE: A CI-Panel link hasn't been made before, although the CI and Panel are already in the database.
-        EXPECT: CI-Panel is created, activated, and a history entry is made to say this
+        EXPECT: Nothing happens - no new link is made, no history is logged
         """
-        activate_clinical_indication_panel(self.ci.id, self.panel.id, None)
+        deactivate_clinical_indication_panel(self.ci.id, self.panel.id, None)
 
-        # check that the ci_panel are now linked
+        # check that no link is made between CI and panel
         with self.subTest():
             self.cips = ClinicalIndicationPanel.objects.all()
-            assert len(self.cips) == 1
-            self.assertEquals(self.cips[0].panel, self.panel)
-            self.assertEquals(self.cips[0].clinical_indication, self.ci)
+            assert not self.cips
 
-        # check that the ci_panel entry is now active
-        with self.subTest():
-            assert self.cips[0].current
-
-        # check that a new history row has been made
+        # check that no history row has been made
         with self.subTest():
             cip_history = ClinicalIndicationPanelHistory.objects.all()
-            assert len(cip_history) == 1
-            assert cip_history[0].clinical_indication_panel == self.cips[0]
-            assert cip_history[0].note == "Created by command line"
+            assert not cip_history
