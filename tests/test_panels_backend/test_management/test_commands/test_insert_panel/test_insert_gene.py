@@ -10,6 +10,7 @@ A few scenarios tested here for insert_gene function
 """
 
 from django.test import TestCase
+from django.contrib.auth.models import User
 
 from panels_backend.models import (
     Panel,
@@ -75,6 +76,11 @@ class TestInsertGene_NewGene(TestCase):
             panel_version="1.15",
         )
 
+        self.user_logged_in = User.objects.create_user(
+            username="test", is_staff=True
+        )
+        self.user_cli = None
+
     def test_skip_if_no_gene_data_in_panel(self):
         """
         CASE: The PanelClass made from the PanelApp API has no genes
@@ -92,7 +98,7 @@ class TestInsertGene_NewGene(TestCase):
         )
 
         # run the function under test
-        _insert_gene(test_panel, self.first_panel, True)
+        _insert_gene(test_panel, self.first_panel, True, self.user_cli)
 
         # there should be no genes added into test db
         new_genes = Gene.objects.all()
@@ -128,7 +134,7 @@ class TestInsertGene_NewGene(TestCase):
         )
 
         # run the function under test
-        _insert_gene(test_panel, self.first_panel, True)
+        _insert_gene(test_panel, self.first_panel, True, self.user_logged_in)
 
         # there should be no genes added into test db
         new_genes = Gene.objects.all()
@@ -164,7 +170,7 @@ class TestInsertGene_NewGene(TestCase):
         )
 
         # run the function under test
-        _insert_gene(test_panel, self.first_panel, True)
+        _insert_gene(test_panel, self.first_panel, True, self.user_cli)
 
         # there should be no genes added into test db
         new_genes = Gene.objects.all()
@@ -200,7 +206,7 @@ class TestInsertGene_NewGene(TestCase):
         )
 
         # run the function under test
-        _insert_gene(test_panel, self.first_panel, True)
+        _insert_gene(test_panel, self.first_panel, True, self.user_logged_in)
 
         # there should only be one gene added into test db
         new_genes = Gene.objects.all()
@@ -231,10 +237,17 @@ class TestInsertGene_NewGene(TestCase):
 
         errors += len_check_wrapper(panel_gene_history, "history record", 1)
 
-        # check panel-gene history record user as PanelApp
+        # check panel-gene history records user correctly
         new_history = panel_gene_history[0]
 
-        errors += value_check_wrapper(new_history.user, "user", "PanelApp")
+        errors += value_check_wrapper(
+            new_history.user, "user", self.user_logged_in
+        )
+        errors += value_check_wrapper(
+            panel_gene_history[0].user.username,
+            "history username",
+            self.user_logged_in.username,
+        )
 
         assert not errors, errors
 
@@ -276,7 +289,7 @@ class TestInsertGene_NewGene(TestCase):
         )
 
         # run the function under test
-        _insert_gene(test_panel, self.first_panel, False)
+        _insert_gene(test_panel, self.first_panel, False, self.user_cli)
 
         # check there is a panel entry - this was in the DB already
         new_panels = Panel.objects.all()
@@ -293,6 +306,9 @@ class TestInsertGene_NewGene(TestCase):
         # check 1 history entry
         new_history = PanelGeneHistory.objects.all()
         errors += len_check_wrapper(new_history, "history record", 1)
+        errors += value_check_wrapper(
+            new_history[0].user, "history user", self.user_cli
+        )
 
         assert not errors, errors
 
@@ -334,7 +350,7 @@ class TestInsertGene_NewGene(TestCase):
         )
 
         # run the function under test
-        _insert_gene(test_panel, self.first_panel, True)
+        _insert_gene(test_panel, self.first_panel, True, self.user_logged_in)
 
         # check there is a panel entry - this was in the DB already
         new_panels = Panel.objects.all()
@@ -354,6 +370,11 @@ class TestInsertGene_NewGene(TestCase):
         errors += len_check_wrapper(
             new_history, "history record", 1
         )  # assert that history is created for one panel-gene link created
+        errors += value_check_wrapper(
+            new_history[0].user.username,
+            "history username",
+            self.user_logged_in.username,
+        )
 
         assert not errors, errors
 
@@ -387,7 +408,9 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
 
         self.moi = ModeOfInheritance.objects.create(mode_of_inheritance="test")
 
-        self.mop = ModeOfPathogenicity.objects.create(mode_of_pathogenicity="test")
+        self.mop = ModeOfPathogenicity.objects.create(
+            mode_of_pathogenicity="test"
+        )
 
         self.penetrance = Penetrance.objects.create(penetrance="test")
 
@@ -401,6 +424,11 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
             active=True,
             justification="PanelApp",
         )
+
+        self.user_logged_in = User.objects.create_user(
+            username="test", is_staff=True
+        )
+        self.user_cli = None
 
     def test_that_unchanged_gene_is_ignored(self):
         """
@@ -435,7 +463,7 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
 
         # run the function under test
         _insert_gene(
-            test_panel, self.first_panel, False
+            test_panel, self.first_panel, False, self.user_logged_in
         )  # False for `panel_created` because the panel already exist in the database with unchanged `external_id` `panel_name` and `panel_version`
 
         # check that the gene is in the database
@@ -459,7 +487,9 @@ class TestInsertGene_PreexistingGene_PreexistingPanelappPanelLink(TestCase):
         new_panelgene = panel_genes[0]
         confidence = Confidence.objects.get(id=new_panelgene.confidence.id)
 
-        errors += value_check_wrapper(confidence.confidence_level, "confidence", "3")
+        errors += value_check_wrapper(
+            confidence.confidence_level, "confidence", "3"
+        )
 
         # there should not have been a history record made,
         # because there was not a change to the gene-panel link in this upload
@@ -493,7 +523,9 @@ class TestAdditionOfGeneToExistingPanelGene(TestCase):
 
         self.moi = ModeOfInheritance.objects.create(mode_of_inheritance="test")
 
-        self.mop = ModeOfPathogenicity.objects.create(mode_of_pathogenicity="test")
+        self.mop = ModeOfPathogenicity.objects.create(
+            mode_of_pathogenicity="test"
+        )
 
         self.penetrance = Penetrance.objects.create(penetrance="test")
 
@@ -590,6 +622,9 @@ class TestAdditionOfGeneToExistingPanelGene(TestCase):
             "recorded panel-gene history",
             panel_genes[1],
         )
+        errors += value_check_wrapper(
+            panel_gene_history[0].user, "history user", None
+        )
 
         assert not errors, errors
 
@@ -625,7 +660,9 @@ class TestDropInPanelGeneConfidence(TestCase):
 
         self.moi = ModeOfInheritance.objects.create(mode_of_inheritance="test")
 
-        self.mop = ModeOfPathogenicity.objects.create(mode_of_pathogenicity="test")
+        self.mop = ModeOfPathogenicity.objects.create(
+            mode_of_pathogenicity="test"
+        )
 
         self.penetrance = Penetrance.objects.create(penetrance="test")
 
@@ -727,6 +764,10 @@ class TestDropInPanelGeneConfidence(TestCase):
         errors += len_check_wrapper(
             PanelGeneHistory.objects.all(), "history record", 1
         )  # there should only be one history record
+
+        errors += value_check_wrapper(
+            PanelGeneHistory.objects.all()[0].user, "history user", None
+        )
 
         errors += value_check_wrapper(
             PanelGeneHistory.objects.get(panel_gene_id=panel_gene_2.id).note,

@@ -1,14 +1,24 @@
-from django.urls import path
+from django.urls import include, path
 
 from . import views
 
 urlpatterns = [
     # index
     path("", views.index, name="index"),
+    # login and related
+    path("accounts/", include("django.contrib.auth.urls")),
+    path("accounts/login/", views.login, name="login"),
+    path("accounts/logout/", views.logout, name="logout"),
     # info
     path("panel/<int:panel_id>/", views.panel, name="panel"),
-    path("superpanel/<int:superpanel_id>/", views.superpanel, name="superpanel"),
-    path("ci/<int:ci_id>/", views.clinical_indication, name="clinical_indication"),
+    path(
+        "superpanel/<int:superpanel_id>/", views.superpanel, name="superpanel"
+    ),
+    path(
+        "ci/<int:ci_id>/",
+        views.clinical_indication,
+        name="clinical_indication",
+    ),
     path("gene/<int:gene_id>/", views.gene, name="gene"),
     path(
         "cip/<int:cip_id>/",
@@ -24,6 +34,11 @@ urlpatterns = [
     # seed test directory
     path("seed", views.seed, name="seed"),
     path("genepanel/", views.genepanel, name="genepanel"),
+    path(
+        "genetranscriptsview/",
+        views.genetranscriptsview,
+        name="genetranscriptsview",
+    ),
     path(
         "genetranscripts/",
         views.genetranscripts,

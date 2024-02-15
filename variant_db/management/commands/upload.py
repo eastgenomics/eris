@@ -16,10 +16,14 @@ class Command(BaseCommand):
         """Define the source of the data to import."""
 
         # python manage.py seed --debug panelapp all
-        parser.add_argument("--debug", action="store_true", help="run in debug mode")
+        parser.add_argument(
+            "--debug", action="store_true", help="run in debug mode"
+        )
         subparsers = parser.add_subparsers(dest="command")
 
-        variants = subparsers.add_parser("variants", help="seed variant results files")
+        variants = subparsers.add_parser(
+            "variants", help="seed variant results files"
+        )
         variants.add_argument(
             "directory_path",
             type=str,
@@ -50,7 +54,9 @@ class Command(BaseCommand):
         else:
             return path
 
-    def _basic_file_validity_check(self, file: pathlib.PosixPath) -> pd.DataFrame:
+    def _basic_file_validity_check(
+        self, file: pathlib.PosixPath
+    ) -> pd.DataFrame:
         """
         Check that the file has a sensible name, is parsable to a DataFrame, and
         includes the expected columns.

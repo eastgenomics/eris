@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.contrib.auth.models import User
 
 from panels_backend.models import (
     Gene,
@@ -31,13 +32,15 @@ class TestAddTranscriptWithGff_NewTranscript(TestCase):
 
         self.transcript_name = "NM04582.5"
 
-        self.ref_genome, _ = ReferenceGenome.objects.get_or_create(name="GRCh37")
+        self.ref_genome, _ = ReferenceGenome.objects.get_or_create(
+            name="GRCh37"
+        )
 
         self.gff_release, _ = GffRelease.objects.get_or_create(
             ensembl_release="10", reference_genome=self.ref_genome
         )
 
-        self.user = "init_v1_user"
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
     def test_novel_transcript_links_successfully(self):
         """
@@ -63,11 +66,15 @@ class TestAddTranscriptWithGff_NewTranscript(TestCase):
 
         release = GffRelease.objects.all()
         err += len_check_wrapper(release, "releases", 1)
-        err += value_check_wrapper(release[0].ensembl_release, "release version", "10")
+        err += value_check_wrapper(
+            release[0].ensembl_release, "release version", "10"
+        )
 
         tx_release = TranscriptGffRelease.objects.all()
         err += len_check_wrapper(tx_release, "tx-release links", 1)
-        err += value_check_wrapper(tx_release[0].transcript, "linked tx", tx[0])
+        err += value_check_wrapper(
+            tx_release[0].transcript, "linked tx", tx[0]
+        )
         err += value_check_wrapper(
             tx_release[0].gff_release, "linked release", release[0]
         )
@@ -79,6 +86,9 @@ class TestAddTranscriptWithGff_NewTranscript(TestCase):
         )
         err += value_check_wrapper(
             history[0].note, "tx-release note", History.tx_gff_release_new()
+        )
+        err += value_check_wrapper(
+            history[0].user.username, "history username", self.user.username
         )
 
         errors = "; ".join(err)
@@ -98,7 +108,9 @@ class TestAddTranscriptWithGff_ExistingTranscripts(TestCase):
 
         self.transcript_name = "NM04582.5"
 
-        self.ref_genome, _ = ReferenceGenome.objects.get_or_create(name="GRCh37")
+        self.ref_genome, _ = ReferenceGenome.objects.get_or_create(
+            name="GRCh37"
+        )
 
         self.gff_release, _ = GffRelease.objects.get_or_create(
             ensembl_release="10.2", reference_genome=self.ref_genome
@@ -110,7 +122,7 @@ class TestAddTranscriptWithGff_ExistingTranscripts(TestCase):
             reference_genome=self.ref_genome,
         )
 
-        self.user = "init_v1_user"
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
     def test_existing_transcript_links_successfully(self):
         """
@@ -142,7 +154,9 @@ class TestAddTranscriptWithGff_ExistingTranscripts(TestCase):
 
         tx_release = TranscriptGffRelease.objects.all()
         err += len_check_wrapper(tx_release, "tx-release links", 1)
-        err += value_check_wrapper(tx_release[0].transcript, "linked tx", tx[0])
+        err += value_check_wrapper(
+            tx_release[0].transcript, "linked tx", tx[0]
+        )
         err += value_check_wrapper(
             tx_release[0].gff_release, "linked release", release[0]
         )
@@ -153,7 +167,12 @@ class TestAddTranscriptWithGff_ExistingTranscripts(TestCase):
             history[0].transcript_gff, "tx-release", tx_release[0]
         )
         err += value_check_wrapper(
-            history[0].note, "tx-release note", History.tx_gff_release_present()
+            history[0].note,
+            "tx-release note",
+            History.tx_gff_release_present(),
+        )
+        err += value_check_wrapper(
+            history[0].user.username, "history username", self.user.username
         )
 
         errors = "; ".join(err)

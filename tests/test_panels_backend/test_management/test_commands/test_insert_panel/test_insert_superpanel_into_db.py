@@ -10,6 +10,8 @@ superpanel name or version change in PanelApp API
 """
 
 from django.test import TestCase
+from django.contrib.auth.models import User
+
 from panels_backend.management.commands.panelapp import SuperPanelClass
 from panels_backend.models import (
     Panel,
@@ -21,7 +23,9 @@ from panels_backend.models import (
     TestDirectoryRelease,
 )
 from panels_backend.management.commands.utils import sortable_version
-from panels_backend.management.commands._insert_panel import _insert_superpanel_into_db
+from panels_backend.management.commands._insert_panel import (
+    _insert_superpanel_into_db,
+)
 
 from .test_insert_gene import len_check_wrapper, value_check_wrapper
 
@@ -52,6 +56,8 @@ class TestInsertNewSuperpanelIntoDb(TestCase):
             test_method="Test method",
         )
 
+        self.user = User.objects.create_user(username="test", is_staff=True)
+
     def test_that_a_new_superpanel_is_made(
         self,
     ):
@@ -73,7 +79,7 @@ class TestInsertNewSuperpanelIntoDb(TestCase):
 
         child_panels = [self.child_one, self.child_two]
 
-        _insert_superpanel_into_db(superpanel, child_panels, "PanelApp")
+        _insert_superpanel_into_db(superpanel, child_panels, self.user)
 
         # look at db changes
         superpanel = SuperPanel.objects.all()
@@ -82,14 +88,20 @@ class TestInsertNewSuperpanelIntoDb(TestCase):
 
         # a superpanel should be made and set to pending
         errors += len_check_wrapper(superpanel, "superpanel", 1)
-        errors += value_check_wrapper(superpanel[0].external_id, "ext id", "1142")
+        errors += value_check_wrapper(
+            superpanel[0].external_id, "ext id", "1142"
+        )
         errors += value_check_wrapper(superpanel[0].pending, "pending", False)
 
         # there won't be a CI link because this is a brand new superpanel
-        errors += len_check_wrapper(ci_superpanel, "clinical indication-superpanel", 0)
+        errors += len_check_wrapper(
+            ci_superpanel, "clinical indication-superpanel", 0
+        )
 
         # there should be links to child panels
-        errors += len_check_wrapper(panel_superpanel, "panel-superpanel links", 2)
+        errors += len_check_wrapper(
+            panel_superpanel, "panel-superpanel links", 2
+        )
         errors += value_check_wrapper(
             panel_superpanel[0].panel, "panel-superpanel Panel", self.child_one
         )
@@ -146,10 +158,12 @@ class TestInsertSuperpanelVersionChange(TestCase):
 
         self.td_version = TestDirectoryRelease.objects.create(release="5")
 
-        self.ci_old_superpanel_link = ClinicalIndicationSuperPanel.objects.create(
-            superpanel=self.old_superpanel,
-            clinical_indication=self.ci,
-            current=True,
+        self.ci_old_superpanel_link = (
+            ClinicalIndicationSuperPanel.objects.create(
+                superpanel=self.old_superpanel,
+                clinical_indication=self.ci,
+                current=True,
+            )
         )
 
         self.child_panels = [self.child_one, self.child_two]
@@ -177,16 +191,28 @@ class TestInsertSuperpanelVersionChange(TestCase):
             child_panels=[],
         )
 
-        _insert_superpanel_into_db(new_superpanel, self.child_panels, "PanelApp")
+        _insert_superpanel_into_db(
+            new_superpanel, self.child_panels, user=None
+        )
 
         # check what's in the db now
         ci_superpanels = ClinicalIndicationSuperPanel.objects.all()
         superpanels = SuperPanel.objects.all()
-        ci_superpanels_history = ClinicalIndicationSuperPanel.objects.all()
+        ci_superpanels_history = (
+            ClinicalIndicationSuperPanelHistory.objects.all()
+        )
 
-        errors += len_check_wrapper(ci_superpanels, "clinical indication-panel", 2)
+        errors += len_check_wrapper(
+            ci_superpanels, "clinical indication-panel", 2
+        )
         errors += len_check_wrapper(superpanels, "superpanels", 2)
-        errors += len_check_wrapper(ci_superpanels_history, "ci-superpanel history", 2)
+        errors += len_check_wrapper(
+            ci_superpanels_history, "ci-superpanel history", 2
+        )
+
+        errors += value_check_wrapper(
+            ci_superpanels_history[0].user, "history user", None
+        )
 
         errors += value_check_wrapper(
             superpanels[1].panel_version,
@@ -266,10 +292,12 @@ class TestInsertSuperpanelNameChange(TestCase):
 
         self.td_version = TestDirectoryRelease.objects.create(release="5")
 
-        self.ci_old_superpanel_link = ClinicalIndicationSuperPanel.objects.create(
-            superpanel=self.old_superpanel,
-            clinical_indication=self.ci,
-            current=True,
+        self.ci_old_superpanel_link = (
+            ClinicalIndicationSuperPanel.objects.create(
+                superpanel=self.old_superpanel,
+                clinical_indication=self.ci,
+                current=True,
+            )
         )
 
         self.child_panels = [self.child_one, self.child_two]
@@ -296,7 +324,7 @@ class TestInsertSuperpanelNameChange(TestCase):
             regions=[],
         )
 
-        _insert_superpanel_into_db(superpanel_input, self.child_panels, "PanelApp")
+        _insert_superpanel_into_db(superpanel_input, self.child_panels, None)
 
         ci_superpanels = ClinicalIndicationSuperPanel.objects.all()
         superpanels = SuperPanel.objects.all()
@@ -370,10 +398,12 @@ class TestInsertSuperpanelUnchanged(TestCase):
 
         self.td_version = TestDirectoryRelease.objects.create(release="5")
 
-        self.ci_old_superpanel_link = ClinicalIndicationSuperPanel.objects.create(
-            superpanel=self.old_superpanel,
-            clinical_indication=self.ci,
-            current=True,
+        self.ci_old_superpanel_link = (
+            ClinicalIndicationSuperPanel.objects.create(
+                superpanel=self.old_superpanel,
+                clinical_indication=self.ci,
+                current=True,
+            )
         )
 
         self.child_panels = [self.child_one, self.child_two]
@@ -397,7 +427,9 @@ class TestInsertSuperpanelUnchanged(TestCase):
             # child_panels=[child_one, child_two]
         )
 
-        _insert_superpanel_into_db(superpanel_input, self.child_panels, "PanelApp")
+        _insert_superpanel_into_db(
+            superpanel_input, self.child_panels, "PanelApp"
+        )
 
         superpanels = SuperPanel.objects.all()
         history = ClinicalIndicationSuperPanelHistory.objects.all()
@@ -411,7 +443,9 @@ class TestInsertSuperpanelUnchanged(TestCase):
         )  # didn't make a history/link with CI
 
         errors += value_check_wrapper(
-            superpanels[0].panel_name, "superpanel name", "Acute rhabdomyolyosis"
+            superpanels[0].panel_name,
+            "superpanel name",
+            "Acute rhabdomyolyosis",
         )  # assert nothing has changed to the existing panel
 
         self.assertEqual(self.old_superpanel, superpanels[0])

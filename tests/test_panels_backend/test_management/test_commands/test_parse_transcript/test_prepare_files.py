@@ -4,7 +4,9 @@ from unittest import mock
 import pandas as pd
 
 
-from panels_backend.management.commands._parse_transcript import _prepare_mane_file
+from panels_backend.management.commands._parse_transcript import (
+    _prepare_mane_file,
+)
 
 
 class TestBasicManeFile(TestCase):
@@ -33,7 +35,11 @@ class TestBasicManeFile(TestCase):
                         "NM_014576.4",
                         "NM_000014.6",
                     ],
-                    "Ensembl StableID GRCh37 (Not MANE)": ["enst", "enst", "enst"],
+                    "Ensembl StableID GRCh37 (Not MANE)": [
+                        "enst",
+                        "enst",
+                        "enst",
+                    ],
                     "5'UTR": ["n", "n", "n"],
                     "CDS": ["y", "y", "y"],
                     "3'UTR": ["n", "n", "n"],

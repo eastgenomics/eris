@@ -1,7 +1,10 @@
 from django.test import TestCase
+from django.contrib.auth.models import User
 
 from panels_backend.management.commands.history import History
-from panels_backend.management.commands._parse_transcript import _add_new_genes_to_db
+from panels_backend.management.commands._parse_transcript import (
+    _add_new_genes_to_db,
+)
 from tests.test_panels_backend.test_management.test_commands.test_insert_ci.test_insert_test_directory_data import (
     len_check_wrapper,
     value_check_wrapper,
@@ -22,20 +25,26 @@ class TestGetOrCreate_CreateNew(TestCase):
 
     def setUp(self) -> None:
         self.hgnc_release = HgncRelease.objects.create(release="new_hgnc")
-        self.user = "init_v1_user"
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
     def test_adding_new_gene(self):
         errors = []
 
         input = [
             {"hgnc_id": "HGNC:10257", "symbol": "ROR2", "alias": None},
-            {"hgnc_id": "HGNC:TEST", "symbol": "TEST_SYMBOL", "alias": "TEST, ALIAS"},
+            {
+                "hgnc_id": "HGNC:TEST",
+                "symbol": "TEST_SYMBOL",
+                "alias": "TEST, ALIAS",
+            },
         ]
 
         _add_new_genes_to_db(input, self.hgnc_release, self.user)
 
         post_run_genes = Gene.objects.all()
-        errors += len_check_wrapper(post_run_genes, "number of post run genes", 2)
+        errors += len_check_wrapper(
+            post_run_genes, "number of post run genes", 2
+        )
 
         poss_symbols = ["ROR2", "TEST_SYMBOL"]
         poss_aliases = [None, "TEST, ALIAS"]
@@ -63,13 +72,20 @@ class TestGetOrCreate_CreateNew(TestCase):
             )
 
         post_run_history = GeneHgncReleaseHistory.objects.all()
-        errors += len_check_wrapper(post_run_history, "number of history entries", 2)
+        errors += len_check_wrapper(
+            post_run_history, "number of history entries", 2
+        )
 
         for i in range(len(post_run_history)):
             errors += value_check_wrapper(
                 post_run_history[i].note,
                 "linked history",
                 History.gene_hgnc_release_new(),
+            )
+            errors += value_check_wrapper(
+                post_run_history[i].user,
+                "linked history user",
+                self.user,
             )
 
         errors = "; ".join(errors)

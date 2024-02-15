@@ -1,6 +1,12 @@
 from django.test import TestCase
 
-from panels_backend.models import SuperPanel, Panel, Gene, PanelGene, PanelSuperPanel
+from panels_backend.models import (
+    SuperPanel,
+    Panel,
+    Gene,
+    PanelGene,
+    PanelSuperPanel,
+)
 from panels_backend.management.commands.generate import Command
 
 
@@ -125,10 +131,14 @@ class TestGetRelevantSuperPanelGenes(TestCase):
         """
         cmd = Command()
 
-        expected_superpanel_genes = {self.superpanel.id: set(["HGNC:910", "HGNC:300"])}
+        expected_superpanel_genes = {
+            self.superpanel.id: set(["HGNC:910", "HGNC:300"])
+        }
 
         actual_superpanel_genes = cmd._get_relevant_superpanel_genes(
             [self.superpanel.pk]
         )
 
-        self.assertDictEqual(expected_superpanel_genes, actual_superpanel_genes)
+        self.assertDictEqual(
+            expected_superpanel_genes, actual_superpanel_genes
+        )

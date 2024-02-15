@@ -71,9 +71,10 @@ class TestGetRelevantCiSuperPanels_Basic(TestCase):
         and a 'relevant superpanels' set of the superpanels' names
         """
         cmd = Command()
-        ci_superpanels, relevant_superpanels = cmd._get_relevant_ci_superpanels(
-            self.td_release
-        )
+        (
+            ci_superpanels,
+            relevant_superpanels,
+        ) = cmd._get_relevant_ci_superpanels(self.td_release)
 
         expected_ci_superpanels = {
             "R1": [
@@ -146,9 +147,10 @@ class TestGetRelevantCiSuperPanels_Basic(TestCase):
         )
 
         cmd = Command()
-        ci_superpanels, relevant_superpanels = cmd._get_relevant_ci_superpanels(
-            self.td_release
-        )
+        (
+            ci_superpanels,
+            relevant_superpanels,
+        ) = cmd._get_relevant_ci_superpanels(self.td_release)
 
         expected_ci_superpanels = {
             "R1": [
