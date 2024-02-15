@@ -1,8 +1,0 @@
-- model: panels_backend.ReferenceGenome
-  pk: 1
-  fields:
-    name: GRCh37.p13
-    refget_md5: jgmoaji4owmuco4w98i3owejfoi£"R££QOIFsaf
-    length: 30000000
-    ga4gh_id: 35124
-    refget_version: v2
