@@ -1288,8 +1288,6 @@ def _add_panel_genes_to_genepanel(
 
         panel_id_to_genes[panel_id].append(WebGene(gene_id, hgnc_id))
 
-        print(panel_id_to_genes[panel_id])
-
         genepanel.hgncs.append(WebGene(gene_id, hgnc_id))
 
 
