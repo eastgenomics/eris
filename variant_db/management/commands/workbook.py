@@ -59,7 +59,7 @@ def _rename_acgs_column(column_header: str) -> str:
 
 
 def _convert_name_to_lowercase(
-    column_header: str, exclude: tuple[str] = ("verdict", "evidence", "ACGS")
+    column_header: str, exclude: tuple[str] = ("verdict", "evidence")
 ) -> str:
     """
     Converts names to lowercase. Returns an unchanged string if it ends with anything in the `exclude` option
