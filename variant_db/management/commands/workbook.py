@@ -5,10 +5,8 @@ Workbook utils
 
 import re
 import pandas as pd
-from typing import Tuple, List, Dict
 
-
-def read_workbook(workbook_file: str) -> List[Dict[str, str | int]]:
+def read_workbook(workbook_file: str) -> list[dict[str, str | int]]:
     """
     Reads CSV workbook into a list of dicts, one per row.
     Column names are cleaned in the following ways for compatibility
@@ -61,7 +59,7 @@ def _rename_acgs_column(column_header: str) -> str:
 
 
 def _convert_name_to_lowercase(
-    column_header: str, exclude: Tuple[str] = ("verdict", "evidence", "ACGS")
+    column_header: str, exclude: tuple[str] = ("verdict", "evidence", "ACGS")
 ) -> str:
     """
     Converts names to lowercase. Returns an unchanged string if it ends with anything in the `exclude` option
@@ -72,7 +70,7 @@ def _convert_name_to_lowercase(
         return column_header.lower()
 
 
-def _add_panels_field(pivoted_df: List[Dict]) -> List[Dict]:
+def _add_panels_field(pivoted_df: list[dict]) -> list[dict]:
     """
     Splits up the "panels" field into single panels (";"-separated), where each panel is a dict with `panel_name` and `panel_version`
     """
@@ -83,7 +81,7 @@ def _add_panels_field(pivoted_df: List[Dict]) -> List[Dict]:
     return pivoted_df
 
 
-def _parse_panel(panel: str) -> Dict[str, str]:
+def _parse_panel(panel: str) -> dict[str, str]:
     """
     Splits a single panel string into "name" and "version" components, returning a dict
     """
