@@ -87,5 +87,6 @@ def _parse_panel(panel: str) -> Dict[str, str]:
     """
     Splits a single panel string into "name" and "version" components, returning a dict
     """
+    assert re.match(r"^.+_[\d]+\.[\d]$"), f"invalid panel name: {panel}"
     split_panel = panel.split("_")
     return {"name": split_panel[0], "version": split_panel[-1]}
