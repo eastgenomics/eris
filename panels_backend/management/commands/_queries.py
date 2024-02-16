@@ -151,9 +151,6 @@ def deactivate_clinical_indication_panel(
             print(
                 f"Clinical indication panel {cip_instance.id} link set to inactive."
             )
-            print(
-                f"Clinical indication panel {cip_instance.id} link set to inactive."
-            )
         else:
             # ci-panel already inactive
             print("Clinical indication panel link already inactive.")
