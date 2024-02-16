@@ -198,7 +198,7 @@ def _subset_row(
     return {k: row[k] for k in desired_keys}
 
 
-# See docstring in `keep_count_of_truth` for why these are here
+# See docstring in `store_bools` for why these are here
 T = TypeVar("T")
 P = ParamSpec("P")
 

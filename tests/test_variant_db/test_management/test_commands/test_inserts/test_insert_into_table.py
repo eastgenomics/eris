@@ -90,5 +90,3 @@ class TestInsertIntoTable_MakingFromScratch(TestCase):
         )
 
         assert retrieved_entry.name == "NHS Foundation Trust"
-
-    # TODO: make sure the try/except is hit IF we decide to keep it
