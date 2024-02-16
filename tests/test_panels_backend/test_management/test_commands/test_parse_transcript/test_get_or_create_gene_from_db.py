@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.contrib.auth.models import User
 
 from panels_backend.management.commands.history import History
 from panels_backend.management.commands._parse_transcript import (
@@ -24,7 +25,7 @@ class TestGetOrCreate_CreateNew(TestCase):
 
     def setUp(self) -> None:
         self.hgnc_release = HgncRelease.objects.create(release="new_hgnc")
-        self.user = "init_v1_user"
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
     def test_adding_new_gene(self):
         errors = []
@@ -80,6 +81,11 @@ class TestGetOrCreate_CreateNew(TestCase):
                 post_run_history[i].note,
                 "linked history",
                 History.gene_hgnc_release_new(),
+            )
+            errors += value_check_wrapper(
+                post_run_history[i].user,
+                "linked history user",
+                self.user,
             )
 
         errors = "; ".join(errors)

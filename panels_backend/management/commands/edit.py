@@ -67,9 +67,6 @@ class Command(BaseCommand):
         into the database."""
         print(kwargs)
 
-        # TODO: add user later, once we've decided on how to do that
-        user = "init_v1_user"
-
         action: str = kwargs.get("action")
         panel_id = kwargs.get("panel_id")
         panel_name = kwargs.get("panel_name")
@@ -122,13 +119,11 @@ class Command(BaseCommand):
 
         if action == "activate":
             activate_clinical_indication_panel(
-                clinical_indication.id,
-                panel.id,
-                user,
+                clinical_indication.id, panel.id, user=None
             )
         else:
             deactivate_clinical_indication_panel(
                 clinical_indication.id,
                 panel.id,
-                user,
+                user=None,
             )

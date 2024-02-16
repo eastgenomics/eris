@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.contrib.auth.models import User
 
 from panels_backend.models import (
     Gene,
@@ -49,7 +50,7 @@ class TestUpdateExistingGeneSymbol(TestCase):
 
         self.hgnc_release = HgncRelease.objects.create(release="hgnc_v1")
 
-        self.user = "init_v1_user"
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
     def test_approved_name_change(self):
         """
@@ -90,6 +91,12 @@ class TestUpdateExistingGeneSymbol(TestCase):
             History.gene_hgnc_release_approved_symbol_change(
                 old_name, new_name
             ),
+        )
+
+        err += value_check_wrapper(
+            history[0].user,
+            "linked history user",
+            self.user,
         )
 
         errors = "; ".join(err)
@@ -151,6 +158,7 @@ class TestUpdateExistingGeneSymbol(TestCase):
                 old_name, new_name
             ),
         )
+        err += value_check_wrapper(history[0].user, "history user", self.user)
         err += value_check_wrapper(
             history[1].gene_hgnc_release, "Gene-HGNC link", gene_release[1]
         )
@@ -197,7 +205,7 @@ class TestUpdateExistingAliasSymbol(TestCase):
 
         self.hgnc_release = HgncRelease.objects.create(release="hgnc_v1")
 
-        self.user = "init_v1_user"
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
     def test_alias_name_change(self):
         """

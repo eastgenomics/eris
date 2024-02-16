@@ -3,6 +3,7 @@ import pandas as pd
 import collections
 import re
 from django.db import transaction
+from django.http import HttpRequest
 from packaging.version import Version
 
 pd.options.mode.chained_assignment = None  # default='warn'
@@ -29,7 +30,9 @@ from panels_backend.models import (
 
 
 def _update_existing_gene_metadata_symbol_in_db(
-    hgnc_id_to_symbol: dict[str, str], hgnc_release: HgncRelease, user: str
+    hgnc_id_to_symbol: dict[str, str],
+    hgnc_release: HgncRelease,
+    user: HttpRequest | None = None,
 ) -> None:
     """
     Function to update gene metadata in db using a hgnc dump prepared dictionary
@@ -39,7 +42,7 @@ def _update_existing_gene_metadata_symbol_in_db(
 
     :param hgnc_id_to_symbol: dictionary of hgnc id to approved symbol
     :param hgnc_release: the HgncRelease for the currently-uploaded HGNC file
-    :param user: currently a string to describe the user
+    :param user: either 'request.user' (if called from web) or None (if called from CLI)
     """
     gene_symbol_updates = []
 
@@ -52,6 +55,9 @@ def _update_existing_gene_metadata_symbol_in_db(
 
     # bulk update the changed genes
     now = datetime.datetime.now().strftime("%H:%M:%S")
+    print(
+        f"Start bulk-updating {len(gene_symbol_updates)} gene symbols: {now}"
+    )
     print(
         f"Start bulk-updating {len(gene_symbol_updates)} gene symbols: {now}"
     )
@@ -77,7 +83,7 @@ def _update_existing_gene_metadata_symbol_in_db(
 def _update_existing_gene_metadata_aliases_in_db(
     hgnc_id_to_alias_symbols: dict[str, str],
     hgnc_release: HgncRelease,
-    user: str,
+    user: HttpRequest | None = None,
 ) -> None:
     """
     Function to update gene metadata in db using hgnc dump prepared dictionaries
@@ -87,7 +93,7 @@ def _update_existing_gene_metadata_aliases_in_db(
 
     :param hgnc_id_to_alias_symbols: dictionary of hgnc id to alias symbol
     :param hgnc_release: the HgncRelease for the currently-uploaded HGNC file
-    :param user: currently a string to describe the user
+    :param user: either a User instance (if called from web) or None (if called from CLI)
     """
     gene_alias_updates = []
 
@@ -118,7 +124,9 @@ def _update_existing_gene_metadata_aliases_in_db(
 
 
 def _link_unchanged_genes_to_new_release(
-    unchanged_genes: list, hgnc_release: HgncRelease, user: str
+    unchanged_genes: list,
+    hgnc_release: HgncRelease,
+    user: HttpRequest | None = None,
 ):
     """
     If a gene wasn't changed in a HGNC release, link it to the new release with a note,
@@ -126,7 +134,7 @@ def _link_unchanged_genes_to_new_release(
 
     :param unchanged_gene: a list of HGNC_IDs of unchanged genes
     :param hgnc_release: a HgncRelease object of the current release
-    :param str: the name of the user making the changed
+    :param user: either a User instance (if called from web) or None (if called from CLI)
     """
 
     print(
@@ -154,7 +162,9 @@ def _link_unchanged_genes_to_new_release(
 
 
 def _add_new_genes_to_db(
-    new_genes: dict[str, str], hgnc_release: HgncRelease, user: str
+    new_genes: dict[str, str],
+    hgnc_release: HgncRelease,
+    user: HttpRequest | None = None,
 ) -> None:
     """
     If a gene exists in the HGNC file, but does NOT exist in the db, make it.
@@ -164,7 +174,7 @@ def _add_new_genes_to_db(
 
     :param new_genes: a list of dicts, one per gene, with keys 'hgnc_id' 'symbol' and 'alias'
     :param hgnc_release: the HgncRelease for the currently-uploaded HGNC file
-    :param user: currently a string to describe the user
+    :param user: either a User instance (if called from web) or None (if called from CLI)
     """
     genes_to_create = []
 
@@ -311,7 +321,7 @@ def _resolve_alias(start_alias: list[str]) -> str | None:
 
 
 def _prepare_hgnc_file(
-    hgnc_file: str, hgnc_version: str, user: str
+    hgnc_file: str, hgnc_version: str, user: HttpRequest | None = None
 ) -> dict[str, str]:
     """
     Read a hgnc file and sanity-check it
@@ -325,7 +335,7 @@ def _prepare_hgnc_file(
     :param hgnc_file: hgnc file path
     :param hgnc_version: a string describing the in-house-assigned release version of
     the HGNC file
-    :param user: str, the user's name
+    :param user: either a User instance (if called from web) or None (if called from CLI)
 
     :return: gene symbol to hgnc id dict
     """
@@ -553,7 +563,7 @@ def _add_transcript_to_db_with_gff_release(
     transcript: str,
     ref_genome: ReferenceGenome,
     gff_release: GffRelease,
-    user: str,
+    user: HttpRequest | None = None,
 ) -> Transcript:
     """
     Add each transcript to the database, with its gene.
@@ -563,7 +573,7 @@ def _add_transcript_to_db_with_gff_release(
     :param: transcript, the name of a transcript to add to the db
     :param: ref_genome, the ReferenceGenome of this version of the transcript
     :param: gff_release, the GffRelease of this version of the GFF file
-    :param: user, a string representing the user carrying out the upload
+    :param: user as stored in the 'request' - or None if CLI
 
     :returns: Transcript instance, for the transcript added to the db
     """
@@ -1193,8 +1203,8 @@ def seed_transcripts(
         hgnc_release, gff_release, mane_release, hgmd_release, reference_genome
     )
 
-    # TODO: user - replace this with something sensible one day
-    user = "init_v1_user"
+    # user is None because calling from CLI, not logged in
+    user = None
 
     # files preparation - parsing the files, and adding release versioning to the database
     hgnc_symbol_to_hgnc_id = _prepare_hgnc_file(

@@ -1,4 +1,6 @@
 from django.test import TestCase
+from django.contrib.auth.models import User
+
 from panels_backend.models import Gene, HgncRelease
 from panels_backend.management.commands._parse_transcript import (
     _prepare_hgnc_file,
@@ -11,8 +13,10 @@ class TestPrepareHgncFile(TestCase):
     """
 
     def setUp(self) -> None:
+        self.user = User.objects.create_user(username="test", is_staff=True)
+
         self.gene_symbols_to_hgnc_ids = _prepare_hgnc_file(
-            "testing_files/eris/hgnc_dump_mock.txt", "1.0", "mock_user"
+            "testing_files/eris/hgnc_dump_mock.txt", "1.0", self.user
         )
 
     def test_prepare_hgnc_file_in_general(self):
@@ -62,8 +66,10 @@ class TestChangeScenario(TestCase):
             alias_symbols="A,B,C",  # this alias symbols are wrong for HGNC:30005
         )
 
+        self.user = User.objects.create_user(username="test", is_staff=True)
+
         _prepare_hgnc_file(
-            "testing_files/eris/hgnc_dump_mock.txt", "1.0", "mock_user"
+            "testing_files/eris/hgnc_dump_mock.txt", "1.0", self.user
         )
 
     def test_when_gene_symbol_changes(self):
