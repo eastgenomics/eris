@@ -120,7 +120,8 @@ def _add_panels_field(pivoted_df: list[dict]) -> list[dict]:
 
 def _parse_panel(panel: str) -> dict[str, str]:
     """
-    Splits a single panel string into "name" and "version" components, returning a dict
+    Splits a single panel string into "name" and "version" components, returning a dict.
+    The function will throw an `AssertionError` in the event of unexpected panel string formatting
     """
     assert re.match(r"^.+_[\d]+\.[\d]$"), f"invalid panel name: {panel}"
     split_panel = panel.split("_")
