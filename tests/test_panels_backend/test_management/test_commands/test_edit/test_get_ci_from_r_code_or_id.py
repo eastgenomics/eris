@@ -9,7 +9,7 @@ from panels_backend.management.commands.edit import get_ci_from_r_code_or_id
 
 class TestGetCi_Rcode(TestCase):
     """
-    Case where:
+    Cases where:
     - a user requests a CI by its valid R code
     - a user requests a CI that has multiple database entries under an R code
     - a user requests a CI that doesn't exist in the database
@@ -68,6 +68,39 @@ class TestGetCi_Rcode(TestCase):
         ):
             get_ci_from_r_code_or_id(user_r_code, user_ci_id)
 
-# Scenarios still to write:            
-# Only CI ID is provided. It's valid
-# Only CI ID is provided. It's not valid
+
+class TestGetCi_Id(TestCase):
+    """
+    Cases where:
+    - a user requests a CI by its valid ID
+    - a user requests a CI by an ID which doesn't exist
+    """
+
+    def setUp(self) -> None:
+        self.ci_single_entry = ClinicalIndication.objects.create(
+            r_code="R123.4", name="Some CI", test_method="large panel"
+        )
+
+    def test_get_ci_id_valid(self):
+        """
+        CASE: Only CI ID is provided. It's valid
+        EXPECT: A single ClinicalIndication result is returned that matches
+        the user-provided ID
+        """
+        user_r_code = None
+        user_ci_id = self.ci_single_entry.id
+        result = get_ci_from_r_code_or_id(user_r_code, user_ci_id)
+        self.assertEqual(self.ci_single_entry, result)
+
+    def test_get_ci_id_invalid(self):
+        """
+        CASE: Only CI ID is provided. It matches no results in the db
+        EXPECT: An error is thrown telling the user the CI wasn't found
+        """
+        user_r_code = None
+        user_ci_id = "5"
+        with self.assertRaisesRegex(
+            ClinicalIndication.DoesNotExist,
+            "The clinical indication 5 was not found in the database",
+        ):
+            get_ci_from_r_code_or_id(user_r_code, user_ci_id)

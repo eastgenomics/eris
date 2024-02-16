@@ -49,7 +49,7 @@ def get_ci_from_r_code_or_id(
             clinical_indication = ClinicalIndication.objects.get(id=ci_id)
         except ClinicalIndication.DoesNotExist:
             raise ClinicalIndication.DoesNotExist(
-                "The clinical indication {clinical_indication} was not found"
+                f"The clinical indication {ci_id} was not found"
                 " in the database"
             )
 
