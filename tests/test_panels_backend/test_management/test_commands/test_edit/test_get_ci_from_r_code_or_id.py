@@ -2,7 +2,6 @@ from django.test import TestCase
 
 from panels_backend.models import (
     ClinicalIndication,
-    Panel,
 )
 from panels_backend.management.commands.edit import get_ci_from_r_code_or_id
 
