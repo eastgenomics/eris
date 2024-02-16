@@ -2,9 +2,9 @@
 python manage.py edit <--panel_id or --panel_name> <panel_id or panel_name> <--clinical_indication_id or --clinical_indication_r_code> <clinical_indication_id or clinical_indication_r_code> <activate or deactivate>
 python manage.py edit --panel_id 26 --clinical_indication_id 1 activate
 python manage.py edit --clinical_indication_r_code R67.1 --panel_id 26 activate
-python maange.py edit --clinical_indication_id 260 panel_name "Stickler Syndrome" deactivate (case insensitive)
+python manange.py edit --clinical_indication_id 260 panel_name "Stickler Syndrome" deactivate (case insensitive)
 """
-from models import ClinicalIndication, Panel
+from panels_backend.models import ClinicalIndication, Panel
 from ._queries import (
     activate_clinical_indication_panel,
     deactivate_clinical_indication_panel,
@@ -12,39 +12,65 @@ from ._queries import (
 from django.core.management.base import BaseCommand
 
 
-def get_ci_from_r_code_or_id(ci_r_code: str, ci_id: str) -> ClinicalIndication:
+def get_ci_from_r_code_or_id(
+    ci_r_code: str | None, ci_id: str | None
+) -> ClinicalIndication:
     """
-    Finds the correct clinical indication, based on user-provided R code or ID.
-    Handles logic for ambiguous R codes and raises errors if a matching entry doesn't exist.
+    Finds the correct clinical indication, based on user-provided
+    R code or ID.
+    Handles logic for ambiguous R codes and raises errors if a matching
+    entry doesn't exist.
+    Note that this is intended for use when R code and ID are args in a
+    mutually_exclusive_group, we should never get R code AND ID.
+
+    :param: ci_r_code, R code provided by user
+    (or None if not provided)
+    :param: ci_id, the clinical indication's database ID provided by user
+    (None if not provided)
+    :return: ClinicalIndication entry matching user arg
     """
     if ci_r_code:
         clinical_indication = ClinicalIndication.objects.filter(
             r_code__iexact=ci_r_code
         )
-
         # foresee r-code might return multiple ci entries
         assert len(clinical_indication) < 2, (
-            f"More than one clinical indication identified with r-code {ci_r_code}."
+            f"More than one clinical indication identified with r-code "
+            f"{ci_r_code}. "
             "Use clinical indication database id instead to be more specific."
         )
-        clinical_indication = clinical_indication[0]
-        assert clinical_indication, "No clinical indication found."
+        try:
+            clinical_indication = clinical_indication[0]
+        except IndexError:
+            raise IndexError("No clinical indication found.")
 
     else:
         try:
             clinical_indication = ClinicalIndication.objects.get(id=ci_id)
         except ClinicalIndication.DoesNotExist:
             raise ClinicalIndication.DoesNotExist(
-                "The clinical indication {clinical_indication} was not found in the database"
+                "The clinical indication {clinical_indication} was not found"
+                " in the database"
             )
 
     return clinical_indication
 
 
-def get_panel_from_id_or_name(panel_id: str, panel_name: str) -> Panel:
+def get_panel_from_id_or_name(
+    panel_id: str | None, panel_name: str | None
+) -> Panel:
     """
     Finds the correct panel, based on user-provided ID or name of panel.
-    Handles logic for ambiguous panel names, and raises errors if a matching entry doesn't exist.
+    Handles logic for ambiguous panel names, and raises errors if a matching
+    entry doesn't exist.
+    Note that this is intended for use when ID and panel name are args in a
+    mutually_exclusive_group, we should never get both at once.
+
+    :param: panel_id, the panel's database ID provided by user
+    (None if not provided)
+    :param: panel_name, the panel's name provided by user
+    (or None if not provided)
+    :return: Panel entry matching user arg
     """
     if panel_id:
         try:
@@ -64,7 +90,8 @@ def get_panel_from_id_or_name(panel_id: str, panel_name: str) -> Panel:
         # more than one panel with same name found
         assert len(panel) < 2, (
             f"More than one {panel_name} identified."
-            "Use python manage.py edit [--cid/--rcode] <ci> pid <panel-id> <add/remove> instead."
+            "Use python manage.py edit [--cid/--rcode] <ci> pid <panel-id> "
+            "<add/remove> instead."
         )
         panel = panel[0]
 
@@ -91,7 +118,8 @@ class Command(BaseCommand):
             help="panel name",
         )
 
-        # add arguments which don't change depending on whether you use panel ID or name
+        # add arguments which don't change depending on whether you use panel
+        # ID or name
         parser.add_argument(
             "action",
             type=str,
@@ -99,7 +127,8 @@ class Command(BaseCommand):
                 "activate",
                 "deactivate",
             ],
-            help="Whether to add the clinical indication to the panel, or remove it",
+            help="Whether to add the clinical indication to the panel, or "
+            "remove it",
         )
 
         clinical_indication = parser.add_mutually_exclusive_group(
