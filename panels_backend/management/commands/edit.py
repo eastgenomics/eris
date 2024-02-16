@@ -80,12 +80,7 @@ def get_panel_from_id_or_name(
                 f"The panel {panel_id} was not found in the database"
             )
     else:
-        try:
-            panel = Panel.objects.filter(panel_name__iexact=panel_name)
-        except Panel.DoesNotExist:
-            raise Panel.DoesNotExist(
-                "The panel {panel_name} was not found in the database"
-            )
+        panel = Panel.objects.filter(panel_name__iexact=panel_name)
 
         # more than one panel with same name found
         assert len(panel) < 2, (
@@ -93,7 +88,12 @@ def get_panel_from_id_or_name(
             "Use python manage.py edit [--cid/--rcode] <ci> pid <panel-id> "
             "<add/remove> instead."
         )
-        panel = panel[0]
+
+        # no panels with this name were found
+        try:
+            panel = panel[0]
+        except IndexError:
+            raise IndexError(f"No panel found")
 
     return panel
 
