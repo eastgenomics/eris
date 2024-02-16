@@ -73,6 +73,43 @@ def _convert_name_to_lowercase(
 def _add_panels_field(pivoted_df: list[dict]) -> list[dict]:
     """
     Splits up the "panels" field into single panels (";"-separated), where each panel is a dict with `panel_name` and `panel_version`
+
+    The input is a `pd.DataFrame` expressed as a list of dicts (from calling `pd.DataFrame.to_dict(orient="records")). The input is structured as follows:
+
+    ```
+    [
+        {
+            "chrom": 1,
+            ..., 
+            "panel": "panel1_1.0;panel2_1.0;..."
+        },
+        ...,
+    ]
+    ```
+
+    When this function completes, the data will have the following structure:
+
+    ```
+    [
+        {
+            "chrom": 1, 
+            ..., 
+            "panel": [
+                {
+                    "name": "panel_1",
+                    "version": "1.0"
+                },
+                {
+                    "name": "panel_2",
+                    "version": "1.0"
+                },
+                ...,
+            ],
+            ...,
+        }
+    ]
+
+    :param pivoted_df: the data represented as a list of dicts (i.e. output of `pd.DataFrane.to_dict(orient="records")`
     """
     for row in pivoted_df:
         row["panels"] = [
