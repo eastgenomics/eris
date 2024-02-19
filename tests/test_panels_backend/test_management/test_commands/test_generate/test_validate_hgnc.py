@@ -5,10 +5,6 @@ import pandas as pd
 from panels_backend.management.commands.generate import (
     Command,
 )
-from panels_backend.management.commands._parse_transcript import (
-    check_missing_columns,
-)
-
 
 class TestCommandValidateHgnc(TestCase):
     """
