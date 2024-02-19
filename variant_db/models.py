@@ -1,5 +1,8 @@
 from django.db import models
-from panels_backend.models import Panel, ReferenceGenome, Chromosome
+from panels_backend.models import (
+    Panel,
+    ReferenceGenome,
+)
 
 
 class Sample(models.Model):
@@ -124,6 +127,26 @@ class ClinvarCollectionMethod(models.Model):
 
     class Meta:
         db_table = "clinvar_collection_method"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class Chromosome(models.Model):
+    """
+    Records chromosomes
+    """
+
+    name = models.TextField(verbose_name="chromosome name")
+
+    numerical_name = models.IntegerField(verbose_name="numeric index")
+
+    source = models.TextField(
+        verbose_name="chromosome source (i.e. RefSeq, Assembly, Genbank etc.)"
+    )
+
+    class Meta:
+        db_table = "chromosome"
 
     def __str__(self):
         return str(self.id)
@@ -272,12 +295,6 @@ class Interpretation(models.Model):
         on_delete=models.PROTECT,
     )
 
-    panel = models.ForeignKey(
-        Panel,
-        verbose_name="Panel ID",
-        on_delete=models.PROTECT,
-    )
-
     assay_method = models.ForeignKey(
         AssayMethod, verbose_name="Assay Method ID", on_delete=models.PROTECT
     )
@@ -301,6 +318,7 @@ class Interpretation(models.Model):
     clinvar_submission = models.ForeignKey(
         ClinvarSubmission,
         verbose_name="Clinvar Submission ID",
+        null=True,
         on_delete=models.PROTECT,
     )
 
@@ -483,6 +501,23 @@ class AcgsCategoryInformation(models.Model):
 
     class Meta:
         db_table = "acgs_category_information"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class InterpretationPanel(models.Model):
+    """
+    Interpretation->Panel linking table
+    """
+
+    interpretation = models.ForeignKey(
+        Interpretation, on_delete=models.PROTECT
+    )
+    panel = models.ForeignKey(Panel, on_delete=models.PROTECT)
+
+    class Meta:
+        db_table = "interpretation_panel"
 
     def __str__(self):
         return str(self.id)
