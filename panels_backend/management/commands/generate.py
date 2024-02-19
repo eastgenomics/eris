@@ -39,16 +39,6 @@ ACCEPTABLE_COMMANDS = ["genepanels", "g2t"]
 class Command(BaseCommand):
     help = "generate genepanels"
 
-    def _validate_directory(self, path) -> bool:
-        """
-        Validate if directory exists
-
-        :param path: path to directory
-
-        :return: True if directory exists, False otherwise
-        """
-        return os.path.exists(path)
-
     def _validate_hgnc(self, file_path: str) -> bool | None:
         """
         Validate hgnc file. Returns True if it passes all asserts and has a valid filepath.
@@ -569,7 +559,7 @@ class Command(BaseCommand):
                 f"No output directory specified. Using default output directory: {output_directory}"
             )
         else:
-            if not self._validate_directory(kwargs["output"]):
+            if not os.path.exists(kwargs["output"]):
                 raise ValueError(
                     f'Output directory specified {kwargs["output"]} is not valid. Please use full path'
                 )
