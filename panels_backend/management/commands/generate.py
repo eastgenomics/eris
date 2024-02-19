@@ -340,13 +340,15 @@ class Command(BaseCommand):
             msg = "; ".join(errors)
             raise ValueError(msg)
 
-    def _generate_genepanels(
-        self, excluded_hgncs: set, output_directory: str
-    ) -> None:
+    def _generate_genepanels_results(
+        self, excluded_hgncs: set
+    ) -> list[tuple[str, str, str]]:
         """
-        Main function to generate genepanel.tsv, a file containing every clinical indications' genes
-        Runs sanity checks, then calls a formatter if these pass
-        Outputs the data as a csv, with columns: clinical indication, source panel, and HGNC gene ID.
+        Main function to format genepanel results, which contains every
+        clinical indications' genes
+        Runs sanity checks first.
+        Outputs the data as a list of tuples, each tuple contains: clinical
+        indication, source panel, and HGNC gene ID.
         :param excluded_hgncs: HGNC loci to exclude from analyses
         :param output_directory: output directory
         """
@@ -378,17 +380,27 @@ class Command(BaseCommand):
         superpanel_results = self._format_output_data_genesuperpanels(
             ci_superpanels, superpanel_genes, excluded_hgncs
         )
-
         results = panel_results + superpanel_results
+
         # run 'sort' again so that the panels and superpanels can be mixed in together
-        # though note due to being on strings, 'sort' isn't version-sensitive for R codes (e.g. R100 shows up before R29)
+        # though note due to being on strings, 'sort' isn't version-sensitive for R codes
+        # (e.g. R100 shows up before R29)
         results = sorted(results, key=lambda x: [x[0], x[1], x[2]])
+        return results
 
-        current_datetime = dt.datetime.today().strftime("%Y%m%d")
+    def _write_genepanels_results(
+        self, results: list[tuple[str, str, str]], output_directory: str
+    ) -> None:
+        """
+        Outputs formatted genepanels results as a file.
+        Each tuple in the list becomes a single tab-separated line.
 
-        with open(
-            f"{output_directory}/{current_datetime}_genepanels.tsv", "w"
-        ) as f:
+        :param results: a list of tuples, each one representing a future file row
+        :param output_directory: a string representing the output location
+        for the file.
+        """
+        file_time = dt.datetime.today().strftime("%Y%m%d")
+        with open(f"{output_directory}/{file_time}_genepanels.tsv", "w") as f:
             for row in results:
                 data = "\t".join(row)
                 f.write(f"{data}\n")
@@ -580,8 +592,8 @@ class Command(BaseCommand):
             # generate genepanels.tsv
             hgncs_to_exclude = parse_excluded_hgncs_from_file(kwargs["hgnc"])
 
-            self._generate_genepanels(hgncs_to_exclude, output_directory)
-
+            results = self._generate_genepanels_results(hgncs_to_exclude)
+            self._write_genepanels_results(results, output_directory)
             print(f"Genepanel file created at {output_directory}")
 
         # if command is g2t, then generate g2t.tsv
