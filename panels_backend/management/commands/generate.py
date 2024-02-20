@@ -345,7 +345,7 @@ class Command(BaseCommand):
     ) -> list[tuple[str, str, str]]:
         """
         Main function to format genepanel results, which contains every
-        clinical indications' genes
+        clinical indications' panel(s) and genes.
         Runs sanity checks first.
         Outputs the data as a list of tuples, each tuple contains: clinical
         indication, source panel, and HGNC gene ID.
