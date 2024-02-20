@@ -5,8 +5,6 @@ services:
     container_name: eris-db
     # platform: linux/amd64
     image: postgres:12.15-bullseye
-    # ports:
-    #   - "5431:5432"
     expose:
       - 5432
     restart: always

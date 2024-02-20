@@ -1,10 +1,12 @@
 """
 Workbook utils
 """
+
 #!/usr/bin/env python
 
 import re
 import pandas as pd
+
 
 def read_workbook(workbook_file: str) -> list[dict[str, str | int]]:
     """
@@ -80,7 +82,7 @@ def _add_panels_field(pivoted_df: list[dict]) -> list[dict]:
     [
         {
             "chrom": 1,
-            ..., 
+            ...,
             "panel": "panel1_1.0;panel2_1.0;..."
         },
         ...,
@@ -92,8 +94,8 @@ def _add_panels_field(pivoted_df: list[dict]) -> list[dict]:
     ```
     [
         {
-            "chrom": 1, 
-            ..., 
+            "chrom": 1,
+            ...,
             "panel": [
                 {
                     "name": "panel_1",
@@ -112,9 +114,7 @@ def _add_panels_field(pivoted_df: list[dict]) -> list[dict]:
     :param pivoted_df: the data represented as a list of dicts (i.e. output of `pd.DataFrane.to_dict(orient="records")`
     """
     for row in pivoted_df:
-        row["panels"] = [
-            _parse_panel(panel) for panel in row["panel"].split(";")
-        ]
+        row["panels"] = [_parse_panel(panel) for panel in row["panel"].split(";")]
     return pivoted_df
 
 
@@ -123,6 +123,6 @@ def _parse_panel(panel: str) -> dict[str, str]:
     Splits a single panel string into "name" and "version" components, returning a dict.
     The function will throw an `AssertionError` in the event of unexpected panel string formatting
     """
-    assert re.match(r"^.+_[\d]+\.[\d]$"), f"invalid panel name: {panel}"
+    assert re.match(r"^.+_[\d]+\.[\d]$", f"invalid panel name: {panel}")
     split_panel = panel.split("_")
     return {"name": split_panel[0], "version": split_panel[-1]}

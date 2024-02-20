@@ -1155,48 +1155,6 @@ def seed_transcripts(
     # prepare error log filename
     error_log: str = f"{current_datetime}_transcript_error.txt"
 
-    # check reference genome makes sense, fetch it
-    reference_genome_str = _parse_reference_genome(reference_genome)
-    reference_genome, _ = ReferenceGenome.objects.get_or_create(
-        name=reference_genome_str
-    )
-
-    # throw errors if the release versions are older than those already in the db
-    _check_for_transcript_seeding_version_regression(
-        hgnc_release, gff_release, mane_release, hgmd_release, reference_genome
-    )
-
-    # user is None because calling from CLI, not logged in
-    user = None
-
-    # files preparation - parsing the files, and adding release versioning to the database
-    hgnc_symbol_to_hgnc_id = _prepare_hgnc_file(hgnc_filepath, hgnc_release, user)
-    mane_data = _prepare_mane_file(mane_filepath, hgnc_symbol_to_hgnc_id)
-    gff = _prepare_gff_file(gff_filepath)
-    gene2refseq_hgmd = _prepare_gene2refseq_file(g2refseq_filepath)
-    markname_hgmd = _prepare_markname_file(markname_filepath)
-
-    # set up the transcript release by adding it, any data sources, and any
-    # supporting files to the database. Throw errors for repeated versions.
-
-    gff_release = _add_gff_release_info_to_db(gff_release, reference_genome)
-
-    mane_select_rel = _add_transcript_release_info_to_db(
-        "MANE Select", mane_release, reference_genome, {"mane": mane_ext_id}
-    )
-    mane_plus_clinical_rel = _add_transcript_release_info_to_db(
-        "MANE Plus Clinical",
-        mane_release,
-        reference_genome,
-        {"mane": mane_ext_id},
-    )
-    hgmd_rel = _add_transcript_release_info_to_db(
-        "HGMD",
-        hgmd_release,
-        reference_genome,
-        {"hgmd_g2refseq": g2refseq_ext_id, "hgmd_markname": markname_ext_id},
-    )
-
     # for record purpose (just in case)
     all_errors: list[str] = []
 
