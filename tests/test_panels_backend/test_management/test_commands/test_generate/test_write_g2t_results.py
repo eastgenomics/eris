@@ -12,6 +12,7 @@ class TestWriteG2tResults(TestCase):
     """
     Check that results are written to a mock file.
     """
+
     def test_basic_file(self):
         """
         CASE: A basic, short set of g2t results containing a value for
