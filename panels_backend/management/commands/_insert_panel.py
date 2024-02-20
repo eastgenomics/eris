@@ -487,7 +487,7 @@ def _insert_superpanel_into_db(
     return superpanel, created
 
 
-@permission_required("staff", raise_exception=False)
+@transaction.atomic
 def panel_insert_controller(
     panels: list[PanelClass],
     superpanels: list[SuperPanelClass],
