@@ -91,8 +91,14 @@ class TestInsertIntoTable_MakingFromScratch(TestCase):
 
         assert retrieved_entry.name == "NHS Foundation Trust"
 
-class Test(TestCase):
+class Test_FetchOnly_Queries(TestCase):
+    """
+    Test cases to test that the "get" behaviour of `_get_or_create` works as intended
+    """
     def setUp(self) -> None:
+        """
+        Insert a row of valid `Chromosome` data to be referenced
+        """
         _, _ = Chromosome.objects.get_or_create(
             name="1",
             numerical_name=1,
@@ -100,12 +106,19 @@ class Test(TestCase):
         )
 
     def test_raises_objectdoesnotexist(self):
-    # chromosome 500 doesn't exist
+        """
+        CASE: Submit a query against `Chromosome` for a chromosome that doesn't exist
+        EXPECTS: Raises `ObjectDoesNotExist` error (Django exception)
+        """
         test_dict = {"name": 500}
         with self.assertRaises(ObjectDoesNotExist) as context:
             _get_or_create(Chromosome, "get", **test_dict)
     
     def test_gets_objects(self):
+        """
+        CASE: Submit a query against `Chromosome` for a chromosome that exists
+        EXPECTS: Correct row of `Chromosome` data is returned. All fields match expectations
+        """
         test_dict = {"name": 1}
         query_result = _get_or_create(Chromosome, "get", **test_dict)
         assert query_result.name == "1"
