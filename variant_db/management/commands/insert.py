@@ -75,9 +75,7 @@ def insert_row(row_dict: dict[str, str | int]) -> None:
         Sample,
         **_subset_row(row_dict, "instrument_id", "batch_id", "specimen_id"),
     )
-    testcode = _get_or_create(
-        TestCode, **_subset_row(row_dict, "test_code")
-    )
+    testcode = _get_or_create(TestCode, **_subset_row(row_dict, "test_code"))
     probeset = _get_or_create(
         ProbeSet,
         **_subset_row(row_dict, "probeset_id") | {"testcode": testcode},
@@ -184,7 +182,7 @@ def insert_row(row_dict: dict[str, str | int]) -> None:
     clinvar_submission = _get_or_create(
         ClinvarSubmission,
         names_to={"accession_id": "scv_id"},
-        **_subset_row(row_dict, "submission_id", "accession_id")
+        **_subset_row(row_dict, "submission_id", "accession_id"),
     )
     if not any(_get_or_create.created):
         logging.warning(
