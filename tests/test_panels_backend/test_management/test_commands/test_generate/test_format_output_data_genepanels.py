@@ -41,10 +41,10 @@ class TestFormatOutputDataGenepanels(TestCase):
             ci_panels, panel_genes, excluded_hgncs
         )
         expected = [
-            ["R123.2_Condition 1", "First Panel_5", "HGNC:1", "109"],
-            ["R123.2_Condition 1", "First Panel_5", "HGNC:2", "109"],
-            ["R2_Condition 2", "Second Panel_2", "HGNC:3", "209"],
-            ["R2_Condition 2", "Second Panel_2", "HGNC:4", "209"],
+            ["R123.2_Condition 1", "First Panel_5.0", "HGNC:1", "109"],
+            ["R123.2_Condition 1", "First Panel_5.0", "HGNC:2", "109"],
+            ["R2_Condition 2", "Second Panel_2.0", "HGNC:3", "209"],
+            ["R2_Condition 2", "Second Panel_2.0", "HGNC:4", "209"],
         ]
         self.assertEqual(expected, actual)
 
@@ -87,8 +87,8 @@ class TestFormatOutputDataGenepanels(TestCase):
         expected = [
             ["R123.2_Condition 1", "First Panel_", "HGNC:1", "109"],
             ["R123.2_Condition 1", "First Panel_", "HGNC:2", "109"],
-            ["R2_Condition 2", "Second Panel_2", "HGNC:3", "209"],
-            ["R2_Condition 2", "Second Panel_2", "HGNC:4", "209"],
+            ["R2_Condition 2", "Second Panel_2.0", "HGNC:3", "209"],
+            ["R2_Condition 2", "Second Panel_2.0", "HGNC:4", "209"],
         ]
         self.assertEqual(expected, actual)
 
