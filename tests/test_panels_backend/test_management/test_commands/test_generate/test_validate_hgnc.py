@@ -6,6 +6,7 @@ from panels_backend.management.commands.generate import (
     Command,
 )
 
+
 class TestCommandValidateHgnc(TestCase):
     """
     Tests for a function which checks whether a HGNC file
