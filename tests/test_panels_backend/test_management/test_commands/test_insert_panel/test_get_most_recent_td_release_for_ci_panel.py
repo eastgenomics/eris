@@ -20,8 +20,12 @@ class TestMostRecentRelease_Panels_MultiEntries(TestCase):
     """
 
     def setUp(self) -> None:
-        self.first_release = TestDirectoryRelease.objects.create(release="1.0.0")
-        self.second_release = TestDirectoryRelease.objects.create(release="1.0.3")
+        self.first_release = TestDirectoryRelease.objects.create(
+            release="1.0.0"
+        )
+        self.second_release = TestDirectoryRelease.objects.create(
+            release="1.0.3"
+        )
 
         self.panel = Panel.objects.create(
             external_id="test",
@@ -58,8 +62,12 @@ class TestMostRecentRelease_Panels_NoEntries(TestCase):
     """
 
     def setUp(self) -> None:
-        self.first_release = TestDirectoryRelease.objects.create(release="1.0.0")
-        self.second_release = TestDirectoryRelease.objects.create(release="1.0.3")
+        self.first_release = TestDirectoryRelease.objects.create(
+            release="1.0.0"
+        )
+        self.second_release = TestDirectoryRelease.objects.create(
+            release="1.0.3"
+        )
 
         self.panel = Panel.objects.create(
             external_id="test",

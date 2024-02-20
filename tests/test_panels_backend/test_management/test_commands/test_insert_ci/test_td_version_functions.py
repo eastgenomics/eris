@@ -3,7 +3,9 @@ from django.test import TestCase
 from panels_backend.models import (
     TestDirectoryRelease,
 )
-from panels_backend.management.commands._insert_ci import _fetch_latest_td_version
+from panels_backend.management.commands._insert_ci import (
+    _fetch_latest_td_version,
+)
 
 
 class TestFetchLatestTdVersion_FullDb(TestCase):
@@ -15,9 +17,13 @@ class TestFetchLatestTdVersion_FullDb(TestCase):
     def setUp(self) -> None:
         self.td_release = TestDirectoryRelease.objects.create(release="2")
 
-        self.td_release_two = TestDirectoryRelease.objects.create(release="3.0.0")
+        self.td_release_two = TestDirectoryRelease.objects.create(
+            release="3.0.0"
+        )
 
-        self.td_release_three = TestDirectoryRelease.objects.create(release="3.0.1")
+        self.td_release_three = TestDirectoryRelease.objects.create(
+            release="3.0.1"
+        )
 
     def test_highest_returned(self):
         """

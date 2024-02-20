@@ -83,15 +83,27 @@ class TestTranscriptAdded_FromScratch(TestCase):
 
         tx_link = TranscriptReleaseTranscript.objects.all()
         err += len_check_wrapper(tx_link, "link", 3)
-        err += value_check_wrapper(tx_link[0].default_clinical, "clinical", True)
+        err += value_check_wrapper(
+            tx_link[0].default_clinical, "clinical", True
+        )
         err += value_check_wrapper(tx_link[0].match_base, "base match", True)
-        err += value_check_wrapper(tx_link[0].match_version, "version match", False)
-        err += value_check_wrapper(tx_link[1].default_clinical, "clinical", None)
+        err += value_check_wrapper(
+            tx_link[0].match_version, "version match", False
+        )
+        err += value_check_wrapper(
+            tx_link[1].default_clinical, "clinical", None
+        )
         err += value_check_wrapper(tx_link[1].match_base, "base match", None)
-        err += value_check_wrapper(tx_link[1].match_version, "version match", None)
-        err += value_check_wrapper(tx_link[2].default_clinical, "clinical", None)
+        err += value_check_wrapper(
+            tx_link[1].match_version, "version match", None
+        )
+        err += value_check_wrapper(
+            tx_link[2].default_clinical, "clinical", None
+        )
         err += value_check_wrapper(tx_link[2].match_base, "base match", None)
-        err += value_check_wrapper(tx_link[2].match_version, "version match", None)
+        err += value_check_wrapper(
+            tx_link[2].match_version, "version match", None
+        )
 
         errors = "".join(err)
         assert not errors, errors
@@ -212,10 +224,16 @@ class TestTranscriptAdded_PreexistingReleases(TestCase):
         err += len_check_wrapper(tx_link, "link", 6)
 
         # see if some of the new info is in there
-        err += value_check_wrapper(tx_link[3].release, "select new", self.select_new)
-        err += value_check_wrapper(tx_link[3].default_clinical, "clinical", True)
+        err += value_check_wrapper(
+            tx_link[3].release, "select new", self.select_new
+        )
+        err += value_check_wrapper(
+            tx_link[3].default_clinical, "clinical", True
+        )
         err += value_check_wrapper(tx_link[3].match_base, "base match", True)
-        err += value_check_wrapper(tx_link[3].match_version, "version match", False)
+        err += value_check_wrapper(
+            tx_link[3].match_version, "version match", False
+        )
 
         errors = ", ".join(err)
         assert not errors, errors

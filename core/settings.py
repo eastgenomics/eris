@@ -38,7 +38,8 @@ ALLOWED_HOSTS = [
 
 # for form submission csrf token verification
 CSRF_TRUSTED_ORIGINS = [
-    origin.strip() for origin in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")
+    origin.strip()
+    for origin in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")
 ]
 
 
@@ -112,9 +113,18 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation."
         "UserAttributeSimilarityValidator"
     },
-    {"NAME": "django.contrib.auth.password_validation." "MinimumLengthValidator"},
-    {"NAME": "django.contrib.auth.password_validation." "CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation." "NumericPasswordValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation."
+        "MinimumLengthValidator"
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation."
+        "CommonPasswordValidator"
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation."
+        "NumericPasswordValidator"
+    },
 ]
 
 
@@ -144,6 +154,10 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 
+# Login and out redirects
+LOGIN_REDIRECT_URL = "index"
+LOGOUT_REDIRECT_URL = "index"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
@@ -151,7 +165,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # HGNC IDs we need to skip due to not having a transcript present in the refseq cache
 HGNC_IDS_TO_OMIT = (
-    [hgnc.strip().upper() for hgnc in os.environ.get("HGNC_IDS_TO_OMIT", []).split(",")]
+    [
+        hgnc.strip().upper()
+        for hgnc in os.environ.get("HGNC_IDS_TO_OMIT", []).split(",")
+    ]
     if "," in os.environ.get("HGNC_IDS_TO_OMIT", [])
     else []
 )

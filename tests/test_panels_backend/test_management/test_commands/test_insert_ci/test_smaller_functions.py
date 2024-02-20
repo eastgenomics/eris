@@ -9,6 +9,8 @@ This file contains tests for the smaller functions in the insert_ci command.
 """
 
 from django.test import TestCase
+from django.contrib.auth.models import User
+
 from panels_backend.models import (
     ClinicalIndication,
     Panel,
@@ -44,11 +46,15 @@ class TestBackwardDeactivation(TestCase):
             panel_version=sortable_version("1.15"),
         )
 
-        self.first_clinical_indication_panel = ClinicalIndicationPanel.objects.create(
-            clinical_indication_id=self.first_clinical_indication.id,
-            panel_id=self.first_panel.id,
-            current=True,
+        self.first_clinical_indication_panel = (
+            ClinicalIndicationPanel.objects.create(
+                clinical_indication_id=self.first_clinical_indication.id,
+                panel_id=self.first_panel.id,
+                current=True,
+            )
         )
+
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
     def test_that_link_will_be_flagged_if_not_exist(self):
         """
@@ -65,7 +71,7 @@ class TestBackwardDeactivation(TestCase):
             []
         )  # notice this empty test directory which simulate a test directory with no R123
 
-        _backward_deactivate(mock_test_directory, "test")
+        _backward_deactivate(mock_test_directory, self.user)
 
         self.first_clinical_indication_panel.refresh_from_db()
 
@@ -73,6 +79,11 @@ class TestBackwardDeactivation(TestCase):
         assert (
             ClinicalIndicationPanelHistory.objects.count() == 1
         )  # there should be one history recorded
+        assert (
+            ClinicalIndicationPanelHistory.objects.all()[0].user.username
+            == "test"
+        )
+
         assert (
             self.first_clinical_indication_panel.current is False
         )  # active status should be False
@@ -89,7 +100,7 @@ class TestBackwardDeactivation(TestCase):
         """
         mock_test_directory = [{"code": "R123"}]
 
-        _backward_deactivate(mock_test_directory, "test")
+        _backward_deactivate(mock_test_directory, self.user)
 
         self.first_clinical_indication_panel.refresh_from_db()
 
@@ -115,11 +126,15 @@ class TestFlagClinicalIndicationPanelForReview(TestCase):
             panel_version=sortable_version("1.15"),
         )
 
-        self.first_clinical_indication_panel = ClinicalIndicationPanel.objects.create(
-            clinical_indication_id=self.first_clinical_indication.id,
-            panel_id=self.first_panel.id,
-            current=True,
+        self.first_clinical_indication_panel = (
+            ClinicalIndicationPanel.objects.create(
+                clinical_indication_id=self.first_clinical_indication.id,
+                panel_id=self.first_panel.id,
+                current=True,
+            )
         )
+
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
     def test_that_link_will_be_flagged_and_history_recorded(self):
         """
@@ -128,7 +143,7 @@ class TestFlagClinicalIndicationPanelForReview(TestCase):
         """
 
         flag_clinical_indication_panel_for_review(
-            self.first_clinical_indication_panel, "test"
+            self.first_clinical_indication_panel, self.user
         )
 
         self.first_clinical_indication_panel.refresh_from_db()
@@ -139,6 +154,10 @@ class TestFlagClinicalIndicationPanelForReview(TestCase):
         assert (
             ClinicalIndicationPanelHistory.objects.count() == 1
         )  # one history recorded
+        assert (
+            ClinicalIndicationPanelHistory.objects.all()[0].user.username
+            == "test"
+        )
 
 
 class TestFlagClinicalIndicationSuperpanelForReview(TestCase):
@@ -165,6 +184,8 @@ class TestFlagClinicalIndicationSuperpanelForReview(TestCase):
             )
         )
 
+        self.user = User.objects.create_user(username="test", is_staff=True)
+
     def test_that_link_will_be_flagged_and_history_recorded(self):
         """
         test that given a clinical indication-superpanel link, the link will be
@@ -173,7 +194,7 @@ class TestFlagClinicalIndicationSuperpanelForReview(TestCase):
         """
 
         flag_clinical_indication_superpanel_for_review(
-            self.first_clinical_indication_superpanel, "test"
+            self.first_clinical_indication_superpanel, self.user
         )
 
         self.first_clinical_indication_superpanel.refresh_from_db()
@@ -184,6 +205,10 @@ class TestFlagClinicalIndicationSuperpanelForReview(TestCase):
         assert (
             ClinicalIndicationSuperPanelHistory.objects.count() == 1
         )  # one history recorded
+        assert (
+            ClinicalIndicationSuperPanelHistory.objects.all()[0].user.username
+            == "test"
+        )
 
 
 class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
@@ -207,14 +232,18 @@ class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
             panel_version=sortable_version("1.15"),
         )
 
-        self.first_clinical_indication_panel = ClinicalIndicationPanel.objects.create(
-            clinical_indication_id=self.first_clinical_indication.id,
-            panel_id=self.first_panel.id,
-            current=True,
-            pending=False,
+        self.first_clinical_indication_panel = (
+            ClinicalIndicationPanel.objects.create(
+                clinical_indication_id=self.first_clinical_indication.id,
+                panel_id=self.first_panel.id,
+                current=True,
+                pending=False,
+            )
         )
 
         self.td_version = TestDirectoryRelease.objects.create(release="2.1.0")
+
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
     def test_that_existing_link_is_flagged(self):
         """
@@ -234,8 +263,8 @@ class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
         provisionally_link_clinical_indication_to_panel(
             self.first_panel.id,
             self.first_clinical_indication.id,
-            "test",
             self.td_version,
+            self.user,
         )  # this is an existing link in db
 
         self.first_clinical_indication_panel.refresh_from_db()
@@ -258,16 +287,20 @@ class TestProvisionallyLinkClinicalIndicationToPanel(TestCase):
         provisionally_link_clinical_indication_to_panel(
             self.first_panel.id,
             self.second_clinical_indication.id,
-            "test",
             self.td_version,
+            self.user,
         )
 
         # test a new ci-panel link is made and flagged for review
         with self.subTest():
-            assert ClinicalIndicationPanel.objects.count() == 2  # one new link created
+            assert (
+                ClinicalIndicationPanel.objects.count() == 2
+            )  # one new link created
             new_link = ClinicalIndicationPanel.objects.last()
 
-            assert new_link.pending is True  # new link should be flagged for review
+            assert (
+                new_link.pending is True
+            )  # new link should be flagged for review
 
         # test that a release was linked to the ci-panel
         with self.subTest():
@@ -308,6 +341,8 @@ class TestProvisionallyLinkClinicalIndicationToSuperPanel(TestCase):
             )
         )
 
+        self.user = User.objects.create_user(username="test", is_staff=True)
+
     def test_that_existing_superpanel_link_is_flagged(self):
         """
         `provisionally_link_clinical_indication_to_superpanel` links a panel
@@ -330,8 +365,8 @@ class TestProvisionallyLinkClinicalIndicationToSuperPanel(TestCase):
         provisionally_link_clinical_indication_to_superpanel(
             self.first_superpanel,
             self.first_clinical_indication,
-            "test",
             self.td_version,
+            self.user,
         )  # this is an existing link in db
 
         self.first_clinical_indication_superpanel.refresh_from_db()
@@ -357,8 +392,8 @@ class TestProvisionallyLinkClinicalIndicationToSuperPanel(TestCase):
         provisionally_link_clinical_indication_to_superpanel(
             self.first_superpanel,
             self.second_clinical_indication,
-            "test",
             self.td_version,
+            self.user,
         )
 
         # one new link created
@@ -394,7 +429,9 @@ class TestRetrievePanelFromPanelID(TestCase):
         self.second_panel = Panel.objects.create(
             external_id=123,
             panel_name="Test panel",
-            panel_version=sortable_version("1.19"),  # notice the version number
+            panel_version=sortable_version(
+                "1.19"
+            ),  # notice the version number
         )
 
     def test_that_latest_panel_version_will_be_retrieved(self):
@@ -421,6 +458,7 @@ class TestMakeProvisionalTestMethodChange(TestCase):
         self.first_clinical_indication = ClinicalIndication.objects.create(
             r_code="R123", name="Test CI", test_method="Test method"
         )
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
     def test_if_clinical_indication_is_flagged(self):
         """
@@ -430,7 +468,7 @@ class TestMakeProvisionalTestMethodChange(TestCase):
         """
 
         _make_provisional_test_method_change(
-            self.first_clinical_indication, "Test method 2", "test user"
+            self.first_clinical_indication, "Test method 2", self.user
         )
 
         self.first_clinical_indication.refresh_from_db()
@@ -438,8 +476,15 @@ class TestMakeProvisionalTestMethodChange(TestCase):
         assert (
             self.first_clinical_indication.test_method == "Test method 2"
         )  # test method updated for clinical indication
-        assert self.first_clinical_indication.pending is True  # flagged for review
+        assert (
+            self.first_clinical_indication.pending is True
+        )  # flagged for review
 
         assert (
             ClinicalIndicationTestMethodHistory.objects.count() == 1
-        )  # one history recorded
+        )  # one history
+
+        assert (
+            ClinicalIndicationTestMethodHistory.objects.all()[0].user.username
+            == self.user.username
+        )

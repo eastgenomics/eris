@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.contrib.auth.models import User
 
 from panels_backend.models import (
     ClinicalIndication,
@@ -37,7 +38,9 @@ class TestPanelsFlaggedWhenNoLongerInTd(TestCase):
             panel_version="500",
         )
         self.cip_current_absent = ClinicalIndicationPanel.objects.create(
-            clinical_indication=self.ci, panel=self.panel_current_absent, current=True
+            clinical_indication=self.ci,
+            panel=self.panel_current_absent,
+            current=True,
         )
 
         self.panel_current_present = Panel.objects.create(
@@ -52,6 +55,7 @@ class TestPanelsFlaggedWhenNoLongerInTd(TestCase):
             current=True,
             pending=False,
         )
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
         # make a list of panels which ARE PRESENT in the current td - from which one of the current
         # CiPanels will be missing
@@ -66,12 +70,14 @@ class TestPanelsFlaggedWhenNoLongerInTd(TestCase):
         Meanwhile, panel '4' should be skipped, remaining current with no history data
         """
         _flag_panels_removed_from_test_directory(
-            self.ci, self.current_td_panels, "test user"
+            self.ci, self.current_td_panels, self.user
         )
 
         # check that the panel with the external ID '3', which is absent from the
         # current td, is set to current=False and pending=True
-        panel_ext_3 = ClinicalIndicationPanel.objects.filter(panel__external_id="3")
+        panel_ext_3 = ClinicalIndicationPanel.objects.filter(
+            panel__external_id="3"
+        )
         with self.subTest():
             assert len(panel_ext_3) == 1
             assert not panel_ext_3[0].current
@@ -84,10 +90,13 @@ class TestPanelsFlaggedWhenNoLongerInTd(TestCase):
             assert hist[0].note == History.flag_clinical_indication_panel(
                 "Panel ID no longer attached to clinical indication in TD"
             )
+            assert hist[0].user.username == "test"
 
         # check that the panel with the external ID '4', which is PRESENT IN the
         # current td, is still set to current=True
-        panel_ext_4 = ClinicalIndicationPanel.objects.filter(panel__external_id="4")
+        panel_ext_4 = ClinicalIndicationPanel.objects.filter(
+            panel__external_id="4"
+        )
         with self.subTest():
             assert len(panel_ext_4) == 1
             assert panel_ext_4[0].current

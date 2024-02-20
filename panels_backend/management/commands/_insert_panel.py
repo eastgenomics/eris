@@ -30,7 +30,9 @@ from ._insert_ci import (
 )
 from .panelapp import PanelClass, SuperPanelClass
 from django.db import transaction
+from django.http import HttpRequest
 from packaging.version import Version
+from django.contrib.auth.decorators import permission_required
 
 
 def _handle_nulls_and_blanks_from_json(json_field: str | None) -> str | None:
@@ -55,7 +57,9 @@ def _handle_nulls_and_blanks_from_json(json_field: str | None) -> str | None:
 
 def _populate_nullable_gene_fields(
     gene: dict,
-) -> tuple[ModeOfInheritance | None, ModeOfPathogenicity | None, Penetrance | None]:
+) -> tuple[
+    ModeOfInheritance | None, ModeOfPathogenicity | None, Penetrance | None
+]:
     """
     Handles extracting fields which are commonly nullable and seen in gene parsing.
     Where the fields exist, make them in the db.
@@ -72,7 +76,9 @@ def _populate_nullable_gene_fields(
     mop_instance = None
     penetrance_instance = None
 
-    inheritance = _handle_nulls_and_blanks_from_json(gene.get("mode_of_inheritance"))
+    inheritance = _handle_nulls_and_blanks_from_json(
+        gene.get("mode_of_inheritance")
+    )
     if inheritance:
         moi_instance, _ = ModeOfInheritance.objects.get_or_create(
             mode_of_inheritance=inheritance
@@ -97,6 +103,7 @@ def _insert_gene(
     panel: PanelClass,
     panel_instance: Panel,
     panel_created: bool,
+    user: HttpRequest | None = None,
 ) -> None:
     """
     Function to insert gene component of Panel into database.
@@ -104,6 +111,7 @@ def _insert_gene(
     :param panel: PanelClass object
     :param panel_instance: Panel object
     :param panel_created: boolean to indicate if panel is newly created
+    :param user: the user if web, or None if CLI
     """
     # attaching each Gene record to Panel record
     for single_gene in panel.genes:
@@ -142,10 +150,10 @@ def _insert_gene(
                             # either filter out those genes or something
                             PanelGeneHistory.objects.create(
                                 panel_gene_id=panel_gene.id,
-                                user="PanelApp",
                                 note=History.panel_gene_flagged_due_to_confidence(
                                     confidence_level
                                 ),
+                                user=user,
                             )
                 continue  # if panel-gene doesn't exist in db then we don't care about this gene with confidence level < 3
             else:
@@ -208,7 +216,7 @@ def _insert_gene(
             PanelGeneHistory.objects.create(
                 panel_gene_id=pg_instance.id,
                 note=History.panel_gene_created(),
-                user="PanelApp",
+                user=user,
             )
         else:
             # Panel-Gene record already exist
@@ -223,7 +231,7 @@ def _insert_gene(
                         pg_instance.justification,
                         "PanelApp",
                     ),
-                    user="PanelApp",
+                    user=user,
                 )
 
                 pg_instance.justification = "PanelApp"
@@ -252,7 +260,9 @@ def _get_most_recent_td_release_for_ci_panel(
         latest_td = max(td_releases, key=Version)
 
         # return the instance for that release
-        latest_td_instance = TestDirectoryRelease.objects.get(release=latest_td)
+        latest_td_instance = TestDirectoryRelease.objects.get(
+            release=latest_td
+        )
         return latest_td_instance
 
 
@@ -266,7 +276,9 @@ def _get_most_recent_td_release_for_ci_superpanel(
     based on data which exists for earlier versions of the same R code and SuperPanel ID.
     """
     # get all td_releases
-    releases = CiSuperpanelTdRelease.objects.filter(ci_superpanel=ci_superpanel)
+    releases = CiSuperpanelTdRelease.objects.filter(
+        ci_superpanel=ci_superpanel
+    )
     if not releases:
         return None
     else:
@@ -275,11 +287,15 @@ def _get_most_recent_td_release_for_ci_superpanel(
         latest_td = max(td_releases, key=Version)
 
         # return the instance for that release
-        latest_td_instance = TestDirectoryRelease.objects.get(release=latest_td)
+        latest_td_instance = TestDirectoryRelease.objects.get(
+            release=latest_td
+        )
         return latest_td_instance
 
 
-def _disable_custom_hgnc_panels(panel: PanelClass, user: str) -> None:
+def _disable_custom_hgnc_panels(
+    panel: PanelClass, user: HttpRequest | None
+) -> None:
     """
     Function to disable custom hgnc panels
     if a PanelApp-created panel is linked to exactly the same HGNC IDs as
@@ -288,7 +304,7 @@ def _disable_custom_hgnc_panels(panel: PanelClass, user: str) -> None:
     NOTE: if it's inactivate custom panel, that's fine
 
     :param panel: PanelClass object
-    :param user: user who initiated this change
+    :param user: either 'request.user' (if called from web) or None (if called from CLI)
     """
     genes: list[dict[str, str]] = [
         gene.get("gene_data") for gene in panel.genes if gene.get("gene_data")
@@ -329,7 +345,9 @@ def _disable_custom_hgnc_panels(panel: PanelClass, user: str) -> None:
             )
 
 
-def _insert_panel_data_into_db(panel: PanelClass, user: str) -> Panel:
+def _insert_panel_data_into_db(
+    panel: PanelClass, user: HttpRequest | None = None
+) -> Panel:
     """
     Insert data from a parsed JSON a panel record, into the database.
     Controls creation and flagging of new and old CI-Panel links,
@@ -337,7 +355,7 @@ def _insert_panel_data_into_db(panel: PanelClass, user: str) -> Panel:
     Controls creation of genes.
 
     :param: panel [PanelClass], parsed panel input from the API
-    :param: user [str], the user initiating this change
+    :param: user if web, None if CLI
     """
     panel_external_id: str = panel.id
     panel_name: str = panel.name
@@ -361,25 +379,33 @@ def _insert_panel_data_into_db(panel: PanelClass, user: str) -> Panel:
         # handle previous Panel(s) with similar external_id. Panel name and version aren't suited for this.
         # mark previous CI-Panel links as needing review!
 
-        for clinical_indication_panel in ClinicalIndicationPanel.objects.filter(
+        for (
+            clinical_indication_panel
+        ) in ClinicalIndicationPanel.objects.filter(
             panel_id__external_id=panel_external_id,
             current=True,
         ):
-            flag_clinical_indication_panel_for_review(clinical_indication_panel, user)
+            flag_clinical_indication_panel_for_review(
+                clinical_indication_panel, user
+            )
 
-            clinical_indication_id = clinical_indication_panel.clinical_indication_id
+            clinical_indication_id = (
+                clinical_indication_panel.clinical_indication_id
+            )
 
             # get the most recent TestDirectoryRelease for this clinical_indication_panel,
             #  and provisionally link it
-            latest_active_td_release = _get_most_recent_td_release_for_ci_panel(
-                clinical_indication_panel
+            latest_active_td_release = (
+                _get_most_recent_td_release_for_ci_panel(
+                    clinical_indication_panel
+                )
             )
 
             provisionally_link_clinical_indication_to_panel(
                 panel_instance.id,
                 clinical_indication_id,
-                "PanelApp",
                 latest_active_td_release,
+                user,
             )
 
     # attach each Gene record to the Panel record,
@@ -391,7 +417,9 @@ def _insert_panel_data_into_db(panel: PanelClass, user: str) -> Panel:
 
 
 def _insert_superpanel_into_db(
-    superpanel: SuperPanelClass, child_panels: list[Panel], user: str
+    superpanel: SuperPanelClass,
+    child_panels: list[Panel],
+    user: HttpRequest | None = None,
 ) -> None:
     """
     Insert data from a parsed SuperPanel.
@@ -403,7 +431,7 @@ def _insert_superpanel_into_db(
     :param: child_panels [list[Panel]], the 'child' panels which make up
     the SuperPanel. These are already added to the db, so they're a list
     of database objects.
-    :param: user [str], the user initiating this
+    :param: user if web, None if CLI
     """
     panel_external_id: str = superpanel.id
     panel_name: str = superpanel.name
@@ -424,7 +452,9 @@ def _insert_superpanel_into_db(
     if created:
         # make links between the SuperPanel and its child panels
         for child in child_panels:
-            PanelSuperPanel.objects.get_or_create(panel=child, superpanel=superpanel)
+            PanelSuperPanel.objects.get_or_create(
+                panel=child, superpanel=superpanel
+            )
 
         # if there are previous SuperPanel(s) with similar external_id,
         # mark previous CI-SuperPanel links as needing review
@@ -437,15 +467,17 @@ def _insert_superpanel_into_db(
                 clinical_indication_superpanel, user
             )
 
-            latest_active_td_release = _get_most_recent_td_release_for_ci_superpanel(
-                clinical_indication_superpanel
+            latest_active_td_release = (
+                _get_most_recent_td_release_for_ci_superpanel(
+                    clinical_indication_superpanel
+                )
             )
 
             provisionally_link_clinical_indication_to_superpanel(
                 superpanel,
                 clinical_indication_superpanel.clinical_indication,
-                "PanelApp",
                 latest_active_td_release,
+                user,
             )
 
     # if the superpanel hasn't just been created: the SuperPanel is either
@@ -455,8 +487,11 @@ def _insert_superpanel_into_db(
     return superpanel, created
 
 
+@permission_required("staff", raise_exception=False)
 def panel_insert_controller(
-    panels: list[PanelClass], superpanels: list[SuperPanelClass], user: str
+    panels: list[PanelClass],
+    superpanels: list[SuperPanelClass],
+    user: HttpRequest | None = None,
 ):
     """
     Carries out coordination of panel creation from the 'all' command - Panels and SuperPanels are
@@ -467,7 +502,7 @@ def panel_insert_controller(
     :param: panels [list[PanelClass]], a list of parsed panel input from the API
     :param: superpanels [list[SuperPanel]], a list of parsed superpanel
     input from the API
-    :param: user [str], the user initiating this
+    :param: user, either 'request.user' (if called from web) or None (if called from CLI)
     """
     # currently, we only handle Panel/SuperPanel if the panel data is from
     # PanelApp, hence adding the source manually

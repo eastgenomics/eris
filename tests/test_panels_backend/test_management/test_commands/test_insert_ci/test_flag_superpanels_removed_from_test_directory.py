@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.contrib.auth.models import User
 
 from panels_backend.models import (
     ClinicalIndication,
@@ -48,12 +49,15 @@ class TestSuperpanelsFlaggedWhenNoLongerInTd(TestCase):
             panel_source="PanelApp",
             panel_version="50",
         )
-        self.cisp_current_present = ClinicalIndicationSuperPanel.objects.create(
-            clinical_indication=self.ci,
-            superpanel=self.superpanel_current_present,
-            current=True,
-            pending=False,
+        self.cisp_current_present = (
+            ClinicalIndicationSuperPanel.objects.create(
+                clinical_indication=self.ci,
+                superpanel=self.superpanel_current_present,
+                current=True,
+                pending=False,
+            )
         )
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
         # make a list of panels which ARE PRESENT in the current td - from which one of the current
         # CiSuperPanels will be missing
@@ -68,7 +72,7 @@ class TestSuperpanelsFlaggedWhenNoLongerInTd(TestCase):
         Current Superpanels which ARE in the td-files should be skipped, remaining current with no history data
         """
         _flag_superpanels_removed_from_test_directory(
-            self.ci, self.current_td_panels, "test user"
+            self.ci, self.current_td_panels, self.user
         )
 
         # check that the superpanel with the external ID '3', which is absent from the
@@ -88,6 +92,7 @@ class TestSuperpanelsFlaggedWhenNoLongerInTd(TestCase):
             assert hist[0].note == History.flag_clinical_indication_panel(
                 "Superpanel ID no longer attached to clinical indication in TD"
             )
+            assert hist[0].user.username == "test"
 
         # check that the superpanel with the external ID '4', which is PRESENT IN the
         # current td, is still set to current=True

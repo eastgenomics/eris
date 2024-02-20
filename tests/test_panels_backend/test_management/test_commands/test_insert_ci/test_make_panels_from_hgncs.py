@@ -7,6 +7,7 @@ Tested scenario:
 """
 
 from django.test import TestCase
+from django.contrib.auth.models import User
 
 from panels_backend.models import (
     ClinicalIndication,
@@ -19,7 +20,9 @@ from panels_backend.models import (
     TestDirectoryRelease,
     CiPanelTdRelease,
 )
-from panels_backend.management.commands._insert_ci import _make_panels_from_hgncs
+from panels_backend.management.commands._insert_ci import (
+    _make_panels_from_hgncs,
+)
 from tests.test_panels_backend.test_management.test_commands.test_insert_panel.test_insert_gene import (
     len_check_wrapper,
     value_check_wrapper,
@@ -54,7 +57,7 @@ class TestMakePanelsFromHgncs(TestCase):
             td_date="230616",
         )
 
-        self.user = "test"
+        self.user = User.objects.create_user(username="test", is_staff=True)
 
     def test_make_panel_function(self):
         """
@@ -115,6 +118,11 @@ class TestMakePanelsFromHgncs(TestCase):
             "clinical indication-panel history",
             1,
         )  # there should be one record of clinical indication-panel history
+        errors += value_check_wrapper(
+            ClinicalIndicationPanelHistory.objects.all()[0].user,
+            "history username",
+            self.user,
+        )
 
         genes = Gene.objects.all()
 
@@ -198,6 +206,12 @@ class TestMakePanelsFromHgncs(TestCase):
         errors += len_check_wrapper(
             PanelGeneHistory.objects.all(), "panel-gene history records", 3
         )  # should have 3 history recorded HGNC:1 HGNC:2 and HGNC:3
+
+        errors += value_check_wrapper(
+            PanelGeneHistory.objects.all()[0].user.username,
+            "PanelGeneHistory user",
+            "test",
+        )
 
         # check that test directory release links are formed
         links_with_td = CiPanelTdRelease.objects.all()

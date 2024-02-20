@@ -125,7 +125,8 @@ class GeneForm(forms.Form):
             Gene.objects.get(hgnc_id=hgnc_id)
 
             self.add_error(
-                "hgnc_id", f"Gene with HGNC ID '{hgnc_id}' already exists in db!"
+                "hgnc_id",
+                f"Gene with HGNC ID '{hgnc_id}' already exists in db!",
             )
         except Gene.DoesNotExist:
             # no gene with this hgnc_id exists, that's good

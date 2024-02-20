@@ -9,6 +9,8 @@ Tested scenario `insert_panel_data_into_db_function`
 """
 
 from django.test import TestCase
+from django.contrib.auth.models import User
+
 from panels_backend.management.commands.panelapp import PanelClass
 from panels_backend.models import (
     Panel,
@@ -17,7 +19,9 @@ from panels_backend.models import (
     PanelGene,
 )
 from panels_backend.management.commands.utils import sortable_version
-from panels_backend.management.commands._insert_panel import _insert_panel_data_into_db
+from panels_backend.management.commands._insert_panel import (
+    _insert_panel_data_into_db,
+)
 
 from .test_insert_gene import len_check_wrapper, value_check_wrapper
 
@@ -45,6 +49,11 @@ class TestInsertDataIntoDB(TestCase):
             panel_id=self.first_panel.id,
             current=True,
         )
+
+        self.user_logged_in = User.objects.create_user(
+            username="test", is_staff=True
+        )
+        self.user_cli = None
 
     def test_that_a_new_panel_will_be_inserted_together_with_its_gene(
         self,
@@ -86,10 +95,12 @@ class TestInsertDataIntoDB(TestCase):
             ],
         )
 
-        _insert_panel_data_into_db(mock_api, "PanelApp")
+        _insert_panel_data_into_db(mock_api, self.user_cli)
 
         errors += len_check_wrapper(
-            ClinicalIndicationPanel.objects.all(), "clinical indication-panel", 1
+            ClinicalIndicationPanel.objects.all(),
+            "clinical indication-panel",
+            1,
         )  # assert that there is no new clinical indication-panel (just the one we created in setup)
 
         errors += len_check_wrapper(
@@ -97,9 +108,9 @@ class TestInsertDataIntoDB(TestCase):
         )  # first one is the one we made in setup, second one is inserted
 
         panels = Panel.objects.all()
-        attached_gene_hgnc_id = PanelGene.objects.filter(panel_id=panels[1].id).values(
-            "gene_id__hgnc_id"
-        )
+        attached_gene_hgnc_id = PanelGene.objects.filter(
+            panel_id=panels[1].id
+        ).values("gene_id__hgnc_id")
 
         errors += len_check_wrapper(attached_gene_hgnc_id, "panel-gene", 1)
 
@@ -146,10 +157,12 @@ class TestInsertDataIntoDB(TestCase):
             regions=[],
         )
 
-        _insert_panel_data_into_db(mock_api, "PanelApp")
+        _insert_panel_data_into_db(mock_api, self.user_logged_in)
 
         errors += len_check_wrapper(
-            ClinicalIndicationPanel.objects.all(), "clinical indication-panel", 2
+            ClinicalIndicationPanel.objects.all(),
+            "clinical indication-panel",
+            2,
         )  # assert that there is one new clinical indication-panel
 
         clinical_indication_panels = ClinicalIndicationPanel.objects.all()
@@ -171,7 +184,9 @@ class TestInsertDataIntoDB(TestCase):
 
         panels = Panel.objects.all()
         errors += value_check_wrapper(
-            panels[1].panel_version, "second panel version", sortable_version("1.16")
+            panels[1].panel_version,
+            "second panel version",
+            sortable_version("1.16"),
         )  # assert second panel version is 1.16
 
         assert not errors, errors
@@ -210,7 +225,7 @@ class TestInsertDataIntoDB(TestCase):
             regions=[],
         )
 
-        _insert_panel_data_into_db(mock_api, "PanelApp")
+        _insert_panel_data_into_db(mock_api, self.user_cli)
 
         errors += len_check_wrapper(
             ClinicalIndicationPanel.objects.all(), "ClinicalIndicationPanel", 2
@@ -274,7 +289,7 @@ class TestInsertDataIntoDB(TestCase):
             regions=[],
         )
 
-        _insert_panel_data_into_db(mock_api, "PanelApp")
+        _insert_panel_data_into_db(mock_api, self.user_logged_in)
 
         errors += len_check_wrapper(
             Panel.objects.all(), "panel", 1

@@ -33,7 +33,11 @@ class TestBasicManeFile(TestCase):
                         "NM_014576.4",
                         "NM_000014.6",
                     ],
-                    "Ensembl StableID GRCh37 (Not MANE)": ["enst", "enst", "enst"],
+                    "Ensembl StableID GRCh37 (Not MANE)": [
+                        "enst",
+                        "enst",
+                        "enst",
+                    ],
                     "5'UTR": ["n", "n", "n"],
                     "CDS": ["y", "y", "y"],
                     "3'UTR": ["n", "n", "n"],

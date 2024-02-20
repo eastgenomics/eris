@@ -46,7 +46,9 @@ class Command(BaseCommand):
             help="Whether to add the clinical indication to the panel, or remove it",
         )
 
-        clinical_indication = parser.add_mutually_exclusive_group(required=True)
+        clinical_indication = parser.add_mutually_exclusive_group(
+            required=True
+        )
 
         # arg for finding clinical indication using r code
         clinical_indication.add_argument(
@@ -64,9 +66,6 @@ class Command(BaseCommand):
         specified source, then calls inserter to insert cleaned data
         into the database."""
         print(kwargs)
-
-        # TODO: add user later, once we've decided on how to do that
-        user = "init_v1_user"
 
         action: str = kwargs.get("action")
         panel_id = kwargs.get("panel_id")
@@ -86,7 +85,9 @@ class Command(BaseCommand):
             panel = get_panel_by_name(panel_name)
 
             # no panel found with the database id
-            assert panel, f"The panel {panel_name} was not found in the database"
+            assert (
+                panel
+            ), f"The panel {panel_name} was not found in the database"
 
             # more than one panel with same name found with the database id
             assert len(panel) < 2, (
@@ -118,13 +119,11 @@ class Command(BaseCommand):
 
         if action == "activate":
             activate_clinical_indication_panel(
-                clinical_indication.id,
-                panel.id,
-                user,
+                clinical_indication.id, panel.id, user=None
             )
         else:
             deactivate_clinical_indication_panel(
                 clinical_indication.id,
                 panel.id,
-                user,
+                user=None,
             )

@@ -32,7 +32,10 @@ class TestBlockGenepanels_BlankDb(TestCase):
 class TestBlockGenepanels_PendingCiPanels(TestCase):
     def setUp(self) -> None:
         TestDirectoryRelease.objects.create(
-            release="8", td_source="xlsx", config_source="json", td_date="2023_04_13"
+            release="8",
+            td_source="xlsx",
+            config_source="json",
+            td_date="2023_04_13",
         )
         self.panel = Panel.objects.create(
             external_id="5",
@@ -47,7 +50,10 @@ class TestBlockGenepanels_PendingCiPanels(TestCase):
             r_code="", name="", test_method="ngs", pending=False
         )
         self.cip = ClinicalIndicationPanel.objects.create(
-            panel=self.panel, clinical_indication=self.ci, current=True, pending=True
+            panel=self.panel,
+            clinical_indication=self.ci,
+            current=True,
+            pending=True,
         )
 
     def test_pending_ci_panel_errors(self):
@@ -76,7 +82,10 @@ class TestBlockGenepanels_PendingSuperPanels(TestCase):
 
     def setUp(self) -> None:
         TestDirectoryRelease.objects.create(
-            release="8", td_source="xlsx", config_source="json", td_date="2023_04_13"
+            release="8",
+            td_source="xlsx",
+            config_source="json",
+            td_date="2023_04_13",
         )
         self.panel = Panel.objects.create(
             external_id="5",
@@ -100,7 +109,10 @@ class TestBlockGenepanels_PendingSuperPanels(TestCase):
             r_code="", name="", test_method="ngs", pending=False
         )
         self.cip = ClinicalIndicationPanel.objects.create(
-            panel=self.panel, clinical_indication=self.ci, current=True, pending=False
+            panel=self.panel,
+            clinical_indication=self.ci,
+            current=True,
+            pending=False,
         )
         self.cisp = ClinicalIndicationSuperPanel.objects.create(
             superpanel=self.superpanel,

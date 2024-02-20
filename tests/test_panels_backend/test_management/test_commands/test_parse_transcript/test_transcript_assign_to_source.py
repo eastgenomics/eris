@@ -29,7 +29,11 @@ class TestTranscriptAssigner_TxAbsent(TestCase):
             tx, hgnc_id, mane_data, markname_hgmd, gene2refseq_hgmd
         )
 
-        no_results = {"clinical": None, "match_base": None, "match_version": None}
+        no_results = {
+            "clinical": None,
+            "match_base": None,
+            "match_version": None,
+        }
 
         with self.subTest():
             self.assertDictEqual(mane_select_data, no_results)
@@ -95,7 +99,9 @@ class TestTranscriptAssigner_InMane(TestCase):
         with self.subTest():
             self.assertDictEqual(mane_select_data, mane_select_expected)
         with self.subTest():
-            self.assertDictEqual(mane_plus_clinical_data, mane_plus_clinical_expected)
+            self.assertDictEqual(
+                mane_plus_clinical_data, mane_plus_clinical_expected
+            )
         with self.subTest():
             self.assertDictEqual(hgmd_data, hgmd_data_expected)
 
@@ -139,7 +145,9 @@ class TestTranscriptAssigner_InMane(TestCase):
         with self.subTest():
             self.assertDictEqual(mane_select_data, no_data)
         with self.subTest():
-            self.assertDictEqual(mane_plus_clinical_data, mane_plus_clinical_expected)
+            self.assertDictEqual(
+                mane_plus_clinical_data, mane_plus_clinical_expected
+            )
         with self.subTest():
             self.assertDictEqual(hgmd_data, no_data)
 
@@ -191,7 +199,9 @@ class TestTranscriptAssigner_InMane(TestCase):
         with self.subTest():
             self.assertDictEqual(mane_select_data, mane_select_expected)
         with self.subTest():
-            self.assertDictEqual(mane_plus_clinical_data, mane_plus_clinical_expected)
+            self.assertDictEqual(
+                mane_plus_clinical_data, mane_plus_clinical_expected
+            )
         with self.subTest():
             self.assertDictEqual(hgmd_data, hgmd_data_expected)
 
@@ -234,7 +244,9 @@ class TestTranscriptAssigner_InMane(TestCase):
         with self.subTest():
             self.assertDictEqual(mane_select_data, no_data)
         with self.subTest():
-            self.assertDictEqual(mane_plus_clinical_data, mane_plus_clinical_expected)
+            self.assertDictEqual(
+                mane_plus_clinical_data, mane_plus_clinical_expected
+            )
         with self.subTest():
             self.assertDictEqual(hgmd_data, no_data)
 
@@ -268,7 +280,11 @@ class TestTranscriptAssigner_InHgmd(TestCase):
         )
 
         # expected values
-        hgmd_expected = {"clinical": True, "match_base": True, "match_version": False}
+        hgmd_expected = {
+            "clinical": True,
+            "match_base": True,
+            "match_version": False,
+        }
         no_data = {"clinical": None, "match_base": None, "match_version": None}
 
         with self.subTest():

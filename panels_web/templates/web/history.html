@@ -107,7 +107,7 @@
                         </td>
                         <td>{{history.created}}</td>
                         <td style="max-width:20em;" class="text-wrap">{{history.note}}</td>
-                        <td style="max-width:20em;" class="text-wrap">{{history.user}}</td>
+                        <td style="max-width:20em;" class="text-wrap">{{history.user__username}}</td>
                     </tr>
                     {% endfor %}
                     {% elif selected == 'panels' %}
@@ -136,7 +136,7 @@
                         </td>
                         <td>{{ pg.created }}</td>
                         <td>{{ pg.note }}</td>
-                        <td>{{ pg.user }}</td>
+                        <td>{{ pg.user__username }}</td>
                     </tr>
                     {% endfor %}
                     {% endif %}

@@ -4,7 +4,9 @@ from unittest.mock import Mock, MagicMock
 import numpy as np
 import json
 
-from panels_backend.management.commands.panelapp import get_specific_version_panel
+from panels_backend.management.commands.panelapp import (
+    get_specific_version_panel,
+)
 
 
 class TestGetPanel_ErrorsNot200(TestCase):

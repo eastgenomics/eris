@@ -56,8 +56,12 @@ class TestGetRelevantCiPanels_Basic(TestCase):
             td_date="20231208",
         )
 
-        CiPanelTdRelease.objects.create(ci_panel=self.cip_1, td_release=self.td_release)
-        CiPanelTdRelease.objects.create(ci_panel=self.cip_2, td_release=self.td_release)
+        CiPanelTdRelease.objects.create(
+            ci_panel=self.cip_1, td_release=self.td_release
+        )
+        CiPanelTdRelease.objects.create(
+            ci_panel=self.cip_2, td_release=self.td_release
+        )
 
     def test_get_relevant_ci_panels_basic(self):
         """
@@ -66,7 +70,9 @@ class TestGetRelevantCiPanels_Basic(TestCase):
         and a 'relevant panels' set of the panels' names
         """
         cmd = Command()
-        ci_panels, relevant_panels = cmd._get_relevant_ci_panels(self.td_release)
+        ci_panels, relevant_panels = cmd._get_relevant_ci_panels(
+            self.td_release
+        )
 
         expected_ci_panels = {
             "R1": [
@@ -139,7 +145,9 @@ class TestGetRelevantCiPanels_Basic(TestCase):
         # Run the test
 
         cmd = Command()
-        ci_panels, relevant_panels = cmd._get_relevant_ci_panels(self.td_release)
+        ci_panels, relevant_panels = cmd._get_relevant_ci_panels(
+            self.td_release
+        )
 
         expected_ci_panels = {
             "R1": [

@@ -7,8 +7,10 @@
         <div class="col">
             <div class="d-flex justify-content-between mb-2">
                 <h3>Clinical Indications</h3>
-                <!-- <a class="btn btn-primary btn-sm m-2" href="{% url 'ci_add' %}" role="button">Add Clinical
-                    Indication</a> -->
+                {% if user.is_staff %}
+                <a class="btn btn-primary btn-sm m-2" href="{% url 'ci_add' %}" role="button">Add Clinical
+                    Indication</a>
+                {% endif %}
             </div>
             <table id="clinicalIndicationTable" class="table pt-2 table-striped table-bordered">
                 <thead class="table-success">
@@ -36,7 +38,9 @@
         <div class="col mt-3">
             <div class="d-flex justify-content-between mb-2">
                 <h3>Panels</h3>
+                {% if user.is_staff %}
                 <a class="btn btn-primary btn-sm m-2" href="{% url 'panel_add' %}" role="button">Add Panel</a>
+                {% endif %}
             </div>
             <table id="panelTable" class="table pt-2 table-striped table-bordered">
                 <thead class="table-success">
@@ -79,8 +83,10 @@
         <div class="col mt-3">
             <div class="d-flex justify-content-between mb-2">
                 <h3>Clinical Indication Panels</h3>
+                {% if user.is_staff %}
                 <a class="btn btn-primary btn-sm m-2" href="{% url 'cip_add' %}" role="button">Add Clinical Indication
                     Panels</a>
+                {% endif %}
             </div>
             <table id="cipTable" class="table pt-2 table-striped table-bordered">
                 <thead class="table-success">
@@ -162,7 +168,9 @@
         <div class="col">
             <div class="d-flex justify-content-between mb-2">
                 <h3>Genes</h3>
+                {% if user.is_staff %}
                 <a class="btn btn-primary btn-sm m-2" href="{% url 'gene_add' %}" role="button">Add Gene</a>
+                {% endif %}
             </div>
             <table class="table pt-2 table-striped table-bordered" id="geneTable">
                 <thead class="table-success">

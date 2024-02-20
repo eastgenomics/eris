@@ -20,8 +20,12 @@ class TestMostRecentRelease_Superpanels_MultiEntries(TestCase):
     """
 
     def setUp(self) -> None:
-        self.first_release = TestDirectoryRelease.objects.create(release="1.0.0")
-        self.second_release = TestDirectoryRelease.objects.create(release="1.0.3")
+        self.first_release = TestDirectoryRelease.objects.create(
+            release="1.0.0"
+        )
+        self.second_release = TestDirectoryRelease.objects.create(
+            release="1.0.3"
+        )
 
         self.superpanel = SuperPanel.objects.create(
             external_id="test",
@@ -35,7 +39,9 @@ class TestMostRecentRelease_Superpanels_MultiEntries(TestCase):
         )
 
         self.ci_superpanel = ClinicalIndicationSuperPanel.objects.create(
-            clinical_indication=self.ci, superpanel=self.superpanel, current=True
+            clinical_indication=self.ci,
+            superpanel=self.superpanel,
+            current=True,
         )
 
         self.ci_panel_td = CiSuperpanelTdRelease.objects.create(
@@ -47,7 +53,9 @@ class TestMostRecentRelease_Superpanels_MultiEntries(TestCase):
         )
 
     def test_two_entries(self):
-        answer = _get_most_recent_td_release_for_ci_superpanel(self.ci_superpanel)
+        answer = _get_most_recent_td_release_for_ci_superpanel(
+            self.ci_superpanel
+        )
         assert answer.release == "1.0.3"
 
 
@@ -58,8 +66,12 @@ class TestMostRecentRelease_SuperPanels_NoEntries(TestCase):
     """
 
     def setUp(self) -> None:
-        self.first_release = TestDirectoryRelease.objects.create(release="1.0.0")
-        self.second_release = TestDirectoryRelease.objects.create(release="1.0.3")
+        self.first_release = TestDirectoryRelease.objects.create(
+            release="1.0.0"
+        )
+        self.second_release = TestDirectoryRelease.objects.create(
+            release="1.0.3"
+        )
 
         self.superpanel = SuperPanel.objects.create(
             external_id="test",
@@ -73,9 +85,13 @@ class TestMostRecentRelease_SuperPanels_NoEntries(TestCase):
         )
 
         self.ci_superpanel = ClinicalIndicationSuperPanel.objects.create(
-            clinical_indication=self.ci, superpanel=self.superpanel, current=True
+            clinical_indication=self.ci,
+            superpanel=self.superpanel,
+            current=True,
         )
 
     def test_no_connected_entries(self):
-        answer = _get_most_recent_td_release_for_ci_superpanel(self.ci_superpanel)
+        answer = _get_most_recent_td_release_for_ci_superpanel(
+            self.ci_superpanel
+        )
         assert not answer

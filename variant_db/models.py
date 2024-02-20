@@ -1,7 +1,8 @@
 from django.db import models
-from panels_backend.models import Chromosome, ClinicalIndication, Panel, ReferenceGenome
-
-# Create your models here.
+from panels_backend.models import (
+    Panel,
+    ReferenceGenome,
+)
 
 
 class Sample(models.Model):
@@ -29,7 +30,7 @@ class Sample(models.Model):
 class TestCode(models.Model):
     """The code of the test used when sequencing a sample. Assay-specific"""
 
-    testcode = models.TextField(verbose_name="Test code")
+    test_code = models.TextField(verbose_name="Test code")
 
     class Meta:
         db_table = "test_code"
@@ -80,7 +81,7 @@ class AssertionCriteria(models.Model):
     a condition-specific set of guidelines, or something like a Pubmed ID.
     """
 
-    name = models.TextField(verbose_name="Assertion criteria name")
+    category = models.TextField(verbose_name="Assertion criteria name")
 
     class Meta:
         db_table = "assertion_criteria"
@@ -131,6 +132,26 @@ class ClinvarCollectionMethod(models.Model):
         return str(self.id)
 
 
+class Chromosome(models.Model):
+    """
+    Records chromosomes
+    """
+
+    name = models.TextField(verbose_name="chromosome name")
+
+    numerical_name = models.IntegerField(verbose_name="numeric index")
+
+    source = models.TextField(
+        verbose_name="chromosome source (i.e. RefSeq, Assembly, Genbank etc.)"
+    )
+
+    class Meta:
+        db_table = "chromosome"
+
+    def __str__(self):
+        return str(self.id)
+
+
 class Variant(models.Model):
     """
     Records variants
@@ -139,7 +160,9 @@ class Variant(models.Model):
     interpreted = models.BooleanField(verbose_name="Interpreted by scientist")
 
     reference_genome = models.ForeignKey(
-        ReferenceGenome, verbose_name="Reference Genome ID", on_delete=models.PROTECT
+        ReferenceGenome,
+        verbose_name="Reference Genome ID",
+        on_delete=models.PROTECT,
     )
 
     chromosome = models.ForeignKey(
@@ -152,7 +175,9 @@ class Variant(models.Model):
         verbose_name="Reference variant allele"
     )  # what's the maximum variant size?
 
-    alt = models.TextField(verbose_name="Alternative variant allele")  # see above
+    alt = models.TextField(
+        verbose_name="Alternative variant allele"
+    )  # see above
 
     class Meta:
         db_table = "variant"
@@ -241,7 +266,9 @@ class Interpretation(models.Model):
     )
 
     affected_status = models.ForeignKey(
-        AffectedStatus, verbose_name="Affected Status ID", on_delete=models.PROTECT
+        AffectedStatus,
+        verbose_name="Affected Status ID",
+        on_delete=models.PROTECT,
     )
 
     assertion_criteria = models.ForeignKey(
@@ -263,12 +290,8 @@ class Interpretation(models.Model):
     )
 
     evaluating_institution = models.ForeignKey(
-        Institution, verbose_name="Evaluating Institution ID", on_delete=models.PROTECT
-    )
-
-    panel = models.ForeignKey(
-        Panel,
-        verbose_name="Panel ID",
+        Institution,
+        verbose_name="Evaluating Institution ID",
         on_delete=models.PROTECT,
     )
 
@@ -295,6 +318,7 @@ class Interpretation(models.Model):
     clinvar_submission = models.ForeignKey(
         ClinvarSubmission,
         verbose_name="Clinvar Submission ID",
+        null=True,
         on_delete=models.PROTECT,
     )
 
@@ -313,7 +337,9 @@ class Interpretation(models.Model):
         on_delete=models.PROTECT,
     )
 
-    date = models.DateField(verbose_name="Date that the interpretation was completed")
+    date = models.DateField(
+        verbose_name="Date that the interpretation was completed"
+    )
 
     class Meta:
         db_table = "interpretation"
@@ -334,91 +360,164 @@ class AcgsCategoryInformation(models.Model):
     )
 
     PVS1_verdict = models.TextField(verbose_name="PSV1 verdict", null=True)
-    PSV1_evidence = models.TextField(verbose_name="PSV1 evidence notes", null=True)
+    PVS1_evidence = models.TextField(
+        verbose_name="PSV1 evidence notes", null=True
+    )
 
     PS1_verdict = models.TextField(verbose_name="PS1 verdict", null=True)
-    PS1_evidence = models.TextField(verbose_name="PS1 evidence notes", null=True)
+    PS1_evidence = models.TextField(
+        verbose_name="PS1 evidence notes", null=True
+    )
 
     PS2_verdict = models.TextField(verbose_name="PS2 verdict", null=True)
-    PS2_evidence = models.TextField(verbose_name="PS2 evidence notes", null=True)
+    PS2_evidence = models.TextField(
+        verbose_name="PS2 evidence notes", null=True
+    )
 
     PS3_verdict = models.TextField(verbose_name="PS3 verdict", null=True)
-    PS3_evidence = models.TextField(verbose_name="PS3 evidence notes", null=True)
+    PS3_evidence = models.TextField(
+        verbose_name="PS3 evidence notes", null=True
+    )
 
     PS4_verdict = models.TextField(verbose_name="PS4 verdict", null=True)
-    PS4_evidence = models.TextField(verbose_name="PS4 evidence notes", null=True)
+    PS4_evidence = models.TextField(
+        verbose_name="PS4 evidence notes", null=True
+    )
 
     PM1_verdict = models.TextField(verbose_name="PM1 verdict", null=True)
-    PM1_evidence = models.TextField(verbose_name="PM1 evidence notes", null=True)
+    PM1_evidence = models.TextField(
+        verbose_name="PM1 evidence notes", null=True
+    )
 
     PM2_verdict = models.TextField(verbose_name="PM2 verdict", null=True)
-    PM2_evidence = models.TextField(verbose_name="PM2 evidence notes", null=True)
+    PM2_evidence = models.TextField(
+        verbose_name="PM2 evidence notes", null=True
+    )
 
     PM3_verdict = models.TextField(verbose_name="PM3 verdict", null=True)
-    PM3_evidence = models.TextField(verbose_name="PM3 evidence notes", null=True)
+    PM3_evidence = models.TextField(
+        verbose_name="PM3 evidence notes", null=True
+    )
 
     PM4_verdict = models.TextField(verbose_name="PM4 verdict", null=True)
-    PM4_evidence = models.TextField(verbose_name="PM4 evidence notes", null=True)
+    PM4_evidence = models.TextField(
+        verbose_name="PM4 evidence notes", null=True
+    )
 
     PM5_verdict = models.TextField(verbose_name="PM5 verdict", null=True)
-    PM5_evidence = models.TextField(verbose_name="PM5 evidence notes", null=True)
+    PM5_evidence = models.TextField(
+        verbose_name="PM5 evidence notes", null=True
+    )
 
     PM6_verdict = models.TextField(verbose_name="PM6 verdict", null=True)
-    PM6_evidence = models.TextField(verbose_name="PM6 evidence notes", null=True)
+    PM6_evidence = models.TextField(
+        verbose_name="PM6 evidence notes", null=True
+    )
 
     PP1_verdict = models.TextField(verbose_name="PP1 verdict", null=True)
-    PP1_evidence = models.TextField(verbose_name="PP1 evidence notes", null=True)
+    PP1_evidence = models.TextField(
+        verbose_name="PP1 evidence notes", null=True
+    )
 
     PP2_verdict = models.TextField(verbose_name="PP2 verdict", null=True)
-    PP2_evidence = models.TextField(verbose_name="PP2 evidence notes", null=True)
+    PP2_evidence = models.TextField(
+        verbose_name="PP2 evidence notes", null=True
+    )
 
     PP3_verdict = models.TextField(verbose_name="PP3 verdict", null=True)
-    PP3_evidence = models.TextField(verbose_name="PP3 evidence notes", null=True)
+    PP3_evidence = models.TextField(
+        verbose_name="PP3 evidence notes", null=True
+    )
 
     PP4_verdict = models.TextField(verbose_name="PP4 verdict", null=True)
-    PP4_evidence = models.TextField(verbose_name="PP4 evidence notes", null=True)
+    PP4_evidence = models.TextField(
+        verbose_name="PP4 evidence notes", null=True
+    )
 
     PP5_verdict = models.TextField(verbose_name="PP5 verdict", null=True)
-    PP5_evidence = models.TextField(verbose_name="PP5 evidence notes", null=True)
+    PP5_evidence = models.TextField(
+        verbose_name="PP5 evidence notes", null=True
+    )
 
     BS1_verdict = models.TextField(verbose_name="BS1 verdict", null=True)
-    BS1_evidence = models.TextField(verbose_name="BS1 evidence notes", null=True)
+    BS1_evidence = models.TextField(
+        verbose_name="BS1 evidence notes", null=True
+    )
 
     BS2_verdict = models.TextField(verbose_name="BS2 verdict", null=True)
-    BS2_evidence = models.TextField(verbose_name="BS2 evidence notes", null=True)
+    BS2_evidence = models.TextField(
+        verbose_name="BS2 evidence notes", null=True
+    )
 
     BS3_verdict = models.TextField(verbose_name="BS3 verdict", null=True)
-    BS3_evidence = models.TextField(verbose_name="BS3 evidence notes", null=True)
+    BS3_evidence = models.TextField(
+        verbose_name="BS3 evidence notes", null=True
+    )
 
     BS4_verdict = models.TextField(verbose_name="BS4 verdict", null=True)
-    BS4_evidence = models.TextField(verbose_name="BS4 evidence notes", null=True)
+    BS4_evidence = models.TextField(
+        verbose_name="BS4 evidence notes", null=True
+    )
 
     BA1_verdict = models.TextField(verbose_name="BA1 verdict", null=True)
-    BA1_evidence = models.TextField(verbose_name="BA1 evidence notes", null=True)
+    BA1_evidence = models.TextField(
+        verbose_name="BA1 evidence notes", null=True
+    )
 
     BP1_verdict = models.TextField(verbose_name="BP1 verdict", null=True)
-    BP1_evidence = models.TextField(verbose_name="BP1 evidence notes", null=True)
+    BP1_evidence = models.TextField(
+        verbose_name="BP1 evidence notes", null=True
+    )
 
     BP2_verdict = models.TextField(verbose_name="BP2 verdict", null=True)
-    BP2_evidence = models.TextField(verbose_name="BP2 evidence notes", null=True)
+    BP2_evidence = models.TextField(
+        verbose_name="BP2 evidence notes", null=True
+    )
 
     BP3_verdict = models.TextField(verbose_name="BP3 verdict", null=True)
-    BP3_evidence = models.TextField(verbose_name="BP3 evidence notes", null=True)
+    BP3_evidence = models.TextField(
+        verbose_name="BP3 evidence notes", null=True
+    )
 
     BP4_verdict = models.TextField(verbose_name="BP4 verdict", null=True)
-    BP4_evidence = models.TextField(verbose_name="BP4 evidence notes", null=True)
+    BP4_evidence = models.TextField(
+        verbose_name="BP4 evidence notes", null=True
+    )
 
     BP5_verdict = models.TextField(verbose_name="BP5 verdict", null=True)
-    BP5_evidence = models.TextField(verbose_name="BP5 evidence notes", null=True)
+    BP5_evidence = models.TextField(
+        verbose_name="BP5 evidence notes", null=True
+    )
 
     BP6_verdict = models.TextField(verbose_name="BP6 verdict", null=True)
-    BP6_evidence = models.TextField(verbose_name="BP6 evidence notes", null=True)
+    BP6_evidence = models.TextField(
+        verbose_name="BP6 evidence notes", null=True
+    )
 
     BP7_verdict = models.TextField(verbose_name="BP7 verdict", null=True)
-    BP7_evidence = models.TextField(verbose_name="BP7 evidence notes", null=True)
+    BP7_evidence = models.TextField(
+        verbose_name="BP7 evidence notes", null=True
+    )
 
     class Meta:
         db_table = "acgs_category_information"
+
+    def __str__(self):
+        return str(self.id)
+
+
+class InterpretationPanel(models.Model):
+    """
+    Interpretation->Panel linking table
+    """
+
+    interpretation = models.ForeignKey(
+        Interpretation, on_delete=models.PROTECT
+    )
+    panel = models.ForeignKey(Panel, on_delete=models.PROTECT)
+
+    class Meta:
+        db_table = "interpretation_panel"
 
     def __str__(self):
         return str(self.id)
