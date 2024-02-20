@@ -292,7 +292,7 @@ class Organization(models.Model):
     """
 
     name = models.TextField(
-        verbose_name="Organization name"
+        verbose_name="Organization name",
         null=True
     )
 
