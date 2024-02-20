@@ -37,20 +37,6 @@ class ReferenceGenome(models.Model):
         return str(self.id)
 
 
-class Chromosome(models.Model):
-    """Defines chromosomes"""
-
-    panelapp_name = models.CharField(
-        verbose_name="Name in PanelApp", max_length=255
-    )
-
-    class Meta:
-        db_table = "chromosome"
-
-    def __str__(self):
-        return str(self.id)
-
-
 class Panel(models.Model):
     """Defines a single internal panel"""
 
