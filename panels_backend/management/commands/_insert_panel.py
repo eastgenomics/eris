@@ -486,6 +486,7 @@ def _insert_superpanel_into_db(
     # issues at PanelApp
     return superpanel, created
 
+
 @transaction.atomic
 def panel_insert_controller(
     panels: list[PanelClass],

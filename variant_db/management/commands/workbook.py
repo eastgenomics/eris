@@ -6,6 +6,7 @@ Workbook utils
 import re
 import pandas as pd
 
+
 def read_workbook(workbook_file: str) -> list[dict[str, str | int]]:
     """
     Reads CSV workbook into a list of dicts, one per row.
@@ -17,7 +18,7 @@ def read_workbook(workbook_file: str) -> list[dict[str, str | int]]:
 
     :param: workbook: path to workbook file
     """
-    wb_df = pd.read_csv(workbook_file, sep=',', quotechar='"')
+    wb_df = pd.read_csv(workbook_file, sep=",", quotechar='"')
     wb_df.columns = [_clean_column_name(x) for x in wb_df.columns]
     wb_records = wb_df.to_dict(orient="records")
     wb_records = _add_panels_field(wb_records)
@@ -80,7 +81,7 @@ def _add_panels_field(pivoted_df: list[dict]) -> list[dict]:
     [
         {
             "chrom": 1,
-            ..., 
+            ...,
             "panel": "panel1_1.0;panel2_1.0;..."
         },
         ...,
@@ -92,8 +93,8 @@ def _add_panels_field(pivoted_df: list[dict]) -> list[dict]:
     ```
     [
         {
-            "chrom": 1, 
-            ..., 
+            "chrom": 1,
+            ...,
             "panel": [
                 {
                     "name": "panel_1",
