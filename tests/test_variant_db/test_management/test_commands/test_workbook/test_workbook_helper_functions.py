@@ -4,7 +4,7 @@ from variant_db.management.commands.workbook import (
     _convert_name_to_lowercase,
     _replace_with_underscores,
     _rename_acgs_column,
-    _parse_panel
+    _parse_panel,
 )
 
 
@@ -78,6 +78,7 @@ class TestPanelAssertionHandling(TestCase):
     """
     Test cases that test the panel format assertion (i.e. raising it when needed, avoiding it when not)
     """
+
     def test_parse_panel_raises_assertion(self):
         """
         CASE: Strings that represent the panel are submitted in various incorrect formats. Expected format
@@ -89,7 +90,7 @@ class TestPanelAssertionHandling(TestCase):
             _parse_panel("pepperoni_pizza_has_no_version")
         with self.assertRaises(AssertionError) as context:
             _parse_panel("1234_5678")
-    
+
     def test_parse_panel_extracts_panel_name_and_version(self):
         """
         CASE: strings conforming to the format `<panel name>_<optional stuff>_<panel version>` are submitted to
@@ -97,8 +98,10 @@ class TestPanelAssertionHandling(TestCase):
         EXPECTS: `AssertionError` is not raised, and the resultant `dict` object contains the expected data
         """
         parsed_panel = _parse_panel("cancerGenePanel_1.0.0")
-        expected_panel = {"name": "cancerGenePanel", "version":"1.0.0"}
+        expected_panel = {"name": "cancerGenePanel", "version": "1.0.0"}
         self.assertDictEqual(parsed_panel, expected_panel)
 
-        parsed_panel = _parse_panel("cancerGenePanel_absolutelyanythingallowedhere_andhere_alsoH£RE!_1.0.0")
+        parsed_panel = _parse_panel(
+            "cancerGenePanel_absolutelyanythingallowedhere_andhere_alsoH£RE!_1.0.0"
+        )
         self.assertDictEqual(parsed_panel, expected_panel)

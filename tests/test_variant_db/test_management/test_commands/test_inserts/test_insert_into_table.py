@@ -6,6 +6,7 @@ from variant_db.management.commands.insert import (
     _get_or_create,
 )
 
+
 class TestInsertIntoTable_GettingExisting(TestCase):
     """
     Check that when GETTING already-existing entries from a model, the function works correctly.
@@ -91,10 +92,12 @@ class TestInsertIntoTable_MakingFromScratch(TestCase):
 
         assert retrieved_entry.name == "NHS Foundation Trust"
 
+
 class Test_FetchOnly_Queries(TestCase):
     """
     Test cases to test that the "get" behaviour of `_get_or_create` works as intended
     """
+
     def setUp(self) -> None:
         """
         Insert a row of valid `Chromosome` data to be referenced
@@ -113,7 +116,7 @@ class Test_FetchOnly_Queries(TestCase):
         test_dict = {"name": 500}
         with self.assertRaises(ObjectDoesNotExist) as context:
             _get_or_create(Chromosome, "get", **test_dict)
-    
+
     def test_gets_objects(self):
         """
         CASE: Submit a query against `Chromosome` for a chromosome that exists
