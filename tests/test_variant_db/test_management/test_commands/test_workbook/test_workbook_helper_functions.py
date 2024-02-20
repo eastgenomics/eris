@@ -4,20 +4,22 @@ from variant_db.management.commands.workbook import (
     _convert_name_to_lowercase,
     _replace_with_underscores,
     _rename_acgs_column,
+    _parse_panel
 )
 
 
 class TestColumnHeaderCleaningFunctions(TestCase):
     """
     Collection of test cases that test each of the workbook column header-cleaning utilities
-
-    CASE: Test that `_convert_name_to_lowercase` converts names to lowercase, with the exception of
-    anything matching the `exclude` argument
-    EXPECT: `_convert_name_to_lowercase` converts names to lowercase. `exclude` option skips lowercase
-    conversion for matching strings
     """
 
     def test_convert_name_to_lowercase(self):
+        """
+        CASE: Test that `_convert_name_to_lowercase` converts names to lowercase, with the exception of
+        anything matching the `exclude` argument
+        EXPECT: `_convert_name_to_lowercase` converts names to lowercase. `exclude` option skips lowercase
+        conversion for matching strings
+        """
         self.assertEqual(_convert_name_to_lowercase("PIZZA"), "pizza")
         self.assertEqual(_convert_name_to_lowercase("PizZa"), "pizza")
         # test that PIZZA is ignored when matching `exclude` option is invoked
@@ -70,3 +72,33 @@ class TestColumnHeaderCleaningFunctions(TestCase):
         # cases that shouldn't get _verdict added to the string
         self.assertEqual(_rename_acgs_column("PS1_evidence"), "PS1_evidence")
         self.assertEqual(_rename_acgs_column("PIZZA"), "PIZZA")
+
+
+class TestPanelAssertionHandling(TestCase):
+    """
+    Test cases that test the panel format assertion (i.e. raising it when needed, avoiding it when not)
+    """
+    def test_parse_panel_raises_assertion(self):
+        """
+        CASE: Strings that represent the panel are submitted in various incorrect formats. Expected format
+        is `<panel_name>_<optional extra stuff>_<panel_version>`, and the test strings that are submitted to
+        `_parse_panel` don't conform to this format.
+        EXPECT: `_parse_panel` correctly raises `AssertionError` for all tested cases
+        """
+        with self.assertRaises(AssertionError) as context:
+            _parse_panel("pepperoni_pizza_has_no_version")
+        with self.assertRaises(AssertionError) as context:
+            _parse_panel("1234_5678")
+    
+    def test_parse_panel_extracts_panel_name_and_version(self):
+        """
+        CASE: strings conforming to the format `<panel name>_<optional stuff>_<panel version>` are submitted to
+          `_parse_panel`
+        EXPECTS: `AssertionError` is not raised, and the resultant `dict` object contains the expected data
+        """
+        parsed_panel = _parse_panel("cancerGenePanel_1.0.0")
+        expected_panel = {"name": "cancerGenePanel", "version":"1.0.0"}
+        self.assertDictEqual(parsed_panel, expected_panel)
+
+        parsed_panel = _parse_panel("cancerGenePanel_absolutelyanythingallowedhere_andhere_alsoH£RE!_1.0.0")
+        self.assertDictEqual(parsed_panel, expected_panel)
