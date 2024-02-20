@@ -234,6 +234,8 @@ class Command(BaseCommand):
                     )
                     if not panel_version:
                         panel_version = ""
+                    else:
+                        panel_version = normalize_version(panel_version)
                     line = [
                         f"{r_code}_{ci_name}",
                         f"{panel_dict['ci_panel__panel__panel_name']}_{panel_version}",
@@ -290,7 +292,7 @@ class Command(BaseCommand):
                         if panel_dict[
                             "ci_superpanel__superpanel__panel_version"
                         ]
-                        else None
+                        else ""
                     )
                     results.append(
                         [
