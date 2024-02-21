@@ -35,7 +35,9 @@ class TestWriteG2tResults(TestCase):
             },
         ]
         with patch("builtins.open", mock_open()) as write_out:
-            with patch("panels_backend.management.commands.generate.date") as mock_date:
+            with patch(
+                "panels_backend.management.commands.generate.date"
+            ) as mock_date:
                 mock_date.today.return_value = date(2024, 2, 19)
                 mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
 
