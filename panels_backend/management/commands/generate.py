@@ -19,7 +19,7 @@ from panels_backend.models import (
 import os
 import csv
 import collections
-from datetime import date
+from datetime import date, datetime
 import pandas as pd
 
 from django.core.management.base import BaseCommand
@@ -402,7 +402,6 @@ class Command(BaseCommand):
         for the file.
         """
         file_time = date.today().strftime("%Y%m%d")
-        print(str(date.today()))
         with open(f"{output_directory}/{file_time}_genepanels.tsv", "w") as f:
             for row in results:
                 data = "\t".join(row)
@@ -473,7 +472,7 @@ class Command(BaseCommand):
         :param latest_hgmd: latest HGMD version
         :return: a list-of-dictionaries - each dict can be used to write out a line
         """
-        start = dt.datetime.now().strftime("%H:%M:%S")
+        start = datetime.now().strftime("%H:%M:%S")
         print(
             f"Creating g2t file for reference genome {ref_genome.name} at {start}"
         )
@@ -654,5 +653,5 @@ class Command(BaseCommand):
             )
             self._write_g2t_results(g2t, output_directory)
 
-            end = dt.datetime.now().strftime("%H:%M:%S")
+            end = datetime.now().strftime("%H:%M:%S")
             print(f"g2t file created at {output_directory} at {end}")
