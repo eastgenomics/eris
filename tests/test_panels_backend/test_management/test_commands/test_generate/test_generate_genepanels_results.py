@@ -1,10 +1,6 @@
 from django.test import TestCase
-from unittest import mock
-from unittest.mock import patch, mock_open
-from datetime import date
 
 from panels_backend.models import (
-    ReferenceGenome,
     TestDirectoryRelease,
     Panel,
     PanelGene,
