@@ -1,7 +1,5 @@
 from django.test import TestCase
 from unittest import mock
-from unittest.mock import Mock, MagicMock
-import numpy as np
 import json
 
 from panels_backend.management.commands.panelapp import (

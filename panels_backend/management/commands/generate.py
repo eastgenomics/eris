@@ -475,8 +475,7 @@ class Command(BaseCommand):
 
         # We only need to assess those transcripts which are linked to the correct GFF release and reference genome
         gff_transcripts = TranscriptGffRelease.objects.filter(
-            gff_release__ensembl_release=gff_release,
-            gff_release__reference_genome=ref_genome,
+            gff_release=gff_release,
         )
 
         # Append per-transcript results to a list-of-dictionaries
@@ -497,7 +496,7 @@ class Command(BaseCommand):
             )
             transcript_data = {
                 "hgnc_id": tx.gene.hgnc_id,
-                "transcript": tx,
+                "transcript": tx.transcript,
                 "clinical": displayable_clinical_status,
             }
             results.append(transcript_data)
