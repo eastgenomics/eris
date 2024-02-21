@@ -19,7 +19,7 @@ from panels_backend.models import (
 import os
 import csv
 import collections
-import datetime as dt
+from datetime import date
 import pandas as pd
 
 from django.core.management.base import BaseCommand
@@ -401,7 +401,8 @@ class Command(BaseCommand):
         :param output_directory: a string representing the output location
         for the file.
         """
-        file_time = dt.datetime.today().strftime("%Y%m%d")
+        file_time = date.today().strftime("%Y%m%d")
+        print(str(date.today()))
         with open(f"{output_directory}/{file_time}_genepanels.tsv", "w") as f:
             for row in results:
                 data = "\t".join(row)
@@ -516,7 +517,7 @@ class Command(BaseCommand):
         row of the eventual file
         :param: output_directory, where the file should be written
         """
-        file_time = dt.datetime.today().strftime("%Y%m%d")
+        file_time = date.today().strftime("%Y%m%d")
         keys = results[0].keys()
         with open(
             f"{output_directory}/{file_time}_g2t.tsv", "w", newline=""

@@ -34,7 +34,7 @@ class TestWriteGenepanels(TestCase):
         ]
 
         with patch("builtins.open", mock_open()) as write_out:
-            with patch("datetime.date") as mock_date:
+            with patch("panels_backend.management.commands.generate.date") as mock_date:
                 mock_date.today.return_value = date(2024, 2, 19)
                 mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
 
@@ -44,7 +44,7 @@ class TestWriteGenepanels(TestCase):
                 # check the correct file name is written to
                 with self.subTest():
                     write_out.assert_called_once_with(
-                        "/dev/null/20240220_genepanels.tsv", "w"
+                        "/dev/null/20240219_genepanels.tsv", "w"
                     )
 
                 # check expected contents are written to file
