@@ -42,14 +42,16 @@ def get_ci_from_r_code_or_id(
         try:
             clinical_indication = clinical_indication[0]
         except IndexError:
-            raise IndexError("No clinical indication found.")
+            raise IndexError(
+                f"No clinical indication found for r code: {ci_r_code}."
+            )
 
     else:
         try:
             clinical_indication = ClinicalIndication.objects.get(id=ci_id)
         except ClinicalIndication.DoesNotExist:
             raise ClinicalIndication.DoesNotExist(
-                f"The clinical indication {ci_id} was not found"
+                f"The clinical indication ID {ci_id} was not found"
                 " in the database"
             )
 
@@ -77,7 +79,7 @@ def get_panel_from_id_or_name(
             panel = Panel.objects.get(id=panel_id)
         except Panel.DoesNotExist:
             raise Panel.DoesNotExist(
-                f"The panel {panel_id} was not found in the database"
+                f"The panel ID {panel_id} was not found in the database"
             )
     else:
         panel = Panel.objects.filter(panel_name__iexact=panel_name)

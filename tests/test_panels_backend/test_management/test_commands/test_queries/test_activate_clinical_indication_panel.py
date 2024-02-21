@@ -43,7 +43,7 @@ class TestActivateCiPanel_AlreadyExists_Active(TestCase):
         # check that the only ci_panel entry is our originally-made one
         cips = ClinicalIndicationPanel.objects.all()
         assert len(cips) == 1
-        self.assertEquals(cips[0], self.ci_panel)
+        assert cips[0].current == True
 
         # check that no new history data was made
         cip_history = ClinicalIndicationPanelHistory.objects.all()

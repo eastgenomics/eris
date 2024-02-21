@@ -40,7 +40,9 @@ class TestGetPanel_Id(TestCase):
         user_panel_id = "100"
         user_panel_name = None
 
-        error_msg = f"The panel {user_panel_id} was not found in the database"
+        error_msg = (
+            f"The panel ID {user_panel_id} was not found in the database"
+        )
         with self.assertRaisesRegex(Panel.DoesNotExist, error_msg):
             get_panel_from_id_or_name(user_panel_id, user_panel_name)
 

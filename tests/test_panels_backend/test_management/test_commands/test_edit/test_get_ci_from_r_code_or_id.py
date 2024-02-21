@@ -63,7 +63,7 @@ class TestGetCi_Rcode(TestCase):
         user_r_code = "R10.1"
         user_ci_id = None
         with self.assertRaisesRegex(
-            IndexError, "No clinical indication " "found"
+            IndexError, "No clinical indication found"
         ):
             get_ci_from_r_code_or_id(user_r_code, user_ci_id)
 
@@ -100,6 +100,6 @@ class TestGetCi_Id(TestCase):
         user_ci_id = "5"
         with self.assertRaisesRegex(
             ClinicalIndication.DoesNotExist,
-            "The clinical indication 5 was not found in the database",
+            "The clinical indication ID 5 was not found in the database",
         ):
             get_ci_from_r_code_or_id(user_r_code, user_ci_id)
