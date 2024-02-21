@@ -91,7 +91,6 @@ class TestInsertIntoTable_MakingFromScratch(TestCase):
         )
 
         assert retrieved_entry.name == "NHS Foundation Trust"
-<<<<<<< HEAD
 
 
 class Test_FetchOnly_Queries(TestCase):
@@ -128,5 +127,3 @@ class Test_FetchOnly_Queries(TestCase):
         assert query_result.name == "1"
         assert query_result.numerical_name == 1
         assert query_result.source == "RefSeq"
-=======
->>>>>>> 1a4f0d7022c8aad2b5aadb6781da355c5314e34b
