@@ -32,7 +32,6 @@ from .panelapp import PanelClass, SuperPanelClass
 from django.db import transaction
 from django.http import HttpRequest
 from packaging.version import Version
-from django.contrib.auth.decorators import permission_required
 
 
 def _handle_nulls_and_blanks_from_json(json_field: str | None) -> str | None:
