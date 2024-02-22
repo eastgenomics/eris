@@ -145,10 +145,10 @@ class Chromosome(models.Model):
 
     numerical_name = models.IntegerField(
         verbose_name="numeric index"
-    )  # automatic
+    )  # Intended to be prepopulated by admin (i.e. reference data that the user shouldn't change)
 
     source = models.TextField(
-        verbose_name="chromosome source (i.e. RefSeq, Assembly, Genbank etc.)"  # automatic
+        verbose_name="chromosome source (i.e. RefSeq, Assembly, Genbank etc.)"  # Prepopulated (as above)
     )
 
     class Meta:
