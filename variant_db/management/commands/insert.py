@@ -171,7 +171,7 @@ def insert_row(row_dict: dict[str, str | int]) -> None:
     panels = [
         _get_or_create(
             Panel,
-            method="GET",
+            method="get",
             **{"panel_name": panel["name"], "panel_version": panel["version"]},
         )
         for panel in row_dict["panels"]
@@ -251,8 +251,9 @@ def _get_or_create(
     """
     Inserts a row of data into a table, given the model
 
-    :param: model_class: The model class to insert data into
-    :names_to: names to rename - current name is key, name to use is value.
+    :param model_class: The model class to insert data into
+    :param method: The method to use - only "insert" or "get" are accepted
+    :param names_to: names to rename - current name is key, name to use is value.
         Required when the key name doesn't match the corresponding column name in the model
     :kwargs: named arguments to pass in to model for import
     """
