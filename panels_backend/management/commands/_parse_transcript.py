@@ -57,7 +57,6 @@ def _update_existing_gene_metadata_symbol_in_db(
     # bulk update the changed genes
     now = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"Start bulk-updating {len(gene_symbol_updates)} gene symbols: {now}")
-    print(f"Start bulk-updating {len(gene_symbol_updates)} gene symbols: {now}")
     Gene.objects.bulk_update(gene_symbol_updates, ["gene_symbol"])
 
     # for each changed gene, link to release and add a note

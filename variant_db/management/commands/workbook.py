@@ -19,7 +19,7 @@ def read_workbook(workbook_file: str) -> list[dict[str, str | int]]:
 
     :param: workbook: path to workbook file
     """
-    wb_df = pd.read_csv(workbook_file, sep=',', quotechar='"')
+    wb_df = pd.read_csv(workbook_file, sep=",", quotechar='"')
     wb_df.columns = [_clean_column_name(x) for x in wb_df.columns]
     wb_records = wb_df.to_dict(orient="records")
     wb_records = _add_panels_field(wb_records)

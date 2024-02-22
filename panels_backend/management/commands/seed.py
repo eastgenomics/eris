@@ -247,9 +247,6 @@ class Command(BaseCommand):
 
         assert command, "Please specify command: panelapp / td / transcript"
 
-        # TODO: fill user variable from somewhere more appropriate, like a database table
-        user = "init_v1_user"
-
         # python manage.py seed panelapp <all/panel_id> <version>
         if command == "panelapp":
             panel_id: str = kwargs.get("panel")
@@ -258,7 +255,7 @@ class Command(BaseCommand):
             if panel_id == "all":
                 # Seeding every panel and superpanel in PanelApp
                 panels, superpanels = process_all_signed_off_panels()
-                panel_insert_controller(panels, superpanels, user)
+                panel_insert_controller(panels, superpanels, user=None)
                 print("Done.")
 
             else:
@@ -307,9 +304,9 @@ class Command(BaseCommand):
 
                     print(f"Importing panels into database...")
                     if is_superpanel:
-                        panel_insert_controller([], [panel_data], user)
+                        panel_insert_controller([], [panel_data], user=None)
                     else:
-                        panel_insert_controller([panel_data], [], user)
+                        panel_insert_controller([panel_data], [], user=None)
                     print("Done.")
 
         # python manage.py seed td <input_json> --td_release <td_release_version> <Y/N>
