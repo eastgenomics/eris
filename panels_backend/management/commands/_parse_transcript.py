@@ -825,7 +825,8 @@ def _transcript_assign_to_source(
                 mane_select_data = mane_info
             elif mane_type.lower() == "mane plus clinical":
                 mane_plus_clinical_data = mane_info
-        # if there are multiple matches in IRRELEVANT transcripts it'll return blank dictionaries and an error msg
+        # if there are multiple matches in IRRELEVANT transcripts it'll
+        # return blank dictionaries and an error msg
         return mane_select_data, mane_plus_clinical_data, hgmd_data, error_msg
 
     else:

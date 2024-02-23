@@ -598,8 +598,10 @@ class Command(BaseCommand):
                 self._write_genepanels_results(results, output_directory)
                 print(f"Genepanel file created at {output_directory}")
             else:
-                print("No genepanel results were found - check that the database"
-                      " contains test directory releases")
+                print(
+                    "No genepanel results were found - check that the database"
+                    " contains test directory releases"
+                )
 
         # if command is g2t, then generate g2t.tsv
         elif cmd == "g2t":
@@ -658,9 +660,11 @@ class Command(BaseCommand):
             if g2t:
                 self._write_g2t_results(g2t, output_directory)
             else:
-                print("No g2t results were found - check that the database"
-                      " is populated with GFF releases, genomes and transcript"
-                      " releases")
+                print(
+                    "No g2t results were found - check that the database"
+                    " is populated with GFF releases, genomes and transcript"
+                    " releases"
+                )
 
             end = datetime.now().strftime("%H:%M:%S")
             print(f"g2t file created at {output_directory} at {end}")
