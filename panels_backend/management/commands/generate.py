@@ -384,8 +384,9 @@ class Command(BaseCommand):
         )
         results = panel_results + superpanel_results
 
-        # run 'sort' again so that the panels and superpanels can be mixed in together
-        # though note due to being on strings, 'sort' isn't version-sensitive for R codes
+        # run 'sort' again so that the panels and superpanels can be mixed
+        # in together, though note due to being on strings, 'sort' isn't
+        # version-sensitive for R codes
         # (e.g. R100 shows up before R29)
         results = sorted(results, key=lambda x: [x[0], x[1], x[2]])
         return results
@@ -397,7 +398,8 @@ class Command(BaseCommand):
         Outputs formatted genepanels results as a file.
         Each tuple in the list becomes a single tab-separated line.
 
-        :param results: a list of tuples, each one representing a future file row
+        :param results: a list of tuples, each one representing a future
+        file row
         :param output_directory: a string representing the output location
         for the file.
         """

@@ -54,7 +54,8 @@ class TestWriteGenepanels(TestCase):
                     write_out.assert_has_calls(
                         [
                             mock.call().write(
-                                "R120_A clinical indication\tPanel name_4.0\tHGNC:456\t125\n"
+                                "R120_A clinical indication\tPanel name_4.0"
+                                "\tHGNC:456\t125\n"
                             ),
                         ]
                     )

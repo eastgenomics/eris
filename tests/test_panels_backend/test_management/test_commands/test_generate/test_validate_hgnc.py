@@ -32,7 +32,8 @@ class TestCommandValidateHgnc(TestCase):
         """
         hgnc = Command()
         with mock.patch("pandas.read_csv") as mock_read:
-            # note that 'Approved name' is missing from cols in the mocked DataFrame
+            # note that 'Approved name' is missing from cols in the mocked
+            # DataFrame
             mock_read.return_value = pd.DataFrame(
                 {"HGNC ID": pd.Series([]), "Locus type": pd.Series([])}
             )
