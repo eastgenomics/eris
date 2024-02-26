@@ -1844,20 +1844,6 @@ def _seed_test_directory(
     return redirect("seed")
 
 
-def get_task_status(request: HttpRequest, task_id: str) -> HttpResponse:
-    async_task = AsyncResult(task_id, app=celery_app)
-
-    return HttpResponse(
-        json.dumps(
-            {
-                "task return": async_task.get(),
-                "status": async_task.status,
-            }
-        ),
-        content_type="application/json",
-    )
-
-
 def _check_task_running(task_name: str) -> bool:
     """
     Function to check if a Celery task is running in the background
