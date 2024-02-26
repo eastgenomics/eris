@@ -17,10 +17,14 @@ def normalize_version(padded_version: str) -> str | float:
     if not padded_version:
         return 0.0
 
-    # TODO: fix issue where float conversion strips trailing 0s -
-    # e.g. 00005.00010 becomes 5.1 when it should be 5.10
-
-    return str(".".join(bit.lstrip("0") for bit in padded_version.split(".")))
+    result = str(
+        ".".join(bit.lstrip("0") for bit in padded_version.split("."))
+    )
+    if result.endswith("."):
+        # this stops cases where you get returned "5." instead of "5.0",
+        # when the db string is "00005.00000"
+        result = result + "0"
+    return result
 
 
 def parse_excluded_hgncs_from_file(file_path) -> set:

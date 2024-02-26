@@ -29,13 +29,18 @@ class TestNormalizeVersion(TestCase):
         with self.subTest():
             middling_example = "00005.00010"
             middling_expect = "5.10"
-            print(normalize_version(middling_example))
             assert normalize_version(middling_example) == middling_expect
         with self.subTest():
             weirder_example = "00006.00010.00005"
             weirder_expect = "6.10.5"
-            with self.assertRaises(ValueError):
-                assert normalize_version(weirder_example) == weirder_expect
+            assert normalize_version(weirder_example) == weirder_expect
+        with self.subTest():
+            longer_example_trails_zero = "00006.00010.00005.00000"
+            longer_expect_trails_zero = "6.10.5.0"
+            assert (
+                normalize_version(longer_example_trails_zero)
+                == longer_expect_trails_zero
+            )
         with self.subTest():
             # None or None-evaluating types are turned into 0.0
             assert normalize_version("") == 0.0
