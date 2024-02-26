@@ -10,16 +10,17 @@ def sortable_version(version: str) -> str:
     return ".".join(bit.zfill(5) for bit in str(version).split("."))
 
 
-def normalize_version(padded_version: str) -> float:
+def normalize_version(padded_version: str) -> str | float:
     """
     Turn '00001.00001' -> '1.1'
     """
     if not padded_version:
         return 0.0
 
-    return str(
-        float(".".join(bit.lstrip("0") for bit in padded_version.split(".")))
-    )
+    # TODO: fix issue where float conversion strips trailing 0s -
+    # e.g. 00005.00010 becomes 5.1 when it should be 5.10
+
+    return str(".".join(bit.lstrip("0") for bit in padded_version.split(".")))
 
 
 def parse_excluded_hgncs_from_file(file_path) -> set:

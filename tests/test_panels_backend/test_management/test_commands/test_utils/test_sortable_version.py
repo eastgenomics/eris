@@ -6,7 +6,7 @@ from panels_backend.management.commands.utils import sortable_version
 class TestSortableVersion(TestCase):
     def setUp(self) -> None:
         return super().setUp()
-    
+
     def test_pads_correctly(self):
         """
         CASE: Version numbers AS STRINGS with decimal-points are provided

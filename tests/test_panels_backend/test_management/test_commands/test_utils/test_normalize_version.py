@@ -6,7 +6,7 @@ from panels_backend.management.commands.utils import normalize_version
 class TestNormalizeVersion(TestCase):
     def setUp(self) -> None:
         return super().setUp()
-    
+
     def test_removes_zeros_correctly(self):
         """
         CASE: Version numbers AS STRINGS with decimal-points are provided.
@@ -15,6 +15,13 @@ class TestNormalizeVersion(TestCase):
         used to pad, but trailing 0s are left alone.
         Only one decimal place is tolerated
         """
+        with self.subTest():
+            zero_after_point_example = "00003.00000"
+            zero_after_point_example = "3.0"
+            assert (
+                normalize_version(zero_after_point_example)
+                == zero_after_point_example
+            )
         with self.subTest():
             easy_example = "00003.00002"
             easy_expect = "3.2"
