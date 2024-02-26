@@ -323,6 +323,14 @@ def update_existing_gene_metadata(
 ) -> None:
     """
     make edits and release links to pre-existing genes, and add genes which are new in the HGNC file
+
+    :param symbol_changed: dictionary containing gene symbols that have been changed
+    :param alias_changed: dictionary containing gene aliases that have been changed
+    :param release_created: boolean indicating whether a new release has been created
+    :param new_genes: list of dictionaries containing new genes
+    :param hgnc_release: HgncRelease instance
+    :param unchanged_genes: dictionary containing unchanged genes
+    :param user: either a User instance (if called from web) or None (if called from CLI)
     """
     with transaction.atomic():
         if symbol_changed:

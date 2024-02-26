@@ -386,7 +386,7 @@ class Command(BaseCommand):
             reference_genome = parse_reference_genome(ref_genome)
 
             reference_genome_model, _ = ReferenceGenome.objects.get_or_create(
-                reference_genome=reference_genome
+                name=reference_genome
             )
 
             check_for_transcript_seeding_version_regression(
