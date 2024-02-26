@@ -4,6 +4,8 @@ import pandas as pd
 def sortable_version(version: str) -> str:
     """
     Turn '1.1' -> '00001.00001'
+    Note you MUST provide a string not a number or behaviour gets weird
+    (e.g. if you provide 5.10 as a float, the final 0 gets dropped)
     """
     return ".".join(bit.zfill(5) for bit in str(version).split("."))
 
