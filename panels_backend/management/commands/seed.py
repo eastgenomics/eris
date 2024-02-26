@@ -7,7 +7,10 @@ import json
 import re
 
 from ._insert_panel import panel_insert_controller
-from ._parse_transcript import seed_transcripts
+from ._parse_transcript import (
+    seed_transcripts,
+    seed_transcripts_controller_function,
+)
 from ._insert_ci import insert_test_directory_data
 from .panelapp import (
     process_all_signed_off_panels,
@@ -15,22 +18,6 @@ from .panelapp import (
     _fetch_latest_signed_off_version_based_on_panel_id,
     get_latest_version_panel,
 )
-
-from panels_backend.management.commands._parse_transcript import (
-    parse_reference_genome,
-    check_for_transcript_seeding_version_regression,
-    prepare_hgnc_file,
-    prepare_mane_file,
-    prepare_gff_file,
-    prepare_gene2refseq_file,
-    prepare_markname_file,
-    make_hgnc_gene_sets,
-    update_existing_gene_metadata,
-    add_gff_release_info_to_db,
-    add_transcript_release_info_to_db,
-)
-from panels_backend.models import ReferenceGenome, HgncRelease
-
 
 from django.core.management.base import BaseCommand
 
@@ -348,7 +335,7 @@ class Command(BaseCommand):
             """
 
             # fetch input reference genome - case sensitive
-            ref_genome = kwargs.get("refgenome")
+            input_reference_genome = kwargs.get("refgenome")
 
             print("Seeding transcripts")
 
@@ -383,77 +370,30 @@ class Command(BaseCommand):
 
             error_bool = kwargs.get("error_log", False)
 
-            reference_genome = parse_reference_genome(ref_genome)
-
-            reference_genome_model, _ = ReferenceGenome.objects.get_or_create(
-                name=reference_genome
-            )
-
-            check_for_transcript_seeding_version_regression(
+            (
+                gff_release_model,
+                gff,
+                mane_data,
+                markname_hgmd,
+                gene2refseq_hgmd,
+                reference_genome_model,
+                mane_select_tx_model,
+                mane_plus_clinical_tx_model,
+                hgmd_tx_model,
+            ) = seed_transcripts_controller_function(
+                input_reference_genome,
                 hgnc_release,
                 gff_release,
                 mane_release,
                 hgmd_release,
-                reference_genome_model,
-            )
-
-            (
-                hgnc_approved_symbol_to_hgnc_id,
-                hgnc_id_to_approved_symbol,
-                hgnc_id_to_alias_symbols,
-            ) = prepare_hgnc_file(hgnc_filepath)
-
-            hgnc_release, release_created = HgncRelease.objects.get_or_create(
-                release=hgnc_release
-            )
-
-            (
-                new_genes,
-                symbol_changed,
-                alias_changed,
-                unchanged_genes,
-            ) = make_hgnc_gene_sets(
-                hgnc_id_to_approved_symbol, hgnc_id_to_alias_symbols
-            )
-
-            update_existing_gene_metadata(
-                symbol_changed,
-                alias_changed,
-                release_created,
-                new_genes,
-                hgnc_release,
-                unchanged_genes,
-                None,
-            )
-
-            mane_data = prepare_mane_file(
-                mane_filepath, hgnc_approved_symbol_to_hgnc_id
-            )
-            gff = prepare_gff_file(gff_filepath)
-            gene2refseq_hgmd = prepare_gene2refseq_file(g2refseq_filepath)
-            markname_hgmd = prepare_markname_file(markname_filepath)
-
-            gff_release_model = add_gff_release_info_to_db(
-                gff_release, reference_genome_model
-            )
-
-            mane_select_tx_model = add_transcript_release_info_to_db(
-                "MANE Select",
-                mane_release,
-                reference_genome_model,
-                {"mane": mane_ext_id},
-            )
-            mane_plus_clinical_tx_model = add_transcript_release_info_to_db(
-                "MANE Plus Clinical",
-                mane_release,
-                reference_genome_model,
-                {"mane": mane_ext_id},
-            )
-            hgmd_tx_model = add_transcript_release_info_to_db(
-                "HGMD",
-                hgmd_release,
-                reference_genome_model,
-                {"hgmd_g2refseq": g2refseq_ext_id, "hgmd_markname": markname_ext_id},
+                hgnc_filepath,
+                mane_filepath,
+                gff_filepath,
+                g2refseq_filepath,
+                markname_filepath,
+                mane_ext_id,
+                g2refseq_ext_id,
+                markname_ext_id,
             )
 
             seed_transcripts(

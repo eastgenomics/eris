@@ -1098,7 +1098,7 @@ def check_for_transcript_seeding_version_regression(
         "HGMD": latest_hgmd_release,
     }
 
-    error = "\n".join(
+    errors = "\n".join(
         [
             f"Provided {source} version {input_version} is a lower version than v{str(latest_db_versions[source])} in the db"
             for source, input_version in input_versions.items()
@@ -1107,12 +1107,133 @@ def check_for_transcript_seeding_version_regression(
         ]
     )
 
-    if error:
-        raise ValueError("Abandoning input:\n" + error)
+    if errors:
+        raise ValueError("Abandoning input:\n" + errors)
 
 
 def _get_current_datetime() -> str:
+    """
+    Function to get current datetime in a formatted string
+    """
+
     return dt.datetime.now().strftime("%H:%M:%S")
+
+
+def seed_transcripts_controller_function(
+    input_reference_genome: str,
+    hgnc_release: str,
+    gff_release: str,
+    mane_release: str,
+    hgmd_release: str,
+    hgnc_filepath: str,
+    mane_filepath: str,
+    gff_filepath: str,
+    g2refseq_filepath: str,
+    markname_filepath: str,
+    mane_ext_id: str,
+    g2refseq_ext_id: str,
+    markname_ext_id: str,
+):
+    """
+    Function that comes before the main seeding function.
+    This controller function calls multiple smaller function to do the following:
+    1. Parse the reference genome
+    2. Check for version regression
+    3. Prepare the HGNC file
+    3.5 Update gene metadata using the HGNC information
+    4. Prepare the MANE, GFF, gene2refseq, and markname files
+    5. Add the GFF release to the database
+    6. Add the transcript releases to the database (MANE, MANE PLUS, HGMD)
+
+    Returns the following:
+    - GFF release DB MODEL
+    - GFF data (dict of hgnc id to list of transcripts)
+    - MANE data (list of dicts of information for transcripts matching against MANE)
+    - Markname HGMD data (dict of hgnc id to lists of matching gene-id)
+    - Gene2refseq HGMD data (dict of hgmd id to list of [refcore, refversion])
+    - Reference genome DB MODEL
+    - MANE Select transcript release DB MODEL
+    - MANE Plus Clinical transcript release DB MODEL
+    - HGMD transcript release DB MODEL
+    """
+    reference_genome = parse_reference_genome(input_reference_genome)
+
+    reference_genome_model, _ = ReferenceGenome.objects.get_or_create(
+        name=reference_genome
+    )
+
+    check_for_transcript_seeding_version_regression(
+        hgnc_release,
+        gff_release,
+        mane_release,
+        hgmd_release,
+        reference_genome_model,
+    )
+
+    (
+        hgnc_approved_symbol_to_hgnc_id,
+        hgnc_id_to_approved_symbol,
+        hgnc_id_to_alias_symbols,
+    ) = prepare_hgnc_file(hgnc_filepath)
+
+    hgnc_release, release_created = HgncRelease.objects.get_or_create(
+        release=hgnc_release
+    )
+
+    (
+        new_genes,
+        symbol_changed,
+        alias_changed,
+        unchanged_genes,
+    ) = make_hgnc_gene_sets(hgnc_id_to_approved_symbol, hgnc_id_to_alias_symbols)
+
+    update_existing_gene_metadata(
+        symbol_changed,
+        alias_changed,
+        release_created,
+        new_genes,
+        hgnc_release,
+        unchanged_genes,
+        None,
+    )
+
+    mane_data = prepare_mane_file(mane_filepath, hgnc_approved_symbol_to_hgnc_id)
+    gff = prepare_gff_file(gff_filepath)
+    gene2refseq_hgmd = prepare_gene2refseq_file(g2refseq_filepath)
+    markname_hgmd = prepare_markname_file(markname_filepath)
+
+    gff_release_model = add_gff_release_info_to_db(gff_release, reference_genome_model)
+
+    mane_select_tx_model = add_transcript_release_info_to_db(
+        "MANE Select",
+        mane_release,
+        reference_genome_model,
+        {"mane": mane_ext_id},
+    )
+    mane_plus_clinical_tx_model = add_transcript_release_info_to_db(
+        "MANE Plus Clinical",
+        mane_release,
+        reference_genome_model,
+        {"mane": mane_ext_id},
+    )
+    hgmd_tx_model = add_transcript_release_info_to_db(
+        "HGMD",
+        hgmd_release,
+        reference_genome_model,
+        {"hgmd_g2refseq": g2refseq_ext_id, "hgmd_markname": markname_ext_id},
+    )
+
+    return (
+        gff_release_model,
+        gff,
+        mane_data,
+        markname_hgmd,
+        gene2refseq_hgmd,
+        reference_genome_model,
+        mane_select_tx_model,
+        mane_plus_clinical_tx_model,
+        hgmd_tx_model,
+    )
 
 
 # 'atomic' should ensure that any failure rolls back the entire attempt to seed
@@ -1138,6 +1259,7 @@ def seed_transcripts(
     transcript releases, to work out whether or not its a clinical transcript.
     Finally, each transcript is linked to the releases, allowing the user to
     see what information was used in decision-making.
+
     :param hgnc_filepath: hgnc file path for gene IDs with current, past, and alias symbols
     :param hgnc_release: the hgnc release (e.g. v1) corresponding to the file in hgnc_filepath
     :param mane_filepath: mane file path for transcripts

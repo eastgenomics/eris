@@ -1942,24 +1942,25 @@ def seed(request: HttpRequest) -> HttpResponse:
                 )
 
             # validation stage should all be here before seeding
-            validate_ext_ids([mane_file_id, g2refseq_file_id, markname_file_id])
-
-            validate_release_versions(
-                [hgnc_version, mane_version, gff_version, hgmd_version]
-            )
-
-            reference_genome_model, _ = ReferenceGenome.objects.get_or_create(
-                name=parse_reference_genome(reference_genome)
-            )
-
-            check_for_transcript_seeding_version_regression(
-                hgnc_version,
-                gff_version,
-                mane_version,
-                hgmd_version,
-                reference_genome_model,
-            )
             try:
+                validate_ext_ids([mane_file_id, g2refseq_file_id, markname_file_id])
+
+                validate_release_versions(
+                    [hgnc_version, mane_version, gff_version, hgmd_version]
+                )
+
+                reference_genome_model, _ = ReferenceGenome.objects.get_or_create(
+                    name=parse_reference_genome(reference_genome)
+                )
+
+                check_for_transcript_seeding_version_regression(
+                    hgnc_version,
+                    gff_version,
+                    mane_version,
+                    hgmd_version,
+                    reference_genome_model,
+                )
+
                 (
                     hgnc_approved_symbol_to_hgnc_id,
                     hgnc_id_to_approved_symbol,
@@ -1967,23 +1968,20 @@ def seed(request: HttpRequest) -> HttpResponse:
                 ) = prepare_hgnc_file(
                     io.BytesIO(hgnc_file),
                 )
-            except Exception as e:
-                return render(request, "web/info/seed.html", {"error": e})
 
-            hgnc_release_model, release_created = HgncRelease.objects.get_or_create(
-                release=hgnc_version
-            )
+                hgnc_release_model, release_created = HgncRelease.objects.get_or_create(
+                    release=hgnc_version
+                )
 
-            (
-                new_genes,
-                symbol_changed,
-                alias_changed,
-                unchanged_genes,
-            ) = make_hgnc_gene_sets(
-                hgnc_id_to_approved_symbol, hgnc_id_to_alias_symbols
-            )
+                (
+                    new_genes,
+                    symbol_changed,
+                    alias_changed,
+                    unchanged_genes,
+                ) = make_hgnc_gene_sets(
+                    hgnc_id_to_approved_symbol, hgnc_id_to_alias_symbols
+                )
 
-            try:
                 mane_data = prepare_mane_file(
                     io.BytesIO(mane_file), hgnc_approved_symbol_to_hgnc_id
                 )

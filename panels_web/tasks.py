@@ -21,7 +21,7 @@ def call_update_existing_gene_metadata(
     alias_changed: dict[str, dict[str, str]],
     release_created: bool,
     new_genes: list[dict[str, str | None]],
-    hgnc_release_id: HgncRelease,
+    hgnc_release_id: int,
     unchanged_genes: dict[str, dict[str, str]],
     user_id: int,
 ) -> bool:
