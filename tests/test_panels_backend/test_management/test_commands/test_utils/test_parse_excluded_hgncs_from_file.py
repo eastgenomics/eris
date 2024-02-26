@@ -29,10 +29,12 @@ class TestParseExcludedHgncsFromFile(TestCase):
                         "alpha-1-B glycoprotein",
                         "A1BG antisense RNA 1",
                         "APOBEC1 complementation factor",
-                        "symbol withdrawn, see [HGNC:12469](/data/gene-symbol-report/#!/hgnc_id/HGNC:12469)",
+                        "symbol withdrawn, see [HGNC:12469](/data/gene-symbol-report/#!/"
+                        + "hgnc_id/HGNC:12469)",
                         "alpha-2-macroglobulin",
                         "A2M antisense RNA 1",
-                        "mitochondrially encoded ATP synthase membrane subunit 6",  # should filter out
+                        "mitochondrially encoded ATP synthase membrane subunit 6",
+                        # last entry should filter out
                     ]
                 ),
                 "RefSeq IDs": pd.Series(
