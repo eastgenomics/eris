@@ -1872,7 +1872,7 @@ def seed(request: HttpRequest) -> HttpResponse:
     Handle seed page:
     Currently handle:
     - Test Directory
-    - Transcript (TODO: known issue of long seeding time which cause 502 Bad Gateway error)
+    - Transcript
     """
     if request.method == "POST":
         action = request.POST.get("action")
