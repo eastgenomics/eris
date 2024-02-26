@@ -13,6 +13,8 @@ def sortable_version(version: str) -> str:
 def normalize_version(padded_version: str) -> str | float:
     """
     Turn '00001.00001' -> '1.1'
+    If no version is available this returns 0.0 as a float
+    Otherwise, you get a string.
     """
     if not padded_version:
         return 0.0
