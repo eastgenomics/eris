@@ -2,13 +2,10 @@ import datetime as dt
 import pandas as pd
 import collections
 import re
-import io
-from django.db import transaction
-from django.http import HttpRequest
 from packaging.version import Version
 
-pd.options.mode.chained_assignment = None  # default='warn'
-import datetime
+from django.db import transaction
+from django.contrib.auth.models import User
 
 from .history import History
 from panels_backend.models import (
@@ -33,7 +30,7 @@ from panels_backend.models import (
 def _update_existing_gene_metadata_symbol_in_db(
     hgnc_id_to_symbol: dict[str, str],
     hgnc_release: HgncRelease,
-    user: HttpRequest | None = None,
+    user: User | None = None,
 ) -> None:
     """
     Function to update gene metadata in db using a hgnc dump prepared dictionary
@@ -55,7 +52,7 @@ def _update_existing_gene_metadata_symbol_in_db(
         gene_symbol_updates.append(gene)
 
     # bulk update the changed genes
-    now = datetime.datetime.now().strftime("%H:%M:%S")
+    now = dt.datetime.now().strftime("%H:%M:%S")
     print(f"Start bulk-updating {len(gene_symbol_updates)} gene symbols: {now}")
     Gene.objects.bulk_update(gene_symbol_updates, ["gene_symbol"])
 
@@ -79,7 +76,7 @@ def _update_existing_gene_metadata_symbol_in_db(
 def _update_existing_gene_metadata_aliases_in_db(
     hgnc_id_to_alias_symbols: dict[str, str],
     hgnc_release: HgncRelease,
-    user: HttpRequest | None = None,
+    user: User | None = None,
 ) -> None:
     """
     Function to update gene metadata in db using hgnc dump prepared dictionaries
@@ -98,7 +95,7 @@ def _update_existing_gene_metadata_aliases_in_db(
         gene.alias_symbols = new_alias["new"]
         gene_alias_updates.append(gene)
 
-    now = datetime.datetime.now().strftime("%H:%M:%S")
+    now = dt.datetime.now().strftime("%H:%M:%S")
     f"Start bulk-updating {len(gene_alias_updates)} gene alias: {now}"
     Gene.objects.bulk_update(gene_alias_updates, ["alias_symbols"])
 
@@ -122,7 +119,7 @@ def _update_existing_gene_metadata_aliases_in_db(
 def _link_unchanged_genes_to_new_release(
     unchanged_genes: list,
     hgnc_release: HgncRelease,
-    user: HttpRequest | None = None,
+    user: User | None = None,
 ):
     """
     If a gene wasn't changed in a HGNC release, link it to the new release with a note,
@@ -158,7 +155,7 @@ def _link_unchanged_genes_to_new_release(
 def _add_new_genes_to_db(
     new_genes: dict[str, str],
     hgnc_release: HgncRelease,
-    user: HttpRequest | None = None,
+    user: User | None = None,
 ) -> None:
     """
     If a gene exists in the HGNC file, but does NOT exist in the db, make it.
@@ -180,7 +177,7 @@ def _add_new_genes_to_db(
         )
         genes_to_create.append(new_gene)
 
-    now = datetime.datetime.now().strftime("%H:%M:%S")
+    now = dt.datetime.now().strftime("%H:%M:%S")
     print(f"Start {len(new_genes)} gene bulk create: {now}")
     new_genes = Gene.objects.bulk_create(genes_to_create)
 
@@ -319,7 +316,7 @@ def update_existing_gene_metadata(
     new_genes: list[dict[str, str | None]],
     hgnc_release: HgncRelease,
     unchanged_genes: dict[str, dict[str, str]],
-    user: str,
+    user: User | None = None,
 ) -> None:
     """
     make edits and release links to pre-existing genes, and add genes which are new in the HGNC file
@@ -551,7 +548,7 @@ def _add_transcript_to_db_with_gff_release(
     transcript: str,
     ref_genome: ReferenceGenome,
     gff_release: GffRelease,
-    user: HttpRequest | None = None,
+    user: User | None = None,
 ) -> Transcript:
     """
     Add each transcript to the database, with its gene.
@@ -1115,7 +1112,7 @@ def check_for_transcript_seeding_version_regression(
 
 
 def _get_current_datetime() -> str:
-    return datetime.datetime.now().strftime("%H:%M:%S")
+    return dt.datetime.now().strftime("%H:%M:%S")
 
 
 # 'atomic' should ensure that any failure rolls back the entire attempt to seed
@@ -1131,7 +1128,7 @@ def seed_transcripts(
     mane_select_tx_model: TranscriptRelease,
     mane_plus_clinical_tx_model: TranscriptRelease,
     hgmd_tx_model: TranscriptRelease,
-    user: str = "init_v1_user",
+    user: User | None = None,
     write_error_log: bool = False,
 ) -> None:
     """

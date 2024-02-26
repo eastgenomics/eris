@@ -423,7 +423,7 @@ class Command(BaseCommand):
                 new_genes,
                 hgnc_release,
                 unchanged_genes,
-                "command_line",
+                None,
             )
 
             mane_data = prepare_mane_file(
@@ -466,7 +466,7 @@ class Command(BaseCommand):
                 mane_select_tx_model,
                 mane_plus_clinical_tx_model,
                 hgmd_tx_model,
-                "command_line",
+                None,
                 error_bool,
             )
 
