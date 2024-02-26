@@ -12,8 +12,7 @@ from panels_backend.management.commands._parse_transcript import (
     update_existing_gene_metadata,
 )
 
-from django.http import HttpRequest
-from django.contrib.auth import get_user, get_user_model
+from django.contrib.auth import get_user_model
 
 
 @shared_task(name="updating_gene_metadata")
@@ -36,7 +35,7 @@ def call_update_existing_gene_metadata(
     new_genes (list): list of dictionaries containing new gene data
     hgnc_release_id (int): ID of the HGNC release
     unchanged_genes (dict): dictionary containing gene data that has not been changed
-    user (str): username of the user who initiated the task
+    user (int): user id of logged-in user
     """
     hgnc_release_model = HgncRelease.objects.get(id=hgnc_release_id)
 
@@ -74,6 +73,8 @@ def call_seed_transcripts_function(
     call seed_functions (panels_backend/management/commands/_parse_transcript.py)
     as Celery backend task
 
+    NOTE: null_argument is a dummy argument to allow Celery to call the function
+
     Params:
     gff_release_id (int): ID of the GFF release
     gff (dict): dictionary containing GFF data
@@ -84,7 +85,7 @@ def call_seed_transcripts_function(
     mane_select_id (int): ID of the MANE Select transcript release
     mane_plus_id (int): ID of the MANE Plus Clinical transcript release
     hgmd_tx_id (int): ID of the HGMD transcript release
-    user (str): username of the user who initiated the task
+    user (int): user id of logged-in user
     """
 
     reference_genome_model = ReferenceGenome.objects.get(id=reference_genome_id)

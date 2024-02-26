@@ -17,7 +17,6 @@ from django.http import JsonResponse
 from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.db.models import QuerySet, Q, F
 from django.db import transaction
-from django.contrib.auth.views import LoginView
 from django.contrib.auth.decorators import permission_required
 
 
