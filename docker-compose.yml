@@ -55,7 +55,7 @@ services:
     depends_on:
       - eris_web
   eris_redis:
-    container: eris-redis
+    container_name: eris-redis
     image: redis:7-alpine
     restart: always
     ports:
