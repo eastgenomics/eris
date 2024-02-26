@@ -11,9 +11,7 @@ urlpatterns = [
     path("accounts/logout/", views.logout, name="logout"),
     # info
     path("panel/<int:panel_id>/", views.panel, name="panel"),
-    path(
-        "superpanel/<int:superpanel_id>/", views.superpanel, name="superpanel"
-    ),
+    path("superpanel/<int:superpanel_id>/", views.superpanel, name="superpanel"),
     path(
         "ci/<int:ci_id>/",
         views.clinical_indication,
@@ -60,5 +58,4 @@ urlpatterns = [
         views.ajax_gene_transcripts,
         name="api_genetranscripts",
     ),
-    path("api/tasks/<str:task_id>", views.get_task_status, name="api_tasks"),
 ]

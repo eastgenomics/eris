@@ -16,7 +16,7 @@ services:
       - POSTGRES_PASSWORD=root # change based on PASSWORD
   eris_web:
     container_name: eris-web
-    # platform: linux/amd64
+    platform: linux/amd64
     image: eris-web:1.0
     build: .
     command: bash -c "python manage.py collectstatic --noinput && gunicorn core.wsgi:application --bind :8009"
@@ -31,6 +31,7 @@ services:
     restart: always
   eris_celery:
     container_name: eris-eris_celery
+    platform: linux/amd64
     image: eris-celery:1.0
     build: .
     command: celery -A core worker -l INFO
@@ -54,6 +55,7 @@ services:
     depends_on:
       - eris_web
   eris_redis:
+    container: eris-redis
     image: redis:7-alpine
     restart: always
     ports:
