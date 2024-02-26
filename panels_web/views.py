@@ -2021,6 +2021,9 @@ def seed(request: HttpRequest) -> HttpResponse:
                 return render(request, "web/info/seed.html", {"error": e})
 
             if not _check_task_running("seed_transcripts"):
+
+                user_id = request.user.id
+
                 call_update_existing_gene_metadata.apply_async(
                     args=[
                         symbol_changed,
@@ -2029,7 +2032,7 @@ def seed(request: HttpRequest) -> HttpResponse:
                         new_genes,
                         hgnc_release_model.id,
                         unchanged_genes,
-                        "online_user",
+                        user_id,
                     ],
                     link=call_seed_transcripts_function.s(
                         gff_release_model.id,
@@ -2041,7 +2044,7 @@ def seed(request: HttpRequest) -> HttpResponse:
                         mane_select_tx_model.id,
                         mane_plus_clinical_tx_model.id,
                         hgmd_tx_model.id,
-                        "online_user",
+                        user_id,
                     ),
                 )
 

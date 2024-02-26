@@ -12,6 +12,9 @@ from panels_backend.management.commands._parse_transcript import (
     update_existing_gene_metadata,
 )
 
+from django.http import HttpRequest
+from django.contrib.auth import get_user, get_user_model
+
 
 @shared_task(name="updating_gene_metadata")
 def call_update_existing_gene_metadata(
@@ -21,7 +24,7 @@ def call_update_existing_gene_metadata(
     new_genes: list[dict[str, str | None]],
     hgnc_release_id: HgncRelease,
     unchanged_genes: dict[str, dict[str, str]],
-    user: str,
+    user_id: int,
 ) -> bool:
     """
     Function to call update_existing_gene_metadata function as Celery task
@@ -36,6 +39,8 @@ def call_update_existing_gene_metadata(
     user (str): username of the user who initiated the task
     """
     hgnc_release_model = HgncRelease.objects.get(id=hgnc_release_id)
+
+    user = get_user_model().objects.get(id=user_id)
 
     update_existing_gene_metadata(
         symbol_changed,
@@ -62,7 +67,7 @@ def call_seed_transcripts_function(
     mane_select_id: int,
     mane_plus_id: int,
     hgmd_tx_id: int,
-    user: str,
+    user_id: int,
 ) -> bool:
     """
     Sub-function to gather all required inputs from web front-end and
@@ -88,6 +93,8 @@ def call_seed_transcripts_function(
     hgmd_tx_model = TranscriptRelease.objects.get(id=hgmd_tx_id)
 
     gff_release_model = GffRelease.objects.get(id=gff_release_id)
+
+    user = get_user_model().objects.get(id=user_id)
 
     seed_transcripts(
         gff_release_model,
