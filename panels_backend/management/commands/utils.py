@@ -4,20 +4,28 @@ import pandas as pd
 def sortable_version(version: str) -> str:
     """
     Turn '1.1' -> '00001.00001'
+    Note you MUST provide a string not a number or behaviour gets weird
+    (e.g. if you provide 5.10 as a float, the final 0 gets dropped)
     """
     return ".".join(bit.zfill(5) for bit in str(version).split("."))
 
 
-def normalize_version(padded_version: str) -> float:
+def normalize_version(padded_version: str) -> str:
     """
     Turn '00001.00001' -> '1.1'
+    If no version is available this returns '0.0'.
     """
     if not padded_version:
-        return 0.0
+        return "0.0"
 
-    return str(
-        float(".".join(bit.lstrip("0") for bit in padded_version.split(".")))
+    result = str(
+        ".".join(bit.lstrip("0") for bit in padded_version.split("."))
     )
+    if result.endswith("."):
+        # this stops cases where you get returned "5." instead of "5.0",
+        # when the db string is "00005.00000"
+        result = result + "0"
+    return result
 
 
 def parse_excluded_hgncs_from_file(file_path) -> set:
