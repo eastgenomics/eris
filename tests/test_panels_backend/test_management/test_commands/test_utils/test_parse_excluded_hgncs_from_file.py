@@ -73,4 +73,4 @@ class TestParseExcludedHgncsFromFile(TestCase):
         mock_read_csv.return_value = self.hgnc_dataframe
         expected = set(["HGNC:7414", "HGNC:37133", "HGNC:27057"])
         actual = parse_excluded_hgncs_from_file("/dev/null")
-        self.assertListEqual(list(expected), list(actual))
+        self.assertListEqual(sorted(list(expected)), sorted(list(actual)))
