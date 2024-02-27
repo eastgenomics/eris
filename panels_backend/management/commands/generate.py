@@ -596,14 +596,8 @@ class Command(BaseCommand):
             hgncs_to_exclude = parse_excluded_hgncs_from_file(kwargs["hgnc"])
 
             results = self._generate_genepanels_results(hgncs_to_exclude)
-            if results:
-                self._write_genepanels_results(results, output_directory)
-                print(f"Genepanel file created at {output_directory}")
-            else:
-                print(
-                    "No genepanel results were found - check that the database"
-                    " contains test directory releases"
-                )
+            self._write_genepanels_results(results, output_directory)
+            print(f"Genepanel file created at {output_directory}")
 
         # if command is g2t, then generate g2t.tsv
         elif cmd == "g2t":
@@ -659,14 +653,13 @@ class Command(BaseCommand):
                 latest_plus_clinical,
                 latest_hgmd,
             )
-            if g2t:
-                self._write_g2t_results(g2t, output_directory)
-            else:
-                print(
-                    "No g2t results were found - check that the database"
-                    " is populated with GFF releases, genomes and transcript"
-                    " releases"
-                )
-
+            self._write_g2t_results(g2t, output_directory)
             end = datetime.now().strftime("%H:%M:%S")
             print(f"g2t file created at {output_directory} at {end}")
+
+            # else:
+            #     print(
+            #         "No g2t results were found - check that the database"
+            #         " is populated with GFF releases, genomes and transcript"
+            #         " releases"
+            #     )
