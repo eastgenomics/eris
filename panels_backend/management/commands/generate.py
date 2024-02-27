@@ -356,8 +356,6 @@ class Command(BaseCommand):
         """
         print("Creating genepanels file")
 
-        self._block_genepanels_if_db_not_ready()
-
         latest_td_release_ver = _fetch_latest_td_version()
         latest_td_instance = TestDirectoryRelease.objects.get(
             release=latest_td_release_ver
@@ -451,6 +449,39 @@ class Command(BaseCommand):
                 if link and link[0].default_clinical:
                     clinical = True
             return clinical
+
+    def _check_genome_and_gff_in_db(
+            self,
+            parsed_genome: str,
+            gff: str
+    ) -> tuple[ReferenceGenome, GffRelease]:
+        """
+        Fetch the ReferenceGenome and GffRelease objects.
+        Produce sensible error messages if not found.
+        :param: self
+        :param: parsed_genome, the reference genome being used
+        :param: gff, the GFF Ensembl version
+        :returns: ReferenceGenome
+        :returns: GffRelease
+        """
+        try:
+            genome = ReferenceGenome.objects.get(name=parsed_genome)
+        except ObjectDoesNotExist:
+            raise ObjectDoesNotExist(
+                "Aborting g2t: reference genome does not exist in the database"
+            )
+
+        try:
+            gff_release = GffRelease.objects.get(
+                ensembl_release=gff,
+                reference_genome=genome,
+            )
+        except ObjectDoesNotExist:
+            raise ObjectDoesNotExist(
+                "Aborting g2t: GFF release does not exist for this genome build in the database."
+            )
+
+        return genome, gff_release
 
     def _generate_g2t_results(
         self,
@@ -592,6 +623,9 @@ class Command(BaseCommand):
             if not self._validate_hgnc(kwargs["hgnc"]):
                 raise ValueError(f'HGNC file: {kwargs["hgnc"]} not valid')
 
+            # check readiness of database
+            self._block_genepanels_if_db_not_ready()
+
             # generate genepanels.tsv
             hgncs_to_exclude = parse_excluded_hgncs_from_file(kwargs["hgnc"])
 
@@ -614,24 +648,13 @@ class Command(BaseCommand):
                     "No GFF release specified, e.g. python manage.py generate g2t --ref_genome GRCh37 --gff_release <>"
                 )
 
-            # if the genome AND gff_release are valid, run the controller function, _generate_g2t
-            try:
-                genome = ReferenceGenome.objects.get(name=parsed_genome)
-            except ObjectDoesNotExist:
-                raise ObjectDoesNotExist(
-                    "Aborting g2t: reference genome does not exist in the database"
+            # check genome and gff_release from database
+            genome, gff_release = \
+                self._check_genome_and_gff_in_db(
+                parsed_genome, kwargs["gff_release"]
                 )
-
-            try:
-                gff_release = GffRelease.objects.get(
-                    ensembl_release=kwargs.get("gff_release"),
-                    reference_genome=genome,
-                )
-            except ObjectDoesNotExist:
-                raise ObjectDoesNotExist(
-                    "Aborting g2t: GFF release does not exist for this genome build in the database."
-                )
-
+            
+            # get latest transcript releases
             latest_select = get_latest_transcript_release(
                 "MANE Select", genome
             )
@@ -639,7 +662,6 @@ class Command(BaseCommand):
                 "MANE Plus Clinical", genome
             )
             latest_hgmd = get_latest_transcript_release("HGMD", genome)
-
             if None in [latest_select, latest_plus_clinical, latest_hgmd]:
                 raise ValueError(
                     "One or more transcript releases (MANE or HGMD) have not yet been"
@@ -656,10 +678,3 @@ class Command(BaseCommand):
             self._write_g2t_results(g2t, output_directory)
             end = datetime.now().strftime("%H:%M:%S")
             print(f"g2t file created at {output_directory} at {end}")
-
-            # else:
-            #     print(
-            #         "No g2t results were found - check that the database"
-            #         " is populated with GFF releases, genomes and transcript"
-            #         " releases"
-            #     )
