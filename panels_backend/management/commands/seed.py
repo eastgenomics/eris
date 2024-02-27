@@ -7,7 +7,10 @@ import json
 import re
 
 from ._insert_panel import panel_insert_controller
-from ._parse_transcript import seed_transcripts
+from ._parse_transcript import (
+    seed_transcripts,
+    seed_transcripts_controller_function,
+)
 from ._insert_ci import insert_test_directory_data
 from .panelapp import (
     process_all_signed_off_panels,
@@ -16,8 +19,39 @@ from .panelapp import (
     get_latest_version_panel,
 )
 
-
 from django.core.management.base import BaseCommand
+
+
+def validate_ext_ids(file_ids: list[str]) -> None:
+    """
+    Validate that the external file ids are in the correct format
+    :param: file_ids, a list of file ID strings
+    """
+
+    missing_ids = [id for id in file_ids if not re.match(r"^file-[\w]+$", id)]
+
+    if missing_ids:
+        raise Exception(
+            f"External file IDs '{', '.join(missing_ids)}' are misformatted,"
+            f" file IDs must take the format 'file-' followed by an alphanumerical string"
+        )
+
+
+def validate_release_versions(releases: list[str]) -> None:
+    """
+    Validate that the external releases are in the correct format
+    Only numbers and dots are permitted, e.g. 1.0.13
+    """
+
+    invalid_releases = [
+        version for version in releases if not re.match(r"^\d+(\.\d+)*$", version)
+    ]
+
+    if invalid_releases:
+        raise Exception(
+            f"The release versions '{', '.join(invalid_releases)}' are misformatted, "
+            f"release versions may only contain numbers and dots"
+        )
 
 
 class Command(BaseCommand):
@@ -35,7 +69,15 @@ class Command(BaseCommand):
         return True
 
     def _validate_file_exist(self, file_paths: list[str]) -> bool:
-        """Validate that the input files are there"""
+        """
+        Validate that the input files are there
+
+        Args:
+            file_paths: list of file paths
+
+        #NOTE: this function does not check for None value because file path
+        arguments (e.g. --hgnc) are REQUIRED args in the cmd line
+        """
         missing_files: list[str] = []
 
         for file_path in file_paths:
@@ -46,41 +88,6 @@ class Command(BaseCommand):
             raise Exception(f"Files {', '.join(missing_files)} do not exist")
 
         return True
-
-    def _validate_ext_ids(self, file_ids: list[str]) -> None:
-        """
-        Validate that the external file ids are in the correct format
-        :param: file_ids, a list of file ID strings
-        """
-
-        missing_ids = [
-            id for id in file_ids if not re.match(r"^file-[\w]+$", id)
-        ]
-
-        if missing_ids:
-            raise Exception(
-                f"External file IDs {', '.join(missing_ids)} are misformatted,"
-                f" file IDs must take the format 'file-' followed by an alphanumerical string"
-            )
-
-    def _validate_release_versions(self, releases: list[str]) -> None:
-        """
-        Validate that the external releases are in the correct format
-        Only numbers on their own (e.g. 3) and numbers with dots (e.g. 1.0.13) are permitted
-        Raises error if anything else is encountered
-
-        :param: list of releases provided at CLI
-        """
-
-        invalid_releases = [
-            id for id in releases if not re.match(r"^\d+(\.\d+)*$", id)
-        ]
-
-        if invalid_releases:
-            raise Exception(
-                f"The release versions {', '.join(invalid_releases)} are misformatted, "
-                f"release versions may only contain numbers and dots"
-            )
 
     def add_arguments(self, parser) -> None:
         """
@@ -138,7 +145,7 @@ class Command(BaseCommand):
             "--hgnc",
             type=str,
             help="Path to hgnc dump .txt file",
-            default="testing_files/eris/hgnc_dump_20230613.txt",
+            required=True,
         )
         transcript.add_argument(
             "--hgnc_release",
@@ -150,7 +157,7 @@ class Command(BaseCommand):
             "--mane",
             type=str,
             help="Path to mane .csv file",
-            default="testing_files/eris/mane_grch37.csv",
+            required=True,
         )
         transcript.add_argument(
             "--mane_ext_id",
@@ -168,7 +175,7 @@ class Command(BaseCommand):
             "--gff",
             type=str,
             help="Path to parsed gff .tsv file",
-            default="testing_files/eris/GCF_000001405.25_GRCh37.p13_genomic.exon_5bp_v2.0.0.tsv",
+            required=True,
         )
         transcript.add_argument(
             "--gff_release",
@@ -180,7 +187,7 @@ class Command(BaseCommand):
             "--g2refseq",
             type=str,
             help="Path to gene2refseq csv file",
-            default="testing_files/eris/gene2refseq_202306131409.csv",
+            required=True,
         )
         transcript.add_argument(
             "--g2refseq_ext_id",
@@ -192,7 +199,7 @@ class Command(BaseCommand):
             "--markname",
             type=str,
             help="Path to markname csv file",
-            default="testing_files/eris/markname_202306131409.csv",
+            required=True,
         )
         transcript.add_argument(
             "--markname_ext_id",
@@ -260,18 +267,14 @@ class Command(BaseCommand):
                     # we start by assuming we have a standard panel, and getting the most-recent version
                     # but if we find out it's a superpanel, we make a second call, to get the latest
                     # signed-off version instead
-                    panel_data, is_superpanel = get_latest_version_panel(
-                        panel_id
-                    )
+                    panel_data, is_superpanel = get_latest_version_panel(panel_id)
                     if is_superpanel:
                         # find latest signed-off superpanel version to use
                         print(
                             "Superpanel detected - fetching latest signed-off version"
                         )
                         latest_signedoff_panel_version = (
-                            _fetch_latest_signed_off_version_based_on_panel_id(
-                                panel_id
-                            )
+                            _fetch_latest_signed_off_version_based_on_panel_id(panel_id)
                         )
                         panel_data, is_superpanel = get_specific_version_panel(
                             panel_id, latest_signedoff_panel_version
@@ -284,9 +287,7 @@ class Command(BaseCommand):
                     raise ValueError("Panel specified does not exist")
 
                 else:
-                    panel_data.panel_source = (
-                        "PanelApp"  # manual addition of source
-                    )
+                    panel_data.panel_source = "PanelApp"  # manual addition of source
 
                     print(f"Importing panels into database...")
                     if is_superpanel:
@@ -304,7 +305,7 @@ class Command(BaseCommand):
             if not self._validate_td(input_directory):
                 raise ValueError("Invalid input file")
 
-            self._validate_release_versions([td_release])
+            validate_release_versions([td_release])
 
             with open(input_directory) as reader:
                 json_data = json.load(reader)
@@ -334,58 +335,79 @@ class Command(BaseCommand):
             """
 
             # fetch input reference genome - case sensitive
-            ref_genome = kwargs.get("refgenome")
+            input_reference_genome = kwargs.get("refgenome")
 
             print("Seeding transcripts")
 
-            hgnc_file = kwargs.get("hgnc")
+            hgnc_filepath = kwargs.get("hgnc")
             hgnc_release = kwargs.get("hgnc_release")
-            mane_file = kwargs.get("mane")
+            mane_filepath = kwargs.get("mane")
             mane_ext_id = kwargs.get("mane_ext_id")
             mane_release = kwargs.get("mane_release")
-            gff_file = kwargs.get("gff")
+            gff_filepath = kwargs.get("gff")
             gff_release = kwargs.get("gff_release")
-            g2refseq_file = kwargs.get("g2refseq")
+            g2refseq_filepath = kwargs.get("g2refseq")
             g2refseq_ext_id = kwargs.get("g2refseq_ext_id")
-            markname_file = kwargs.get("markname")
+            markname_filepath = kwargs.get("markname")
             markname_ext_id = kwargs.get("markname_ext_id")
             hgmd_release = kwargs.get("hgmd_release")
 
             self._validate_file_exist(
                 [
-                    hgnc_file,
-                    mane_file,
-                    gff_file,
-                    g2refseq_file,
-                    markname_file,
+                    hgnc_filepath,
+                    mane_filepath,
+                    gff_filepath,
+                    g2refseq_filepath,
+                    markname_filepath,
                 ]
             )
 
-            self._validate_ext_ids(
-                [mane_ext_id, g2refseq_ext_id, markname_ext_id]
-            )
+            validate_ext_ids([mane_ext_id, g2refseq_ext_id, markname_ext_id])
 
-            self._validate_release_versions(
+            validate_release_versions(
                 [hgnc_release, mane_release, gff_release, hgmd_release]
             )
 
-            error_log = kwargs.get("error_log", False)
+            error_bool = kwargs.get("error_log", False)
+
+            (
+                gff_release_model,
+                gff,
+                mane_data,
+                markname_hgmd,
+                gene2refseq_hgmd,
+                reference_genome_model,
+                mane_select_tx_model,
+                mane_plus_clinical_tx_model,
+                hgmd_tx_model,
+            ) = seed_transcripts_controller_function(
+                input_reference_genome,
+                hgnc_release,
+                gff_release,
+                mane_release,
+                hgmd_release,
+                hgnc_filepath,
+                mane_filepath,
+                gff_filepath,
+                g2refseq_filepath,
+                markname_filepath,
+                mane_ext_id,
+                g2refseq_ext_id,
+                markname_ext_id,
+            )
 
             seed_transcripts(
-                hgnc_file,
-                hgnc_release,
-                mane_file,
-                mane_ext_id,
-                mane_release,
-                gff_file,
-                gff_release,
-                g2refseq_file,
-                g2refseq_ext_id,
-                markname_file,
-                markname_ext_id,
-                hgmd_release,
-                ref_genome,
-                error_log,
+                gff_release_model,
+                gff,
+                mane_data,
+                markname_hgmd,
+                gene2refseq_hgmd,
+                reference_genome_model,
+                mane_select_tx_model,
+                mane_plus_clinical_tx_model,
+                hgmd_tx_model,
+                None,
+                error_bool,
             )
 
             print("Seed transcripts completed.")

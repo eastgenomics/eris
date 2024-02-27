@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from panels_backend.management.commands._parse_transcript import (
-    _make_hgnc_gene_sets,
+    make_hgnc_gene_sets,
     _resolve_alias,
 )
 from panels_backend.models import (
@@ -68,7 +68,7 @@ class TestMakeHgncGeneSets_AllScenarios(TestCase):
             hgnc_symbol_changed,
             hgnc_alias_changed,
             unchanged,
-        ) = _make_hgnc_gene_sets(hgnc_id_to_symbol, hgnc_id_to_alias)
+        ) = make_hgnc_gene_sets(hgnc_id_to_symbol, hgnc_id_to_alias)
 
         self.assertDictEqual(
             new_hgncs[0],

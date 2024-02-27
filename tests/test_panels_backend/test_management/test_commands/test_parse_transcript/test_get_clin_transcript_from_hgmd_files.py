@@ -20,7 +20,7 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
         an error is returned.
         """
         hgnc_id = "HGNC:1234"
-        markname = {1235: [5678]}  # doesn't match the HGNC_ID
+        markname = {"1235": ["5678"]}  # doesn't match the HGNC_ID
         gene2refseq = {}
 
         result, test_error = _get_clin_transcript_from_hgmd_files(
@@ -38,7 +38,7 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
         an error is returned.
         """
         hgnc_id = "HGNC:1234"
-        markname = {1234: [5678, 9101]}
+        markname = {"1234": ["5678", "9101"]}
         gene2refseq = {}
 
         result, test_error = _get_clin_transcript_from_hgmd_files(
@@ -58,7 +58,7 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
         an error is returned.
         """
         hgnc_id = "HGNC:1234"
-        markname = {1234: []}
+        markname = {"1234": []}
         gene2refseq = {}
 
         result, test_error = _get_clin_transcript_from_hgmd_files(
@@ -76,7 +76,7 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
         an error is returned.
         """
         hgnc_id = "HGNC:1234"
-        markname = {1234: [None]}
+        markname = {"1234": [None]}
         gene2refseq = {}
 
         result, test_error = _get_clin_transcript_from_hgmd_files(
@@ -94,7 +94,7 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
         an error is returned.
         """
         hgnc_id = "HGNC:1234"
-        markname = {1234: [np.nan]}
+        markname = {"1234": [np.nan]}
         gene2refseq = {}
 
         result, test_error = _get_clin_transcript_from_hgmd_files(
@@ -112,7 +112,7 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
         an error is returned.
         """
         hgnc_id = "HGNC:1234"
-        markname = {1234: [5678]}
+        markname = {"1234": ["5678"]}
         gene2refseq = {}
 
         result, test_error = _get_clin_transcript_from_hgmd_files(
@@ -130,7 +130,7 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
         EXPECT: An error is returned.
         """
         hgnc_id = "HGNC:1234"
-        markname = {1234: [5678]}
+        markname = {"1234": ["5678"]}
         gene2refseq = {"5678": [["NM005", "1"], ["NM009", "1"]]}
 
         result, test_error = _get_clin_transcript_from_hgmd_files(
@@ -148,7 +148,7 @@ class TestHgmdFileFetcher_ErrorStates(TestCase):
         EXPECT: Returns the correct transcript in HGMD, for this particular HGNC_ID
         """
         hgnc_id = "HGNC:1234"
-        markname = {1234: [5678]}
+        markname = {"1234": ["5678"]}
         gene2refseq = {"5678": [["NM005", "1"]]}
 
         result, test_error = _get_clin_transcript_from_hgmd_files(

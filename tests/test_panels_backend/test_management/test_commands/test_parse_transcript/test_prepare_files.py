@@ -4,9 +4,7 @@ from unittest import mock
 import pandas as pd
 
 
-from panels_backend.management.commands._parse_transcript import (
-    _prepare_mane_file,
-)
+from panels_backend.management.commands._parse_transcript import prepare_mane_file
 
 
 class TestBasicManeFile(TestCase):
@@ -49,7 +47,7 @@ class TestBasicManeFile(TestCase):
 
             hgnc_ids = {"A1BG": "HGNC:1", "A1CF": "HGNC:2", "A2M": "HGNC:3"}
 
-            mane_output = _prepare_mane_file("/dev/null", hgnc_ids)
+            mane_output = prepare_mane_file("/dev/null", hgnc_ids)
 
             assert len(mane_output) == 2
             expected = [

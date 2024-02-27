@@ -2,35 +2,42 @@
 
 {% block content %}
 <div class="container">
-  <div class="row">
+  <div class="row mb-3 pb-3">
     <div class="col">
       <!-- Alert -->
+      <!-- Error -->
       {% if error %}
       <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        {{ error }}
+        {{error}}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
-      {% elif error is not None %}
-      <div class="alert alert-success" role="alert">
-        Seed complete!.
+      {% endif %}
+      <!-- Success -->
+      {% if success %}
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{success}}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
       {% endif %}
       <!-- End Alert -->
 
       <h1>Test Directory Seed</h1>
-      <!-- File Upload Form -->
       <form action="{% url 'seed' %}" method="POST" enctype="multipart/form-data" id="tdForm">
         {% csrf_token %}
+        <input class="visually-hidden" type="text" value="td" name="action">
+        <!-- test directory file upload -->
         <div class="mb-3">
-          <label for="formFile" class="form-label">Upload a Test Directory Json</label>
+          <label for="formFile" class="form-label">Upload Test Directory Json</label>
           <input class="form-control" type="file" id="td_upload" name="td_upload" required>
         </div>
+        <!-- test directory version input -->
         <div class="mb-3">
           <label for="exampleVersionInput" class="form-label">Version</label>
           <input type="text" class="form-control" id="exampleVersionInput" name="version"
             aria-describedby="versionHelp">
           <div id="versionHelp" class="form-text">Test Directory Version</div>
         </div>
+        <!-- force seed test directory checkbox -->
         <div class="mb-3 form-check">
           <input type="checkbox" class="form-check-input" id="forceCheck" name="force">
           <label class="form-check-label" for="forceCheck">Force Seed</label>
@@ -38,6 +45,107 @@
         <button type="submit" class="btn btn-primary btn-sm">Submit
           <span class="spinner-border spinner-border-sm ml-2 visually-hidden" aria-hidden="true"></span>
         </button>
+      </form>
+
+      <div class="my-3"></div>
+
+      <h1>Transcripts Seed</h1>
+      <form action="{% url 'seed' %}" method="POST" enctype="multipart/form-data" id="transcriptForm">
+        {% csrf_token %}
+        <input class="visually-hidden" type="text" value="transcripts" name="action">
+        <div class="row">
+          <div class="col">
+            <!-- hgnc file upload -->
+            <label for="formFile" class="form-label">Upload HGNC</label>
+            <input class="form-control" type="file" id="hgnc_upload" name="hgnc_upload" required>
+          </div>
+          <div class="col">
+            <!-- hgnc release version -->
+            <label for="exampleVersionInput" class="form-label">HGNC Version</label>
+            <input type="text" class="form-control" id="exampleVersionInput" name="hgnc_version"
+              aria-describedby="versionHelp" required>
+            <div id="versionHelp" class="form-text">1.0</div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <!-- mane file upload -->
+            <label for="formFile" class="form-label">Upload MANE</label>
+            <input class="form-control" type="file" id="mane_upload" name="mane_upload" required>
+          </div>
+          <div class="col">
+            <!-- mane release version -->
+            <label for="exampleVersionInput" class="form-label">MANE Version</label>
+            <input type="text" class="form-control" id="exampleVersionInput" name="mane_version"
+              aria-describedby="versionHelp" required>
+            <div id="versionHelp" class="form-text">1.0</div>
+            <!-- mane file-id input -->
+            <label for="exampleVersionInput" class="form-label">MANE File ID</label>
+            <input type="text" class="form-control" id="exampleVersionInput" name="mane_file_id"
+              aria-describedby="versionHelp" required>
+            <div id="versionHelp" class="form-text">file-123</div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <!-- gff file upload -->
+            <label for="formFile" class="form-label">Upload GFF</label>
+            <input class="form-control" type="file" id="gff_upload" name="gff_upload" required>
+          </div>
+          <div class="col">
+            <!-- gff release version -->
+            <label for="exampleVersionInput" class="form-label">GFF Release</label>
+            <input type="text" class="form-control" id="exampleVersionInput" name="gff_version"
+              aria-describedby="versionHelp" required>
+            <div id="versionHelp" class="form-text">1.0</div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <!-- hgmd release version -->
+            <label for="exampleVersionInput" class="form-label">HGMD Release</label>
+            <input type="text" class="form-control" id="exampleVersionInput" name="hgmd_version"
+              aria-describedby="versionHelp" required>
+            <div id="versionHelp" class="form-text">1.0</div>
+          </div>
+          <div class="col">
+            <!-- g2refseq file upload -->
+            <label for="formFile" class="form-label">Upload G2refseq</label>
+            <input class="form-control" type="file" id="g2refseq_upload" name="g2refseq_upload" required>
+            <!-- g2refseq file-id input -->
+            <label for="exampleVersionInput" class="form-label">G2refseq File ID</label>
+            <input type="text" class="form-control" id="exampleVersionInput" name="g2refseq_file_id"
+              aria-describedby="versionHelp" required>
+            <div id="versionHelp" class="form-text">file-123</div>
+          </div>
+          <div class="col">
+            <!-- markname file upload -->
+            <label for="formFile" class="form-label">Upload Markname</label>
+            <input class="form-control" type="file" id="markname_upload" name="markname_upload" required>
+            <!-- markname file-id input -->
+            <label for="exampleVersionInput" class="form-label">Markname File ID</label>
+            <input type="text" class="form-control" id="exampleVersionInput" name="markname_file_id"
+              aria-describedby="versionHelp" required>
+            <div id="versionHelp" class="form-text">file-123</div>
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-4">
+            <!-- reference genome -->
+            <label for="referenceGenome" class="form-label">Reference Genome</label>
+            <select class="form-select" aria-label="default select example" name="reference_genome">
+              <option value="GRCh37">GRCh37</option>
+              <option value="GRCh38">GRCh38</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <button type="submit" class="btn btn-primary btn-sm">Submit
+              <span class="spinner-border spinner-border-sm ml-2 visually-hidden" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
       </form>
 
     </div>
@@ -50,6 +158,12 @@
   $(document).ready(function () {
     // script to block submit button on form submission and show loading indicator
     $('#tdForm').submit(function () {
+      $(this).find('button[type="submit"]').prop('disabled', true);
+      $(this).find('button[type="submit"]').find('.visually-hidden').removeClass('visually-hidden');
+    });
+
+    // script to block submit button on form submission and show loading indicator
+    $('#transcriptForm').submit(function () {
       $(this).find('button[type="submit"]').prop('disabled', true);
       $(this).find('button[type="submit"]').find('.visually-hidden').removeClass('visually-hidden');
     });

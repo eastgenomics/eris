@@ -9,7 +9,7 @@ from panels_backend.models import (
     ReferenceGenome,
 )
 from panels_backend.management.commands._parse_transcript import (
-    _check_for_transcript_seeding_version_regression,
+    check_for_transcript_seeding_version_regression,
 )
 
 
@@ -69,7 +69,7 @@ class TestCheckRegressions_OldHgncRelease(TestCase):
         expected_error = "Abandoning input:\nProvided HGNC version 1 is a lower version than v2 in the db"
 
         with self.assertRaisesRegex(ValueError, expected_error):
-            _check_for_transcript_seeding_version_regression(
+            check_for_transcript_seeding_version_regression(
                 new_hgnc, new_gff, new_mane, new_hgmd, self.reference_genome
             )
 
@@ -87,7 +87,7 @@ class TestCheckRegressions_OldHgncRelease(TestCase):
         expected_err = "Abandoning input:\nProvided HGNC version 1 is a lower version than v2 in the db\nProvided HGMD version 1.9.0 is a lower version than v2 in the db"
 
         with self.assertRaisesRegex(ValueError, expected_err):
-            _check_for_transcript_seeding_version_regression(
+            check_for_transcript_seeding_version_regression(
                 new_hgnc, new_gff, new_mane, new_hgmd, self.reference_genome
             )
 
@@ -111,6 +111,6 @@ class TestCheckRegressions_NoReleasesYet(TestCase):
         new_mane = "2"
         new_hgmd = "1.9.0"
 
-        _check_for_transcript_seeding_version_regression(
+        check_for_transcript_seeding_version_regression(
             new_hgnc, new_gff, new_mane, new_hgmd, self.reference_genome
         )

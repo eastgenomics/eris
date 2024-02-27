@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     # custom apps
     "panels_backend",
     "panels_web",
+    "django_celery_results",
     "variant_db.apps.VariantDbConfig",
 ]
 
@@ -174,4 +175,12 @@ HGNC_IDS_TO_OMIT = (
 
 PANELAPP_API_URL = os.environ.get(
     "PANELAPP_API_URL", "https://panelapp.genomicsengland.co.uk/api/v1/panels/"
+)
+
+# NOTE: localhost start up Celery: celery -A core worker -l INFO
+CELERY_BROKER_URL = (
+    os.environ["CELERY_BROKER_URL"] if not LOCALHOST else "redis://localhost:6379/0"
+)
+CELERY_RESULT_BACKEND = (
+    os.environ["CELERY_BROKER_URL"] if not LOCALHOST else "redis://localhost:6379/0"
 )

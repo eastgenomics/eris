@@ -27,7 +27,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from .utils import normalize_version, parse_excluded_hgncs_from_file
 from core.settings import HGNC_IDS_TO_OMIT
 from ._parse_transcript import (
-    _parse_reference_genome,
+    parse_reference_genome,
     get_latest_transcript_release,
     check_missing_columns,
 )
@@ -600,7 +600,7 @@ class Command(BaseCommand):
                 raise ValueError(
                     "No reference genome specified, e.g. python manage.py generate g2t --ref_genome GRCh37 --gff_release <>"
                 )
-            parsed_genome = _parse_reference_genome(kwargs.get("ref_genome"))
+            parsed_genome = parse_reference_genome(kwargs.get("ref_genome"))
 
             # get the GFF file release
             if not kwargs["gff_release"]:

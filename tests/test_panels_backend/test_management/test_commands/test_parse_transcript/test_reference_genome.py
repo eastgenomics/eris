@@ -1,9 +1,7 @@
 from django.test import TestCase
 
 
-from panels_backend.management.commands._parse_transcript import (
-    _parse_reference_genome,
-)
+from panels_backend.management.commands._parse_transcript import parse_reference_genome
 
 
 class TestParsingRefGenome(TestCase):
@@ -20,7 +18,7 @@ class TestParsingRefGenome(TestCase):
         valid = ["37", "GRCh37", "Grch37", "hg19", "HG19", "hG19"]
         for i in valid:
             with self.subTest():
-                self.assertEqual(_parse_reference_genome(i), "GRCh37")
+                self.assertEqual(parse_reference_genome(i), "GRCh37")
 
     def test_ref_genome_values_37_with_patch(self):
         """
@@ -29,7 +27,7 @@ class TestParsingRefGenome(TestCase):
         valid = ["GRCh37.p10", "Grch37.P10", "hg19.P10"]
         for i in valid:
             with self.subTest():
-                self.assertEqual(_parse_reference_genome(i), "GRCh37.p10")
+                self.assertEqual(parse_reference_genome(i), "GRCh37.p10")
 
     def test_ref_genome_values_38(self):
         """
@@ -38,7 +36,7 @@ class TestParsingRefGenome(TestCase):
         valid = ["38", "GRCh38", "Grch38", "hg38", "HG38", "hG38"]
         for i in valid:
             with self.subTest():
-                self.assertEqual(_parse_reference_genome(i), "GRCh38")
+                self.assertEqual(parse_reference_genome(i), "GRCh38")
 
     def test_ref_genome_values_38_with_patch(self):
         """
@@ -47,7 +45,7 @@ class TestParsingRefGenome(TestCase):
         valid = ["GRCh38.p10", "Grch38.p10", "hg38.P10"]
         for i in valid:
             with self.subTest():
-                self.assertEqual(_parse_reference_genome(i), "GRCh38.p10")
+                self.assertEqual(parse_reference_genome(i), "GRCh38.p10")
 
     def test_invalid_ref_genomes(self):
         """
@@ -69,5 +67,5 @@ class TestParsingRefGenome(TestCase):
                 msg = f"Please provide a valid reference genome, such as {'; '.join(permitted_grch37)}, "
                 f"{'; '.join(permitted_grch38)} or GRCh37/GRCh38 followed by '.p' patch numbers - you provided {i}"
                 with self.assertRaises(ValueError) as cm:
-                    _parse_reference_genome(i)
+                    parse_reference_genome(i)
                     self.assertEqual(msg, cm.exception)
