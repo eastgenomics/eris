@@ -42,6 +42,6 @@ class TestNormalizeVersion(TestCase):
                 == longer_expect_trails_zero
             )
         with self.subTest():
-            # None or None-evaluating types are turned into 0.0
-            assert normalize_version("") == 0.0
-            assert normalize_version(None) == 0.0
+            # None or None-evaluating types are turned into "0.0"
+            assert normalize_version("") == "0.0"
+            assert normalize_version(None) == "0.0"
