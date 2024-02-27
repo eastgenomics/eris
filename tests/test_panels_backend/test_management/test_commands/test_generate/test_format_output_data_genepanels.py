@@ -19,7 +19,7 @@ class TestFormatOutputDataGenepanels(TestCase):
                     "ci_panel__panel_id": 1,
                     "ci_panel__panel__external_id": "109",
                     "ci_panel__panel__panel_name": "First Panel",
-                    "ci_panel__panel__panel_version": "5",
+                    "ci_panel__panel__panel_version": "00005.00000",
                 }
             ],
             "R2": [
@@ -29,7 +29,7 @@ class TestFormatOutputDataGenepanels(TestCase):
                     "ci_panel__panel_id": 2,
                     "ci_panel__panel__external_id": "209",
                     "ci_panel__panel__panel_name": "Second Panel",
-                    "ci_panel__panel__panel_version": "2",
+                    "ci_panel__panel__panel_version": "00002.00000",
                 }
             ],
         }
@@ -73,7 +73,7 @@ class TestFormatOutputDataGenepanels(TestCase):
                     "ci_panel__panel_id": 2,
                     "ci_panel__panel__external_id": "209",
                     "ci_panel__panel__panel_name": "Second Panel",
-                    "ci_panel__panel__panel_version": "2",
+                    "ci_panel__panel__panel_version": "00002.00000",
                 }
             ],
         }

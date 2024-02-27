@@ -60,7 +60,7 @@ class TestGenerateGenepanels_TwoTD(TestCase):
             external_id="20",
             panel_name="Test panel 1",
             panel_source="Test",
-            panel_version="4",
+            panel_version="00004.00000",
             test_directory=True,
         )
 
@@ -68,7 +68,7 @@ class TestGenerateGenepanels_TwoTD(TestCase):
             external_id="25",
             panel_name="Test panel 2",
             panel_source="Test",
-            panel_version="6",
+            panel_version="00006.00000",
             test_directory=True,
         )
 
@@ -76,7 +76,7 @@ class TestGenerateGenepanels_TwoTD(TestCase):
             external_id="10",
             panel_name="A superpanel",
             panel_source="Test",
-            panel_version="7",
+            panel_version="00007.00000",
             test_directory=True,
         )
 
@@ -144,7 +144,7 @@ class TestGenerateGenepanels_TwoTD(TestCase):
             external_id="300",
             panel_name="Child panel 1",
             panel_source="Test",
-            panel_version="4",
+            panel_version="00004.00000",
             test_directory=True,
         )
 
@@ -166,7 +166,7 @@ class TestGenerateGenepanels_TwoTD(TestCase):
             external_id="301",
             panel_name="Child panel 2",
             panel_source="Test",
-            panel_version="4",
+            panel_version="00004.00000",
             test_directory=True,
         )
 
