@@ -21,7 +21,7 @@ class TestFormatGeneSuperPanels(TestCase):
                     "ci_superpanel__superpanel": 1,
                     "ci_superpanel__superpanel__external_id": "109",
                     "ci_superpanel__superpanel__panel_name": "First Panel",
-                    "ci_superpanel__superpanel__panel_version": "5",
+                    "ci_superpanel__superpanel__panel_version": "5.0",
                 }
             ],
             "R2": [
@@ -31,7 +31,7 @@ class TestFormatGeneSuperPanels(TestCase):
                     "ci_superpanel__superpanel": 2,
                     "ci_superpanel__superpanel__external_id": "209",
                     "ci_superpanel__superpanel__panel_name": "Second Panel",
-                    "ci_superpanel__superpanel__panel_version": "2",
+                    "ci_superpanel__superpanel__panel_version": "2.0",
                 }
             ],
         }
@@ -71,7 +71,7 @@ class TestFormatGeneSuperPanels(TestCase):
                     "ci_superpanel__superpanel": 1,
                     "ci_superpanel__superpanel__external_id": "109",
                     "ci_superpanel__superpanel__panel_name": "First Panel",
-                    "ci_superpanel__superpanel__panel_version": "5",
+                    "ci_superpanel__superpanel__panel_version": "5.0",
                 }
             ],
             "R2": [
@@ -81,7 +81,7 @@ class TestFormatGeneSuperPanels(TestCase):
                     "ci_superpanel__superpanel": 2,
                     "ci_superpanel__superpanel__external_id": "209",
                     "ci_superpanel__superpanel__panel_name": "Second Panel",
-                    "ci_superpanel__superpanel__panel_version": "2",
+                    "ci_superpanel__superpanel__panel_version": "2.0",
                 }
             ],
         }
