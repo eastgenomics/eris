@@ -27,6 +27,7 @@ from ._insert_ci import (
     flag_clinical_indication_superpanel_for_review,
     provisionally_link_clinical_indication_to_panel,
     provisionally_link_clinical_indication_to_superpanel,
+    _check_for_changed_pg_justification
 )
 from .panelapp import PanelClass, SuperPanelClass
 from django.db import transaction
@@ -221,20 +222,7 @@ def _insert_gene(
             # Panel-Gene record already exist
             # meaning probably there's a new PanelApp import
             # with a different justification
-
-            if pg_instance.justification != "PanelApp":
-                PanelGeneHistory.objects.create(
-                    panel_gene_id=pg_instance.id,
-                    note=History.panel_gene_metadata_changed(
-                        "justification",
-                        pg_instance.justification,
-                        "PanelApp",
-                    ),
-                    user=user,
-                )
-
-                pg_instance.justification = "PanelApp"
-                pg_instance.save()
+            _check_for_changed_pg_justification(pg_instance, "PanelApp", user)
 
 
 def _get_most_recent_td_release_for_ci_panel(
