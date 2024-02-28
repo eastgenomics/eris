@@ -13,11 +13,11 @@ class Sample(models.Model):
     submitted multiple times.
     """
 
-    instrument_id = models.TextField(verbose_name="Instrument ID")
+    instrument_id = models.TextField(verbose_name="Instrument ID", null=False)
 
-    batch_id = models.TextField(verbose_name="Batch ID")
+    batch_id = models.TextField(verbose_name="Batch ID", null=False)
 
-    specimen_id = models.TextField(verbose_name="Specimen ID")
+    specimen_id = models.TextField(verbose_name="Specimen ID", null=False)
 
     class Meta:
         db_table = "sample"
@@ -30,7 +30,7 @@ class Sample(models.Model):
 class TestCode(models.Model):
     """The code of the test used when sequencing a sample. Assay-specific"""
 
-    test_code = models.TextField(verbose_name="Test code")
+    test_code = models.TextField(verbose_name="Test code", null=False)
 
     class Meta:
         db_table = "test_code"
@@ -45,7 +45,7 @@ class ProbeSet(models.Model):
     may change over time
     """
 
-    probeset_id = models.TextField(verbose_name="Probeset ID")
+    probeset_id = models.TextField(verbose_name="Probeset ID", null=False)
 
     testcode = models.ForeignKey(
         TestCode, verbose_name="Test code", on_delete=models.PROTECT
@@ -65,7 +65,7 @@ class AffectedStatus(models.Model):
     Example values: yes, no, unknown
     """
 
-    name = models.TextField(verbose_name="Affected status")
+    name = models.TextField(verbose_name="Affected status", null=True)
 
     class Meta:
         db_table = "affected_status"
@@ -81,7 +81,9 @@ class AssertionCriteria(models.Model):
     a condition-specific set of guidelines, or something like a Pubmed ID.
     """
 
-    category = models.TextField(verbose_name="Assertion criteria name")
+    category = models.TextField(
+        verbose_name="Assertion criteria name", null=True
+    )
 
     class Meta:
         db_table = "assertion_criteria"
@@ -96,7 +98,7 @@ class ClinicalSignificanceDescription(models.Model):
     Example values: 'Pathogenic', 'Benign'
     """
 
-    category = models.TextField(verbose_name="CSD category")
+    category = models.TextField(verbose_name="CSD category", null=True)
 
     class Meta:
         db_table = "clinical_significance_description"
@@ -108,7 +110,7 @@ class ClinicalSignificanceDescription(models.Model):
 class AssayMethod(models.Model):
     """Records assay methods"""
 
-    name = models.TextField(verbose_name="Assay method name")
+    name = models.TextField(verbose_name="Assay method name", null=True)
 
     class Meta:
         db_table = "assay_method"
@@ -123,7 +125,9 @@ class ClinvarCollectionMethod(models.Model):
     Examples of permitted values: 'clinical testing' 'case-control'
     """
 
-    name = models.TextField(verbose_name="Clinvar collection method name")
+    name = models.TextField(
+        verbose_name="Clinvar collection method name", null=True
+    )
 
     class Meta:
         db_table = "clinvar_collection_method"
@@ -137,12 +141,14 @@ class Chromosome(models.Model):
     Records chromosomes
     """
 
-    name = models.TextField(verbose_name="chromosome name")
+    name = models.TextField(verbose_name="chromosome name", null=False)
 
-    numerical_name = models.IntegerField(verbose_name="numeric index")
+    numerical_name = models.IntegerField(
+        verbose_name="numeric index"
+    )  # Intended to be prepopulated by admin (i.e. reference data that the user shouldn't change)
 
     source = models.TextField(
-        verbose_name="chromosome source (i.e. RefSeq, Assembly, Genbank etc.)"
+        verbose_name="chromosome source (i.e. RefSeq, Assembly, Genbank etc.)"  # Prepopulated (as above)
     )
 
     class Meta:
@@ -157,27 +163,33 @@ class Variant(models.Model):
     Records variants
     """
 
-    interpreted = models.BooleanField(verbose_name="Interpreted by scientist")
+    interpreted = models.BooleanField(
+        verbose_name="Interpreted by scientist", null=True
+    )
 
     reference_genome = models.ForeignKey(
         ReferenceGenome,
         verbose_name="Reference Genome ID",
         on_delete=models.PROTECT,
+        null=False,
     )
 
     chromosome = models.ForeignKey(
-        Chromosome, verbose_name="Chromosome ID", on_delete=models.PROTECT
+        Chromosome,
+        verbose_name="Chromosome ID",
+        on_delete=models.PROTECT,
+        null=False,
     )
 
-    position = models.IntegerField(verbose_name="Variant Position")
+    position = models.IntegerField(verbose_name="Variant Position", null=False)
 
-    ref = models.TextField(
-        verbose_name="Reference variant allele"
-    )  # what's the maximum variant size?
+    ref = models.TextField(verbose_name="Reference variant allele", null=False)
 
     alt = models.TextField(
-        verbose_name="Alternative variant allele"
-    )  # see above
+        verbose_name="Alternative variant allele", null=False
+    )
+
+    hgvsc = models.TextField(verbose_name="HGVS c.dot notation", null=False)
 
     class Meta:
         db_table = "variant"
@@ -192,7 +204,7 @@ class ClinvarAlleleOrigin(models.Model):
     The genetic origin of the variant - example values: 'de novo', 'germline', 'somatic', 'maternal'
     """
 
-    category = models.TextField(verbose_name="Allele origin")
+    category = models.TextField(verbose_name="Allele origin", null=True)
 
     class Meta:
         db_table = "clinvar_allele_origin"
@@ -204,13 +216,17 @@ class ClinvarAlleleOrigin(models.Model):
 class ClinvarSubmission(models.Model):
     """Records clinvar submissions"""
 
-    scv_id = models.TextField(verbose_name="SCV ID")
+    scv_id = models.TextField(verbose_name="SCV ID", null=True)
 
-    scv_id_version = models.TextField(verbose_name="SCV ID version")
+    scv_id_version = models.TextField(verbose_name="SCV ID version", null=True)
 
-    submission_id = models.TextField(verbose_name="ClinVar submission ID")
+    submission_id = models.TextField(
+        verbose_name="ClinVar submission ID", null=True
+    )
 
-    submission_date = models.DateTimeField(verbose_name="Submission timestamp")
+    submission_date = models.DateTimeField(
+        verbose_name="Submission timestamp", null=True
+    )
 
     class Meta:
         db_table = "clinvar_submission"
@@ -226,7 +242,7 @@ class Organization(models.Model):
     #TODO: write an Organization/Institution relationship once it emerges?
     """
 
-    name = models.TextField(verbose_name="Organization name")
+    name = models.TextField(verbose_name="Organization name", null=True)
 
     class Meta:
         db_table = "organization"
@@ -241,7 +257,7 @@ class Institution(models.Model):
     Generally smaller than an Organization. For example, a hospital which is part of a GLH would be an Institution.
     """
 
-    name = models.TextField(verbose_name="Institution name")
+    name = models.TextField(verbose_name="Institution name", null=True)
 
     class Meta:
         db_table = "institution"
@@ -271,6 +287,10 @@ class Interpretation(models.Model):
         on_delete=models.PROTECT,
     )
 
+    preferred_condition_name = models.CharField(
+        verbose_name="Long-form alias for condition", null=False
+    )
+
     assertion_criteria = models.ForeignKey(
         AssertionCriteria,
         verbose_name="Assertion Criteria ID",
@@ -281,6 +301,10 @@ class Interpretation(models.Model):
         ClinicalSignificanceDescription,
         verbose_name="Clinical Significance Description ID",
         on_delete=models.PROTECT,
+    )
+
+    clinical_significance_comment = models.CharField(
+        verbose_name="Comment on classification", null=True
     )
 
     evaluating_organization = models.ForeignKey(
@@ -322,14 +346,19 @@ class Interpretation(models.Model):
         on_delete=models.PROTECT,
     )
 
-    prevalence = models.TextField(verbose_name="Prevalence of variant")
-
-    # Inheritance pattern. Not to be confused with ModeOfInheritance, which is populated from PanelApp for PanelGene/SuperPanelGene
-    known_inheritance = models.TextField(
-        verbose_name="Inheritance pattern",
+    prevalence = models.TextField(
+        verbose_name="Prevalence of variant", null=True
     )
 
-    associated_disease = models.TextField(verbose_name="Associated disease")
+    # Inheritance pattern. Not to be confused with ModeOfInheritance,
+    # which is populated from PanelApp for PanelGene/SuperPanelGene
+    known_inheritance = models.TextField(
+        verbose_name="Inheritance pattern", null=True
+    )
+
+    associated_disease = models.TextField(
+        verbose_name="Associated disease", null=True
+    )
 
     probe_set = models.ForeignKey(
         ProbeSet,
@@ -337,8 +366,13 @@ class Interpretation(models.Model):
         on_delete=models.PROTECT,
     )
 
-    date = models.DateField(
-        verbose_name="Date that the interpretation was completed"
+    date_evaluated = models.DateField(
+        verbose_name="Date that the interpretation was completed", null=True
+    )
+
+    # by this we mean "from the "Comment" field in the "Included" tab"
+    comment_from_included = models.CharField(
+        verbose_name='Comment field from workbook "Included" tab', null=True
     )
 
     class Meta:
