@@ -71,45 +71,49 @@ def insert_row(row_dict: dict[str, str | int]) -> None:
 
     :param row_dict: dataframe row as dictionary
     """
-    sample = _insert_into_table(
+    sample = _get_or_create(
         Sample,
         **_subset_row(row_dict, "instrument_id", "batch_id", "specimen_id"),
     )
-    testcode = _insert_into_table(
-        TestCode, **_subset_row(row_dict, "test_code")
-    )
-    probeset = _insert_into_table(
+    testcode = _get_or_create(TestCode, **_subset_row(row_dict, "test_code"))
+    probeset = _get_or_create(
         ProbeSet,
         **_subset_row(row_dict, "probeset_id") | {"testcode": testcode},
     )
-    affected_status = _insert_into_table(
+    affected_status = _get_or_create(
         AffectedStatus,
         names_to={"affected_status": "name"},
         **_subset_row(row_dict, "affected_status"),
     )
-    assertion_criteria = _insert_into_table(
-        AssertionCriteria, **_subset_row(row_dict, "category")
+    assertion_criteria = _get_or_create(
+        AssertionCriteria,
+        names_to={"assertion_criteria": "category"},
+        **_subset_row(row_dict, "assertion_criteria")
     )
-    clinical_significance_description = _insert_into_table(
-        ClinicalSignificanceDescription, **_subset_row(row_dict, "category")
+    clinical_significance_description = _get_or_create(
+        ClinicalSignificanceDescription, 
+        names_to={"clinical_significance_description_category": "category"},
+        **_subset_row(row_dict, "clinical_significance_description_category")
     )
-    assay_method = _insert_into_table(
+    assay_method = _get_or_create(
         AssayMethod,
         names_to={"assay_method": "name"},
         **_subset_row(row_dict, "assay_method"),
     )
-    reference_genome = _insert_into_table(
+    reference_genome = _get_or_create(
         ReferenceGenome,
         names_to={"ref_genome": "name"},
         **_subset_row(row_dict, "ref_genome"),
     )
-    clinvar_collection_method = _insert_into_table(
+    clinvar_collection_method = _get_or_create(
         ClinvarCollectionMethod,
         names_to={"collection_method": "name"},
         **_subset_row(row_dict, "collection_method"),
     )
-    chromosome = _insert_into_table(
+    # chromosome is fetch-only; if the chromosome doesn't exist, crash
+    chromosome = _get_or_create(
         Chromosome,
+        method="get",
         names_to={"chrom": "name"},
         **_subset_row(row_dict, "chrom"),
     )
@@ -117,23 +121,23 @@ def insert_row(row_dict: dict[str, str | int]) -> None:
     vnt_row_subset["interpreted"] = (
         vnt_row_subset["interpreted"].lower() == "yes"
     )
-    variant = _insert_into_table(
+    variant = _get_or_create(
         Variant,
         names_to={"pos": "position"},
         **vnt_row_subset
         | {"reference_genome": reference_genome, "chromosome": chromosome},
     )
-    clinvar_allele_origin = _insert_into_table(
+    clinvar_allele_origin = _get_or_create(
         ClinvarAlleleOrigin,
         names_to={"allele_origin": "category"},
         **_subset_row(row_dict, "allele_origin"),
     )
-    organisation = _insert_into_table(
+    organisation = _get_or_create(
         Organization,
         names_to={"organisation": "name"},
         **_subset_row(row_dict, "organisation"),
     )
-    institution = _insert_into_table(
+    institution = _get_or_create(
         Institution,
         names_to={"institution": "name"},
         **_subset_row(row_dict, "institution"),
@@ -156,16 +160,18 @@ def insert_row(row_dict: dict[str, str | int]) -> None:
         "probe_set": probeset,
         "date": row_dict["date"],
     }
-    interpretation = _insert_into_table(Interpretation, **interpretation_row)
+    interpretation = _get_or_create(Interpretation, **interpretation_row)
     # ACGS_CATEGORY_INFORMATION return object is not used, so we throw it away
-    _insert_into_table(
+    _get_or_create(
         AcgsCategoryInformation,
         **{"interpretation": interpretation}
         | _subset_row(row_dict, *ACGS_COLUMNS),
     )
+    # Panel is fetch-only; if the panel doesn't exist, crash
     panels = [
-        _insert_into_table(
+        _get_or_create(
             Panel,
+            method="get",
             **{"panel_name": panel["name"], "panel_version": panel["version"]},
         )
         for panel in row_dict["panels"]
@@ -173,12 +179,16 @@ def insert_row(row_dict: dict[str, str | int]) -> None:
     # Note that SuperPanel does not currently need to be linked to Interpretation in variantDB;
     # this is because the laboratory does not presently have the option of selecting them in testing.
     for panel in panels:
-        _insert_into_table(
+        _get_or_create(
             InterpretationPanel,
             **{"panel": panel, "interpretation": interpretation},
         )
-
-    if not any(_insert_into_table.created):
+    clinvar_submission = _get_or_create(
+        ClinvarSubmission,
+        names_to={"accession_id": "scv_id"},
+        **_subset_row(row_dict, "submission_id", "accession_id"),
+    )
+    if not any(_get_or_create.created):
         logging.warning(
             "Redundant row; this row already exists in the DB. Not inserting..."
         )
@@ -186,7 +196,7 @@ def insert_row(row_dict: dict[str, str | int]) -> None:
         logging.info("Successfully inserted row")
     # reset decorated function state for next loop.
     # This is being done because it'd just keep filling up with bools otherwise
-    _insert_into_table.created = []
+    _get_or_create.created = []
 
 
 def _subset_row(
@@ -235,22 +245,29 @@ def store_bools(func: Callable[P, T]) -> Callable[P, T]:
 
 
 @store_bools
-def _insert_into_table(
-    model_class: models.Model, names_to: dict = None, **kwargs
+def _get_or_create(
+    model_class: models.Model, method="insert", names_to: dict = None, **kwargs
 ) -> models.Model:
     """
     Inserts a row of data into a table, given the model
 
-    :param: model_class: The model class to insert data into
-    :names_to: names to rename - current name is key, name to use is value.
+    :param model_class: The model class to insert data into
+    :param method: The method to use - only "insert" or "get" are accepted
+    :param names_to: names to rename - current name is key, name to use is value.
         Required when the key name doesn't match the corresponding column name in the model
     :kwargs: named arguments to pass in to model for import
     """
+    assert method in ("get", "insert")
     if names_to:
         for k in names_to:
             kwargs = _rename_key(kwargs, k, names_to[k])
-    inst, created = model_class.objects.get_or_create(**kwargs)
-    return inst, created
+    if method == "insert":
+        inst, created = model_class.objects.get_or_create(**kwargs)
+        return inst, created
+    elif method == "get":
+        # django raises `DoesNotExist` error if missing
+        inst = model_class.objects.get(**kwargs)
+        return inst, None
 
 
 def _rename_key(
