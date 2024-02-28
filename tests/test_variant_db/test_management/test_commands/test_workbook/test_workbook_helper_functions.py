@@ -86,10 +86,17 @@ class TestPanelAssertionHandling(TestCase):
         `_parse_panel` don't conform to this format.
         EXPECT: `_parse_panel` correctly raises `AssertionError` for all tested cases
         """
-        with self.assertRaises(AssertionError) as context:
-            _parse_panel("pepperoni_pizza_has_no_version")
-        with self.assertRaises(AssertionError) as context:
-            _parse_panel("1234_5678")
+        test_strings = [
+            # no version
+            "HGNC:1100_SG_panel",
+            # unexpected characters at end of version
+            "CUH_Inherited Stroke_1.0foo",
+        ]
+        for test_string in test_strings:
+            with self.subTest(test_string=test_string), self.assertRaises(
+                AssertionError
+            ):
+                _parse_panel(test_string)
 
     def test_parse_panel_extracts_panel_name_and_version(self):
         """
@@ -97,11 +104,30 @@ class TestPanelAssertionHandling(TestCase):
           `_parse_panel`
         EXPECTS: `AssertionError` is not raised, and the resultant `dict` object contains the expected data
         """
-        parsed_panel = _parse_panel("cancerGenePanel_1.0.0")
-        expected_panel = {"name": "cancerGenePanel", "version": "1.0.0"}
-        self.assertDictEqual(parsed_panel, expected_panel)
-
-        parsed_panel = _parse_panel(
-            "cancerGenePanel_absolutelyanythingallowedhere_andhere_alsoH£RE!_1.0.0"
-        )
-        self.assertDictEqual(parsed_panel, expected_panel)
+        # tuples: (panel string, expected dict result)
+        test_data = [
+            (
+                "CUH_Inherited Stroke_1.0",
+                {"name": "CUH_Inherited Stroke", "version": "1.0"},
+            ),
+            (
+                "Hereditary neuropathy or pain disorder - NOT PMP22 copy number_3.0",
+                {
+                    "name": "Hereditary neuropathy or pain disorder - NOT PMP22 copy number",
+                    "version": "3.0",
+                },
+            ),
+            ("Haematuria_2.4", {"name": "Haematuria", "version": "2.4"}),
+            (
+                "Test_panel_v1.23.45",
+                {"name": "Test_panel", "version": "v1.23.45"},
+            ),
+            (
+                "Test_panel_v10.9.31",
+                {"name": "Test_panel", "version": "v10.9.31"},
+            ),
+        ]
+        for row in test_data:
+            with self.subTest(row=row):
+                parsed_panel = _parse_panel(row[0])
+                self.assertDictEqual(parsed_panel, row[1])
