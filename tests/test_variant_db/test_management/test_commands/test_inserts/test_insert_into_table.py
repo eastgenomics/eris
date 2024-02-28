@@ -1,8 +1,9 @@
 from django.test import TestCase
+from django.core.exceptions import ObjectDoesNotExist
 
-from variant_db.models import Sample, Institution
+from variant_db.models import Sample, Institution, Chromosome
 from variant_db.management.commands.insert import (
-    _insert_into_table,
+    _get_or_create,
 )
 
 
@@ -35,9 +36,9 @@ class TestInsertIntoTable_GettingExisting(TestCase):
             "specimen_id": "test_specimen",
         }
 
-        retrieved_entry = _insert_into_table(Sample, **test_dict)
+        retrieved_entry = _get_or_create(Sample, **test_dict)
 
-        # in this case, we expect _insert_into_table to fetch the already-existing entry
+        # in this case, we expect _get_or_create to fetch the already-existing entry
         assert self.sample.id == retrieved_entry.id
 
     def test_getting_inst_with_rename(self):
@@ -49,11 +50,11 @@ class TestInsertIntoTable_GettingExisting(TestCase):
         test_dict = {"institution": "NHS Foundation Trust"}
         names_to = {"institution": "name"}
 
-        retrieved_entry = _insert_into_table(
+        retrieved_entry = _get_or_create(
             Institution, names_to=names_to, **test_dict
         )
 
-        # in this case, we expect _insert_into_table to fetch the already-existing entry
+        # in this case, we expect _get_or_create to fetch the already-existing entry
         assert self.inst.id == retrieved_entry.id
 
 
@@ -76,7 +77,7 @@ class TestInsertIntoTable_MakingFromScratch(TestCase):
             "specimen_id": "test_specimen",
         }
 
-        retrieved_entry = _insert_into_table(Sample, **test_dict)
+        retrieved_entry = _get_or_create(Sample, **test_dict)
 
         assert retrieved_entry.instrument_id == "test_inst"
 
@@ -85,8 +86,44 @@ class TestInsertIntoTable_MakingFromScratch(TestCase):
         test_dict = {"institution": "NHS Foundation Trust"}
         names_to = {"institution": "name"}
 
-        retrieved_entry = _insert_into_table(
+        retrieved_entry = _get_or_create(
             Institution, names_to=names_to, **test_dict
         )
 
         assert retrieved_entry.name == "NHS Foundation Trust"
+
+
+class Test_FetchOnly_Queries(TestCase):
+    """
+    Test cases to test that the "get" behaviour of `_get_or_create` works as intended
+    """
+
+    def setUp(self) -> None:
+        """
+        Insert a row of valid `Chromosome` data to be referenced
+        """
+        _, _ = Chromosome.objects.get_or_create(
+            name="1",
+            numerical_name=1,
+            source="RefSeq",
+        )
+
+    def test_raises_objectdoesnotexist(self):
+        """
+        CASE: Submit a query against `Chromosome` for a chromosome that doesn't exist
+        EXPECTS: Raises `ObjectDoesNotExist` error (Django exception)
+        """
+        test_dict = {"name": 500}
+        with self.assertRaises(ObjectDoesNotExist) as context:
+            _get_or_create(Chromosome, "get", **test_dict)
+
+    def test_gets_objects(self):
+        """
+        CASE: Submit a query against `Chromosome` for a chromosome that exists
+        EXPECTS: Correct row of `Chromosome` data is returned. All fields match expectations
+        """
+        test_dict = {"name": 1}
+        query_result = _get_or_create(Chromosome, "get", **test_dict)
+        assert query_result.name == "1"
+        assert query_result.numerical_name == 1
+        assert query_result.source == "RefSeq"

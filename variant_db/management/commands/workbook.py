@@ -124,6 +124,8 @@ def _parse_panel(panel: str) -> dict[str, str]:
     Splits a single panel string into "name" and "version" components, returning a dict.
     The function will throw an `AssertionError` in the event of unexpected panel string formatting
     """
-    assert re.match(r"^.+_[\d]+\.[\d]$"), f"invalid panel name: {panel}"
-    split_panel = panel.split("_")
+    assert re.match(
+        string=panel, pattern=r"^.+_v?(\d+\.?)+$"
+    ), f"invalid panel name: {panel}"
+    split_panel = panel.rsplit("_", 1)
     return {"name": split_panel[0], "version": split_panel[-1]}
