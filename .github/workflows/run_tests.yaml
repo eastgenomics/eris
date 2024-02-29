@@ -34,4 +34,4 @@ jobs:
         python manage.py migrate
     - name: Run Tests
       run: |
-        coverage run --source="." manage.py test
+        python manage.py test --with-coverage¶
