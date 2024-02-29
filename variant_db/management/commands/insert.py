@@ -134,8 +134,8 @@ def insert_row(row_dict: dict[str, str | int]) -> None:
     )
     organisation = _get_or_create(
         Organization,
-        names_to={"organisation": "name"},
-        **_subset_row(row_dict, "organisation"),
+        names_to={"organisation": "name", "organisation_id": "external_id"},
+        **_subset_row(row_dict, "organisation", "organisation_id"),
     )
     institution = _get_or_create(
         Institution,
