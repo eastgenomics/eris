@@ -1,28 +1,10 @@
 from django.test import TestCase
-import requests
 import json
+from unittest import mock
 
 
-from panels_backend.management.commands.panelapp import SuperPanelClass
-
-
-def mocked_requests_get_superpanel(filename):
-    """
-    Makes a pretend API response which contains some file contents
-    as its json payload.
-    Lets you avoid actually calling the real PanelApp API.
-    """
-
-    class MockResponse:
-        def __init__(self):
-            self.json_data = json.load(open(filename))
-            self.status_code = 200
-
-        def json(self):
-            return self.json_data
-
-    mock = MockResponse()
-    return mock.json()
+from panels_backend.management.commands.panelapp import SuperPanelClass, PanelClass
+from .mockresponse import MockResponse
 
 
 class TestSuperPanelClass(TestCase):
@@ -35,31 +17,76 @@ class TestSuperPanelClass(TestCase):
     def test_basic_values_parse(self):
         """
         Check that basic SuperPanel string values, such as ID, are parsed correctly
-        """
-        # mocked-out API call
-        json_response = mocked_requests_get_superpanel(
-            "testing_files/eris/panelapp_api_mocks/superpanel_api_example_most_genes_removed.json"
-        )
-        superpanel = SuperPanelClass(**json_response)
+        SuperPanelClass will call _create_component_panels() to fetch the child panels
+        _create_component_panels() will call two more functions:
+        - _fetch_latest_signed_off_version_based_on_panel_id
+        - get_specific_version_panel
 
-        assert superpanel.id == 465
-        assert superpanel.name == "Other rare neuromuscular disorders"
-        assert superpanel.version == "19.155"
-        assert superpanel.panel_source is None
+        These two functions need to be mocked out in order to not fail the test when
+        API calling failed.
+
+
+        """
+        with mock.patch(
+            'panels_backend.management.commands.panelapp._fetch_latest_signed_off_version_based_on_panel_id'
+        ) as _:
+            with mock.patch(
+                'panels_backend.management.commands.panelapp.get_specific_version_panel'
+            ) as mocked_panel:
+
+                mocked_panel.return_value = (PanelClass(), None)
+
+                # mocked-out API call
+                superpanel = SuperPanelClass(
+                    **MockResponse(
+                        json.load(
+                            open(
+                                "testing_files/eris/panelapp_api_mocks/superpanel_api_example_most_genes_removed.json"
+                            )
+                        ),
+                    ).json()
+                )
+
+                assert superpanel.id == 465
+                assert superpanel.name == "Other rare neuromuscular disorders"
+                assert superpanel.version == "19.155"
+                assert superpanel.panel_source is None
 
     def test_children_panel_ids_retrieved_in_superpanel_is_correct(self):
         """
         Superpanel should have a list of child panels (list[PanelClass])
-        Each child panel should have an ID
-        Check that the IDs are correct
+        The function does not take the child panels directly from the API response
+        returned for SuperPanel because SuperPanel does not returned the latest
+        signed-off version of the panels. Instead, it needs to call the API again
+        to check the latest signed-off version of each child panel.
+
+        Therefore the child panels are not parsed in the __init__ method, but in
+        the _create_component_panels method.
+
+        This stage need to be mocked out in order to not fail the test when
+        API calling failed.
         """
+        with mock.patch(
+            'panels_backend.management.commands.panelapp._fetch_latest_signed_off_version_based_on_panel_id'
+        ) as _:
+            with mock.patch(
+                'panels_backend.management.commands.panelapp.get_specific_version_panel'
+            ) as mocked_panel:
 
-        # mocked-out API call
-        json_response = mocked_requests_get_superpanel(
-            "testing_files/eris/panelapp_api_mocks/superpanel_api_mock.json"
-        )
-        superpanel = SuperPanelClass(**json_response)
+                mocked_panel.return_value = (
+                    PanelClass(**{"id": 3}),
+                    None,
+                )  # mocked child panel insertion
 
-        assert set([p.id for p in superpanel.child_panels]) == set(
-            [66, 79, 185, 207, 225, 232, 235]
-        )
+                # mocked-out API call
+                superpanel = SuperPanelClass(
+                    **MockResponse(
+                        json.load(
+                            open(
+                                "testing_files/eris/panelapp_api_mocks/superpanel_api_example_most_genes_removed.json"
+                            )
+                        ),
+                    ).json()
+                )
+
+                assert superpanel.child_panels[0].id == 3

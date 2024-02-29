@@ -6,8 +6,9 @@ from core.settings import PANELAPP_API_URL
 class PanelClass:
     """
     Class for panel data. Default population is by greedy ingestion of all
-    attributes from PanelApp API. However, may also be populated by
-    SuperPanelClass.
+    attributes from PanelApp API.
+
+    SuperPanelClass is available for superpanels
     """
 
     def __init__(self, **a):
@@ -58,9 +59,7 @@ class SuperPanelClass:
             latest_signed_off_version = (
                 _fetch_latest_signed_off_version_based_on_panel_id(panel_id)
             )
-            panel, _ = get_specific_version_panel(
-                panel_id, latest_signed_off_version
-            )
+            panel, _ = get_specific_version_panel(panel_id, latest_signed_off_version)
 
             self.child_panels.append(panel)
 
@@ -82,10 +81,7 @@ def _get_all_signed_off_panels() -> list[dict]:
     while panelapp_url:
         response = requests.get(panelapp_url)
         if response.status_code != 200:
-            print(
-                f"Aborting because API returned a non-200 exit code: {response.status_code} {response.reason}"
-            )
-            exit(1)
+            raise Exception(f'API returned a non-200 exit code: {response.status_code}')
 
         data = response.json()
         all_panels += data["results"]  # append to all_panels
@@ -101,9 +97,9 @@ def _fetch_latest_signed_off_version_based_on_panel_id(panel_id: int) -> str:
     :return: latest signed-off version of the panel, as a string
     """
     try:
-        return requests.get(
-            f"{PANELAPP_API_URL}signedoff/?panel_id={panel_id}"
-        ).json()["results"][0]["version"]
+        return requests.get(f"{PANELAPP_API_URL}signedoff/?panel_id={panel_id}").json()[
+            "results"
+        ][0]["version"]
     except Exception as e:
         raise Exception(
             f"Could not fetch latest signed off panel based on panel id {panel_id}. Error: {e}"
@@ -183,9 +179,7 @@ def get_specific_version_panel(
     return panel, is_superpanel
 
 
-def process_all_signed_off_panels() -> (
-    tuple[list[PanelClass], list[SuperPanelClass]]
-):
+def process_all_signed_off_panels() -> tuple[list[PanelClass], list[SuperPanelClass]]:
     """
     Function to process all signed off panels and superpanels,
     starting by getting information from _get_all_signed_off_panels()
@@ -204,9 +198,7 @@ def process_all_signed_off_panels() -> (
         panel_version = panel.get("version")
 
         # fetching specific signed-off version
-        panel_data, is_superpanel = get_specific_version_panel(
-            panel_id, panel_version
-        )
+        panel_data, is_superpanel = get_specific_version_panel(panel_id, panel_version)
         if panel_data:
             panel_data.panel_source = "PanelApp"
             if is_superpanel:
