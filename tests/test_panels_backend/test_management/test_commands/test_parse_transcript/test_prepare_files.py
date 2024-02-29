@@ -100,7 +100,7 @@ class TestBasicManeFile(TestCase):
             )
             mock_df.return_value = mock_return
 
-            expected_err="Missing columns in MANE: ['MANE TYPE']"
+            expected_err=f"Missing columns in MANE: \['MANE TYPE'\]"
 
             with self.assertRaisesRegex(ValueError, expected_err):
                 hgnc_ids = {"A1BG": "HGNC:1", "A1CF": "HGNC:2", "A2M": "HGNC:3"}
