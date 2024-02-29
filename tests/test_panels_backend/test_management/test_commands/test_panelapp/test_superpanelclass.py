@@ -3,7 +3,10 @@ import json
 from unittest import mock
 
 
-from panels_backend.management.commands.panelapp import SuperPanelClass, PanelClass
+from panels_backend.management.commands.panelapp import (
+    SuperPanelClass,
+    PanelClass,
+)
 from .mockresponse import MockResponse
 
 
@@ -28,12 +31,11 @@ class TestSuperPanelClass(TestCase):
 
         """
         with mock.patch(
-            'panels_backend.management.commands.panelapp._fetch_latest_signed_off_version_based_on_panel_id'
+            "panels_backend.management.commands.panelapp._fetch_latest_signed_off_version_based_on_panel_id"
         ) as _:
             with mock.patch(
-                'panels_backend.management.commands.panelapp.get_specific_version_panel'
+                "panels_backend.management.commands.panelapp.get_specific_version_panel"
             ) as mocked_panel:
-
                 mocked_panel.return_value = (PanelClass(), None)
 
                 # mocked-out API call
@@ -67,12 +69,11 @@ class TestSuperPanelClass(TestCase):
         API calling failed.
         """
         with mock.patch(
-            'panels_backend.management.commands.panelapp._fetch_latest_signed_off_version_based_on_panel_id'
+            "panels_backend.management.commands.panelapp._fetch_latest_signed_off_version_based_on_panel_id"
         ) as _:
             with mock.patch(
-                'panels_backend.management.commands.panelapp.get_specific_version_panel'
+                "panels_backend.management.commands.panelapp.get_specific_version_panel"
             ) as mocked_panel:
-
                 mocked_panel.return_value = (
                     PanelClass(**{"id": 3}),
                     None,

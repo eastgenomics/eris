@@ -28,12 +28,11 @@ class TestGetPanelFromUrl(TestCase):
         """
 
         with mock.patch(
-            'panels_backend.management.commands.panelapp.get_panel_from_url'
+            "panels_backend.management.commands.panelapp.get_panel_from_url"
         ) as mocked_panel:
             with mock.patch(
-                'panels_backend.management.commands.panelapp._check_superpanel_status'
+                "panels_backend.management.commands.panelapp._check_superpanel_status"
             ) as mocked_superpanel_status:
-
                 mocked_superpanel_status.return_value = (
                     False  # mocked panel is not a superpanel
                 )

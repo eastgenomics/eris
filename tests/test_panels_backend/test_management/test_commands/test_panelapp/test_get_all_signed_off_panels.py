@@ -2,13 +2,14 @@ from django.test import TestCase
 from unittest import mock
 import json
 
-from panels_backend.management.commands.panelapp import _get_all_signed_off_panels
+from panels_backend.management.commands.panelapp import (
+    _get_all_signed_off_panels,
+)
 from .mockresponse import MockResponse
 
 
 class TestGetAllSignedOffPanel(TestCase):
-
-    @mock.patch('requests.get')
+    @mock.patch("requests.get")
     def test_general_function(self, mocked_response):
         """
         Case: Test that the function returns a list of panels.
@@ -17,7 +18,9 @@ class TestGetAllSignedOffPanel(TestCase):
 
         mocked_response.return_value = MockResponse(
             json.load(
-                open('testing_files/eris/panelapp_api_mocks/mock_panelapp_api.json')
+                open(
+                    "testing_files/eris/panelapp_api_mocks/mock_panelapp_api.json"
+                )
             ),
             200,
         )
@@ -26,7 +29,7 @@ class TestGetAllSignedOffPanel(TestCase):
 
         assert len(panels) == 100  # there are 100 panels in the mock file
 
-    @mock.patch('requests.get')
+    @mock.patch("requests.get")
     def test_exception_raised(self, mocked_response):
         """
         Case: If API returned non-200 status code, raise Exception
@@ -35,7 +38,9 @@ class TestGetAllSignedOffPanel(TestCase):
 
         mocked_response.return_value = MockResponse(
             json.load(
-                open('testing_files/eris/panelapp_api_mocks/mock_panelapp_api.json')
+                open(
+                    "testing_files/eris/panelapp_api_mocks/mock_panelapp_api.json"
+                )
             ),
             201,
         )

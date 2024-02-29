@@ -9,8 +9,7 @@ from .mockresponse import MockResponse
 
 
 class TestFetchLatestSignedOffVersionBasedOnPanelId(TestCase):
-
-    @mock.patch('requests.get')
+    @mock.patch("requests.get")
     def test_general_function(self, mocked_response):
         """
         Case: Test that the function returns the latest signed-off version of a panel.
@@ -20,17 +19,19 @@ class TestFetchLatestSignedOffVersionBasedOnPanelId(TestCase):
         mocked_response.return_value = MockResponse(
             json.load(
                 open(
-                    'testing_files/eris/panelapp_api_mocks/mock_latest_signed_off_panel.json'
+                    "testing_files/eris/panelapp_api_mocks/mock_latest_signed_off_panel.json"
                 )
             ),
             200,
         )
 
-        panel_version = _fetch_latest_signed_off_version_based_on_panel_id(1141)
+        panel_version = _fetch_latest_signed_off_version_based_on_panel_id(
+            1141
+        )
 
         assert panel_version == "1.7"
 
-    @mock.patch('requests.get')
+    @mock.patch("requests.get")
     def test_exception_raised(self, mocked_response):
         """
         Case: If API returned non-200 status code, raise Exception
@@ -40,10 +41,12 @@ class TestFetchLatestSignedOffVersionBasedOnPanelId(TestCase):
         mocked_response.return_value = MockResponse(
             json.load(
                 open(
-                    'testing_files/eris/panelapp_api_mocks/mock_latest_signed_off_panel.json'
+                    "testing_files/eris/panelapp_api_mocks/mock_latest_signed_off_panel.json"
                 )
             ),
             201,
         )
 
-        self.assertRaises(Exception, _fetch_latest_signed_off_version_based_on_panel_id)
+        self.assertRaises(
+            Exception, _fetch_latest_signed_off_version_based_on_panel_id
+        )

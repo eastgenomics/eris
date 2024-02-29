@@ -11,7 +11,7 @@ from .mockresponse import MockResponse
 
 
 class TestGetPanelFromUrl(TestCase):
-    @mock.patch('requests.get')
+    @mock.patch("requests.get")
     def test_fetching_panel(self, mocked_response):
         """
         Case: Fetch a panel from PanelApp
@@ -20,7 +20,9 @@ class TestGetPanelFromUrl(TestCase):
         """
 
         mocked_response.return_value = MockResponse(
-            json.load(open('testing_files/eris/panelapp_api_mocks/mock_panel.json')),
+            json.load(
+                open("testing_files/eris/panelapp_api_mocks/mock_panel.json")
+            ),
             200,
         )
         panel, is_superpanel = get_panel_from_url(
@@ -30,7 +32,7 @@ class TestGetPanelFromUrl(TestCase):
         assert panel.id == 3
         assert not is_superpanel
 
-    @mock.patch('requests.get')
+    @mock.patch("requests.get")
     def test_fetching_superpanel(self, mocked_response):
         """
         Case: Fetch a superpanel from PanelApp
@@ -40,12 +42,11 @@ class TestGetPanelFromUrl(TestCase):
         # NOTE: mocked_version does not require a return value because it will not affect the test
         """
         with mock.patch(
-            'panels_backend.management.commands.panelapp._fetch_latest_signed_off_version_based_on_panel_id'
+            "panels_backend.management.commands.panelapp._fetch_latest_signed_off_version_based_on_panel_id"
         ) as _:
             with mock.patch(
-                'panels_backend.management.commands.panelapp.get_specific_version_panel'
+                "panels_backend.management.commands.panelapp.get_specific_version_panel"
             ) as mocked_panel:
-
                 mocked_panel.return_value = (
                     PanelClass(),
                     None,
@@ -54,7 +55,7 @@ class TestGetPanelFromUrl(TestCase):
                 mocked_response.return_value = MockResponse(
                     json.load(
                         open(
-                            'testing_files/eris/panelapp_api_mocks/superpanel_api_mock.json'
+                            "testing_files/eris/panelapp_api_mocks/superpanel_api_mock.json"
                         )
                     ),
                     200,

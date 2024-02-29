@@ -1,7 +1,9 @@
 import json
 from django.test import TestCase
 
-from panels_backend.management.commands.panelapp import _check_superpanel_status
+from panels_backend.management.commands.panelapp import (
+    _check_superpanel_status,
+)
 
 
 class TestCheckSuperpanelStatus(TestCase):
@@ -13,7 +15,7 @@ class TestCheckSuperpanelStatus(TestCase):
 
         response = json.load(
             open(
-                'testing_files/eris/panelapp_api_mocks/superpanel_api_mock.json'
+                "testing_files/eris/panelapp_api_mocks/superpanel_api_mock.json"
             )  # mocked superpanel
         )
 
@@ -29,7 +31,7 @@ class TestCheckSuperpanelStatus(TestCase):
 
         response = json.load(
             open(
-                'testing_files/eris/panelapp_api_mocks/mock_panel.json'
+                "testing_files/eris/panelapp_api_mocks/mock_panel.json"
             )  # mocked panel
         )
 
