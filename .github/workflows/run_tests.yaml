@@ -35,7 +35,7 @@ jobs:
         cp .github/workflows/.env core/.env
     - name: Make migrations
       run: |
-        python manage.py makemigrations auth
+        python manage.py makemigrations auth panels_backend variant_db
         python manage.py migrate
     - name: Run Tests
       run: |
