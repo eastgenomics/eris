@@ -27,7 +27,7 @@ from ._insert_ci import (
     flag_clinical_indication_superpanel_for_review,
     provisionally_link_clinical_indication_to_panel,
     provisionally_link_clinical_indication_to_superpanel,
-    _check_for_changed_pg_justification
+    _check_for_changed_pg_justification,
 )
 from .panelapp import PanelClass, SuperPanelClass
 from django.db import transaction

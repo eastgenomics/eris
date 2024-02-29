@@ -43,7 +43,7 @@ class TestPrepareHgncFile(TestCase):
             )
             mock_df.return_value = mock_return
 
-            expected_err=f"Missing columns in HGNC Dump: \['Alias symbols'\]"
+            expected_err = f"Missing columns in HGNC Dump: \['Alias symbols'\]"
             with self.assertRaisesRegex(ValueError, expected_err):
                 self.gene_symbols_to_hgnc_ids = _prepare_hgnc_file(
                     "/dev/null", "1.0", self.user
