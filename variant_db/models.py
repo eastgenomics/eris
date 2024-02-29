@@ -244,7 +244,9 @@ class Organization(models.Model):
 
     name = models.TextField(verbose_name="Organization name", null=True)
 
-    external_id = models.IntegerField(verbose_name="Organization external ID", null=True)
+    external_id = models.IntegerField(
+        verbose_name="Organization external ID", null=True
+    )
 
     class Meta:
         db_table = "organization"

@@ -88,12 +88,12 @@ def insert_row(row_dict: dict[str, str | int]) -> None:
     assertion_criteria = _get_or_create(
         AssertionCriteria,
         names_to={"assertion_criteria": "category"},
-        **_subset_row(row_dict, "assertion_criteria")
+        **_subset_row(row_dict, "assertion_criteria"),
     )
     clinical_significance_description = _get_or_create(
-        ClinicalSignificanceDescription, 
+        ClinicalSignificanceDescription,
         names_to={"clinical_significance_description_category": "category"},
-        **_subset_row(row_dict, "clinical_significance_description_category")
+        **_subset_row(row_dict, "clinical_significance_description_category"),
     )
     assay_method = _get_or_create(
         AssayMethod,
