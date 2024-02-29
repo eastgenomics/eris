@@ -1,5 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
+from unittest import mock
+import pandas as pd
 
 from panels_backend.models import Gene, HgncRelease
 from panels_backend.management.commands._parse_transcript import (
@@ -25,6 +27,27 @@ class TestPrepareHgncFile(TestCase):
         EXPECT: 15 entries as per the mock file
         """
         assert len(self.gene_symbols_to_hgnc_ids) == 15
+
+    def test_raises_error_if_cols_missing(self):
+        """
+        CASE: The provided HGNC file is missing a required column,
+        'Alias symbols'
+        EXPECT: An informative error is raised
+        """
+        with mock.patch("pandas.read_csv") as mock_df:
+            mock_return = pd.DataFrame(
+                {
+                    "HGNC ID": ["HGNC:5"],
+                    "Approved symbol": ["A1BG"],
+                }
+            )
+            mock_df.return_value = mock_return
+
+            expected_err=f"Missing columns in HGNC Dump: \['Alias symbols'\]"
+            with self.assertRaisesRegex(ValueError, expected_err):
+                self.gene_symbols_to_hgnc_ids = _prepare_hgnc_file(
+                    "/dev/null", "1.0", self.user
+                )
 
     def test_new_gene_bulk_create(self):
         """
