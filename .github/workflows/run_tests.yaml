@@ -36,6 +36,7 @@ jobs:
     - name: Make migrations
       run: |
         python manage.py makemigrations auth
+        python manage.py migrate
     - name: Run Tests
       run: |
         python manage.py test
