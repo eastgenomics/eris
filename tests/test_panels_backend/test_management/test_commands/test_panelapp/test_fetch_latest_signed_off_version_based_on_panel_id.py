@@ -25,9 +25,7 @@ class TestFetchLatestSignedOffVersionBasedOnPanelId(TestCase):
             200,
         )
 
-        panel_version = _fetch_latest_signed_off_version_based_on_panel_id(
-            1141
-        )
+        panel_version = _fetch_latest_signed_off_version_based_on_panel_id(1141)
 
         assert panel_version == "1.7"
 
@@ -38,15 +36,13 @@ class TestFetchLatestSignedOffVersionBasedOnPanelId(TestCase):
         Expected behaviour: An Exception should be raised.
         """
 
-        mocked_response.return_value = MockResponse(
-            json.load(
-                open(
-                    "testing_files/eris/panelapp_api_mocks/mock_latest_signed_off_panel.json"
-                )
-            ),
-            201,
-        )
+        # mocked response should return an Exception rather than a response as that's what
+        # returned by the function
+        mocked_response.return_value = Exception(500)
 
-        self.assertRaises(
-            Exception, _fetch_latest_signed_off_version_based_on_panel_id
+        self.assertRaisesRegex(
+            Exception,
+            r"Could not fetch latest signed off panel based on panel 3*",
+            _fetch_latest_signed_off_version_based_on_panel_id,
+            3,
         )

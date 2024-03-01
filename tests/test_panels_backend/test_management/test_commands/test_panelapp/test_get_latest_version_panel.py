@@ -8,7 +8,7 @@ from panels_backend.management.commands.panelapp import (
 )
 
 
-class TestGetPanelFromUrl(TestCase):
+class TestGetLatestVersionPanel(TestCase):
     def get_latest_version_panel(self):
         """
         Case: Fetch latest version given a panel id or specific version given a panel
