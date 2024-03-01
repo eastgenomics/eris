@@ -37,8 +37,6 @@ class TestPrepareMarknameFile(TestCase):
             )
             mock_df.return_value = mock_return
 
-            expected_err = (
-                f"Missing columns in markname: \['hgncID'\]"
-            )
+            expected_err = f"Missing columns in markname: \['hgncID'\]"
             with self.assertRaisesRegex(ValueError, expected_err):
                 result = _prepare_markname_file("/dev/null")

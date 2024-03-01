@@ -1,5 +1,4 @@
 from django.test import TestCase
-from unittest import mock
 
 from panels_backend.management.commands._parse_transcript import (
     _populate_mane_dict_by_category,
@@ -14,10 +13,11 @@ class TestPopulateManeDictByCategory_ValueError(TestCase):
     CASE: An invalid MANE type is passed
     EXPECT: A ValueError is raised
     """
+
     def test_value_error(self):
         expected_err = (
             "MANE Type does not match MANE Select or MANE Plus Clinical"
-            " - check how mane_data has been set up" 
+            " - check how mane_data has been set up"
         )
         with self.assertRaisesRegex(ValueError, expected_err):
             tx = [{"MANE TYPE": "test"}]
