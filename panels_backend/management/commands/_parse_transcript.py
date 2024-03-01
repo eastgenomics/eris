@@ -1196,10 +1196,10 @@ def seed_transcripts(
     :param write_error_log: write error log or not
     """
     # take today's datetime
-    current_datetime = dt.datetime.today().strftime("%Y%m%d")
+    current_date = dt.datetime.today().strftime("%Y%m%d")
 
     # prepare error log filename
-    error_log: str = f"{current_datetime}_transcript_error.txt"
+    error_log: str = f"{current_date}_transcript_error.txt"
 
     # check reference genome makes sense, fetch it
     reference_genome_str = _parse_reference_genome(reference_genome)
