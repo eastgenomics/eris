@@ -10,13 +10,14 @@ def sortable_version(version: str) -> str:
     return ".".join(bit.zfill(5) for bit in str(version).split("."))
 
 
-def normalize_version(padded_version: str) -> str:
+def normalize_version(padded_version: str) -> str | None:
     """
     Turn '00001.00001' -> '1.1'
-    If no version is available this returns '0.0'.
+    If no version is available this returns None - as version is nullable
+    in the db.
     """
     if not padded_version:
-        return "0.0"
+        return None
 
     result = str(
         ".".join(bit.lstrip("0") for bit in padded_version.split("."))
