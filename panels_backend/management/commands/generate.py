@@ -656,7 +656,7 @@ class Command(BaseCommand):
 
             # check genome and gff_release from database
             genome = self._check_genome_in_db(
-                parsed_genome, kwargs["gff_release"]
+                parsed_genome
             )
 
             gff_release = self._check_gff_in_db(kwargs["gff_release"], genome)
