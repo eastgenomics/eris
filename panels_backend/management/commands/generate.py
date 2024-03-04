@@ -19,7 +19,7 @@ from panels_backend.models import (
 import os
 import csv
 import collections
-import datetime as dt
+from datetime import date, datetime
 import pandas as pd
 
 from django.core.management.base import BaseCommand
@@ -38,16 +38,6 @@ ACCEPTABLE_COMMANDS = ["genepanels", "g2t"]
 
 class Command(BaseCommand):
     help = "generate genepanels"
-
-    def _validate_directory(self, path) -> bool:
-        """
-        Validate if directory exists
-
-        :param path: path to directory
-
-        :return: True if directory exists, False otherwise
-        """
-        return os.path.exists(path)
 
     def _validate_hgnc(self, file_path: str) -> bool | None:
         """
@@ -244,6 +234,8 @@ class Command(BaseCommand):
                     )
                     if not panel_version:
                         panel_version = ""
+                    else:
+                        panel_version = normalize_version(panel_version)
                     line = [
                         f"{r_code}_{ci_name}",
                         f"{panel_dict['ci_panel__panel__panel_name']}_{panel_version}",
@@ -300,7 +292,7 @@ class Command(BaseCommand):
                         if panel_dict[
                             "ci_superpanel__superpanel__panel_version"
                         ]
-                        else None
+                        else ""
                     )
                     results.append(
                         [
@@ -350,19 +342,19 @@ class Command(BaseCommand):
             msg = "; ".join(errors)
             raise ValueError(msg)
 
-    def _generate_genepanels(
-        self, excluded_hgncs: set, output_directory: str
-    ) -> None:
+    def _generate_genepanels_results(
+        self, excluded_hgncs: set
+    ) -> list[tuple[str, str, str]]:
         """
-        Main function to generate genepanel.tsv, a file containing every clinical indications' genes
-        Runs sanity checks, then calls a formatter if these pass
-        Outputs the data as a csv, with columns: clinical indication, source panel, and HGNC gene ID.
+        Main function to format genepanel results, which contains every
+        clinical indications' panel(s) and genes.
+        Runs sanity checks first.
+        Outputs the data as a list of tuples, each tuple contains: clinical
+        indication, source panel, and HGNC gene ID.
         :param excluded_hgncs: HGNC loci to exclude from analyses
         :param output_directory: output directory
         """
         print("Creating genepanels file")
-
-        self._block_genepanels_if_db_not_ready()
 
         latest_td_release_ver = _fetch_latest_td_version()
         latest_td_instance = TestDirectoryRelease.objects.get(
@@ -388,17 +380,29 @@ class Command(BaseCommand):
         superpanel_results = self._format_output_data_genesuperpanels(
             ci_superpanels, superpanel_genes, excluded_hgncs
         )
-
         results = panel_results + superpanel_results
-        # run 'sort' again so that the panels and superpanels can be mixed in together
-        # though note due to being on strings, 'sort' isn't version-sensitive for R codes (e.g. R100 shows up before R29)
+
+        # run 'sort' again so that the panels and superpanels can be mixed
+        # in together, though note due to being on strings, 'sort' isn't
+        # version-sensitive for R codes
+        # (e.g. R100 shows up before R29)
         results = sorted(results, key=lambda x: [x[0], x[1], x[2]])
+        return results
 
-        current_datetime = dt.datetime.today().strftime("%Y%m%d")
+    def _write_genepanels_results(
+        self, results: list[tuple[str, str, str]], output_directory: str
+    ) -> None:
+        """
+        Outputs formatted genepanels results as a file.
+        Each tuple in the list becomes a single tab-separated line.
 
-        with open(
-            f"{output_directory}/{current_datetime}_genepanels.tsv", "w"
-        ) as f:
+        :param results: a list of tuples, each one representing a future
+        file row
+        :param output_directory: a string representing the output location
+        for the file.
+        """
+        file_time = date.today().strftime("%Y%m%d")
+        with open(f"{output_directory}/{file_time}_genepanels.tsv", "w") as f:
             for row in results:
                 data = "\t".join(row)
                 f.write(f"{data}\n")
@@ -446,6 +450,45 @@ class Command(BaseCommand):
                     clinical = True
             return clinical
 
+    def _check_genome_in_db(self, parsed_genome: str) -> ReferenceGenome:
+        """
+        Fetch the ReferenceGenome object.
+        Produce sensible error messages if not found.
+        :param: self
+        :param: parsed_genome, the reference genome being used
+        :returns: ReferenceGenome
+        """
+        try:
+            genome = ReferenceGenome.objects.get(name=parsed_genome)
+        except ObjectDoesNotExist:
+            raise ObjectDoesNotExist(
+                "Aborting g2t: reference genome does not exist in the database"
+            )
+
+        return genome
+
+    def _check_gff_in_db(
+        self, gff: str, genome: ReferenceGenome
+    ) -> GffRelease:
+        """
+        Fetch the GffRelease object for the specific ReferenceGenome
+        Produce sensible error messages if not found.
+        :param: self
+        :param: gff, the GFF Ensembl version
+        :returns: GffRelease
+        """
+        try:
+            gff_release = GffRelease.objects.get(
+                ensembl_release=gff,
+                reference_genome=genome,
+            )
+        except ObjectDoesNotExist:
+            raise ObjectDoesNotExist(
+                "Aborting g2t: GFF release does not exist for this genome build in the database."
+            )
+
+        return gff_release
+
     def _generate_g2t_results(
         self,
         ref_genome: ReferenceGenome,
@@ -468,7 +511,7 @@ class Command(BaseCommand):
         :param latest_hgmd: latest HGMD version
         :return: a list-of-dictionaries - each dict can be used to write out a line
         """
-        start = dt.datetime.now().strftime("%H:%M:%S")
+        start = datetime.now().strftime("%H:%M:%S")
         print(
             f"Creating g2t file for reference genome {ref_genome.name} at {start}"
         )
@@ -512,11 +555,11 @@ class Command(BaseCommand):
         row of the eventual file
         :param: output_directory, where the file should be written
         """
-        file_time = dt.datetime.today().strftime("%Y%m%d")
-        keys = results[0].keys()
+        file_time = date.today().strftime("%Y%m%d")
         with open(
             f"{output_directory}/{file_time}_g2t.tsv", "w", newline=""
         ) as out_file:
+            keys = results[0].keys()
             writer = csv.DictWriter(
                 out_file, delimiter="\t", lineterminator="\n", fieldnames=keys
             )
@@ -568,7 +611,7 @@ class Command(BaseCommand):
                 f"No output directory specified. Using default output directory: {output_directory}"
             )
         else:
-            if not self._validate_directory(kwargs["output"]):
+            if not os.path.exists(kwargs["output"]):
                 raise ValueError(
                     f'Output directory specified {kwargs["output"]} is not valid. Please use full path'
                 )
@@ -586,11 +629,14 @@ class Command(BaseCommand):
             if not self._validate_hgnc(kwargs["hgnc"]):
                 raise ValueError(f'HGNC file: {kwargs["hgnc"]} not valid')
 
+            # check readiness of database
+            self._block_genepanels_if_db_not_ready()
+
             # generate genepanels.tsv
             hgncs_to_exclude = parse_excluded_hgncs_from_file(kwargs["hgnc"])
 
-            self._generate_genepanels(hgncs_to_exclude, output_directory)
-
+            results = self._generate_genepanels_results(hgncs_to_exclude)
+            self._write_genepanels_results(results, output_directory)
             print(f"Genepanel file created at {output_directory}")
 
         # if command is g2t, then generate g2t.tsv
@@ -608,24 +654,12 @@ class Command(BaseCommand):
                     "No GFF release specified, e.g. python manage.py generate g2t --ref_genome GRCh37 --gff_release <>"
                 )
 
-            # if the genome AND gff_release are valid, run the controller function, _generate_g2t
-            try:
-                genome = ReferenceGenome.objects.get(name=parsed_genome)
-            except ObjectDoesNotExist:
-                raise ObjectDoesNotExist(
-                    "Aborting g2t: reference genome does not exist in the database"
-                )
+            # check genome and gff_release from database
+            genome = self._check_genome_in_db(parsed_genome)
 
-            try:
-                gff_release = GffRelease.objects.get(
-                    ensembl_release=kwargs.get("gff_release"),
-                    reference_genome=genome,
-                )
-            except ObjectDoesNotExist:
-                raise ObjectDoesNotExist(
-                    "Aborting g2t: GFF release does not exist for this genome build in the database."
-                )
+            gff_release = self._check_gff_in_db(kwargs["gff_release"], genome)
 
+            # get latest transcript releases
             latest_select = get_latest_transcript_release(
                 "MANE Select", genome
             )
@@ -633,7 +667,6 @@ class Command(BaseCommand):
                 "MANE Plus Clinical", genome
             )
             latest_hgmd = get_latest_transcript_release("HGMD", genome)
-
             if None in [latest_select, latest_plus_clinical, latest_hgmd]:
                 raise ValueError(
                     "One or more transcript releases (MANE or HGMD) have not yet been"
@@ -648,6 +681,5 @@ class Command(BaseCommand):
                 latest_hgmd,
             )
             self._write_g2t_results(g2t, output_directory)
-
-            end = dt.datetime.now().strftime("%H:%M:%S")
+            end = datetime.now().strftime("%H:%M:%S")
             print(f"g2t file created at {output_directory} at {end}")
