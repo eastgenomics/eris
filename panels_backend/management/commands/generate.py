@@ -450,10 +450,7 @@ class Command(BaseCommand):
                     clinical = True
             return clinical
 
-    def _check_genome_in_db(
-            self,
-            parsed_genome: str
-    ) -> ReferenceGenome:
+    def _check_genome_in_db(self, parsed_genome: str) -> ReferenceGenome:
         """
         Fetch the ReferenceGenome object.
         Produce sensible error messages if not found.
@@ -467,13 +464,11 @@ class Command(BaseCommand):
             raise ObjectDoesNotExist(
                 "Aborting g2t: reference genome does not exist in the database"
             )
-        
+
         return genome
 
     def _check_gff_in_db(
-            self,
-            gff: str,
-            genome: ReferenceGenome
+        self, gff: str, genome: ReferenceGenome
     ) -> GffRelease:
         """
         Fetch the GffRelease object for the specific ReferenceGenome
@@ -662,13 +657,10 @@ class Command(BaseCommand):
             # check genome and gff_release from database
             genome = self._check_genome_in_db(
                 parsed_genome, kwargs["gff_release"]
-                )
-            
-            gff_release = self._check_gff_in_db(
-                kwargs["gff_release"],
-                genome
             )
-            
+
+            gff_release = self._check_gff_in_db(kwargs["gff_release"], genome)
+
             # get latest transcript releases
             latest_select = get_latest_transcript_release(
                 "MANE Select", genome

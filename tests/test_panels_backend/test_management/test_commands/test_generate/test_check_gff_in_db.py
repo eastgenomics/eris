@@ -2,18 +2,13 @@ from django.test import TestCase
 from django.core.exceptions import ObjectDoesNotExist
 
 from panels_backend.management.commands.generate import Command
-from panels_backend.models import (
-    ReferenceGenome,
-    GffRelease
-)
+from panels_backend.models import ReferenceGenome, GffRelease
 
 
 class TestCheckCatchesNoGff(TestCase):
     def setUp(self) -> None:
-        self.ref = ReferenceGenome.objects.create(
-            name="GRCh37"
-        )
-    
+        self.ref = ReferenceGenome.objects.create(name="GRCh37")
+
     def test_no_gff(self):
         """
         CASE: A GFF is missing in the database
@@ -29,15 +24,12 @@ class TestCheckCatchesNoGff(TestCase):
 
 class TestGffPass(TestCase):
     def setUp(self) -> None:
-        self.ref = ReferenceGenome.objects.create(
-            name="GRCh37"
-        )
+        self.ref = ReferenceGenome.objects.create(name="GRCh37")
 
         self.gff = GffRelease.objects.create(
-            ensembl_release="19",
-            reference_genome=self.ref
+            ensembl_release="19", reference_genome=self.ref
         )
-    
+
     def test_no_gff(self):
         """
         CASE: The GFF is present in the DB

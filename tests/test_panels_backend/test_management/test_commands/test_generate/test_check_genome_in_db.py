@@ -23,10 +23,8 @@ class TestCheckCatchesNoRefGenome(TestCase):
 
 class TestRefGenomePass(TestCase):
     def setUp(self) -> None:
-        self.ref = ReferenceGenome.objects.create(
-            name="GRCh37"
-        )
-    
+        self.ref = ReferenceGenome.objects.create(name="GRCh37")
+
     def test_no_gff(self):
         """
         CASE: ReferenceGenome is present in DB
