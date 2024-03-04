@@ -1,7 +1,7 @@
 # Eris: Django apps for panel management and variant storage
 
 ## Note
-Eris is currently still in active pre-release development, as of 23rd January 2024.
+Eris is currently still in active pre-release development, as of 4th March 2024.
 
 
 ## Purpose

@@ -8,24 +8,9 @@ from panels_backend.models import (
 )
 
 
-class TestCheckCatchesNoRefGenome(TestCase):
-    def test_no_reference(self):
-        """
-        CASE: No reference genome or GFF are in the database
-        EXPECT: Error thrown over the lack of reference genome
-        """
-        cmd = Command()
-        ref = "GRCh37"
-        gff = "19"
-        expected_err = "Aborting g2t: reference genome does not exist in "
-        "the database"
-        with self.assertRaisesRegex(ObjectDoesNotExist, expected_err):
-            cmd._check_genome_and_gff_in_db(ref, gff)
-
-
 class TestCheckCatchesNoGff(TestCase):
     def setUp(self) -> None:
-        ReferenceGenome.objects.create(
+        self.ref = ReferenceGenome.objects.create(
             name="GRCh37"
         )
     
@@ -35,15 +20,14 @@ class TestCheckCatchesNoGff(TestCase):
         EXPECT: Error thrown over the lack of GFF
         """
         cmd = Command()
-        ref = "GRCh37"
         gff = "19"
         expected_err = "Aborting g2t: GFF release does not exist for this "
         "genome build in the database"
         with self.assertRaisesRegex(ObjectDoesNotExist, expected_err):
-            cmd._check_genome_and_gff_in_db(ref, gff)
+            cmd._check_gff_in_db(gff, self.ref)
 
 
-class TestGenomeGffPass(TestCase):
+class TestGffPass(TestCase):
     def setUp(self) -> None:
         self.ref = ReferenceGenome.objects.create(
             name="GRCh37"
@@ -56,13 +40,11 @@ class TestGenomeGffPass(TestCase):
     
     def test_no_gff(self):
         """
-        CASE: Both reference and GFF are present in DB
-        EXPECT: The reference and GFF are correctly returned
+        CASE: The GFF is present in the DB
+        EXPECT: The GFF is correctly returned
         """
         cmd = Command()
-        ref = "GRCh37"
         gff = "19"
 
-        genome, gff = cmd._check_genome_and_gff_in_db(ref, gff)
-        assert genome == self.ref
+        gff = cmd._check_gff_in_db(gff, self.ref)
         assert gff == self.gff
