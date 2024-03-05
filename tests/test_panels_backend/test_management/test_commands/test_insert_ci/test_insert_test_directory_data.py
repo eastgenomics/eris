@@ -218,6 +218,60 @@ class TestInsertTestDirectoryData(TestCase):
 
         assert not errors, errors
 
+    def test_make_clinical_indication_with_no_panel_links(self):
+        """
+        We create a clinical indication which has no currently linked panels
+        the function will create a new clinical indication, but won't link it
+        to any panels
+        """
+        errors = []
+
+        mock_test_directory = {
+            "indications": [
+                {
+                    "name": "Test",
+                    "code": "R100.1",
+                    "test_method": "WES or Large Panel",
+                    "panels": [],
+                    "original_targets": "Hearing loss (126)",
+                    "changes": "No change",
+                },
+            ],
+            "td_source": "rare-and-inherited-disease-national-gnomic-test-directory-v5.2.xlsx",
+            "config_source": "230401_RD",
+            "date": "230616",
+        }
+
+        insert_test_directory_data(mock_test_directory, "5.2", False)
+
+        clinical_indications = ClinicalIndication.objects.all()
+        errors += len_check_wrapper(
+            clinical_indications, "clinical indications", 2
+        )
+
+        errors += value_check_wrapper(
+            clinical_indications[1].r_code,
+            "clinical indication r code",
+            "R100.1",
+        )
+
+        clinical_indication_panels = ClinicalIndicationPanel.objects.all().order_by(
+            "id"
+        )  # order by id to make sure the first link is the one from setup above
+        errors += len_check_wrapper(
+            clinical_indication_panels, "clinical indication-panel", 1
+        )  # should ONLY have the link from set-up - there shouldn't be
+        # one for CI "R100.1"
+
+        # check there are 2 links to td version
+        links = CiPanelTdRelease.objects.all()
+
+        errors += len_check_wrapper(
+            links, "ci-panel td-release links matching our ci_panel", 0
+        )
+
+        assert not errors, errors
+
     def test_that_change_in_clinical_indication_name_will_flag_old_links(self):
         """
         CASE: A clinical indication R123 is renamed from "test ci" to "test ci 2"
