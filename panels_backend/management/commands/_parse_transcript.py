@@ -689,36 +689,44 @@ def _get_clin_transcript_from_hgmd_files(
     return hgmd_base, None
 
 
-def _check_for_more_than_one_tx_match_in_panel_linked_tx(
-    matches, hgnc_id, tx
+def _check_if_tx_genes_are_relevant_to_panels(
+    transcript_matches: list[dict[str:str]], tx: str
 ) -> tuple[bool, str | None]:
     """
-    Check that a transcript isn't attached to more than one gene.
-    This should be impossible, but it's happened at least once with GRCh37 transcruots,
-    If it happens, check if we really need this transcript, because there's a Panel-Gene
-    it's relevant to. If we did really need it, raise a ValueError - the input MANE will
+    For a transcript which appears in MANE against multiple genes - check
+    that those genes aren't used in our Panels. We check ALL PanelGene
+    entries, even inactive ones, out of an abundance of caution.
+    For Panel-relevant genes raise a ValueError - the input MANE will
     need checking by a human.
     If it's not relevant, just return the log message noting what happened.
 
-    :param: matches between the transcript and genes. Will usually be 1.
-    :param: hgnc_id of the transcript's gene
-    :param: relevant Panel-Genes affected by the duplicate transcript.
+    It SHOULD be impossible for a transcript to be linked to multiple genes,
+    but it's happened at least once with GRCh37 transcripts
+
+    :param: transcript_matches, a subset of the output of _prepare_mane_file
+    :param: the transcript which we are checking for multiple gene matches
     :return: bool representing whether there's more than one match
     :return: error message or None if not applicable
     """
-    relevant_panels = PanelGene.objects.filter(gene__hgnc_id=hgnc_id)
-    if len(matches) > 1:
-        if len(relevant_panels) != 0:
-            # stop event - throw a ValueError
-            raise ValueError(
-                f"Versionless transcript in MANE more than once: {tx}"
-            )
-        else:
-            # log the error and return the data - it
-            err = f"Versionless transcript in MANE more than once, can't resolve: {tx}"
-            return True, err
+    # find if panels are linked to any of these tx-linked genes
+    relevant_panels = []
+    hgncs = [i["HGNC ID"] for i in transcript_matches]
+    for hgnc_id in hgncs:
+        look_up = PanelGene.objects.filter(gene__hgnc_id=hgnc_id).values_list(
+            "id", flat=True
+        )
+        if look_up:
+            relevant_panels.append([i for i in look_up])
+
+    if len(relevant_panels) != 0:
+        # stop event - throw a ValueError
+        raise ValueError(
+            f"Versionless transcript in MANE more than once and linked to multiple panel-relevant genes, can't resolve: {tx}"
+        )
     else:
-        return False, None
+        # log the error and return the data - it
+        err = f"Versionless transcript in MANE more than once, can't resolve: {tx}"
+        return True, err
 
 
 def _populate_mane_dict_by_category(
@@ -807,13 +815,16 @@ def _transcript_assign_to_source(
         transcript_list = mane_base_match
 
     if mane_exact_match or mane_base_match:
-        (
-            multiple_matches,
-            error_msg,
-        ) = _check_for_more_than_one_tx_match_in_panel_linked_tx(
-            transcript_list, hgnc_id, tx
-        )
+        # work out whether or not the transcript exists multiple times in MANE
+        if len(transcript_list) > 1:
+            (
+                multiple_matches,
+                error_msg,
+            ) = _check_if_tx_genes_are_relevant_to_panels(transcript_list, tx)
+        else:
+            multiple_matches = False
 
+        # annotate the transcript (but only if it doesn't have multiple matches)
         if not multiple_matches:
             mane_info, mane_type = _populate_mane_dict_by_category(
                 transcript_list,
@@ -1053,6 +1064,35 @@ def get_latest_transcript_release(
     )
 
 
+def _get_highest_mane_version(
+    select: TranscriptRelease | None, plus: TranscriptRelease | None
+) -> str | None:
+    """
+    Given a TranscriptRelease (or None) for MANE select and MANE plus
+    clinical, find and return the highest TranscriptRelease version as a
+    string.
+    If one of the TranscriptReleases is None then the version of the other
+    is returned instead.
+    If there aren't any TranscriptReleases then return None.
+
+    :param: select, the MANE Select TranscriptRelease (or None)
+    :param: plus, the MANE Plus Clinical TranscriptRelease (or None)
+    :returns: the string release version of the highest TranscriptRelease,
+    or None if there isn't one
+    """
+    if None not in [select, plus]:
+        max_mane = (
+            select.release
+            if Version(select.release) >= Version(plus.release)
+            else plus.release
+        )
+    elif not select and not plus:
+        max_mane = None
+    else:
+        max_mane = select.release if select else plus.release
+    return max_mane
+
+
 def _check_for_transcript_seeding_version_regression(
     hgnc_release: str,
     gff_release: str,
@@ -1084,18 +1124,7 @@ def _check_for_transcript_seeding_version_regression(
         "MANE Plus Clinical", reference_genome
     )
 
-    # pick whichever of select or plus has the highest version (or 'select' if both are the same)
-    # just return None if there aren't versions for either
-    if None not in [select, plus]:
-        max_mane = (
-            select.release
-            if Version(select.release) >= Version(plus.release)
-            else plus.release
-        )
-    elif not select and not plus:
-        max_mane = None
-    else:
-        max_mane = select if select else plus
+    max_mane = _get_highest_mane_version(select, plus)
 
     if _get_latest_hgnc_release():
         latest_hgnc_release = _get_latest_hgnc_release().release
@@ -1183,10 +1212,10 @@ def seed_transcripts(
     :param write_error_log: write error log or not
     """
     # take today's datetime
-    current_datetime = dt.datetime.today().strftime("%Y%m%d")
+    current_date = dt.datetime.today().strftime("%Y%m%d")
 
     # prepare error log filename
-    error_log: str = f"{current_datetime}_transcript_error.txt"
+    error_log: str = f"{current_date}_transcript_error.txt"
 
     # check reference genome makes sense, fetch it
     reference_genome_str = _parse_reference_genome(reference_genome)
