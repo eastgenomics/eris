@@ -495,9 +495,7 @@ def _prepare_gff_file(gff_file: str) -> dict[str, list[str]]:
         raise ValueError(f"Missing columns in GFF: {missing_columns}")
 
     return (
-        gff.groupby("hgnc")
-        .agg({"transcript": lambda x: list(set(list(x)))})
-        .to_dict()["transcript"]
+        gff.groupby("hgnc").agg({"transcript": lambda x: list(set(list(x)))}).to_dict()["transcript"]
     )
 
 
