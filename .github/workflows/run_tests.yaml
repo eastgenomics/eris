@@ -39,5 +39,5 @@ jobs:
     - name: Run Black reformatter
       uses: psf/black@stable
       with:
-        options: "-l 79"
+        options: "-l 79 --check"
 
