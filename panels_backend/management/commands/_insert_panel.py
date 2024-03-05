@@ -288,7 +288,7 @@ def _disable_custom_hgnc_panels(
     if a PanelApp-created panel is linked to exactly the same HGNC IDs as
     those in the "ACTIVE" custom panel's name
 
-    NOTE: if it's inactivate custom panel, that's fine
+    NOTE: if it's inactive custom panel, that's fine
 
     :param panel: PanelClass object
     :param user: either 'request.user' (if called from web) or None (if called from CLI)
@@ -336,7 +336,7 @@ def _insert_panel_data_into_db(
     panel: PanelClass, user: HttpRequest | None = None
 ) -> Panel:
     """
-    Insert data from a parsed JSON a panel record, into the database.
+    Insert data from a parsed JSON panel record, into the database.
     Controls creation and flagging of new and old CI-Panel links,
     where the Panel version has changed.
     Controls creation of genes.
