@@ -256,9 +256,7 @@ def _make_hgnc_gene_sets(
                 # add to a list of symbol-changed HGNCs
                 symbol_change = True
                 hgnc_symbol_changed[gene.hgnc_id]["old"] = current_gene_symbol
-                hgnc_symbol_changed[gene.hgnc_id][
-                    "new"
-                ] = potential_new_gene_symbol.strip().upper()
+                hgnc_symbol_changed[gene.hgnc_id]["new"] = potential_new_gene_symbol.strip().upper()
 
         # check alias change
         if gene.hgnc_id in hgnc_id_to_alias:
