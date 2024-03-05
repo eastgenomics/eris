@@ -1066,6 +1066,35 @@ def get_latest_transcript_release(
     )
 
 
+def _get_highest_mane_version(
+    select: TranscriptRelease | None, plus: TranscriptRelease | None
+) -> str | None:
+    """
+    Given a TranscriptRelease (or None) for MANE select and MANE plus
+    clinical, find and return the highest TranscriptRelease version as a
+    string.
+    If one of the TranscriptReleases is None then the version of the other
+    is returned instead.
+    If there aren't any TranscriptReleases then return None.
+
+    :param: select, the MANE Select TranscriptRelease (or None)
+    :param: plus, the MANE Plus Clinical TranscriptRelease (or None)
+    :returns: the string release version of the highest TranscriptRelease,
+    or None
+    """
+    if None not in [select, plus]:
+        max_mane = (
+            select.release
+            if Version(select.release) >= Version(plus.release)
+            else plus.release
+        )
+    elif not select and not plus:
+        max_mane = None
+    else:
+        max_mane = select.release if select else plus.release
+    return max_mane
+
+
 def _check_for_transcript_seeding_version_regression(
     hgnc_release: str,
     gff_release: str,
@@ -1097,18 +1126,7 @@ def _check_for_transcript_seeding_version_regression(
         "MANE Plus Clinical", reference_genome
     )
 
-    # pick whichever of select or plus has the highest version (or 'select' if both are the same)
-    # just return None if there aren't versions for either
-    if None not in [select, plus]:
-        max_mane = (
-            select.release
-            if Version(select.release) >= Version(plus.release)
-            else plus.release
-        )
-    elif not select and not plus:
-        max_mane = None
-    else:
-        max_mane = select if select else plus
+    max_mane = _get_highest_mane_version(select, plus)
 
     if _get_latest_hgnc_release():
         latest_hgnc_release = _get_latest_hgnc_release().release
