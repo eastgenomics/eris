@@ -1,4 +1,4 @@
-name: unittest & reformat
+name: unittest & check formatting
 on: [push, pull_request]
 
 jobs:
@@ -36,7 +36,7 @@ jobs:
       run: |
         coverage run --source=panels_backend,variant_db --omit=*/migrations/* manage.py test
         coverage report
-    - name: Run Black reformatter
+    - name: Run Black formatter checks
       uses: psf/black@stable
       with:
         version: "23.3.0"
