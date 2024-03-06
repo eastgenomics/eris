@@ -181,11 +181,11 @@ class Variant(models.Model):
         null=False,
     )
 
-    position = models.IntegerField(verbose_name="Variant Position", null=False)
+    start = models.IntegerField(verbose_name="Variant Position", null=False)
 
-    ref = models.TextField(verbose_name="Reference variant allele", null=False)
+    reference_allele = models.TextField(verbose_name="Reference variant allele", null=False)
 
-    alt = models.TextField(
+    alternate_allele = models.TextField(
         verbose_name="Alternative variant allele", null=False
     )
 
@@ -239,7 +239,6 @@ class Organization(models.Model):
     """
     The name of the Organization where the interpretation was carried out
     Generally larger than an Institution. For example, a GLH would be an Organization.
-    #TODO: write an Organization/Institution relationship once it emerges?
     """
 
     name = models.TextField(verbose_name="Organization name", null=True)
@@ -281,7 +280,7 @@ class Interpretation(models.Model):
 
     # TODO: long term, switch to using ClinicalIndication as an FK here. For now, tolerate strings.
     # N.B. this is NOT a ClinicalIndication FK.
-    clinical_indication = models.TextField(
+    preferred_condition_name = models.TextField(
         verbose_name="Clinical indication as it appears in parsed results workbook"
     )
 
@@ -370,7 +369,7 @@ class Interpretation(models.Model):
         on_delete=models.PROTECT,
     )
 
-    date_evaluated = models.DateField(
+    date_last_evaluated = models.DateField(
         verbose_name="Date that the interpretation was completed", null=True
     )
 
