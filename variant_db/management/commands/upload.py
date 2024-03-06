@@ -60,7 +60,9 @@ class Command(BaseCommand):
                     upload(workbook)
                 except DatabaseError as e:
                     logging.error(f"Exception: {repr(e)}")
-                    logging.error("Rolling back transactions and continuing to next workbook")
+                    logging.error(
+                        "Rolling back transactions and continuing to next workbook"
+                    )
                     continue
             logging.info("All done")
         else:

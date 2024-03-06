@@ -183,7 +183,9 @@ class Variant(models.Model):
 
     start = models.IntegerField(verbose_name="Variant Position", null=False)
 
-    reference_allele = models.TextField(verbose_name="Reference variant allele", null=False)
+    reference_allele = models.TextField(
+        verbose_name="Reference variant allele", null=False
+    )
 
     alternate_allele = models.TextField(
         verbose_name="Alternative variant allele", null=False

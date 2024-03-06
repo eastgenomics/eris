@@ -117,7 +117,13 @@ def insert_row(row_dict: dict[str, str | int]) -> None:
         names_to={"chromosome": "name"},
         **_subset_row(row_dict, "chromosome"),
     )
-    vnt_row_subset = _subset_row(row_dict, "interpreted", "start", "reference_allele", "alternate_allele")
+    vnt_row_subset = _subset_row(
+        row_dict,
+        "interpreted",
+        "start",
+        "reference_allele",
+        "alternate_allele",
+    )
     vnt_row_subset["interpreted"] = (
         vnt_row_subset["interpreted"].lower() == "yes"
     )
