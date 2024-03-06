@@ -68,7 +68,7 @@ class TestDisableCustomPanels_DeactivateMatchingHgncPanel(TestCase):
             panel_source="test directory",
             panel_version=None,
             test_directory=True,
-            custom=True,
+            custom=False,
             pending=False,
         )
 

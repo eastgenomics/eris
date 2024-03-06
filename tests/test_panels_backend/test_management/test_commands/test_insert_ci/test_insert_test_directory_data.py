@@ -220,9 +220,12 @@ class TestInsertTestDirectoryData(TestCase):
 
     def test_make_clinical_indication_with_no_panel_links(self):
         """
-        We create a clinical indication which has no currently linked panels
-        the function will create a new clinical indication, but won't link it
-        to any panels
+        CASE: We run insert_test_directory_data with a mock test directory.
+        The mock test directory contains a clinical indication which does
+        not exist in the database yet. The clinical indication has no panels
+        in its 'panels' field in the JSON.
+        EXPECT: The new ClinicalIndication is created. It doesn't get linked
+        to any Panel records.
         """
         errors = []
 
@@ -232,7 +235,7 @@ class TestInsertTestDirectoryData(TestCase):
                     "name": "Test",
                     "code": "R100.1",
                     "test_method": "WES or Large Panel",
-                    "panels": [],
+                    "panels": [""],
                     "original_targets": "Hearing loss (126)",
                     "changes": "No change",
                 },

@@ -705,7 +705,9 @@ def _check_if_tx_genes_are_relevant_to_panels(
     It SHOULD be impossible for a transcript to be linked to multiple genes,
     but it's happened at least once with GRCh37 transcripts
 
-    :param: transcript_matches, a subset of the output of _prepare_mane_file
+    :param: transcript_matches, a filtered subset of the output of
+    _prepare_mane_file. It's a list of dictionaries. Each dict contains the
+     keys "MANE TYPE", "RefSeq", "RefSeq_versionless" and "HGNC ID".
     :param: the transcript which we are checking for multiple gene matches
     :return: bool representing whether there's more than one match
     :return: error message or None if not applicable
@@ -762,7 +764,7 @@ def _populate_mane_dict_by_category(
 def _transcript_assign_to_source(
     tx: str,
     hgnc_id: str,
-    mane_data: list[dict],
+    mane_data: list[dict[str:str]],
     markname_hgmd: dict[int, list[int]],
     gene2refseq_hgmd: dict[str, list[list[str]]],
 ) -> tuple[dict[str, bool], dict[str, bool], dict[str, bool], str | None]:
@@ -772,7 +774,9 @@ def _transcript_assign_to_source(
 
     :param: tx, the string name of a transcript to look for in sources
     :param: hgnc_id of a gene linked to the above transcript
-    :param: mane_data, information extracted from a MANE file as a list of dicts
+    :param: mane_data, information extracted from a MANE file as a list of
+    dicts. Each dict contains the keys "MANE TYPE", "RefSeq",
+    "RefSeq_versionless" and "HGNC ID".
     :param: markname_hgmd, information extracted from HGMD's markname file as a dict
     :param: gene2refseq_hgmd, information extracted from HGMD's gene2refseq file as a dict
 
