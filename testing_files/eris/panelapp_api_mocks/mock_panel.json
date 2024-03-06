@@ -1,0 +1,629 @@
+{
+    "id": 3,
+    "name": "Stickler syndrome",
+    "strs": [],
+    "genes": [
+        {
+            "tags": [],
+            "evidence": [
+                "NHS GMS",
+                "Expert Review Green",
+                "Expert list"
+            ],
+            "gene_data": {
+                "alias": [],
+                "biotype": "protein_coding",
+                "hgnc_id": "HGNC:1071",
+                "gene_name": "bone morphogenetic protein 4",
+                "omim_gene": [
+                    "112262"
+                ],
+                "alias_name": null,
+                "gene_symbol": "BMP4",
+                "hgnc_symbol": "BMP4",
+                "hgnc_release": "2017-11-03",
+                "ensembl_genes": {
+                    "GRch37": {
+                        "82": {
+                            "location": "14:54416454-54425479",
+                            "ensembl_id": "ENSG00000125378"
+                        }
+                    },
+                    "GRch38": {
+                        "90": {
+                            "location": "14:53949736-53958761",
+                            "ensembl_id": "ENSG00000125378"
+                        }
+                    }
+                },
+                "hgnc_date_symbol_changed": "1990-06-11"
+            },
+            "penetrance": null,
+            "phenotypes": [
+                "Stickler syndrome, MONDO:0019354"
+            ],
+            "transcript": null,
+            "entity_name": "BMP4",
+            "entity_type": "gene",
+            "publications": [
+                "30568244",
+                "35022715",
+                "34926457"
+            ],
+            "confidence_level": "3",
+            "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown",
+            "mode_of_pathogenicity": null
+        },
+        {
+            "tags": [],
+            "evidence": [
+                "Expert Review Green",
+                "Eligibility statement prior genetic testing",
+                "Emory Genetics Laboratory",
+                "Radboud University Medical Center, Nijmegen"
+            ],
+            "gene_data": {
+                "alias": [
+                    "STL2",
+                    "CO11A1"
+                ],
+                "biotype": "protein_coding",
+                "hgnc_id": "HGNC:2186",
+                "gene_name": "collagen type XI alpha 1 chain",
+                "omim_gene": [
+                    "120280"
+                ],
+                "alias_name": [
+                    "collagen XI, alpha-1 polypeptide"
+                ],
+                "gene_symbol": "COL11A1",
+                "hgnc_symbol": "COL11A1",
+                "hgnc_release": "2017-11-03T00:00:00",
+                "ensembl_genes": {
+                    "GRch37": {
+                        "82": {
+                            "location": "1:103342023-103574052",
+                            "ensembl_id": "ENSG00000060718"
+                        }
+                    },
+                    "GRch38": {
+                        "90": {
+                            "location": "1:102876467-103108496",
+                            "ensembl_id": "ENSG00000060718"
+                        }
+                    }
+                },
+                "hgnc_date_symbol_changed": "1989-05-08"
+            },
+            "penetrance": "Complete",
+            "phenotypes": [
+                "Stickler syndrome, type II, OMIM:604841",
+                "Marshall syndrome, OMIM:154780"
+            ],
+            "transcript": null,
+            "entity_name": "COL11A1",
+            "entity_type": "gene",
+            "publications": [
+                "10573014",
+                "23922384",
+                "20513134",
+                "8872475"
+            ],
+            "confidence_level": "3",
+            "mode_of_inheritance": "BOTH monoallelic and biallelic, autosomal or pseudoautosomal",
+            "mode_of_pathogenicity": ""
+        },
+        {
+            "tags": [],
+            "evidence": [
+                "Expert Review Green",
+                "Emory Genetics Laboratory",
+                "Radboud University Medical Center, Nijmegen",
+                "UKGTN",
+                "Illumina TruGenome Clinical Sequencing Services"
+            ],
+            "gene_data": {
+                "alias": [
+                    "HKE5"
+                ],
+                "biotype": "protein_coding",
+                "hgnc_id": "HGNC:2187",
+                "gene_name": "collagen type XI alpha 2 chain",
+                "omim_gene": [
+                    "120290"
+                ],
+                "alias_name": null,
+                "gene_symbol": "COL11A2",
+                "hgnc_symbol": "COL11A2",
+                "hgnc_release": "2017-11-03T00:00:00",
+                "ensembl_genes": {
+                    "GRch37": {
+                        "82": {
+                            "location": "6:33130458-33160276",
+                            "ensembl_id": "ENSG00000204248"
+                        }
+                    },
+                    "GRch38": {
+                        "90": {
+                            "location": "6:33162681-33192499",
+                            "ensembl_id": "ENSG00000204248"
+                        }
+                    }
+                },
+                "hgnc_date_symbol_changed": "1989-05-25"
+            },
+            "penetrance": "Complete",
+            "phenotypes": [
+                "Otospondylomegaepiphyseal dysplasia, autosomal dominant, OMIM:184840",
+                "Otospondylomegaepiphyseal dysplasia, autosomal recessive, OMIM:215150"
+            ],
+            "transcript": null,
+            "entity_name": "COL11A2",
+            "entity_type": "gene",
+            "publications": [],
+            "confidence_level": "3",
+            "mode_of_inheritance": "BOTH monoallelic and biallelic, autosomal or pseudoautosomal",
+            "mode_of_pathogenicity": ""
+        },
+        {
+            "tags": [],
+            "evidence": [
+                "Expert Review Green",
+                "Eligibility statement prior genetic testing",
+                "Radboud University Medical Center, Nijmegen",
+                "UKGTN",
+                "Emory Genetics Laboratory",
+                "Illumina TruGenome Clinical Sequencing Services"
+            ],
+            "gene_data": {
+                "alias": [
+                    "STL1"
+                ],
+                "biotype": "protein_coding",
+                "hgnc_id": "HGNC:2200",
+                "gene_name": "collagen type II alpha 1 chain",
+                "omim_gene": [
+                    "120140"
+                ],
+                "alias_name": null,
+                "gene_symbol": "COL2A1",
+                "hgnc_symbol": "COL2A1",
+                "hgnc_release": "2017-11-03T00:00:00",
+                "ensembl_genes": {
+                    "GRch37": {
+                        "82": {
+                            "location": "12:48366748-48398269",
+                            "ensembl_id": "ENSG00000139219"
+                        }
+                    },
+                    "GRch38": {
+                        "90": {
+                            "location": "12:47972965-48004486",
+                            "ensembl_id": "ENSG00000139219"
+                        }
+                    }
+                },
+                "hgnc_date_symbol_changed": "1986-01-01"
+            },
+            "penetrance": "Complete",
+            "phenotypes": [
+                "Stickler syndrome, type I, OMIM:108300"
+            ],
+            "transcript": null,
+            "entity_name": "COL2A1",
+            "entity_type": "gene",
+            "publications": [
+                "16752401",
+                "20513134"
+            ],
+            "confidence_level": "3",
+            "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
+            "mode_of_pathogenicity": ""
+        },
+        {
+            "tags": [],
+            "evidence": [
+                "Expert Review Green",
+                "Emory Genetics Laboratory",
+                "Illumina TruGenome Clinical Sequencing Services",
+                "Radboud University Medical Center, Nijmegen"
+            ],
+            "gene_data": {
+                "alias": [],
+                "biotype": "protein_coding",
+                "hgnc_id": "HGNC:2217",
+                "gene_name": "collagen type IX alpha 1 chain",
+                "omim_gene": [
+                    "120210"
+                ],
+                "alias_name": null,
+                "gene_symbol": "COL9A1",
+                "hgnc_symbol": "COL9A1",
+                "hgnc_release": "2017-11-03T00:00:00",
+                "ensembl_genes": {
+                    "GRch37": {
+                        "82": {
+                            "location": "6:70924764-71012786",
+                            "ensembl_id": "ENSG00000112280"
+                        }
+                    },
+                    "GRch38": {
+                        "90": {
+                            "location": "6:70215061-70303083",
+                            "ensembl_id": "ENSG00000112280"
+                        }
+                    }
+                },
+                "hgnc_date_symbol_changed": "1989-05-08"
+            },
+            "penetrance": "Complete",
+            "phenotypes": [
+                "Stickler syndrome, type IV, OMIM:614134"
+            ],
+            "transcript": null,
+            "entity_name": "COL9A1",
+            "entity_type": "gene",
+            "publications": [],
+            "confidence_level": "3",
+            "mode_of_inheritance": "BIALLELIC, autosomal or pseudoautosomal",
+            "mode_of_pathogenicity": ""
+        },
+        {
+            "tags": [],
+            "evidence": [
+                "Expert Review Green",
+                "Emory Genetics Laboratory",
+                "Illumina TruGenome Clinical Sequencing Services",
+                "Radboud University Medical Center, Nijmegen"
+            ],
+            "gene_data": {
+                "alias": [
+                    "MED"
+                ],
+                "biotype": "protein_coding",
+                "hgnc_id": "HGNC:2218",
+                "gene_name": "collagen type IX alpha 2 chain",
+                "omim_gene": [
+                    "120260"
+                ],
+                "alias_name": null,
+                "gene_symbol": "COL9A2",
+                "hgnc_symbol": "COL9A2",
+                "hgnc_release": "2017-11-03T00:00:00",
+                "ensembl_genes": {
+                    "GRch37": {
+                        "82": {
+                            "location": "1:40766159-40783488",
+                            "ensembl_id": "ENSG00000049089"
+                        }
+                    },
+                    "GRch38": {
+                        "90": {
+                            "location": "1:40300487-40317816",
+                            "ensembl_id": "ENSG00000049089"
+                        }
+                    }
+                },
+                "hgnc_date_symbol_changed": "1993-06-16"
+            },
+            "penetrance": "Complete",
+            "phenotypes": [
+                "Stickler syndrome, type V, OMIM:614284"
+            ],
+            "transcript": null,
+            "entity_name": "COL9A2",
+            "entity_type": "gene",
+            "publications": [
+                "21671392"
+            ],
+            "confidence_level": "3",
+            "mode_of_inheritance": "BIALLELIC, autosomal or pseudoautosomal",
+            "mode_of_pathogenicity": ""
+        },
+        {
+            "tags": [],
+            "evidence": [
+                "Expert Review Green",
+                "Expert Review"
+            ],
+            "gene_data": {
+                "alias": [
+                    "IDD",
+                    "MED",
+                    "EDM3",
+                    "FLJ90759",
+                    "DJ885L7.4.1"
+                ],
+                "biotype": "protein_coding",
+                "hgnc_id": "HGNC:2219",
+                "gene_name": "collagen type IX alpha 3 chain",
+                "omim_gene": [
+                    "120270"
+                ],
+                "alias_name": [
+                    "collagen type IX proteoglycan"
+                ],
+                "gene_symbol": "COL9A3",
+                "hgnc_symbol": "COL9A3",
+                "hgnc_release": "2017-11-03T00:00:00",
+                "ensembl_genes": {
+                    "GRch37": {
+                        "82": {
+                            "location": "20:61447596-61472511",
+                            "ensembl_id": "ENSG00000092758"
+                        }
+                    },
+                    "GRch38": {
+                        "90": {
+                            "location": "20:62816244-62841159",
+                            "ensembl_id": "ENSG00000092758"
+                        }
+                    }
+                },
+                "hgnc_date_symbol_changed": "1995-08-15"
+            },
+            "penetrance": "Complete",
+            "phenotypes": [
+                "Stickler syndrome, MONDO:0019354"
+            ],
+            "transcript": null,
+            "entity_name": "COL9A3",
+            "entity_type": "gene",
+            "publications": [
+                "24273071 and unpublished observation",
+                "30450842",
+                "33633367"
+            ],
+            "confidence_level": "3",
+            "mode_of_inheritance": "BIALLELIC, autosomal or pseudoautosomal",
+            "mode_of_pathogenicity": ""
+        },
+        {
+            "tags": [],
+            "evidence": [
+                "Expert Review Green",
+                "Literature"
+            ],
+            "gene_data": {
+                "alias": [
+                    "dJ322G13.2",
+                    "ZBTB23"
+                ],
+                "biotype": "protein_coding",
+                "hgnc_id": "HGNC:15808",
+                "gene_name": "GDNF inducible zinc finger protein 1",
+                "omim_gene": [
+                    "613842"
+                ],
+                "alias_name": null,
+                "gene_symbol": "GZF1",
+                "hgnc_symbol": "GZF1",
+                "hgnc_release": "2017-11-03T00:00:00",
+                "ensembl_genes": {
+                    "GRch37": {
+                        "82": {
+                            "location": "20:23342787-23353700",
+                            "ensembl_id": "ENSG00000125812"
+                        }
+                    },
+                    "GRch38": {
+                        "90": {
+                            "location": "20:23362182-23373063",
+                            "ensembl_id": "ENSG00000125812"
+                        }
+                    }
+                },
+                "hgnc_date_symbol_changed": "2006-09-19"
+            },
+            "penetrance": "Complete",
+            "phenotypes": [
+                "Larsen syndrome, MONDO:0007875"
+            ],
+            "transcript": null,
+            "entity_name": "GZF1",
+            "entity_type": "gene",
+            "publications": [
+                "28475863"
+            ],
+            "confidence_level": "3",
+            "mode_of_inheritance": "BIALLELIC, autosomal or pseudoautosomal",
+            "mode_of_pathogenicity": ""
+        },
+        {
+            "tags": [],
+            "evidence": [
+                "NHS GMS",
+                "Expert Review Green",
+                "Expert Review"
+            ],
+            "gene_data": {
+                "alias": [
+                    "PG-M"
+                ],
+                "biotype": "protein_coding",
+                "hgnc_id": "HGNC:2464",
+                "gene_name": "versican",
+                "omim_gene": [
+                    "118661"
+                ],
+                "alias_name": [
+                    "versican proteoglycan"
+                ],
+                "gene_symbol": "VCAN",
+                "hgnc_symbol": "VCAN",
+                "hgnc_release": "2017-11-03",
+                "ensembl_genes": {
+                    "GRch37": {
+                        "82": {
+                            "location": "5:82767284-82878122",
+                            "ensembl_id": "ENSG00000038427"
+                        }
+                    },
+                    "GRch38": {
+                        "90": {
+                            "location": "5:83471465-83582303",
+                            "ensembl_id": "ENSG00000038427"
+                        }
+                    }
+                },
+                "hgnc_date_symbol_changed": "2007-02-15"
+            },
+            "penetrance": "Complete",
+            "phenotypes": [
+                "Ocular-only Stickler syndrome",
+                "Wagner syndrome 1, OMIM:143200"
+            ],
+            "transcript": null,
+            "entity_name": "VCAN",
+            "entity_type": "gene",
+            "publications": [
+                "12208278",
+                "10729292",
+                "11812423"
+            ],
+            "confidence_level": "3",
+            "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown",
+            "mode_of_pathogenicity": "Other"
+        },
+        {
+            "tags": [],
+            "evidence": [
+                "Expert Review Amber",
+                "Expert Review"
+            ],
+            "gene_data": {
+                "alias": [],
+                "biotype": "protein_coding",
+                "hgnc_id": "HGNC:13869",
+                "gene_name": "lysyl oxidase like 3",
+                "omim_gene": [
+                    "607163"
+                ],
+                "alias_name": null,
+                "gene_symbol": "LOXL3",
+                "hgnc_symbol": "LOXL3",
+                "hgnc_release": "2017-11-03T00:00:00",
+                "ensembl_genes": {
+                    "GRch37": {
+                        "82": {
+                            "location": "2:74759541-74782817",
+                            "ensembl_id": "ENSG00000115318"
+                        }
+                    },
+                    "GRch38": {
+                        "90": {
+                            "location": "2:74532414-74555690",
+                            "ensembl_id": "ENSG00000115318"
+                        }
+                    }
+                },
+                "hgnc_date_symbol_changed": "2001-06-27"
+            },
+            "penetrance": "Complete",
+            "phenotypes": [
+                "Stickler syndrome, MONDO:0019354"
+            ],
+            "transcript": null,
+            "entity_name": "LOXL3",
+            "entity_type": "gene",
+            "publications": [
+                "25663169",
+                "30362103"
+            ],
+            "confidence_level": "2",
+            "mode_of_inheritance": "BIALLELIC, autosomal or pseudoautosomal",
+            "mode_of_pathogenicity": ""
+        },
+        {
+            "tags": [],
+            "evidence": [
+                "Expert Review Amber",
+                "Expert list"
+            ],
+            "gene_data": {
+                "alias": [
+                    "gp330",
+                    "DBS"
+                ],
+                "biotype": "protein_coding",
+                "hgnc_id": "HGNC:6694",
+                "gene_name": "LDL receptor related protein 2",
+                "omim_gene": [
+                    "600073"
+                ],
+                "alias_name": [
+                    "megalin"
+                ],
+                "gene_symbol": "LRP2",
+                "hgnc_symbol": "LRP2",
+                "hgnc_release": "2017-11-03",
+                "ensembl_genes": {
+                    "GRch37": {
+                        "82": {
+                            "location": "2:169983619-170219195",
+                            "ensembl_id": "ENSG00000081479"
+                        }
+                    },
+                    "GRch38": {
+                        "90": {
+                            "location": "2:169127109-169362685",
+                            "ensembl_id": "ENSG00000081479"
+                        }
+                    }
+                },
+                "hgnc_date_symbol_changed": "1994-05-04"
+            },
+            "penetrance": null,
+            "phenotypes": [
+                "Stickler syndrome, MONDO:0019354"
+            ],
+            "transcript": null,
+            "entity_name": "LRP2",
+            "entity_type": "gene",
+            "publications": [
+                "23992033"
+            ],
+            "confidence_level": "2",
+            "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
+            "mode_of_pathogenicity": null
+        }
+    ],
+    "stats": {
+        "number_of_strs": 0,
+        "number_of_genes": 11,
+        "number_of_regions": 0
+    },
+    "types": [
+        {
+            "name": "Rare Disease 100K",
+            "slug": "rare-disease-100k",
+            "description": "Rare Disease 100K"
+        },
+        {
+            "name": "GMS Rare Disease Virtual",
+            "slug": "gms-rare-disease-virtual",
+            "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+        },
+        {
+            "name": "GMS Rare Disease",
+            "slug": "gms-rare-disease",
+            "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+        },
+        {
+            "name": "GMS signed-off",
+            "slug": "gms-signed-off",
+            "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+        }
+    ],
+    "status": "public",
+    "hash_id": "554a0ac9bb5a167e4ccd1ec1",
+    "regions": [],
+    "version": "4.0",
+    "disease_group": "Skeletal disorders",
+    "version_created": "2023-03-22T15:38:28.046827Z",
+    "disease_sub_group": "Skeletal dysplasias",
+    "relevant_disorders": [
+        "R45"
+    ],
+    "signed_off": "2023-03-22"
+}

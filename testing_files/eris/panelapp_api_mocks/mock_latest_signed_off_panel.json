@@ -1,0 +1,43 @@
+{
+    "count": 1,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "id": 1141,
+            "name": "Acute rhabdomyolysis",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 65,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "1.7",
+            "disease_group": "Neurology and neurodevelopmental disorders",
+            "version_created": "2023-05-30T14:34:47.010314Z",
+            "disease_sub_group": "Neuromuscular disorders",
+            "relevant_disorders": [
+                "R419"
+            ],
+            "signed_off": "2023-05-31"
+        }
+    ]
+}
