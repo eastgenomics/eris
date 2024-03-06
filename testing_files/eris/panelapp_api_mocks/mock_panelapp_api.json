@@ -1,0 +1,3950 @@
+{
+    "count": 298,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "id": 3,
+            "name": "Stickler syndrome",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 11,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "554a0ac9bb5a167e4ccd1ec1",
+            "version": "4.0",
+            "disease_group": "Skeletal disorders",
+            "version_created": "2023-03-22T15:38:28.046827Z",
+            "disease_sub_group": "Skeletal dysplasias",
+            "relevant_disorders": [
+                "R45"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 9,
+            "name": "Disorders of sex development",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 67,
+                "number_of_regions": 2
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "569380ac22c1fc251660faf8",
+            "version": "4.0",
+            "disease_group": "Endocrine disorders",
+            "version_created": "2023-03-22T17:01:24.025090Z",
+            "disease_sub_group": "Gonadal and sex development disorders",
+            "relevant_disorders": [
+                "R146"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 13,
+            "name": "Brugada syndrome and cardiac sodium channel disease",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 23,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "55a3a78122c1fc6711b0c6b5",
+            "version": "3.2",
+            "disease_group": "Cardiovascular disorders",
+            "version_created": "2023-03-22T11:21:23.991053Z",
+            "disease_sub_group": "Cardiac arrhythmia",
+            "relevant_disorders": [
+                "Brugada syndrome",
+                "R128"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 25,
+            "name": "Congenital disorders of glycosylation",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 115,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "58346b8b8f62036225ca8a7d",
+            "version": "4.0",
+            "disease_group": "Metabolic disorders",
+            "version_created": "2023-03-22T15:15:30.929323Z",
+            "disease_sub_group": "Specific metabolic abnormalities",
+            "relevant_disorders": [
+                "Congential disorders of glycosylation"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 31,
+            "name": "Congenital hypothyroidism",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 34,
+                "number_of_regions": 2
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "5763f2938f620350a1996046",
+            "version": "2.2",
+            "disease_group": "Endocrine disorders",
+            "version_created": "2020-02-25T10:03:00.850654Z",
+            "disease_sub_group": "Thyroid disorders",
+            "relevant_disorders": [
+                "Congenital hypothyroidism or thyroid agenesis",
+                "R145"
+            ],
+            "signed_off": "2020-02-25"
+        },
+        {
+            "id": 49,
+            "name": "Hypertrophic cardiomyopathy",
+            "stats": {
+                "number_of_strs": 1,
+                "number_of_genes": 75,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "55a39e2d22c1fc6711b0c6b3",
+            "version": "4.0",
+            "disease_group": "Cardiovascular disorders",
+            "version_created": "2023-03-22T15:02:38.012100Z",
+            "disease_sub_group": "Cardiomyopathy",
+            "relevant_disorders": [
+                "Hypertrophic cardiomyopathy - teen and adult",
+                "HCM",
+                "R131"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 53,
+            "name": "Ehlers Danlos syndrome with a likely monogenic cause",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 80,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "588728f38f62030cf7152165",
+            "version": "3.0",
+            "disease_group": "Rheumatological disorders",
+            "version_created": "2023-03-22T15:45:26.029347Z",
+            "disease_sub_group": "Connective tissues disorders",
+            "relevant_disorders": [
+                "Classical Ehlers Danlos Syndrome",
+                "Classical Ehlers-Danlos Syndrome",
+                "Ehlers-Danlos Syndrome (unusual phenotypes e.g. absent pain sense)",
+                "Ehlers-Danlos syndrome type 3",
+                "Kyphoscoliotic Ehlers-Danlos syndrome",
+                "EDS",
+                "Ehlers-Danlos syndromes",
+                "Ehlers Danlos syndromes",
+                "R101"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 55,
+            "name": "Breast cancer pertinent cancer susceptibility",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 5,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Cancer Germline 100K",
+                    "slug": "cancer-germline-100k",
+                    "description": "Cancer Germline 100K"
+                },
+                {
+                    "name": "GMS Cancer Germline Virtual",
+                    "slug": "gms-cancer-germline-virtual",
+                    "description": "This is a panel used for WGS germline analysis for the GMS."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "596f82e88f620352d0e3eeb1",
+            "version": "2.0",
+            "disease_group": "Cancer Programme",
+            "version_created": "2023-03-22T16:27:25.290394Z",
+            "disease_sub_group": "Pertinent cancer susceptibility gene panel",
+            "relevant_disorders": [
+                "Breast"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 59,
+            "name": "Haematological malignancies cancer susceptibility",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 100,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Cancer Germline 100K",
+                    "slug": "cancer-germline-100k",
+                    "description": "Cancer Germline 100K"
+                },
+                {
+                    "name": "GMS Cancer Germline Virtual",
+                    "slug": "gms-cancer-germline-virtual",
+                    "description": "This is a panel used for WGS germline analysis for the GMS."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "594a71908f620375d17ea6b2",
+            "version": "4.0",
+            "disease_group": "Cancer Programme",
+            "version_created": "2023-03-22T16:29:16.821733Z",
+            "disease_sub_group": "Pertinent cancer susceptibility gene panel",
+            "relevant_disorders": [
+                "Haemonc",
+                "Haematological malignancies pertinent cancer susceptibility"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 65,
+            "name": "Primary lymphoedema",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 56,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "57ee82ef8f62035c9b2d0487",
+            "version": "3.0",
+            "disease_group": "Cardiovascular disorders",
+            "version_created": "2022-11-30T14:52:22.760987Z",
+            "disease_sub_group": "Lymphatic Disorders",
+            "relevant_disorders": [
+                "Lymphatic Disorders",
+                "Meiges disease",
+                "Meige disease",
+                "Milroy disease",
+                "Lymphoedema distichiasis",
+                "Lipoedema disease",
+                "R136"
+            ],
+            "signed_off": "2022-11-30"
+        },
+        {
+            "id": 66,
+            "name": "Rhabdomyolysis and metabolic muscle disorders",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 62,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "55b63d7f22c1fc05fc7a185b",
+            "version": "3.0",
+            "disease_group": "Neurology and neurodevelopmental disorders",
+            "version_created": "2023-03-22T15:13:56.719313Z",
+            "disease_sub_group": "Neuromuscular disorders",
+            "relevant_disorders": [],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 76,
+            "name": "Long QT syndrome",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 23,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "55a3b19722c1fc6710839b80",
+            "version": "3.1",
+            "disease_group": "Cardiovascular disorders",
+            "version_created": "2022-11-30T13:09:43.448011Z",
+            "disease_sub_group": "Cardiac arrhythmia",
+            "relevant_disorders": [
+                "Long QT",
+                "R127"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 77,
+            "name": "Xeroderma pigmentosum, Trichothiodystrophy or Cockayne syndrome",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 21,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "5811a8738f620323c5766a2b",
+            "version": "3.0",
+            "disease_group": "Dysmorphic and congenital abnormality syndromes",
+            "version_created": "2023-03-22T16:58:30.820060Z",
+            "disease_sub_group": "DNA repair disorders",
+            "relevant_disorders": [
+                "Cockayne and Xeroderma Pigmentosum-like disorders",
+                "Cockayne syndrome",
+                "Xeroderma Pigmentosum-like disorders",
+                "XP-like disorders",
+                "R227"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 78,
+            "name": "Holoprosencephaly - NOT chromosomal",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 25,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "568e87e022c1fc1c79ca1754",
+            "version": "4.0",
+            "disease_group": "Neurology and neurodevelopmental disorders",
+            "version_created": "2023-03-22T15:06:07.755265Z",
+            "disease_sub_group": "Neurodevelopmental disorders",
+            "relevant_disorders": [
+                "Rhombencephalosynapsis",
+                "Holoprosencephaly",
+                "R85"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 79,
+            "name": "Paediatric motor neuronopathies",
+            "stats": {
+                "number_of_strs": 2,
+                "number_of_genes": 39,
+                "number_of_regions": 5
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "5541ef3dbb5a160c33b964e0",
+            "version": "3.3",
+            "disease_group": "Neurology and neurodevelopmental disorders",
+            "version_created": "2023-03-22T15:12:46.752408Z",
+            "disease_sub_group": "Motor and Sensory Disorders of the PNS",
+            "relevant_disorders": [],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 81,
+            "name": "Clefting",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 268,
+                "number_of_regions": 6
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "57acb8268f620364dc61afd3",
+            "version": "4.0",
+            "disease_group": "Dysmorphic and congenital abnormality syndromes",
+            "version_created": "2023-03-22T15:28:22.058056Z",
+            "disease_sub_group": "Dysmorphic disorders",
+            "relevant_disorders": [
+                "Familial non-syndromic cleft lip and or familial cleft palate",
+                "Familial non-syndromic clefting",
+                "Syndromic cleft lip and or cleft palate",
+                "Syndromic clefting"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 83,
+            "name": "Membranoproliferative glomerulonephritis including C3 glomerulopathy",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 9,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "58c805938f6203413360f1cb",
+            "version": "3.0",
+            "disease_group": "Renal and urinary tract disorders",
+            "version_created": "2023-03-22T16:05:06.870861Z",
+            "disease_sub_group": "Syndromes with prominent renal abnormalities",
+            "relevant_disorders": [
+                "PMG",
+                "MPGN",
+                "Primary Membranoproliferative Glomerulonephritis",
+                "Primary membranoproliferative glomerulonephritis",
+                "Membranoproliferative glomerulonephritis",
+                "R197"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 96,
+            "name": "Malformations of cortical development",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 119,
+                "number_of_regions": 1
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "568f8ba422c1fc1c79ca1774",
+            "version": "4.0",
+            "disease_group": "Neurology and neurodevelopmental disorders",
+            "version_created": "2023-03-22T16:23:34.028299Z",
+            "disease_sub_group": "Neurodevelopmental disorders",
+            "relevant_disorders": [],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 98,
+            "name": "Segmental overgrowth disorders - Deep sequencing",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 17,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "5763f2348f620350a1996043",
+            "version": "3.3",
+            "disease_group": "",
+            "version_created": "2023-03-22T11:43:32.313756Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "Regional overgrowth disorders",
+                "Segmental overgrowth disorders",
+                "R110"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 99,
+            "name": "Haematuria",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 8,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "55e01bb222c1fc6199b42904",
+            "version": "2.4",
+            "disease_group": "Renal and urinary tract disorders",
+            "version_created": "2020-03-04T11:49:24.820620Z",
+            "disease_sub_group": "Syndromes with prominent renal abnormalities",
+            "relevant_disorders": [
+                "Alport syndrome",
+                "Familial haematuria",
+                "R194"
+            ],
+            "signed_off": "2020-10-15"
+        },
+        {
+            "id": 105,
+            "name": "Pneumothorax - familial",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 35,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "572c908e8f62036eed0a39c8",
+            "version": "3.0",
+            "disease_group": "Respiratory disorders",
+            "version_created": "2023-03-22T16:01:04.902712Z",
+            "disease_sub_group": "Structural lung disorders",
+            "relevant_disorders": [
+                "Familial Pneumothorax",
+                "Familial Primary Spontaneous Pneumothorax",
+                "R190"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 106,
+            "name": "Proteinuric renal disease",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 108,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "55af787822c1fc78a829f89f",
+            "version": "4.0",
+            "disease_group": "Renal and urinary tract disorders",
+            "version_created": "2023-03-22T15:50:32.772796Z",
+            "disease_sub_group": "Syndromes with prominent renal abnormalities",
+            "relevant_disorders": [
+                "R195"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 112,
+            "name": "Mitochondrial disorders",
+            "stats": {
+                "number_of_strs": 2,
+                "number_of_genes": 480,
+                "number_of_regions": 1
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "55928cf522c1fc4f7d26e960",
+            "version": "4.0",
+            "disease_group": "Metabolic disorders",
+            "version_created": "2023-03-22T15:18:23.754976Z",
+            "disease_sub_group": "Mitochondrial",
+            "relevant_disorders": [
+                "Lactic acidosis",
+                "All recognised syndromes and those with suggestive features"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 117,
+            "name": "Ovarian cancer pertinent cancer susceptibility",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 9,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Cancer Germline 100K",
+                    "slug": "cancer-germline-100k",
+                    "description": "Cancer Germline 100K"
+                },
+                {
+                    "name": "GMS Cancer Germline Virtual",
+                    "slug": "gms-cancer-germline-virtual",
+                    "description": "This is a panel used for WGS germline analysis for the GMS."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "596f8ca98f620352d1224c1e",
+            "version": "2.0",
+            "disease_group": "Cancer Programme",
+            "version_created": "2023-03-22T16:07:15.807413Z",
+            "disease_sub_group": "Pertinent cancer susceptibility gene panel",
+            "relevant_disorders": [
+                "Ovarian"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 123,
+            "name": "Hereditary haemorrhagic telangiectasia",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 15,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "5633857722c1fc582756e3d9",
+            "version": "3.0",
+            "disease_group": "Respiratory disorders",
+            "version_created": "2022-11-30T14:37:22.939446Z",
+            "disease_sub_group": "Vascular lung disorders",
+            "relevant_disorders": [
+                "Familial and multiple pulmonary arteriovenous malformations",
+                "R186"
+            ],
+            "signed_off": "2022-11-30"
+        },
+        {
+            "id": 126,
+            "name": "Monogenic hearing loss",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 413,
+                "number_of_regions": 1
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "558ac48fbb5a16630dcfeaad",
+            "version": "4.0",
+            "disease_group": "Hearing and ear disorders",
+            "version_created": "2023-03-22T14:48:49.652171Z",
+            "disease_sub_group": "Non-syndromic hearing loss",
+            "relevant_disorders": [
+                "Hearing loss",
+                "Congenital hearing impairment",
+                "Autosomal dominant deafness",
+                "Congenital hearing impairment (profound/severe)",
+                "Non-syndromic hearing loss",
+                "R67"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 130,
+            "name": "Severe early-onset obesity",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 43,
+                "number_of_regions": 3
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "55d2fc2d22c1fc2cc6635960",
+            "version": "4.0",
+            "disease_group": "Endocrine disorders",
+            "version_created": "2023-03-22T17:12:32.513925Z",
+            "disease_sub_group": "Obesity syndromes",
+            "relevant_disorders": [
+                "Significant early-onset obesity with or without other endocrine features and short stature",
+                "Significant early-onset obesity +/- other endocrine features and short stature",
+                "R149"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 134,
+            "name": "Arrhythmogenic right ventricular cardiomyopathy",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 20,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "55a3876e22c1fc63fec6d0da",
+            "version": "3.5",
+            "disease_group": "Cardiovascular disorders",
+            "version_created": "2023-03-22T14:29:15.759763Z",
+            "disease_sub_group": "Cardiomyopathy",
+            "relevant_disorders": [
+                "Arrhythmogenic cardiomyopathy",
+                "R133"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 139,
+            "name": "Atypical haemolytic uraemic syndrome",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 15,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "563248da22c1fc58285b283a",
+            "version": "3.0",
+            "disease_group": "Renal and urinary tract disorders",
+            "version_created": "2023-03-22T15:44:08.681945Z",
+            "disease_sub_group": "Syndromes with prominent renal abnormalities",
+            "relevant_disorders": [
+                "R201"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 143,
+            "name": "Inherited ovarian cancer (without breast cancer)",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 26,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "592843a08f6203468490fa68",
+            "version": "4.0",
+            "disease_group": "Tumour syndromes",
+            "version_created": "2023-03-22T16:23:01.202614Z",
+            "disease_sub_group": "Breast and endocrine",
+            "relevant_disorders": [
+                "Familial ovarian cancer",
+                "R207"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 145,
+            "name": "Congenital adrenal hypoplasia",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 22,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "55bf785822c1fc0fe45530bf",
+            "version": "3.0",
+            "disease_group": "Endocrine disorders",
+            "version_created": "2022-11-30T14:47:18.258664Z",
+            "disease_sub_group": "Adrenal disorders",
+            "relevant_disorders": [
+                "R150"
+            ],
+            "signed_off": "2022-11-30"
+        },
+        {
+            "id": 147,
+            "name": "Cerebral vascular malformations",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 104,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "5819a24f8f6203341de99c89",
+            "version": "3.0",
+            "disease_group": "Neurology and neurodevelopmental disorders",
+            "version_created": "2023-03-22T15:15:22.677308Z",
+            "disease_sub_group": "Cerebrovascular disorders",
+            "relevant_disorders": [
+                "Cerebrovascular disorders",
+                "Vein of Galen malformation",
+                "Cerebral arteriovenous malformations",
+                "Moyamoya disease",
+                "R336"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 149,
+            "name": "Nephrocalcinosis or nephrolithiasis",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 51,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "553f94d5bb5a1616e5ed45a5",
+            "version": "4.0",
+            "disease_group": "Renal and urinary tract disorders",
+            "version_created": "2023-03-22T15:47:45.819228Z",
+            "disease_sub_group": "Disorders of function",
+            "relevant_disorders": [
+                "Renal tract calcification (or Nephrolithiasis or nephrocalcinosis)",
+                "Renal tract calcification (or Nephrolithiasis/nephrocalcinosis)",
+                "R256"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 157,
+            "name": "Hereditary Erythrocytosis",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 17,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "58c7fba38f6203345887d4f5",
+            "version": "2.0",
+            "disease_group": "Haematological disorders",
+            "version_created": "2023-03-22T16:41:47.119999Z",
+            "disease_sub_group": "Anaemias and red cell disorders",
+            "relevant_disorders": [
+                "R405"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 162,
+            "name": "Severe microcephaly",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 249,
+                "number_of_regions": 6
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "568f860222c1fc1c79ca1769",
+            "version": "4.0",
+            "disease_group": "Dysmorphic and congenital abnormality syndromes",
+            "version_created": "2023-03-22T16:20:05.541488Z",
+            "disease_sub_group": "DNA repair disorders",
+            "relevant_disorders": [
+                "Primary Microcephaly - Microcephalic Dwarfism Spectrum",
+                "Severe microcephaly",
+                "R88"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 166,
+            "name": "Brain cancer pertinent cancer susceptibility",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 7,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Cancer Germline 100K",
+                    "slug": "cancer-germline-100k",
+                    "description": "Cancer Germline 100K"
+                },
+                {
+                    "name": "GMS Cancer Germline Virtual",
+                    "slug": "gms-cancer-germline-virtual",
+                    "description": "This is a panel used for WGS germline analysis for the GMS."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "596f81208f620352d0e3eea7",
+            "version": "1.0",
+            "disease_group": "Cancer Programme",
+            "version_created": "2017-11-05T02:37:20.153599Z",
+            "disease_sub_group": "Pertinent cancer susceptibility gene panel",
+            "relevant_disorders": [
+                "Adult Glioma"
+            ],
+            "signed_off": "2021-09-29"
+        },
+        {
+            "id": 168,
+            "name": "Rare syndromic craniosynostosis or isolated multisuture synostosis",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 140,
+                "number_of_regions": 2
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "55b605f722c1fc05fd2345af",
+            "version": "4.0",
+            "disease_group": "Skeletal disorders",
+            "version_created": "2023-03-22T15:41:35.486762Z",
+            "disease_sub_group": "Craniosynostosis syndromes",
+            "relevant_disorders": [
+                "Craniosynostosis syndromes",
+                "Craniosynostosis syndromes phenotypes",
+                "Rare syndromic craniosynostosis or isolated multisuture synostosis",
+                "Craniosynostosis",
+                "R100"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 179,
+            "name": "Hydrocephalus",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 108,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "5763f35c8f620350a22bccdf",
+            "version": "4.0",
+            "disease_group": "",
+            "version_created": "2023-03-22T14:58:50.296762Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "Hydrocephalus",
+                "R86"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 185,
+            "name": "Limb girdle muscular dystrophies, myofibrillar myopathies and distal myopathies",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 95,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "55b7a65322c1fc05fc7a1869",
+            "version": "4.0",
+            "disease_group": "Neurology and neurodevelopmental disorders",
+            "version_created": "2023-03-22T15:34:20.663636Z",
+            "disease_sub_group": "Neuromuscular disorders",
+            "relevant_disorders": [
+                "Limb girdle muscular dystrophy",
+                "R82"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 186,
+            "name": "Optic neuropathy",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 69,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "553f95e2bb5a1616e5ed45c8",
+            "version": "4.0",
+            "disease_group": "Ophthalmological disorders",
+            "version_created": "2023-03-22T15:31:37.713096Z",
+            "disease_sub_group": "Posterior segment abnormalities",
+            "relevant_disorders": [
+                "Inherited optic neuropathies",
+                "R41"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 193,
+            "name": "Pulmonary arterial hypertension",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 21,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "58c7f8a78f62033482c42716",
+            "version": "3.0",
+            "disease_group": "Cardiovascular disorders",
+            "version_created": "2022-11-30T15:02:16.356020Z",
+            "disease_sub_group": "Pulmonary heart disease",
+            "relevant_disorders": [
+                "PAH",
+                "R188"
+            ],
+            "signed_off": "2022-11-30"
+        },
+        {
+            "id": 196,
+            "name": "Osteogenesis imperfecta",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 191,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "55896ed2bb5a1671a7fef4f9",
+            "version": "4.0",
+            "disease_group": "Skeletal disorders",
+            "version_created": "2023-03-22T15:03:49.700053Z",
+            "disease_sub_group": "Skeletal dysplasias",
+            "relevant_disorders": [
+                "Osteogenesis Imperfecta",
+                "R102"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 207,
+            "name": "Congenital muscular dystrophy",
+            "stats": {
+                "number_of_strs": 1,
+                "number_of_genes": 58,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "55b117c022c1fc7dd7ce411c",
+            "version": "4.0",
+            "disease_group": "Neurology and neurodevelopmental disorders",
+            "version_created": "2023-03-22T15:07:22.388588Z",
+            "disease_sub_group": "Neuromuscular disorders",
+            "relevant_disorders": [
+                "R79"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 214,
+            "name": "Catecholaminergic polymorphic VT",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 10,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "55a3aac122c1fc6710839b7d",
+            "version": "4.0",
+            "disease_group": "Cardiovascular disorders",
+            "version_created": "2023-03-22T15:13:09.615617Z",
+            "disease_sub_group": "Cardiac arrhythmia",
+            "relevant_disorders": [
+                "Catecholaminergic Polymorphic Ventricular Tachycardia",
+                "R129"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 224,
+            "name": "Short QT syndrome",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 40,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "58c7f6858f620328d77ce711",
+            "version": "3.1",
+            "disease_group": "",
+            "version_created": "2022-11-30T14:30:06.363812Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "R130"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 225,
+            "name": "Congenital myopathy",
+            "stats": {
+                "number_of_strs": 2,
+                "number_of_genes": 117,
+                "number_of_regions": 3
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "553f94b6bb5a1616e5ed459a",
+            "version": "4.0",
+            "disease_group": "Neurology and neurodevelopmental disorders",
+            "version_created": "2023-03-22T15:09:19.066102Z",
+            "disease_sub_group": "Neuromuscular disorders",
+            "relevant_disorders": [
+                "R81"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 230,
+            "name": "Bilateral congenital or childhood onset cataracts",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 200,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "553f979fbb5a1616e5ed45f8",
+            "version": "4.0",
+            "disease_group": "Ophthalmological disorders",
+            "version_created": "2023-03-22T16:02:08.567311Z",
+            "disease_sub_group": "Anterior segment abnormalities",
+            "relevant_disorders": [
+                "Cataracts",
+                "R31"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 232,
+            "name": "Congenital myaesthenic syndrome",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 35,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "553f94c2bb5a1616e5ed459c",
+            "version": "4.0",
+            "disease_group": "Neurology and neurodevelopmental disorders",
+            "version_created": "2023-03-22T14:51:14.248301Z",
+            "disease_sub_group": "Neuromuscular disorders",
+            "relevant_disorders": [
+                "Congenital myaesthenia",
+                "Congenital myasthenia",
+                "R80"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 235,
+            "name": "Distal myopathies",
+            "stats": {
+                "number_of_strs": 2,
+                "number_of_genes": 31,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "55b7a0bb22c1fc05fd2345d1",
+            "version": "3.0",
+            "disease_group": "Neurology and neurodevelopmental disorders",
+            "version_created": "2023-03-22T14:56:35.582720Z",
+            "disease_sub_group": "Neuromuscular disorders",
+            "relevant_disorders": [],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 236,
+            "name": "Hyperthyroidism",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 8,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "576cd44c8f6203609632be80",
+            "version": "3.0",
+            "disease_group": "Endocrine disorders",
+            "version_created": "2022-11-30T14:25:12.167140Z",
+            "disease_sub_group": "Thyroid disorders",
+            "relevant_disorders": [
+                "Resistance to thyroid hormone",
+                "R182"
+            ],
+            "signed_off": "2022-11-30"
+        },
+        {
+            "id": 243,
+            "name": "Childhood solid tumours",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 117,
+                "number_of_regions": 1
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS Cancer Germline Virtual",
+                    "slug": "gms-cancer-germline-virtual",
+                    "description": "This is a panel used for WGS germline analysis for the GMS."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "55af539322c1fc78a9ef5052",
+            "version": "4.0",
+            "disease_group": "Tumour syndromes",
+            "version_created": "2023-03-22T14:53:40.140129Z",
+            "disease_sub_group": "Childhood Tumours",
+            "relevant_disorders": [
+                "Paediatric congenital malformation-dysmorphism-tumour syndrome",
+                "Paediatric congenital malformation-dysmorphism-tumour syndromes",
+                "Paediatric congenital malformation-dysmorphism-tumour sydromes",
+                "Paediatric congenital malformation-dysmorphism-tumour syndrome",
+                "Tumour predisposition - childhood onset",
+                "R359"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 245,
+            "name": "Adult solid tumours cancer susceptibility",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 104,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Cancer Germline 100K",
+                    "slug": "cancer-germline-100k",
+                    "description": "Cancer Germline 100K"
+                },
+                {
+                    "name": "GMS Cancer Germline Virtual",
+                    "slug": "gms-cancer-germline-virtual",
+                    "description": "This is a panel used for WGS germline analysis for the GMS."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "595ce30f8f62036352471f39",
+            "version": "2.2",
+            "disease_group": "Cancer Programme",
+            "version_created": "2020-02-18T16:58:52.111020Z",
+            "disease_sub_group": "Pertinent cancer susceptibility gene panel",
+            "relevant_disorders": [
+                "Carcinoma of unknown primary",
+                "Other",
+                "Adult solid tumours pertinent cancer susceptibility"
+            ],
+            "signed_off": "2020-02-18"
+        },
+        {
+            "id": 258,
+            "name": "Arthrogryposis",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 293,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "55b75d5b22c1fc05fd2345c9",
+            "version": "5.0",
+            "disease_group": "Neurology and neurodevelopmental disorders",
+            "version_created": "2023-03-22T15:10:10.693394Z",
+            "disease_sub_group": "Neuromuscular disorders",
+            "relevant_disorders": [
+                "Arthrogrythsis",
+                "R83"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 269,
+            "name": "Amelogenesis imperfecta",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 40,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "58c7f3c78f620328d77ce70e",
+            "version": "3.0",
+            "disease_group": "Skeletal disorders",
+            "version_created": "2023-03-22T14:59:51.244795Z",
+            "disease_sub_group": "Skeletal dysplasias",
+            "relevant_disorders": [
+                "Amelogenesis Imperfecta",
+                "R340"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 283,
+            "name": "Cystic kidney disease",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 71,
+                "number_of_regions": 2
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "55a646ef22c1fc6710839b9a",
+            "version": "4.0",
+            "disease_group": "Renal and urinary tract disorders",
+            "version_created": "2023-03-22T15:24:05.267919Z",
+            "disease_sub_group": "Structural renal and urinary tract disease",
+            "relevant_disorders": [
+                "Cystic kidney disease"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 285,
+            "name": "Intellectual disability - microarray and sequencing",
+            "stats": {
+                "number_of_strs": 12,
+                "number_of_genes": 2619,
+                "number_of_regions": 62
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "558aa423bb5a16630e15b63c",
+            "version": "5.0",
+            "disease_group": "Neurology and neurodevelopmental disorders",
+            "version_created": "2023-03-22T14:51:48.308091Z",
+            "disease_sub_group": "Neurodevelopmental disorders",
+            "relevant_disorders": [
+                "Coarse facial features including Coffin-Siris-like disorders",
+                "ID",
+                "Moderate",
+                "severe or profound intellectual disability",
+                "Schizophrenia plus additional features",
+                "Intellectual disability - microarray",
+                "fragile X and sequencing",
+                "Intellectual disability",
+                "R29"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 292,
+            "name": "Renal tubulopathies",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 64,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "553f94d5bb5a1616e5ed45a4",
+            "version": "4.0",
+            "disease_group": "Renal and urinary tract disorders",
+            "version_created": "2023-03-22T15:53:30.028204Z",
+            "disease_sub_group": "Disorders of function",
+            "relevant_disorders": [
+                "Renal tubular acidosis",
+                "R198"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 293,
+            "name": "Neonatal diabetes",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 40,
+                "number_of_regions": 1
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "55a9041e22c1fc6711b0c6c0",
+            "version": "4.0",
+            "disease_group": "Endocrine disorders",
+            "version_created": "2023-03-22T15:12:30.180510Z",
+            "disease_sub_group": "Disorders of unusual phenotypes",
+            "relevant_disorders": [
+                "Neonatal diabetes (diagnosed less than 6 months)",
+                "Neonatal diabetes diagnosed <6 months",
+                "Diabetes - neonatal onset",
+                "R143"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 307,
+            "name": "Retinal disorders",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 413,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "56e0238b22c1fc09c97a6e46",
+            "version": "4.0",
+            "disease_group": "Ophthalmological disorders",
+            "version_created": "2023-03-22T15:34:26.907894Z",
+            "disease_sub_group": "Posterior segment abnormalities",
+            "relevant_disorders": [
+                "Posterior segment abnormalities",
+                "Cone Dysfunction Syndrome",
+                "Developmental macular and foveal dystrophy",
+                "Inherited macular dystrophy",
+                "Leber Congenital Amaurosis Early-Onset Severe Retinal Dystrophy",
+                "Leber Congenital Amaurosis / Early-Onset Severe Retinal Dystrophy",
+                "Leber Congenital Amaurosis or Early-Onset Severe Retinal Dystrophy",
+                "Rod Dysfunction Syndrome",
+                "Rod-cone dystrophy",
+                "Familial exudative vitreoretinopathy",
+                "Familial exudative retinopathy",
+                "Sorsby retinal dystrophy",
+                "Doyne retinal dystrophy",
+                "R32"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 308,
+            "name": "Congenital hyperinsulinism",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 24,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "553f9781bb5a1616e5ed45f4",
+            "version": "3.0",
+            "disease_group": "Endocrine disorders",
+            "version_created": "2023-03-22T15:09:16.225427Z",
+            "disease_sub_group": "Disorders of unusual phenotypes",
+            "relevant_disorders": [
+                "Hyperinsulinism",
+                "R144"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 309,
+            "name": "Skeletal dysplasia",
+            "stats": {
+                "number_of_strs": 1,
+                "number_of_genes": 612,
+                "number_of_regions": 6
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "5693952f22c1fc251660fb1e",
+            "version": "4.0",
+            "disease_group": "Skeletal disorders",
+            "version_created": "2023-03-22T14:45:22.089629Z",
+            "disease_sub_group": "Skeletal dysplasias",
+            "relevant_disorders": [
+                "Unexplained skeletal dysplasia",
+                "Skeletal dysplasia",
+                "R104"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 312,
+            "name": "Familial hypoparathyroidism",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 9,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": "55bf826222c1fc0fe45530c1",
+            "version": "2.2",
+            "disease_group": "Endocrine disorders",
+            "version_created": "2020-02-25T10:13:04.490825Z",
+            "disease_sub_group": "Disorders of calcium homeostasis",
+            "relevant_disorders": [
+                "Familial or syndromic hypoparathyroidism",
+                "R153"
+            ],
+            "signed_off": "2020-02-25"
+        },
+        {
+            "id": 384,
+            "name": "Limb disorders",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 257,
+                "number_of_regions": 1
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "4.0",
+            "disease_group": "",
+            "version_created": "2023-03-22T15:21:33.153588Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 386,
+            "name": "Pancreatitis",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 18,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "3.0",
+            "disease_group": "",
+            "version_created": "2022-11-30T14:52:20.362246Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "R175"
+            ],
+            "signed_off": "2022-11-30"
+        },
+        {
+            "id": 398,
+            "name": "Primary immunodeficiency or monogenic inflammatory bowel disease",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 541,
+                "number_of_regions": 2
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "4.0",
+            "disease_group": "",
+            "version_created": "2023-03-22T16:47:16.253847Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "Primary immunodeficiency disorders",
+                "A- or hypo-gammaglobulinaemia",
+                "Congenital neutropaenia",
+                "Agranulocytosis",
+                "Combined B and T cell defect",
+                "Inherited complement deficiency",
+                "SCID",
+                "Primary immune disorder",
+                "Primary immunodeficiency",
+                "A-gammaglobulinaemia",
+                "Agammaglobulinaemia",
+                "hypo-gammaglobulinaemia",
+                "hypogammaglobulinemia",
+                "immune deficiency syndromes",
+                "Severe combined immunodeficiency",
+                "Congenital neutopenia",
+                "Familial haemophagocytic lymphohistiocytic disorders",
+                "Familial hemophagocytic lymphohistiocytic disorders",
+                "PID",
+                "Sepsis",
+                "Disseminated non-tuberculous mycobacterial infection",
+                "Primary immunodeficiency",
+                "R15"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 402,
+            "name": "Early onset or syndromic epilepsy",
+            "stats": {
+                "number_of_strs": 2,
+                "number_of_genes": 789,
+                "number_of_regions": 17
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "4.0",
+            "disease_group": "Neurology and neurodevelopmental disorders",
+            "version_created": "2023-03-22T14:56:42.297187Z",
+            "disease_sub_group": "Inherited Epilepsy Syndromes",
+            "relevant_disorders": [
+                "Epilepsy Plus",
+                "Epilepsy plus other features",
+                "Genetic Epilepsy Syndromes",
+                "Epileptic encephalopathy",
+                "Familial Focal Epilepsies",
+                "Familial Genetic Generalised Epilepsies",
+                "Genetic Epilepsies with Febrile Seizures Plus (GEFS+)",
+                "Genetic Epilepsies with Febrile Seizures Plus",
+                "Early onset or syndromic epilepsy",
+                "Genetic epilepsy syndromes",
+                "R59"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 465,
+            "name": "Other rare neuromuscular disorders",
+            "stats": {
+                "number_of_strs": 7,
+                "number_of_genes": 437,
+                "number_of_regions": 8
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "Super Panel",
+                    "slug": "superpanel",
+                    "description": "Superpanel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "19.1",
+            "disease_group": "",
+            "version_created": "2023-03-22T15:34:58.854214Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "Neuromuscular disorders",
+                "R381"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 466,
+            "name": "Hereditary ataxia with onset in adulthood",
+            "stats": {
+                "number_of_strs": 15,
+                "number_of_genes": 247,
+                "number_of_regions": 4
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "4.0",
+            "disease_group": "",
+            "version_created": "2023-03-22T15:52:43.961000Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "Hereditary ataxia - adult onset",
+                "R54"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 467,
+            "name": "Likely inborn error of metabolism - targeted testing not possible",
+            "stats": {
+                "number_of_strs": 3,
+                "number_of_genes": 916,
+                "number_of_regions": 1
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "4.0",
+            "disease_group": "",
+            "version_created": "2023-03-22T15:04:02.239838Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "Likely inborn error of metabolism - targeted testing not possible",
+                "Likely inborn error of metabolism",
+                "Inborn errors of metabolism",
+                "R98"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 472,
+            "name": "Monogenic diabetes",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 77,
+                "number_of_regions": 1
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "2.2",
+            "disease_group": "",
+            "version_created": "2020-02-25T10:24:25.707488Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "R141"
+            ],
+            "signed_off": "2020-02-25"
+        },
+        {
+            "id": 473,
+            "name": "Growth failure in early childhood",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 161,
+                "number_of_regions": 5
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "3.0",
+            "disease_group": "",
+            "version_created": "2023-03-22T17:04:33.542444Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "R147"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 474,
+            "name": "Adult onset neurodegenerative disorder",
+            "stats": {
+                "number_of_strs": 16,
+                "number_of_genes": 413,
+                "number_of_regions": 4
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "4.34",
+            "disease_group": "",
+            "version_created": "2023-07-31T13:52:25.603936Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "Neurodegenerative disorders - adult onset",
+                "R58"
+            ],
+            "signed_off": "2023-07-31"
+        },
+        {
+            "id": 476,
+            "name": "White matter disorders and cerebral calcification - narrow panel",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 237,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "3.0",
+            "disease_group": "",
+            "version_created": "2023-03-22T15:18:01.993574Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 477,
+            "name": "Ataxia and cerebellar anomalies - narrow panel",
+            "stats": {
+                "number_of_strs": 14,
+                "number_of_genes": 282,
+                "number_of_regions": 4
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "4.0",
+            "disease_group": "",
+            "version_created": "2023-03-22T14:58:44.682890Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 478,
+            "name": "Fetal anomalies",
+            "stats": {
+                "number_of_strs": 2,
+                "number_of_genes": 1939,
+                "number_of_regions": 1
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "3.0",
+            "disease_group": "",
+            "version_created": "2023-03-22T16:19:02.320847Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "R21",
+                "Fetal anomalies with a likely genetic cause",
+                "Fetal anomalies with a likely genetic cause - non urgent",
+                "R412"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 479,
+            "name": "Paediatric disorders - additional genes",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 63,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "3.0",
+            "disease_group": "",
+            "version_created": "2023-03-22T15:14:21.206948Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 480,
+            "name": "Familial hyperparathyroidism or hypocalciuric hypercalcaemia",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 11,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "Rare Disease 100K",
+                    "slug": "rare-disease-100k",
+                    "description": "Rare Disease 100K"
+                },
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "3.2",
+            "disease_group": "",
+            "version_created": "2022-11-30T16:20:53.964743Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "Familial hyperparathyroidism",
+                "Hypocalciuric hypercalcaemia",
+                "R151"
+            ],
+            "signed_off": "2022-11-30"
+        },
+        {
+            "id": 482,
+            "name": "Hypophosphataemia or rickets",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 18,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "3.0",
+            "disease_group": "",
+            "version_created": "2022-11-30T14:29:56.662204Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "R154"
+            ],
+            "signed_off": "2022-11-30"
+        },
+        {
+            "id": 483,
+            "name": "Pituitary hormone deficiency",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 64,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "3.0",
+            "disease_group": "",
+            "version_created": "2023-03-22T17:10:18.708604Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "R159"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 484,
+            "name": "DDG2P",
+            "stats": {
+                "number_of_strs": 1,
+                "number_of_genes": 1921,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "3.1",
+            "disease_group": "",
+            "version_created": "2022-11-30T13:16:41.541379Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 486,
+            "name": "Paediatric disorders",
+            "stats": {
+                "number_of_strs": 17,
+                "number_of_genes": 7396,
+                "number_of_regions": 79
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "Super Panel",
+                    "slug": "superpanel",
+                    "description": "Superpanel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "35.2",
+            "disease_group": "",
+            "version_created": "2023-03-22T15:39:39.663476Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "Congenital malformation and dysmorphism syndromes - microarray and sequencing",
+                "Congenital malformation and dysmorphism syndromes",
+                "R27"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 487,
+            "name": "Cystic renal disease",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 172,
+                "number_of_regions": 4
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "Super Panel",
+                    "slug": "superpanel",
+                    "description": "Superpanel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "7.1",
+            "disease_group": "",
+            "version_created": "2023-03-22T15:26:58.301765Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "Cystic renal disease - PKD1",
+                "R193"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 488,
+            "name": "Hereditary ataxia and cerebellar anomalies - childhood onset",
+            "stats": {
+                "number_of_strs": 14,
+                "number_of_genes": 462,
+                "number_of_regions": 4
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "Super Panel",
+                    "slug": "superpanel",
+                    "description": "Superpanel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "12.1",
+            "disease_group": "",
+            "version_created": "2023-03-22T15:16:04.729765Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "Hereditary ataxia with onset in childhood",
+                "Cerebellar anomalies",
+                "R55",
+                "R84"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 490,
+            "name": "Hypotonic infant",
+            "stats": {
+                "number_of_strs": 22,
+                "number_of_genes": 3972,
+                "number_of_regions": 71
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "Super Panel",
+                    "slug": "superpanel",
+                    "description": "Superpanel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "25.1",
+            "disease_group": "",
+            "version_created": "2023-03-22T15:34:57.508508Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "Floppy infant with a likely central cause",
+                "Hypotonic infant with a likely central cause",
+                "R69"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 491,
+            "name": "Cerebral malformation",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 156,
+                "number_of_regions": 1
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "Super Panel",
+                    "slug": "superpanel",
+                    "description": "Superpanel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "10.1",
+            "disease_group": "",
+            "version_created": "2023-03-22T16:24:10.632510Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "Cerebral malformations",
+                "R87"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 496,
+            "name": "Childhood onset leukodystrophy",
+            "stats": {
+                "number_of_strs": 17,
+                "number_of_genes": 4252,
+                "number_of_regions": 64
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "Super Panel",
+                    "slug": "superpanel",
+                    "description": "Superpanel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "14.2",
+            "disease_group": "",
+            "version_created": "2023-03-22T15:19:58.484636Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "White matter disorders - childhood onset",
+                "R109"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 502,
+            "name": "Hereditary systemic amyloidosis",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 11,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "1.18",
+            "disease_group": "",
+            "version_created": "2023-03-22T11:25:52.942351Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "Amyloidosis",
+                "R204"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 503,
+            "name": "Inherited MMR deficiency (Lynch syndrome)",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 5,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "1.2",
+            "disease_group": "",
+            "version_created": "2020-03-04T11:14:37.264404Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "R210"
+            ],
+            "signed_off": "2020-03-04"
+        },
+        {
+            "id": 504,
+            "name": "Inherited polyposis and early onset colorectal cancer - germline testing",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 19,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "2.0",
+            "disease_group": "",
+            "version_created": "2022-11-30T13:33:33.529693Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "Inherited polyposis",
+                "R211"
+            ],
+            "signed_off": "2022-11-30"
+        },
+        {
+            "id": 506,
+            "name": "Progressive cardiac conduction disease",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 21,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "Component Of Super Panel",
+                    "slug": "component-of-super-panel",
+                    "description": "This panel is a component of a Super Panel"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "2.2",
+            "disease_group": "",
+            "version_created": "2022-11-30T16:00:05.616464Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "R328"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 507,
+            "name": "Common craniosynostosis syndromes",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 7,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "1.2",
+            "disease_group": "",
+            "version_created": "2020-02-13T13:37:33.900843Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "R99"
+            ],
+            "signed_off": "2020-02-13"
+        },
+        {
+            "id": 508,
+            "name": "Confirmed Fanconi anaemia or Bloom syndrome",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 23,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "2.0",
+            "disease_group": "",
+            "version_created": "2023-03-22T15:29:37.174037Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "R229",
+                "R258"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 509,
+            "name": "Structural eye disease",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 490,
+                "number_of_regions": 2
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "3.0",
+            "disease_group": "",
+            "version_created": "2023-03-22T15:41:02.535389Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "R36"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 510,
+            "name": "Sporadic aniridia",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 6,
+                "number_of_regions": 1
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "3.2",
+            "disease_group": "",
+            "version_created": "2023-03-22T12:26:19.521541Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "Aniridia",
+                "R38"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 511,
+            "name": "Albinism or congenital nystagmus",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 47,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "3.0",
+            "disease_group": "",
+            "version_created": "2023-03-22T15:28:14.954756Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "R39"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 512,
+            "name": "Congenital fibrosis of the extraocular muscles",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 6,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "1.2",
+            "disease_group": "",
+            "version_created": "2020-03-03T15:49:26.846169Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "R46"
+            ],
+            "signed_off": "2020-03-03"
+        },
+        {
+            "id": 513,
+            "name": "Non-acute porphyrias",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 9,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "1.4",
+            "disease_group": "",
+            "version_created": "2020-03-04T13:51:48.166913Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "R168"
+            ],
+            "signed_off": "2020-10-15"
+        },
+        {
+            "id": 514,
+            "name": "Intestinal failure or congenital diarrhoea",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 47,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "3.0",
+            "disease_group": "",
+            "version_created": "2023-03-22T17:17:15.138609Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "R331",
+                "Intestinal failure"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 515,
+            "name": "Iron metabolism disorders - NOT common HFE mutations",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 26,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "2.0",
+            "disease_group": "",
+            "version_created": "2023-03-22T15:32:37.547491Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "Iron metabolism disorders",
+                "R96"
+            ],
+            "signed_off": "2023-03-22"
+        },
+        {
+            "id": 516,
+            "name": "Thrombophilia with a likely monogenic cause",
+            "stats": {
+                "number_of_strs": 0,
+                "number_of_genes": 21,
+                "number_of_regions": 0
+            },
+            "types": [
+                {
+                    "name": "GMS Rare Disease Virtual",
+                    "slug": "gms-rare-disease-virtual",
+                    "description": "This is a panel for the Genomic Medicine Service for an exome/genome/panel based test that requires a virtual gene panel for rare disease in the Test Directory."
+                },
+                {
+                    "name": "GMS Rare Disease",
+                    "slug": "gms-rare-disease",
+                    "description": "This panel type is used for GMS panels that are not virtual (i.e. could be a wet lab test)"
+                },
+                {
+                    "name": "GMS signed-off",
+                    "slug": "gms-signed-off",
+                    "description": "This panel has undergone review by a NHSE GMS disease specialist group and processes to be signed-off for use within the GMS."
+                }
+            ],
+            "status": "public",
+            "hash_id": null,
+            "version": "2.2",
+            "disease_group": "",
+            "version_created": "2023-03-22T12:21:39.732756Z",
+            "disease_sub_group": "",
+            "relevant_disorders": [
+                "Thrombophilia",
+                "R97"
+            ],
+            "signed_off": "2023-03-22"
+        }
+    ]
+}
