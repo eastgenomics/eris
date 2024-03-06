@@ -59,26 +59,8 @@ class Command(BaseCommand):
                 try:
                     upload(workbook)
                 except DatabaseError as e:
-                    logging.error(
-                        f"Workbook {workbook}:\n\
-                                  Exception raised: {e}.\n\
-                                  Rolling back transactions and continuing to next workbook"
-                    )
-                    continue
-                except KeyError as e:
-                    logging.error(
-                        f"Workbook: {workbook}\n\
-                                  Exception raised: {e}\n\
-                                  It is likely that your headers don't conform to the specs. Please seek advice from a bioinformatics manager\n\
-                                  Rolling back transactions and continuing to next workbook"
-                    )
-                    continue
-                except ValueError as e:
-                    logging.error(
-                        f"Workbook: {workbook}\nException raised: {e}\n\
-                                  It is likely that a value(s) are an invalid type. Please seek advice from a bioinformatics manager\n\
-                                  Rolling back transactions and moving to next workbook"
-                    )
+                    logging.error(f"Exception: {repr(e)}")
+                    logging.error("Rolling back transactions and continuing to next workbook")
                     continue
             logging.info("All done")
         else:
