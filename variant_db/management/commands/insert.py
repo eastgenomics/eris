@@ -158,7 +158,7 @@ def insert_row(row_dict: dict[str, str | int]) -> None:
         "known_inheritance": row_dict["known_inheritance"],
         "associated_disease": row_dict["associated_disease"],
         "probe_set": probeset,
-        "date": row_dict["date"],
+        "date_last_evaluated": row_dict["date_last_evaluated"],
     }
     interpretation = _get_or_create(Interpretation, **interpretation_row)
     # ACGS_CATEGORY_INFORMATION return object is not used, so we throw it away
