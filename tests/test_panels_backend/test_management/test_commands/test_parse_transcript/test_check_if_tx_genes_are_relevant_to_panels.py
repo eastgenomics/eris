@@ -67,9 +67,8 @@ class TestCheckMoreThanOneTxMatch_MultiMatches(TestCase):
         ]
         tx = "NM00234.1"
 
-        result, err = _check_if_tx_genes_are_relevant_to_panels(matches, tx)
+        err = _check_if_tx_genes_are_relevant_to_panels(matches, tx)
 
-        assert result
         assert (
             err
             == f"Versionless transcript in MANE more than once, can't resolve: {tx}"
@@ -118,6 +117,4 @@ class TestCheckMoreThanOneTxMatch_MultiMatches(TestCase):
         )
 
         with self.assertRaisesRegex(ValueError, expected_err):
-            result, err = _check_if_tx_genes_are_relevant_to_panels(
-                matches, tx
-            )
+            err = _check_if_tx_genes_are_relevant_to_panels(matches, tx)

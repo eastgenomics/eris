@@ -693,7 +693,7 @@ def _get_clin_transcript_from_hgmd_files(
 
 def _check_if_tx_genes_are_relevant_to_panels(
     transcript_matches: list[dict[str:str]], tx: str
-) -> tuple[bool, str | None]:
+) -> str | None:
     """
     For a transcript which appears in MANE against multiple genes - check
     that those genes aren't used in our Panels. We check ALL PanelGene
@@ -709,7 +709,6 @@ def _check_if_tx_genes_are_relevant_to_panels(
     _prepare_mane_file. It's a list of dictionaries. Each dict contains the
      keys "MANE TYPE", "RefSeq", "RefSeq_versionless" and "HGNC ID".
     :param: the transcript which we are checking for multiple gene matches
-    :return: bool representing whether there's more than one match
     :return: error message or None if not applicable
     """
     # find if panels are linked to any of these tx-linked genes
@@ -728,9 +727,9 @@ def _check_if_tx_genes_are_relevant_to_panels(
             f"Versionless transcript in MANE more than once and linked to multiple panel-relevant genes, can't resolve: {tx}"
         )
     else:
-        # log the error and return the data - it
+        # log the error and return it
         err = f"Versionless transcript in MANE more than once, can't resolve: {tx}"
-        return True, err
+        return err
 
 
 def _populate_mane_dict_by_category(
@@ -823,10 +822,9 @@ def _transcript_assign_to_source(
     if mane_exact_match or mane_base_match:
         # work out whether or not the transcript exists multiple times in MANE
         if len(transcript_list) > 1:
-            (
-                multiple_matches,
-                error_msg,
-            ) = _check_if_tx_genes_are_relevant_to_panels(transcript_list, tx)
+            error_msg = _check_if_tx_genes_are_relevant_to_panels(
+                transcript_list, tx
+            )
         else:
             multiple_matches = False
 
