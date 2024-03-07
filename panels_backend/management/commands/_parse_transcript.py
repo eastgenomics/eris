@@ -822,6 +822,7 @@ def _transcript_assign_to_source(
     if mane_exact_match or mane_base_match:
         # work out whether or not the transcript exists multiple times in MANE
         if len(transcript_list) > 1:
+            multiple_matches = True
             error_msg = _check_if_tx_genes_are_relevant_to_panels(
                 transcript_list, tx
             )
