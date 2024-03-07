@@ -114,16 +114,21 @@ def insert_row(row_dict: dict[str, str | int]) -> None:
     chromosome = _get_or_create(
         Chromosome,
         method="get",
-        names_to={"chrom": "name"},
-        **_subset_row(row_dict, "chrom"),
+        names_to={"chromosome": "name"},
+        **_subset_row(row_dict, "chromosome"),
     )
-    vnt_row_subset = _subset_row(row_dict, "interpreted", "pos", "ref", "alt")
+    vnt_row_subset = _subset_row(
+        row_dict,
+        "interpreted",
+        "start",
+        "reference_allele",
+        "alternate_allele",
+    )
     vnt_row_subset["interpreted"] = (
         vnt_row_subset["interpreted"].lower() == "yes"
     )
     variant = _get_or_create(
         Variant,
-        names_to={"pos": "position"},
         **vnt_row_subset
         | {"reference_genome": reference_genome, "chromosome": chromosome},
     )
@@ -144,7 +149,7 @@ def insert_row(row_dict: dict[str, str | int]) -> None:
     )
     interpretation_row = {
         "sample": sample,
-        "clinical_indication": row_dict["ci"],
+        "preferred_condition_name": row_dict["preferred_condition_name"],
         "affected_status": affected_status,
         "assertion_criteria": assertion_criteria,
         "clinical_significance_description": clinical_significance_description,
@@ -158,7 +163,7 @@ def insert_row(row_dict: dict[str, str | int]) -> None:
         "known_inheritance": row_dict["known_inheritance"],
         "associated_disease": row_dict["associated_disease"],
         "probe_set": probeset,
-        "date": row_dict["date"],
+        "date_last_evaluated": row_dict["date_last_evaluated"],
     }
     interpretation = _get_or_create(Interpretation, **interpretation_row)
     # ACGS_CATEGORY_INFORMATION return object is not used, so we throw it away
