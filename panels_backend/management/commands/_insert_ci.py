@@ -301,7 +301,9 @@ def _check_for_changed_pg_justification(
 ) -> None:
     """
     For a PanelGene instance, check that the justification hasn't changed.
-    If it has, update it and log it in history.
+    Example scenarios: a PanelGene previously defined in Test Directory 5
+    is now defined in Test Directory 6 (or perhaps it's now in PanelApp).
+    If the justification has changed, update it and log it in history.
     You might run this if there's a new td import, for example.
 
     :param pg_instance: a PanelGene which might have changed

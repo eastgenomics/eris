@@ -27,6 +27,7 @@ from ._insert_ci import (
     flag_clinical_indication_superpanel_for_review,
     provisionally_link_clinical_indication_to_panel,
     provisionally_link_clinical_indication_to_superpanel,
+    _check_for_changed_pg_justification,
 )
 from .panelapp import PanelClass, SuperPanelClass
 from django.db import transaction
@@ -221,20 +222,7 @@ def _insert_gene(
             # Panel-Gene record already exist
             # meaning probably there's a new PanelApp import
             # with a different justification
-
-            if pg_instance.justification != "PanelApp":
-                PanelGeneHistory.objects.create(
-                    panel_gene_id=pg_instance.id,
-                    note=History.panel_gene_metadata_changed(
-                        "justification",
-                        pg_instance.justification,
-                        "PanelApp",
-                    ),
-                    user=user,
-                )
-
-                pg_instance.justification = "PanelApp"
-                pg_instance.save()
+            _check_for_changed_pg_justification(pg_instance, "PanelApp", user)
 
 
 def _get_most_recent_td_release_for_ci_panel(
@@ -300,7 +288,7 @@ def _disable_custom_hgnc_panels(
     if a PanelApp-created panel is linked to exactly the same HGNC IDs as
     those in the "ACTIVE" custom panel's name
 
-    NOTE: if it's inactivate custom panel, that's fine
+    NOTE: if it's inactive custom panel, that's fine
 
     :param panel: PanelClass object
     :param user: either 'request.user' (if called from web) or None (if called from CLI)
@@ -348,7 +336,7 @@ def _insert_panel_data_into_db(
     panel: PanelClass, user: HttpRequest | None = None
 ) -> Panel:
     """
-    Insert data from a parsed JSON a panel record, into the database.
+    Insert data from a parsed JSON panel record, into the database.
     Controls creation and flagging of new and old CI-Panel links,
     where the Panel version has changed.
     Controls creation of genes.

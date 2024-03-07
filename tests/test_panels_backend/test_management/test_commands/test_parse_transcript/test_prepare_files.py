@@ -71,3 +71,41 @@ class TestBasicManeFile(TestCase):
             # normal assert will throw errors if the keys in a dict are
             # ordered differently
             self.assertCountEqual(mane_output, expected)
+
+    def test_value_error_if_missing_cols(self):
+        """
+        Test that a ValueError and error message are produced,
+        if a required column is missing from the input.
+        In this case we've remove MANE TYPE from the input.
+        """
+        with mock.patch("pandas.read_csv") as mock_df:
+            mock_return = pd.DataFrame(
+                {
+                    "Gene": ["A1BG", "A1CF", "A2M"],
+                    "Ensembl StableID GRCh38": ["test", "test", "test"],
+                    "RefSeq StableID GRCh38 / GRCh37": [
+                        "NM_130786.4",
+                        "NM_014576.4",
+                        "NM_000014.6",
+                    ],
+                    "Ensembl StableID GRCh37 (Not MANE)": [
+                        "enst",
+                        "enst",
+                        "enst",
+                    ],
+                    "5'UTR": ["n", "n", "n"],
+                    "CDS": ["y", "y", "y"],
+                    "3'UTR": ["n", "n", "n"],
+                }
+            )
+            mock_df.return_value = mock_return
+
+            expected_err = f"Missing columns in MANE: \['MANE TYPE'\]"
+
+            with self.assertRaisesRegex(ValueError, expected_err):
+                hgnc_ids = {
+                    "A1BG": "HGNC:1",
+                    "A1CF": "HGNC:2",
+                    "A2M": "HGNC:3",
+                }
+                mane_output = _prepare_mane_file("/dev/null", hgnc_ids)

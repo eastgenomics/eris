@@ -1033,7 +1033,9 @@ class PanelGene(models.Model):
     )
 
     justification = models.TextField(
-        verbose_name="Justification",
+        verbose_name="Justification for the panel-gene link - often "
+        "'PanelApp', but may be test directory in the case of TD-defined "
+        "panels",
         max_length=255,
     )
 

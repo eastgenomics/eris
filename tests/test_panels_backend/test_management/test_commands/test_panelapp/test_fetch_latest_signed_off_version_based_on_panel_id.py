@@ -25,7 +25,9 @@ class TestFetchLatestSignedOffVersionBasedOnPanelId(TestCase):
             200,
         )
 
-        panel_version = _fetch_latest_signed_off_version_based_on_panel_id(1141)
+        panel_version = _fetch_latest_signed_off_version_based_on_panel_id(
+            1141
+        )
 
         assert panel_version == "1.7"
 
